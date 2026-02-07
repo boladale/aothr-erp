@@ -15,7 +15,8 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,6 +43,7 @@ const navItems = [
   { path: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
   { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
   { path: '/invoices', label: 'Invoices', icon: Receipt },
+  { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
   { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
   { path: '/notifications', label: 'Notifications', icon: Bell },
   { path: '/admin', label: 'Admin', icon: Settings },

@@ -196,27 +196,8 @@ export default function Invoices() {
 
   const handlePost = async (invoice: InvoiceWithDetails) => {
     try {
-      // Get invoice lines
-      const { data: invLines, error: linesError } = await supabase
-        .from('ap_invoice_lines')
-        .select('*, purchase_order_lines(*)')
-        .eq('invoice_id', invoice.id);
-
-      if (linesError) throw linesError;
-
-      // Update PO line qty_invoiced
-      for (const line of invLines || []) {
-        const poLine = line.purchase_order_lines;
-        if (poLine) {
-          await supabase
-            .from('purchase_order_lines')
-            .update({ qty_invoiced: (poLine.qty_invoiced || 0) + line.quantity })
-            .eq('id', line.po_line_id);
-        }
-      }
-
-      // Update invoice status
-      await supabase
+      // Attempt to post - the database trigger will run three-way match
+      const { error } = await supabase
         .from('ap_invoices')
         .update({ 
           status: 'posted',
@@ -225,53 +206,35 @@ export default function Invoices() {
         })
         .eq('id', invoice.id);
 
-      // Check closure readiness
-      await checkClosureReadiness(invoice.po_id);
+      if (error) {
+        // Check if it's a hold-related error
+        if (error.message?.includes('unresolved hold')) {
+          toast.error('Invoice has unresolved exceptions. Please resolve them first.');
+          return;
+        }
+        throw error;
+      }
 
-      toast.success('Invoice posted');
-      fetchData();
-    } catch (error) {
-      console.error('Error posting invoice:', error);
-      toast.error('Failed to post invoice');
-    }
-  };
-
-  const checkClosureReadiness = async (poId: string) => {
-    const { data: poLines } = await supabase
-      .from('purchase_order_lines')
-      .select('quantity, qty_received, qty_invoiced')
-      .eq('po_id', poId);
-
-    const ready = poLines?.every(l => 
-      l.qty_received >= l.quantity && l.qty_invoiced >= l.quantity
-    );
-
-    if (ready) {
-      await supabase
-        .from('purchase_orders')
-        .update({ close_ready: true })
-        .eq('id', poId);
-
-      const { data: po } = await supabase
-        .from('purchase_orders')
-        .select('po_number')
-        .eq('id', poId)
+      // Check if the invoice was actually posted (trigger may have reverted status)
+      const { data: updated } = await supabase
+        .from('ap_invoices')
+        .select('status')
+        .eq('id', invoice.id)
         .single();
 
-      if (user?.id && po) {
-        await supabase
-          .from('notifications')
-          .upsert({
-            user_id: user.id,
-            entity_type: 'purchase_order',
-            entity_id: poId,
-            notification_type: 'po_ready_to_close',
-            title: `PO ${po.po_number} is ready to be closed`,
-            message: 'All items have been fully received and invoiced.',
-          }, {
-            onConflict: 'user_id,entity_type,entity_id,notification_type'
-          });
+      if (updated?.status === 'draft') {
+        // Invoice was blocked by three-way match
+        toast.error('Invoice failed three-way matching. Check Match Exceptions for details.');
+        fetchData();
+        return;
       }
+
+      toast.success('Invoice posted successfully');
+      fetchData();
+    } catch (error: unknown) {
+      console.error('Error posting invoice:', error);
+      const err = error as { message?: string };
+      toast.error(err.message || 'Failed to post invoice');
     }
   };
 

@@ -1,6 +1,22 @@
 
 # Phase 2 Extension Plan: Finance-Grade Controls and Automation
 
+## Status: Sprint 1 In Progress ✅
+
+### Completed
+- [x] All Phase 2 database tables created
+- [x] Enums for match status, approval types, hold types, budget status, reservation status
+- [x] Three-way matching engine (`run_three_way_match` function)
+- [x] Invoice hold enforcement trigger
+- [x] Automatic three-way match on invoice post attempt
+- [x] Reservation validation trigger
+- [x] RLS policies for all new tables
+- [x] Audit triggers for Phase 2 tables
+- [x] Match Exceptions UI (`/match-exceptions`)
+
+### In Progress
+- [ ] Update plan.md with remaining Sprint 1 items
+
 ## Overview
 
 This plan extends the Phase 1 MVP procurement system with advanced financial controls, automation, and analytics while preserving all existing Phase 1 correctness guarantees.

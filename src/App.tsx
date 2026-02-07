@@ -14,6 +14,7 @@ import PurchaseOrders from "./pages/PurchaseOrders";
 import PurchaseOrderDetail from "./pages/PurchaseOrderDetail";
 import GoodsReceipts from "./pages/GoodsReceipts";
 import Invoices from "./pages/Invoices";
+import MatchExceptions from "./pages/MatchExceptions";
 import POClosureReport from "./pages/POClosureReport";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/purchase-orders/:id" element={<ProtectedRoute><PurchaseOrderDetail /></ProtectedRoute>} />
             <Route path="/goods-receipts" element={<ProtectedRoute><GoodsReceipts /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+            <Route path="/match-exceptions" element={<ProtectedRoute><MatchExceptions /></ProtectedRoute>} />
             <Route path="/po-closure" element={<ProtectedRoute><POClosureReport /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
