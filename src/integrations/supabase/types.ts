@@ -879,9 +879,49 @@ export type Database = {
           },
         ]
       }
+      vendor_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_name: string
+          file_url: string
+          id: string
+          uploaded_by: string | null
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          file_name: string
+          file_url: string
+          id?: string
+          uploaded_by?: string | null
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          uploaded_by?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_documents_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           address: string | null
+          bank_account_number: string | null
+          bank_name: string | null
           city: string | null
           code: string
           country: string | null
@@ -892,11 +932,15 @@ export type Database = {
           name: string
           payment_terms: number | null
           phone: string | null
+          project_size_capacity: string | null
+          service_categories: string[] | null
           status: Database["public"]["Enums"]["vendor_status"]
           updated_at: string
         }
         Insert: {
           address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           city?: string | null
           code: string
           country?: string | null
@@ -907,11 +951,15 @@ export type Database = {
           name: string
           payment_terms?: number | null
           phone?: string | null
+          project_size_capacity?: string | null
+          service_categories?: string[] | null
           status?: Database["public"]["Enums"]["vendor_status"]
           updated_at?: string
         }
         Update: {
           address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           city?: string | null
           code?: string
           country?: string | null
@@ -922,6 +970,8 @@ export type Database = {
           name?: string
           payment_terms?: number | null
           phone?: string | null
+          project_size_capacity?: string | null
+          service_categories?: string[] | null
           status?: Database["public"]["Enums"]["vendor_status"]
           updated_at?: string
         }
