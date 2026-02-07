@@ -18,6 +18,7 @@ import MatchExceptions from "./pages/MatchExceptions";
 import POClosureReport from "./pages/POClosureReport";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
+import ApprovalRules from "./pages/ApprovalRules";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/po-closure" element={<ProtectedRoute><POClosureReport /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/approval-rules" element={<ProtectedRoute><ApprovalRules /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
