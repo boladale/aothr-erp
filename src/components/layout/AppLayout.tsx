@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   X,
+  Shield,
   ChevronDown,
   AlertTriangle
 } from 'lucide-react';
@@ -46,6 +47,7 @@ const navItems = [
   { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
   { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
   { path: '/notifications', label: 'Notifications', icon: Bell },
+  { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
   { path: '/admin', label: 'Admin', icon: Settings },
 ];
 
