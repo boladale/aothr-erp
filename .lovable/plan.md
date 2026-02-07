@@ -23,6 +23,8 @@ This plan extends the Phase 1 MVP procurement system with advanced financial con
 
 ## Scope Summary
 
+### Phase 2 (Current)
+
 | In Scope | Out of Scope |
 |----------|--------------|
 | Three-way matching (PO-GRN-Invoice) | Payments & disbursements |
@@ -31,6 +33,21 @@ This plan extends the Phase 1 MVP procurement system with advanced financial con
 | Budget management & commitments | Multi-currency support |
 | Inventory reservations | Tax calculation engines |
 | Advanced analytics dashboards | External accounting integrations |
+
+### Future Phases (Allowed Expansion)
+
+| Allowed | Explicit Non-Goals |
+|---------|-------------------|
+| Payments & disbursements | Full ERP rebuild |
+| GL integrations (external) | Custom tax engines |
+| OCR/document scanning | Custom accounting logic beyond integrations |
+| Multi-currency support | |
+
+### Risk Controls
+
+- **Compliance reviews** before launching financial features
+- **Phased rollouts** with gradual user adoption
+- **Feature flags** for controlled enablement
 
 ---
 
