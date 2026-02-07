@@ -18,9 +18,23 @@ export interface Vendor {
   phone?: string;
   email?: string;
   payment_terms?: number;
+  service_categories?: string[];
+  project_size_capacity?: 'small' | 'medium' | 'large' | 'enterprise';
+  bank_name?: string;
+  bank_account_number?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface VendorDocument {
+  id: string;
+  vendor_id: string;
+  document_type: string;
+  file_name: string;
+  file_url: string;
+  uploaded_by?: string;
+  created_at: string;
 }
 
 export interface Item {
