@@ -7,6 +7,18 @@ export type POStatus = 'draft' | 'pending_approval' | 'approved' | 'sent' | 'par
 export type AdjustmentType = 'increase' | 'decrease';
 export type AppRole = 'admin' | 'procurement_manager' | 'warehouse_manager' | 'accounts_payable' | 'viewer';
 
+// Phase 2 types
+export type MatchLineStatus = 'matched' | 'qty_exception' | 'price_exception' | 'missing_grn' | 'missing_invoice';
+export type MatchRunStatus = 'pending' | 'matched' | 'exceptions_found' | 'resolved';
+export type ApprovalStepType = 'sequential' | 'parallel' | 'any_of';
+export type ApprovalActionType = 'approved' | 'rejected' | 'delegated' | 'escalated';
+export type ApprovalInstanceStatus = 'pending' | 'in_progress' | 'approved' | 'rejected' | 'cancelled';
+export type HoldType = 'match_exception' | 'approval_pending' | 'budget_exceeded' | 'manual';
+export type BudgetStatus = 'draft' | 'active' | 'closed' | 'frozen';
+export type BudgetSourceType = 'po_commitment' | 'invoice_actual';
+export type BudgetTransactionType = 'commit' | 'uncommit' | 'consume' | 'reverse';
+export type ReservationStatus = 'active' | 'fulfilled' | 'cancelled' | 'expired';
+
 export interface Vendor {
   id: string;
   code: string;
@@ -202,4 +214,166 @@ export interface AuditLog {
   before_data?: Record<string, unknown>;
   after_data?: Record<string, unknown>;
   created_at: string;
+}
+
+// Phase 2: Three-Way Matching Types
+export interface MatchRun {
+  id: string;
+  invoice_id: string;
+  run_date: string;
+  match_status: MatchRunStatus;
+  tolerance_pct: number;
+  total_exceptions: number;
+  created_by?: string;
+  created_at: string;
+  invoice?: APInvoice;
+}
+
+export interface MatchLine {
+  id: string;
+  match_run_id: string;
+  po_line_id: string;
+  grn_line_id?: string;
+  invoice_line_id: string;
+  qty_po: number;
+  qty_grn: number;
+  qty_invoice: number;
+  price_po: number;
+  price_invoice: number;
+  variance_amt: number;
+  match_status: MatchLineStatus;
+  po_line?: PurchaseOrderLine;
+  invoice_line?: APInvoiceLine;
+}
+
+// Phase 2: Invoice Holds
+export interface InvoiceHold {
+  id: string;
+  invoice_id: string;
+  hold_type: HoldType;
+  hold_reason: string;
+  match_run_id?: string;
+  created_at: string;
+  resolved_at?: string;
+  resolved_by?: string;
+  resolution_notes?: string;
+  invoice?: APInvoice;
+  match_run?: MatchRun;
+}
+
+// Phase 2: Approval Engine Types
+export interface ApprovalRule {
+  id: string;
+  entity_type: string;
+  rule_name: string;
+  conditions: Record<string, unknown>;
+  is_active: boolean;
+  priority: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApprovalStep {
+  id: string;
+  rule_id: string;
+  step_order: number;
+  step_type: ApprovalStepType;
+  approver_role?: AppRole;
+  approver_user_id?: string;
+  delegation_user_id?: string;
+  timeout_hours?: number;
+  created_at: string;
+}
+
+export interface ApprovalInstance {
+  id: string;
+  rule_id?: string;
+  entity_type: string;
+  entity_id: string;
+  current_step: number;
+  status: ApprovalInstanceStatus;
+  submitted_at: string;
+  submitted_by?: string;
+  completed_at?: string;
+  created_at: string;
+}
+
+export interface ApprovalAction {
+  id: string;
+  instance_id: string;
+  step_id?: string;
+  step_order: number;
+  actor_id?: string;
+  action: ApprovalActionType;
+  comments?: string;
+  acted_at: string;
+}
+
+// Phase 2: Budgeting Types
+export interface Budget {
+  id: string;
+  budget_code: string;
+  name: string;
+  fiscal_year: number;
+  status: BudgetStatus;
+  start_date: string;
+  end_date: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BudgetLine {
+  id: string;
+  budget_id: string;
+  category: string;
+  budgeted_amount: number;
+  committed_amount: number;
+  consumed_amount: number;
+  available_amount: number;
+  created_at: string;
+  updated_at: string;
+  budget?: Budget;
+}
+
+export interface BudgetConsumption {
+  id: string;
+  budget_line_id: string;
+  source_type: BudgetSourceType;
+  source_id: string;
+  amount: number;
+  transaction_type: BudgetTransactionType;
+  transaction_date: string;
+  posted: boolean;
+  created_at: string;
+}
+
+// Phase 2: Inventory Extensions
+export interface ReorderRule {
+  id: string;
+  item_id: string;
+  location_id: string;
+  reorder_point: number;
+  reorder_qty: number;
+  lead_time_days: number;
+  is_active: boolean;
+  last_checked_at?: string;
+  created_at: string;
+  updated_at: string;
+  item?: Item;
+  location?: Location;
+}
+
+export interface InventoryReservation {
+  id: string;
+  item_id: string;
+  location_id: string;
+  po_line_id?: string;
+  reserved_qty: number;
+  status: ReservationStatus;
+  expires_at?: string;
+  created_by?: string;
+  created_at: string;
+  item?: Item;
+  location?: Location;
 }

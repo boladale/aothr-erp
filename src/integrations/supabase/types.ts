@@ -132,6 +132,178 @@ export type Database = {
           },
         ]
       }
+      approval_actions: {
+        Row: {
+          acted_at: string
+          action: Database["public"]["Enums"]["approval_action_type"]
+          actor_id: string | null
+          comments: string | null
+          id: string
+          instance_id: string
+          step_id: string | null
+          step_order: number
+        }
+        Insert: {
+          acted_at?: string
+          action: Database["public"]["Enums"]["approval_action_type"]
+          actor_id?: string | null
+          comments?: string | null
+          id?: string
+          instance_id: string
+          step_id?: string | null
+          step_order: number
+        }
+        Update: {
+          acted_at?: string
+          action?: Database["public"]["Enums"]["approval_action_type"]
+          actor_id?: string | null
+          comments?: string | null
+          id?: string
+          instance_id?: string
+          step_id?: string | null
+          step_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_actions_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "approval_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_actions_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "approval_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_instances: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_step: number
+          entity_id: string
+          entity_type: string
+          id: string
+          rule_id: string | null
+          status: Database["public"]["Enums"]["approval_instance_status"]
+          submitted_at: string
+          submitted_by: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          entity_id: string
+          entity_type: string
+          id?: string
+          rule_id?: string | null
+          status?: Database["public"]["Enums"]["approval_instance_status"]
+          submitted_at?: string
+          submitted_by?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          rule_id?: string | null
+          status?: Database["public"]["Enums"]["approval_instance_status"]
+          submitted_at?: string
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_instances_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "approval_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_rules: {
+        Row: {
+          conditions: Json
+          created_at: string
+          entity_type: string
+          id: string
+          is_active: boolean
+          priority: number
+          rule_name: string
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          entity_type: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          rule_name: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          entity_type?: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          rule_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      approval_steps: {
+        Row: {
+          approver_role: Database["public"]["Enums"]["app_role"] | null
+          approver_user_id: string | null
+          created_at: string
+          delegation_user_id: string | null
+          id: string
+          rule_id: string
+          step_order: number
+          step_type: Database["public"]["Enums"]["approval_step_type"]
+          timeout_hours: number | null
+        }
+        Insert: {
+          approver_role?: Database["public"]["Enums"]["app_role"] | null
+          approver_user_id?: string | null
+          created_at?: string
+          delegation_user_id?: string | null
+          id?: string
+          rule_id: string
+          step_order: number
+          step_type?: Database["public"]["Enums"]["approval_step_type"]
+          timeout_hours?: number | null
+        }
+        Update: {
+          approver_role?: Database["public"]["Enums"]["app_role"] | null
+          approver_user_id?: string | null
+          created_at?: string
+          delegation_user_id?: string | null
+          id?: string
+          rule_id?: string
+          step_order?: number
+          step_type?: Database["public"]["Enums"]["approval_step_type"]
+          timeout_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_steps_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "approval_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -162,6 +334,133 @@ export type Database = {
           entity_id?: string
           entity_type?: string
           id?: string
+        }
+        Relationships: []
+      }
+      budget_consumption: {
+        Row: {
+          amount: number
+          budget_line_id: string
+          created_at: string
+          id: string
+          posted: boolean
+          source_id: string
+          source_type: Database["public"]["Enums"]["budget_source_type"]
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["budget_transaction_type"]
+        }
+        Insert: {
+          amount: number
+          budget_line_id: string
+          created_at?: string
+          id?: string
+          posted?: boolean
+          source_id: string
+          source_type: Database["public"]["Enums"]["budget_source_type"]
+          transaction_date?: string
+          transaction_type: Database["public"]["Enums"]["budget_transaction_type"]
+        }
+        Update: {
+          amount?: number
+          budget_line_id?: string
+          created_at?: string
+          id?: string
+          posted?: boolean
+          source_id?: string
+          source_type?: Database["public"]["Enums"]["budget_source_type"]
+          transaction_date?: string
+          transaction_type?: Database["public"]["Enums"]["budget_transaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_consumption_budget_line_id_fkey"
+            columns: ["budget_line_id"]
+            isOneToOne: false
+            referencedRelation: "budget_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_lines: {
+        Row: {
+          available_amount: number | null
+          budget_id: string
+          budgeted_amount: number
+          category: string
+          committed_amount: number
+          consumed_amount: number
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          available_amount?: number | null
+          budget_id: string
+          budgeted_amount?: number
+          category: string
+          committed_amount?: number
+          consumed_amount?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          available_amount?: number | null
+          budget_id?: string
+          budgeted_amount?: number
+          category?: string
+          committed_amount?: number
+          consumed_amount?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_lines_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budgets: {
+        Row: {
+          budget_code: string
+          created_at: string
+          created_by: string | null
+          end_date: string
+          fiscal_year: number
+          id: string
+          name: string
+          start_date: string
+          status: Database["public"]["Enums"]["budget_status"]
+          updated_at: string
+        }
+        Insert: {
+          budget_code: string
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          fiscal_year: number
+          id?: string
+          name: string
+          start_date: string
+          status?: Database["public"]["Enums"]["budget_status"]
+          updated_at?: string
+        }
+        Update: {
+          budget_code?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          fiscal_year?: number
+          id?: string
+          name?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["budget_status"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -396,6 +695,163 @@ export type Database = {
           },
         ]
       }
+      inventory_reservations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          item_id: string
+          location_id: string
+          po_line_id: string | null
+          reserved_qty: number
+          status: Database["public"]["Enums"]["reservation_status"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          item_id: string
+          location_id: string
+          po_line_id?: string | null
+          reserved_qty: number
+          status?: Database["public"]["Enums"]["reservation_status"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          item_id?: string
+          location_id?: string
+          po_line_id?: string | null
+          reserved_qty?: number
+          status?: Database["public"]["Enums"]["reservation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_reservations_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_reservations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_reservations_po_line_id_fkey"
+            columns: ["po_line_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_approvals: {
+        Row: {
+          approval_instance_id: string | null
+          approved_at: string | null
+          approved_by: string | null
+          comments: string | null
+          created_at: string
+          id: string
+          invoice_id: string
+          status: Database["public"]["Enums"]["approval_instance_status"]
+        }
+        Insert: {
+          approval_instance_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          invoice_id: string
+          status?: Database["public"]["Enums"]["approval_instance_status"]
+        }
+        Update: {
+          approval_instance_id?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          status?: Database["public"]["Enums"]["approval_instance_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_approvals_approval_instance_id_fkey"
+            columns: ["approval_instance_id"]
+            isOneToOne: false
+            referencedRelation: "approval_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_approvals_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ap_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_holds: {
+        Row: {
+          created_at: string
+          hold_reason: string
+          hold_type: Database["public"]["Enums"]["hold_type"]
+          id: string
+          invoice_id: string
+          match_run_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          hold_reason: string
+          hold_type: Database["public"]["Enums"]["hold_type"]
+          id?: string
+          invoice_id: string
+          match_run_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          hold_reason?: string
+          hold_type?: Database["public"]["Enums"]["hold_type"]
+          id?: string
+          invoice_id?: string
+          match_run_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_holds_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ap_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_holds_match_run_id_fkey"
+            columns: ["match_run_id"]
+            isOneToOne: false
+            referencedRelation: "match_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items: {
         Row: {
           category: string | null
@@ -461,6 +917,121 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      match_lines: {
+        Row: {
+          grn_line_id: string | null
+          id: string
+          invoice_line_id: string
+          match_run_id: string
+          match_status: Database["public"]["Enums"]["match_line_status"]
+          po_line_id: string
+          price_invoice: number
+          price_po: number
+          qty_grn: number
+          qty_invoice: number
+          qty_po: number
+          variance_amt: number
+        }
+        Insert: {
+          grn_line_id?: string | null
+          id?: string
+          invoice_line_id: string
+          match_run_id: string
+          match_status?: Database["public"]["Enums"]["match_line_status"]
+          po_line_id: string
+          price_invoice: number
+          price_po: number
+          qty_grn?: number
+          qty_invoice: number
+          qty_po: number
+          variance_amt?: number
+        }
+        Update: {
+          grn_line_id?: string | null
+          id?: string
+          invoice_line_id?: string
+          match_run_id?: string
+          match_status?: Database["public"]["Enums"]["match_line_status"]
+          po_line_id?: string
+          price_invoice?: number
+          price_po?: number
+          qty_grn?: number
+          qty_invoice?: number
+          qty_po?: number
+          variance_amt?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_lines_grn_line_id_fkey"
+            columns: ["grn_line_id"]
+            isOneToOne: false
+            referencedRelation: "goods_receipt_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lines_invoice_line_id_fkey"
+            columns: ["invoice_line_id"]
+            isOneToOne: false
+            referencedRelation: "ap_invoice_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lines_match_run_id_fkey"
+            columns: ["match_run_id"]
+            isOneToOne: false
+            referencedRelation: "match_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lines_po_line_id_fkey"
+            columns: ["po_line_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          match_status: Database["public"]["Enums"]["match_run_status"]
+          run_date: string
+          tolerance_pct: number
+          total_exceptions: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          match_status?: Database["public"]["Enums"]["match_run_status"]
+          run_date?: string
+          tolerance_pct?: number
+          total_exceptions?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          match_status?: Database["public"]["Enums"]["match_run_status"]
+          run_date?: string
+          tolerance_pct?: number
+          total_exceptions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_runs_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ap_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -718,6 +1289,60 @@ export type Database = {
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reorder_rules: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          item_id: string
+          last_checked_at: string | null
+          lead_time_days: number
+          location_id: string
+          reorder_point: number
+          reorder_qty: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_id: string
+          last_checked_at?: string | null
+          lead_time_days?: number
+          location_id: string
+          reorder_point?: number
+          reorder_qty?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_id?: string
+          last_checked_at?: string | null
+          lead_time_days?: number
+          location_id?: string
+          reorder_point?: number
+          reorder_qty?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reorder_rules_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reorder_rules_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -993,6 +1618,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      run_three_way_match: { Args: { p_invoice_id: string }; Returns: string }
     }
     Enums: {
       adjustment_type: "increase" | "decrease"
@@ -1002,6 +1628,29 @@ export type Database = {
         | "warehouse_manager"
         | "accounts_payable"
         | "viewer"
+      approval_action_type: "approved" | "rejected" | "delegated" | "escalated"
+      approval_instance_status:
+        | "pending"
+        | "in_progress"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+      approval_step_type: "sequential" | "parallel" | "any_of"
+      budget_source_type: "po_commitment" | "invoice_actual"
+      budget_status: "draft" | "active" | "closed" | "frozen"
+      budget_transaction_type: "commit" | "uncommit" | "consume" | "reverse"
+      hold_type:
+        | "match_exception"
+        | "approval_pending"
+        | "budget_exceeded"
+        | "manual"
+      match_line_status:
+        | "matched"
+        | "qty_exception"
+        | "price_exception"
+        | "missing_grn"
+        | "missing_invoice"
+      match_run_status: "pending" | "matched" | "exceptions_found" | "resolved"
       po_status:
         | "draft"
         | "pending_approval"
@@ -1010,6 +1659,7 @@ export type Database = {
         | "partially_received"
         | "fully_received"
         | "closed"
+      reservation_status: "active" | "fulfilled" | "cancelled" | "expired"
       vendor_status: "draft" | "pending_approval" | "active" | "inactive"
     }
     CompositeTypes: {
@@ -1146,6 +1796,32 @@ export const Constants = {
         "accounts_payable",
         "viewer",
       ],
+      approval_action_type: ["approved", "rejected", "delegated", "escalated"],
+      approval_instance_status: [
+        "pending",
+        "in_progress",
+        "approved",
+        "rejected",
+        "cancelled",
+      ],
+      approval_step_type: ["sequential", "parallel", "any_of"],
+      budget_source_type: ["po_commitment", "invoice_actual"],
+      budget_status: ["draft", "active", "closed", "frozen"],
+      budget_transaction_type: ["commit", "uncommit", "consume", "reverse"],
+      hold_type: [
+        "match_exception",
+        "approval_pending",
+        "budget_exceeded",
+        "manual",
+      ],
+      match_line_status: [
+        "matched",
+        "qty_exception",
+        "price_exception",
+        "missing_grn",
+        "missing_invoice",
+      ],
+      match_run_status: ["pending", "matched", "exceptions_found", "resolved"],
       po_status: [
         "draft",
         "pending_approval",
@@ -1155,6 +1831,7 @@ export const Constants = {
         "fully_received",
         "closed",
       ],
+      reservation_status: ["active", "fulfilled", "cancelled", "expired"],
       vendor_status: ["draft", "pending_approval", "active", "inactive"],
     },
   },
