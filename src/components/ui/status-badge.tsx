@@ -17,6 +17,10 @@ const statusStyles: Record<string, string> = {
   fully_received: 'bg-success/15 text-success border border-success/30',
   closed: 'bg-muted text-muted-foreground',
   posted: 'bg-success/15 text-success border border-success/30',
+  rejected: 'bg-destructive/15 text-destructive border border-destructive/30',
+  cancelled: 'bg-muted text-muted-foreground',
+  partially_converted: 'bg-info/15 text-info border border-info/30',
+  fully_converted: 'bg-success/15 text-success border border-success/30',
 };
 
 const statusLabels: Record<string, string> = {
@@ -30,6 +34,10 @@ const statusLabels: Record<string, string> = {
   fully_received: 'Received',
   closed: 'Closed',
   posted: 'Posted',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
+  partially_converted: 'Partially Converted',
+  fully_converted: 'Fully Converted',
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
