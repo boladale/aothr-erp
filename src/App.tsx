@@ -19,6 +19,8 @@ import POClosureReport from "./pages/POClosureReport";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
 import ApprovalRules from "./pages/ApprovalRules";
+import Requisitions from "./pages/Requisitions";
+import RequisitionDetail from "./pages/RequisitionDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +54,8 @@ const App = () => (
             <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
             <Route path="/purchase-orders" element={<ProtectedRoute><PurchaseOrders /></ProtectedRoute>} />
+            <Route path="/requisitions" element={<ProtectedRoute><Requisitions /></ProtectedRoute>} />
+            <Route path="/requisitions/:id" element={<ProtectedRoute><RequisitionDetail /></ProtectedRoute>} />
             <Route path="/purchase-orders/:id" element={<ProtectedRoute><PurchaseOrderDetail /></ProtectedRoute>} />
             <Route path="/goods-receipts" element={<ProtectedRoute><GoodsReceipts /></ProtectedRoute>} />
             <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
