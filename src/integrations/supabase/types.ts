@@ -1128,6 +1128,45 @@ export type Database = {
           },
         ]
       }
+      po_line_requisition_lines: {
+        Row: {
+          created_at: string
+          id: string
+          po_line_id: string
+          quantity: number
+          requisition_line_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          po_line_id: string
+          quantity: number
+          requisition_line_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          po_line_id?: string
+          quantity?: number
+          requisition_line_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_line_requisition_lines_po_line_id_fkey"
+            columns: ["po_line_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_line_requisition_lines_requisition_line_id_fkey"
+            columns: ["requisition_line_id"]
+            isOneToOne: false
+            referencedRelation: "requisition_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1346,6 +1385,120 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      requisition_lines: {
+        Row: {
+          created_at: string
+          estimated_total: number | null
+          estimated_unit_cost: number | null
+          id: string
+          item_id: string
+          line_number: number
+          qty_converted: number
+          quantity: number
+          requisition_id: string
+          specifications: string | null
+        }
+        Insert: {
+          created_at?: string
+          estimated_total?: number | null
+          estimated_unit_cost?: number | null
+          id?: string
+          item_id: string
+          line_number: number
+          qty_converted?: number
+          quantity: number
+          requisition_id: string
+          specifications?: string | null
+        }
+        Update: {
+          created_at?: string
+          estimated_total?: number | null
+          estimated_unit_cost?: number | null
+          id?: string
+          item_id?: string
+          line_number?: number
+          qty_converted?: number
+          quantity?: number
+          requisition_id?: string
+          specifications?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_lines_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "requisitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisitions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          department: string | null
+          id: string
+          justification: string | null
+          needed_by_date: string | null
+          notes: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
+          req_number: string
+          requester_id: string
+          status: Database["public"]["Enums"]["requisition_status"]
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          id?: string
+          justification?: string | null
+          needed_by_date?: string | null
+          notes?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          req_number: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["requisition_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          id?: string
+          justification?: string | null
+          needed_by_date?: string | null
+          notes?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          req_number?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["requisition_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -1659,6 +1812,14 @@ export type Database = {
         | "partially_received"
         | "fully_received"
         | "closed"
+      requisition_status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+        | "partially_converted"
+        | "fully_converted"
       reservation_status: "active" | "fulfilled" | "cancelled" | "expired"
       vendor_status: "draft" | "pending_approval" | "active" | "inactive"
     }
@@ -1830,6 +1991,15 @@ export const Constants = {
         "partially_received",
         "fully_received",
         "closed",
+      ],
+      requisition_status: [
+        "draft",
+        "pending_approval",
+        "approved",
+        "rejected",
+        "cancelled",
+        "partially_converted",
+        "fully_converted",
       ],
       reservation_status: ["active", "fulfilled", "cancelled", "expired"],
       vendor_status: ["draft", "pending_approval", "active", "inactive"],
