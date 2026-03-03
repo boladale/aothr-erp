@@ -24,7 +24,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item, POStatus } from '@/lib/supabase';
+import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
 
 interface GRNWithDetails extends GoodsReceipt {
   purchase_orders: { po_number: string; vendors: { name: string } | null } | null;
@@ -185,10 +185,10 @@ export default function GoodsReceipts() {
 
   const handlePost = async (grn: GRNWithDetails) => {
     try {
-      // Get GRN lines
+      // Get GRN lines to update inventory
       const { data: grnLines, error: linesError } = await supabase
         .from('goods_receipt_lines')
-        .select('*, purchase_order_lines(*)')
+        .select('*')
         .eq('grn_id', grn.id);
 
       if (linesError) throw linesError;
@@ -219,19 +219,10 @@ export default function GoodsReceipts() {
               quantity: newQty,
             });
         }
-
-        // Update PO line qty_received
-        const poLine = line.purchase_order_lines;
-        if (poLine) {
-          await supabase
-            .from('purchase_order_lines')
-            .update({ qty_received: (poLine.qty_received || 0) + line.qty_received })
-            .eq('id', line.po_line_id);
-        }
       }
 
-      // Update GRN status
-      await supabase
+      // Post GRN — database triggers will update PO line qty_received and PO status
+      const { error: postError } = await supabase
         .from('goods_receipts')
         .update({ 
           status: 'posted',
@@ -240,82 +231,14 @@ export default function GoodsReceipts() {
         })
         .eq('id', grn.id);
 
-      // Check if PO is fully received and update status
-      const { data: po } = await supabase
-        .from('purchase_orders')
-        .select('id')
-        .eq('id', grn.po_id)
-        .single();
-
-      if (po) {
-        const { data: poLinesCheck } = await supabase
-          .from('purchase_order_lines')
-          .select('quantity, qty_received')
-          .eq('po_id', po.id);
-
-        const allReceived = poLinesCheck?.every(l => l.qty_received >= l.quantity);
-        const partiallyReceived = poLinesCheck?.some(l => l.qty_received > 0);
-
-        let newStatus: POStatus = 'sent';
-        if (allReceived) newStatus = 'fully_received';
-        else if (partiallyReceived) newStatus = 'partially_received';
-
-        await supabase
-          .from('purchase_orders')
-          .update({ status: newStatus })
-          .eq('id', po.id);
-
-        // Check closure readiness
-        await checkClosureReadiness(po.id);
-      }
+      if (postError) throw postError;
 
       toast.success('GRN posted and inventory updated');
       fetchData();
-    } catch (error) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to post GRN';
       console.error('Error posting GRN:', error);
-      toast.error('Failed to post GRN');
-    }
-  };
-
-  const checkClosureReadiness = async (poId: string) => {
-    const { data: poLines } = await supabase
-      .from('purchase_order_lines')
-      .select('quantity, qty_received, qty_invoiced')
-      .eq('po_id', poId);
-
-    const ready = poLines?.every(l => 
-      l.qty_received >= l.quantity && l.qty_invoiced >= l.quantity
-    );
-
-    if (ready) {
-      // Update PO close_ready flag
-      await supabase
-        .from('purchase_orders')
-        .update({ close_ready: true })
-        .eq('id', poId);
-
-      // Get PO number for notification
-      const { data: po } = await supabase
-        .from('purchase_orders')
-        .select('po_number')
-        .eq('id', poId)
-        .single();
-
-      // Create notification (if not exists)
-      if (user?.id && po) {
-        await supabase
-          .from('notifications')
-          .upsert({
-            user_id: user.id,
-            entity_type: 'purchase_order',
-            entity_id: poId,
-            notification_type: 'po_ready_to_close',
-            title: `PO ${po.po_number} is ready to be closed`,
-            message: 'All items have been fully received and invoiced.',
-          }, {
-            onConflict: 'user_id,entity_type,entity_id,notification_type'
-          });
-      }
+      toast.error(message);
     }
   };
 
@@ -328,7 +251,8 @@ export default function GoodsReceipts() {
 
   const updateLineQty = (idx: number, qty: number) => {
     const newLines = [...lines];
-    newLines[idx].qty_received = qty;
+    // Clamp to max receivable to prevent over-receipt
+    newLines[idx].qty_received = Math.min(Math.max(0, qty), newLines[idx].max_receivable);
     setLines(newLines);
   };
 
