@@ -297,10 +297,10 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="small">Small (up to $50K)</SelectItem>
-                <SelectItem value="medium">Medium ($50K - $500K)</SelectItem>
-                <SelectItem value="large">Large ($500K - $5M)</SelectItem>
-                <SelectItem value="enterprise">Enterprise ($5M+)</SelectItem>
+                <SelectItem value="small">Small (up to ₦50M)</SelectItem>
+                <SelectItem value="medium">Medium (₦50M - ₦500M)</SelectItem>
+                <SelectItem value="large">Large (₦500M - ₦5B)</SelectItem>
+                <SelectItem value="enterprise">Enterprise (₦5B+)</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -261,7 +261,7 @@ export default function Invoices() {
     { key: 'vendor', header: 'Vendor', render: (i: InvoiceWithDetails) => i.vendors?.name || '-' },
     { key: 'po', header: 'PO', render: (i: InvoiceWithDetails) => i.purchase_orders?.po_number || '-' },
     { key: 'invoice_date', header: 'Date', render: (i: InvoiceWithDetails) => new Date(i.invoice_date).toLocaleDateString() },
-    { key: 'total_amount', header: 'Total', render: (i: InvoiceWithDetails) => `$${(i.total_amount || 0).toFixed(2)}` },
+    { key: 'total_amount', header: 'Total', render: (i: InvoiceWithDetails) => `₦${(i.total_amount || 0).toFixed(2)}` },
     { key: 'status', header: 'Status', render: (i: InvoiceWithDetails) => <StatusBadge status={i.status} /> },
     {
       key: 'actions',
@@ -372,7 +372,7 @@ export default function Invoices() {
                         <div className="flex-1">
                           <p className="font-medium">{line.item_name}</p>
                           <p className="text-xs text-muted-foreground">
-                            Max invoiceable: {line.max_invoiceable} @ ${line.unit_price.toFixed(2)}
+                            Max invoiceable: {line.max_invoiceable} @ ₦{line.unit_price.toFixed(2)}
                           </p>
                         </div>
                         <Input
@@ -385,14 +385,14 @@ export default function Invoices() {
                           placeholder="0"
                         />
                         <span className="w-24 text-right font-medium">
-                          ${(line.quantity * line.unit_price).toFixed(2)}
+                          ₦{(line.quantity * line.unit_price).toFixed(2)}
                         </span>
                       </div>
                     ))}
                   </div>
                   <div className="flex justify-end pt-2 border-t">
                     <span className="font-medium">
-                      Total: ${lines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0).toFixed(2)}
+                      Total: ₦{lines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0).toFixed(2)}
                     </span>
                   </div>
                 </div>

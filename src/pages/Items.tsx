@@ -90,7 +90,7 @@ export default function Items() {
     { 
       key: 'unit_cost', 
       header: 'Unit Cost', 
-      render: (i: Item) => `$${(i.unit_cost || 0).toFixed(2)}` 
+      render: (i: Item) => `₦${(i.unit_cost || 0).toFixed(2)}` 
     },
     { 
       key: 'is_active', 

@@ -252,14 +252,14 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
                         />
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ${(sl.selected ? sl.quantity * sl.unit_price : 0).toFixed(2)}
+                        ₦{(sl.selected ? sl.quantity * sl.unit_price : 0).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
-            <div className="text-right font-semibold">PO Total: ${total.toFixed(2)}</div>
+            <div className="text-right font-semibold">PO Total: ₦{total.toFixed(2)}</div>
           </div>
         </div>
         <DialogFooter>

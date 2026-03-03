@@ -165,15 +165,15 @@ export default function PurchaseOrderDetail() {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${(po.subtotal || 0).toFixed(2)}</span>
+                <span>₦{(po.subtotal || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax</span>
-                <span>${(po.tax_amount || 0).toFixed(2)}</span>
+                <span>₦{(po.tax_amount || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-medium text-lg border-t pt-2">
                 <span>Total</span>
-                <span>${(po.total_amount || 0).toFixed(2)}</span>
+                <span>₦{(po.total_amount || 0).toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>
@@ -217,8 +217,8 @@ export default function PurchaseOrderDetail() {
                         {line.qty_invoiced}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">${line.unit_price.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-medium">${line.line_total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">₦{line.unit_price.toFixed(2)}</TableCell>
+                    <TableCell className="text-right font-medium">₦{line.line_total.toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

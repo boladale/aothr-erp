@@ -57,7 +57,7 @@ function formatConditions(conditions: Record<string, unknown>): string {
       for (const [op, val] of Object.entries(ops)) {
         const opLabel = op === 'gt' ? '>' : op === 'gte' ? '≥' : op === 'lt' ? '<' : op === 'lte' ? '≤' : op;
         const fieldLabel = field === 'total_amount' ? 'Amount' : field;
-        parts.push(`${fieldLabel} ${opLabel} $${val.toLocaleString()}`);
+        parts.push(`${fieldLabel} ${opLabel} ₦${val.toLocaleString()}`);
       }
     }
   }

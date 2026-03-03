@@ -221,7 +221,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-4">
                       <StatusBadge status={po.status} />
                       <span className="text-sm font-medium">
-                        ${(po.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        ₦{(po.total_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
