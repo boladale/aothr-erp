@@ -214,7 +214,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
                     />
                   </div>
                   <div className="w-24 text-right font-medium text-sm">
-                    ${(line.quantity * line.estimated_unit_cost).toFixed(2)}
+                    ₦{(line.quantity * line.estimated_unit_cost).toFixed(2)}
                   </div>
                   {lines.length > 1 && (
                     <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)}>×</Button>
@@ -223,7 +223,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
               ))}
             </div>
             <div className="text-right text-sm font-semibold text-muted-foreground">
-              Estimated Total: ${totalEstimate.toFixed(2)}
+              Estimated Total: ₦{totalEstimate.toFixed(2)}
             </div>
           </div>
 

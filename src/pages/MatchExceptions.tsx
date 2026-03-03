@@ -340,7 +340,7 @@ export default function MatchExceptions() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Invoice Amount</p>
-                  <p className="font-medium">${(selectedHold?.ap_invoices?.total_amount || 0).toFixed(2)}</p>
+                  <p className="font-medium">₦{(selectedHold?.ap_invoices?.total_amount || 0).toFixed(2)}</p>
                 </div>
               </div>
 

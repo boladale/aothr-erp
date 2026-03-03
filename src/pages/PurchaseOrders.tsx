@@ -236,7 +236,7 @@ export default function PurchaseOrders() {
     { key: 'po_number', header: 'PO Number', render: (o: POWithDetails) => <span className="font-medium">{o.po_number}</span> },
     { key: 'vendor', header: 'Vendor', render: (o: POWithDetails) => o.vendors?.name || '-' },
     { key: 'order_date', header: 'Order Date', render: (o: POWithDetails) => new Date(o.order_date).toLocaleDateString() },
-    { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => `$${(o.total_amount || 0).toFixed(2)}` },
+    { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => `₦${(o.total_amount || 0).toFixed(2)}` },
     { key: 'status', header: 'Status', render: (o: POWithDetails) => <StatusBadge status={o.status} /> },
     {
       key: 'actions',
@@ -389,7 +389,7 @@ export default function PurchaseOrders() {
                         />
                       </div>
                       <div className="w-24 text-right font-medium">
-                        ${(line.quantity * line.unit_price).toFixed(2)}
+                        ₦{(line.quantity * line.unit_price).toFixed(2)}
                       </div>
                       {lines.length > 1 && (
                         <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)}>
