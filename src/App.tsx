@@ -21,6 +21,9 @@ import Admin from "./pages/Admin";
 import ApprovalRules from "./pages/ApprovalRules";
 import Requisitions from "./pages/Requisitions";
 import RequisitionDetail from "./pages/RequisitionDetail";
+import RFPs from "./pages/RFPs";
+import RFPDetail from "./pages/RFPDetail";
+import VendorPerformance from "./pages/VendorPerformance";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +67,9 @@ const App = () => (
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/approval-rules" element={<ProtectedRoute><ApprovalRules /></ProtectedRoute>} />
+            <Route path="/rfps" element={<ProtectedRoute><RFPs /></ProtectedRoute>} />
+            <Route path="/rfps/:id" element={<ProtectedRoute><RFPDetail /></ProtectedRoute>} />
+            <Route path="/vendor-performance" element={<ProtectedRoute><VendorPerformance /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
