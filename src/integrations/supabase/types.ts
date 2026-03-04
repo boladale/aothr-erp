@@ -1500,6 +1500,290 @@ export type Database = {
         }
         Relationships: []
       }
+      rfp_criteria: {
+        Row: {
+          created_at: string
+          criterion_name: string
+          description: string | null
+          id: string
+          rfp_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          criterion_name: string
+          description?: string | null
+          id?: string
+          rfp_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          criterion_name?: string
+          description?: string | null
+          id?: string
+          rfp_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfp_criteria_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfp_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          quantity: number
+          rfp_id: string
+          specifications: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          quantity: number
+          rfp_id: string
+          specifications?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          quantity?: number
+          rfp_id?: string
+          specifications?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfp_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfp_items_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfp_proposal_lines: {
+        Row: {
+          created_at: string
+          delivery_days: number | null
+          id: string
+          line_total: number | null
+          proposal_id: string
+          quantity: number
+          rfp_item_id: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          delivery_days?: number | null
+          id?: string
+          line_total?: number | null
+          proposal_id: string
+          quantity: number
+          rfp_item_id: string
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          delivery_days?: number | null
+          id?: string
+          line_total?: number | null
+          proposal_id?: string
+          quantity?: number
+          rfp_item_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfp_proposal_lines_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "rfp_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfp_proposal_lines_rfp_item_id_fkey"
+            columns: ["rfp_item_id"]
+            isOneToOne: false
+            referencedRelation: "rfp_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfp_proposals: {
+        Row: {
+          cover_letter: string | null
+          created_at: string
+          delivery_timeline_days: number | null
+          id: string
+          rfp_id: string
+          status: Database["public"]["Enums"]["proposal_status"]
+          submitted_at: string | null
+          total_amount: number | null
+          updated_at: string
+          vendor_id: string
+          weighted_score: number | null
+        }
+        Insert: {
+          cover_letter?: string | null
+          created_at?: string
+          delivery_timeline_days?: number | null
+          id?: string
+          rfp_id: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          submitted_at?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          vendor_id: string
+          weighted_score?: number | null
+        }
+        Update: {
+          cover_letter?: string | null
+          created_at?: string
+          delivery_timeline_days?: number | null
+          id?: string
+          rfp_id?: string
+          status?: Database["public"]["Enums"]["proposal_status"]
+          submitted_at?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          vendor_id?: string
+          weighted_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfp_proposals_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfp_proposals_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfp_scores: {
+        Row: {
+          comments: string | null
+          created_at: string
+          criterion_id: string
+          evaluated_by: string | null
+          id: string
+          proposal_id: string
+          score: number
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          criterion_id: string
+          evaluated_by?: string | null
+          id?: string
+          proposal_id: string
+          score?: number
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          criterion_id?: string
+          evaluated_by?: string | null
+          id?: string
+          proposal_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfp_scores_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "rfp_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfp_scores_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "rfp_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfps: {
+        Row: {
+          awarded_proposal_id: string | null
+          awarded_vendor_id: string | null
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          description: string | null
+          id: string
+          rfp_number: string
+          status: Database["public"]["Enums"]["rfp_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          awarded_proposal_id?: string | null
+          awarded_vendor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          rfp_number: string
+          status?: Database["public"]["Enums"]["rfp_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          awarded_proposal_id?: string | null
+          awarded_vendor_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          rfp_number?: string
+          status?: Database["public"]["Enums"]["rfp_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfps_awarded_proposal_id_fkey"
+            columns: ["awarded_proposal_id"]
+            isOneToOne: false
+            referencedRelation: "rfp_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfps_awarded_vendor_id_fkey"
+            columns: ["awarded_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -1695,6 +1979,57 @@ export type Database = {
           },
         ]
       }
+      vendor_ratings: {
+        Row: {
+          comments: string | null
+          created_at: string
+          delivery_rating: number | null
+          id: string
+          po_id: string | null
+          quality_rating: number | null
+          rating: number
+          reviewed_by: string | null
+          vendor_id: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          delivery_rating?: number | null
+          id?: string
+          po_id?: string | null
+          quality_rating?: number | null
+          rating: number
+          reviewed_by?: string | null
+          vendor_id: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          delivery_rating?: number | null
+          id?: string
+          po_id?: string | null
+          quality_rating?: number | null
+          rating?: number
+          reviewed_by?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_ratings_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_ratings_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           address: string | null
@@ -1812,6 +2147,12 @@ export type Database = {
         | "partially_received"
         | "fully_received"
         | "closed"
+      proposal_status:
+        | "invited"
+        | "submitted"
+        | "awarded"
+        | "rejected"
+        | "declined"
       requisition_status:
         | "draft"
         | "pending_approval"
@@ -1821,6 +2162,7 @@ export type Database = {
         | "partially_converted"
         | "fully_converted"
       reservation_status: "active" | "fulfilled" | "cancelled" | "expired"
+      rfp_status: "draft" | "published" | "evaluating" | "awarded" | "cancelled"
       vendor_status: "draft" | "pending_approval" | "active" | "inactive"
     }
     CompositeTypes: {
@@ -1992,6 +2334,13 @@ export const Constants = {
         "fully_received",
         "closed",
       ],
+      proposal_status: [
+        "invited",
+        "submitted",
+        "awarded",
+        "rejected",
+        "declined",
+      ],
       requisition_status: [
         "draft",
         "pending_approval",
@@ -2002,6 +2351,7 @@ export const Constants = {
         "fully_converted",
       ],
       reservation_status: ["active", "fulfilled", "cancelled", "expired"],
+      rfp_status: ["draft", "published", "evaluating", "awarded", "cancelled"],
       vendor_status: ["draft", "pending_approval", "active", "inactive"],
     },
   },
