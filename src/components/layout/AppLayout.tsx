@@ -18,7 +18,9 @@ import {
   X,
   Shield,
   ChevronDown,
-  AlertTriangle
+  AlertTriangle,
+  FileSearch,
+  BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,6 +41,8 @@ interface AppLayoutProps {
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/vendors', label: 'Vendors', icon: Building2 },
+  { path: '/vendor-performance', label: 'Vendor Performance', icon: BarChart3 },
+  { path: '/rfps', label: 'Requests for Proposal', icon: FileSearch },
   { path: '/items', label: 'Items', icon: Package },
   { path: '/locations', label: 'Locations', icon: MapPin },
   { path: '/inventory', label: 'Inventory', icon: Boxes },
