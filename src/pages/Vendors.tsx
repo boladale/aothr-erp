@@ -21,7 +21,9 @@ const PROJECT_SIZE_LABELS: Record<string, string> = {
 };
 
 export default function Vendors() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canApprove = hasRole('admin') || hasRole('procurement_manager');
+  const canInitiate = !!user;
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -147,12 +149,12 @@ export default function Vendors() {
       header: '',
       render: (v: Vendor) => (
         <div className="flex gap-2 justify-end">
-          {v.status === 'draft' && (
+          {v.status === 'draft' && canInitiate && v.created_by === user?.id && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitForApproval(v); }}>
               Submit
             </Button>
           )}
-          {v.status === 'pending_approval' && (
+          {v.status === 'pending_approval' && canApprove && (
             <>
               <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(v); }}>
                 Approve

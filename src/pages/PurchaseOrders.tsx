@@ -41,7 +41,9 @@ interface POLine {
 
 export default function PurchaseOrders() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canApprove = hasRole('admin') || hasRole('procurement_manager');
+  const canInitiate = !!user;
   const [orders, setOrders] = useState<POWithDetails[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -243,17 +245,17 @@ export default function PurchaseOrders() {
       header: '',
       render: (o: POWithDetails) => (
         <div className="flex gap-2 justify-end">
-          {o.status === 'draft' && (
+          {o.status === 'draft' && canInitiate && o.created_by === user?.id && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmit(o); }}>
               Submit
             </Button>
           )}
-          {o.status === 'pending_approval' && (
+          {o.status === 'pending_approval' && canApprove && (
             <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(o); }}>
               Approve
             </Button>
           )}
-          {o.status === 'approved' && (
+          {o.status === 'approved' && canApprove && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSend(o); }}>
               Send
             </Button>
