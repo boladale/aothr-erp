@@ -26,7 +26,9 @@ interface RequisitionRow {
 
 export default function Requisitions() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canApprove = hasRole('admin') || hasRole('procurement_manager');
+  const canInitiate = !!user;
   const [requisitions, setRequisitions] = useState<RequisitionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -111,12 +113,12 @@ export default function Requisitions() {
       header: '',
       render: (r: RequisitionRow) => (
         <div className="flex gap-2 justify-end">
-          {r.status === 'draft' && r.requester_id === user?.id && (
+          {r.status === 'draft' && canInitiate && r.requester_id === user?.id && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmit(r); }}>
               Submit
             </Button>
           )}
-          {r.status === 'pending_approval' && (
+          {r.status === 'pending_approval' && canApprove && (
             <>
               <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(r); }}>
                 Approve
