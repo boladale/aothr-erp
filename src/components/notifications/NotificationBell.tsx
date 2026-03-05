@@ -36,11 +36,11 @@ export function NotificationBell() {
     if (!user) return;
     const { data } = await supabase
       .from('notifications')
-      .select('id, title, message, is_read, entity_type, entity_id, notification_type, created_at, sender_id')
+      .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20);
-    setNotifications((data || []) as NotificationItem[]);
+    setNotifications((data || []) as unknown as NotificationItem[]);
   }, [user]);
 
   useEffect(() => {

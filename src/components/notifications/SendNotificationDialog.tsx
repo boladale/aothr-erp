@@ -66,13 +66,12 @@ export function SendNotificationDialog({ open, onOpenChange, onSent }: SendNotif
     try {
       const { error } = await supabase.from('notifications').insert({
         user_id: recipientId,
-        sender_id: user?.id,
         entity_type: 'user_message',
         entity_id: user?.id || '',
         notification_type: 'user_message',
         title: title.trim(),
         message: message.trim() || null,
-      });
+      } as any);
 
       if (error) throw error;
 
