@@ -45,7 +45,7 @@ export function ProcurementDashboard() {
         supabase.from('purchase_orders').select('id', { count: 'exact', head: true }).eq('status', 'sent'),
         supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
-        supabase.from('rfps').select('id', { count: 'exact', head: true }).in('status', ['draft', 'published', 'under_review']),
+        supabase.from('rfps').select('id', { count: 'exact', head: true }).in('status', ['draft', 'published', 'evaluating']),
         supabase.from('requisitions').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
         supabase.from('purchase_orders').select('id, po_number, status, total_amount, created_at, vendor:vendors(name)').order('created_at', { ascending: false }).limit(5),
         supabase.from('vendors').select('id, code, name, status, created_at').order('created_at', { ascending: false }).limit(5),
