@@ -6,9 +6,10 @@ import { WarehouseDashboard } from '@/components/dashboard/WarehouseDashboard';
 import { APDashboard } from '@/components/dashboard/APDashboard';
 import { RequisitionerDashboard } from '@/components/dashboard/RequisitionerDashboard';
 import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
+import { DashboardNotifications } from '@/components/dashboard/DashboardNotifications';
 
 export default function Dashboard() {
-  const { profile, hasRole, roles } = useAuth();
+  const { profile, hasRole } = useAuth();
 
   const isAdmin = hasRole('admin');
   const isProcurement = hasRole('procurement_manager') || hasRole('procurement_officer');
@@ -17,7 +18,6 @@ export default function Dashboard() {
   const isRequisitioner = hasRole('requisitioner');
   const isViewer = hasRole('viewer');
 
-  // If user has no specific role, show requisitioner view as default
   const showDefault = !isAdmin && !isProcurement && !isWarehouse && !isAP && !isRequisitioner && !isViewer;
 
   return (
@@ -28,22 +28,15 @@ export default function Dashboard() {
           description="Here's what's happening with your operations today."
         />
 
-        {/* Admin section */}
+        {/* Notifications section - always visible */}
+        <DashboardNotifications />
+
         {isAdmin && <AdminDashboard />}
-
-        {/* Procurement section */}
         {(isAdmin || isProcurement) && <ProcurementDashboard />}
-
-        {/* Warehouse section */}
         {(isAdmin || isWarehouse) && <WarehouseDashboard />}
-
-        {/* AP section */}
         {(isAdmin || isAP) && <APDashboard />}
-
-        {/* Requisitioner section */}
         {(isAdmin || isRequisitioner || showDefault) && <RequisitionerDashboard />}
 
-        {/* Viewer - show a read-only summary */}
         {isViewer && !isAdmin && !isProcurement && !isWarehouse && !isAP && !isRequisitioner && (
           <div className="space-y-6">
             <ProcurementDashboard />
