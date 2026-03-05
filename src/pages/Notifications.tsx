@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, CheckCheck, FileText } from 'lucide-react';
+import { Bell, Check, CheckCheck, FileText, Send, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
+import { SendNotificationDialog } from '@/components/notifications/SendNotificationDialog';
 import type { Notification } from '@/lib/supabase';
 
 export default function Notifications() {
@@ -15,6 +16,7 @@ export default function Notifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendOpen, setSendOpen] = useState(false);
 
   useEffect(() => {
     if (user) fetchNotifications();
@@ -71,12 +73,19 @@ export default function Notifications() {
   const handleClick = (notification: Notification) => {
     markAsRead(notification.id);
     
-    if (notification.entity_type === 'purchase_order') {
+    if (notification.entity_type === 'purchase_order' || notification.entity_type === 'purchase_orders') {
       navigate(`/purchase-orders/${notification.entity_id}`);
+    } else if (notification.entity_type === 'requisitions') {
+      navigate(`/requisitions/${notification.entity_id}`);
     }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  const getIcon = (notificationType: string) => {
+    if (notificationType === 'user_message') return MessageSquare;
+    return FileText;
+  };
 
   if (loading) {
     return (
@@ -100,11 +109,16 @@ export default function Notifications() {
           title="Notifications"
           description={unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
           actions={
-            unreadCount > 0 && (
-              <Button variant="outline" onClick={markAllAsRead}>
-                <CheckCheck className="mr-2 h-4 w-4" /> Mark All Read
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setSendOpen(true)}>
+                <Send className="mr-2 h-4 w-4" /> Send Notification
               </Button>
-            )
+              {unreadCount > 0 && (
+                <Button variant="outline" onClick={markAllAsRead}>
+                  <CheckCheck className="mr-2 h-4 w-4" /> Mark All Read
+                </Button>
+              )}
+            </div>
           }
         />
 
@@ -114,56 +128,64 @@ export default function Notifications() {
               <Bell className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-medium">No notifications yet</p>
               <p className="text-sm text-muted-foreground">
-                You'll see notifications here when POs are ready to close.
+                You'll see notifications here when someone sends you one.
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
-            {notifications.map(notification => (
-              <Card 
-                key={notification.id}
-                className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                  !notification.is_read ? 'border-primary/50 bg-primary/5' : ''
-                }`}
-                onClick={() => handleClick(notification)}
-              >
-                <CardContent className="flex items-center gap-4 p-4">
-                  <div className={`rounded-lg p-2 ${
-                    notification.notification_type === 'po_ready_to_close' 
-                      ? 'bg-success/10' 
-                      : 'bg-primary/10'
-                  }`}>
-                    <FileText className={`h-5 w-5 ${
-                      notification.notification_type === 'po_ready_to_close' 
-                        ? 'text-success' 
-                        : 'text-primary'
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{notification.title}</p>
-                    {notification.message && (
-                      <p className="text-sm text-muted-foreground">{notification.message}</p>
+            {notifications.map(notification => {
+              const Icon = getIcon(notification.notification_type);
+              return (
+                <Card 
+                  key={notification.id}
+                  className={`cursor-pointer transition-colors hover:bg-muted/50 ${
+                    !notification.is_read ? 'border-primary/50 bg-primary/5' : ''
+                  }`}
+                  onClick={() => handleClick(notification)}
+                >
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <div className={`rounded-lg p-2 ${
+                      notification.notification_type === 'user_message' 
+                        ? 'bg-info/10' 
+                        : notification.notification_type === 'po_ready_to_close' 
+                          ? 'bg-success/10' 
+                          : 'bg-primary/10'
+                    }`}>
+                      <Icon className={`h-5 w-5 ${
+                        notification.notification_type === 'user_message' 
+                          ? 'text-info' 
+                          : notification.notification_type === 'po_ready_to_close' 
+                            ? 'text-success' 
+                            : 'text-primary'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{notification.title}</p>
+                      {notification.message && (
+                        <p className="text-sm text-muted-foreground">{notification.message}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    {!notification.is_read && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
                     )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(notification.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  {!notification.is_read && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
+      <SendNotificationDialog open={sendOpen} onOpenChange={setSendOpen} onSent={fetchNotifications} />
     </AppLayout>
   );
 }
