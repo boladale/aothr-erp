@@ -6,7 +6,7 @@ export type VendorStatus = 'draft' | 'pending_approval' | 'active' | 'inactive';
 export type POStatus = 'draft' | 'pending_approval' | 'approved' | 'sent' | 'partially_received' | 'fully_received' | 'closed';
 export type RequisitionStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'cancelled' | 'partially_converted' | 'fully_converted';
 export type AdjustmentType = 'increase' | 'decrease';
-export type AppRole = 'admin' | 'procurement_manager' | 'warehouse_manager' | 'accounts_payable' | 'viewer';
+export type AppRole = 'admin' | 'procurement_manager' | 'procurement_officer' | 'warehouse_manager' | 'warehouse_officer' | 'accounts_payable' | 'ap_clerk' | 'requisitioner' | 'viewer';
 
 // Phase 2 types
 export type MatchLineStatus = 'matched' | 'qty_exception' | 'price_exception' | 'missing_grn' | 'missing_invoice';

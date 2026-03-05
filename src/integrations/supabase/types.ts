@@ -2116,6 +2116,10 @@ export type Database = {
         | "warehouse_manager"
         | "accounts_payable"
         | "viewer"
+        | "procurement_officer"
+        | "warehouse_officer"
+        | "ap_clerk"
+        | "requisitioner"
       approval_action_type: "approved" | "rejected" | "delegated" | "escalated"
       approval_instance_status:
         | "pending"
@@ -2298,6 +2302,10 @@ export const Constants = {
         "warehouse_manager",
         "accounts_payable",
         "viewer",
+        "procurement_officer",
+        "warehouse_officer",
+        "ap_clerk",
+        "requisitioner",
       ],
       approval_action_type: ["approved", "rejected", "delegated", "escalated"],
       approval_instance_status: [
