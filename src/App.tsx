@@ -18,6 +18,7 @@ import MatchExceptions from "./pages/MatchExceptions";
 import POClosureReport from "./pages/POClosureReport";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
+import UserManagement from "./pages/UserManagement";
 import ApprovalRules from "./pages/ApprovalRules";
 import Requisitions from "./pages/Requisitions";
 import RequisitionDetail from "./pages/RequisitionDetail";
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/po-closure" element={<ProtectedRoute><POClosureReport /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
             <Route path="/approval-rules" element={<ProtectedRoute><ApprovalRules /></ProtectedRoute>} />
             <Route path="/rfps" element={<ProtectedRoute><RFPs /></ProtectedRoute>} />
             <Route path="/rfps/:id" element={<ProtectedRoute><RFPDetail /></ProtectedRoute>} />
