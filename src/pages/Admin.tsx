@@ -114,8 +114,12 @@ export default function Admin() {
   const roleColors: Record<AppRole, string> = {
     admin: 'bg-destructive text-destructive-foreground',
     procurement_manager: 'bg-primary text-primary-foreground',
+    procurement_officer: 'bg-primary/80 text-primary-foreground',
     warehouse_manager: 'bg-info text-info-foreground',
+    warehouse_officer: 'bg-info/80 text-info-foreground',
     accounts_payable: 'bg-success text-success-foreground',
+    ap_clerk: 'bg-success/80 text-success-foreground',
+    requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
   };
 
@@ -280,9 +284,13 @@ export default function Admin() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="procurement_manager">Procurement Manager</SelectItem>
-                  <SelectItem value="warehouse_manager">Warehouse Manager</SelectItem>
-                  <SelectItem value="accounts_payable">Accounts Payable</SelectItem>
+                  <SelectItem value="procurement_manager">Procurement Manager (Approver)</SelectItem>
+                  <SelectItem value="procurement_officer">Procurement Officer (Initiator)</SelectItem>
+                  <SelectItem value="warehouse_manager">Warehouse Manager (Approver)</SelectItem>
+                  <SelectItem value="warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
+                  <SelectItem value="accounts_payable">Accounts Payable (Approver)</SelectItem>
+                  <SelectItem value="ap_clerk">AP Clerk (Initiator)</SelectItem>
+                  <SelectItem value="requisitioner">Requisitioner</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
                 </SelectContent>
               </Select>
