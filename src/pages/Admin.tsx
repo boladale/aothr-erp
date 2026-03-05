@@ -227,26 +227,22 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <div className="p-4 border rounded-lg">
-                    <Badge className={roleColors.admin}>Admin</Badge>
-                    <p className="text-sm text-muted-foreground mt-2">Full system access, user management, audit logs</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <Badge className={roleColors.procurement_manager}>Procurement Manager</Badge>
-                    <p className="text-sm text-muted-foreground mt-2">Manage vendors, POs, and approvals</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <Badge className={roleColors.warehouse_manager}>Warehouse Manager</Badge>
-                    <p className="text-sm text-muted-foreground mt-2">Manage inventory, locations, goods receipts</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <Badge className={roleColors.accounts_payable}>Accounts Payable</Badge>
-                    <p className="text-sm text-muted-foreground mt-2">Manage invoices, PO closure</p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <Badge className={roleColors.viewer}>Viewer</Badge>
-                    <p className="text-sm text-muted-foreground mt-2">Read-only access to all data</p>
-                  </div>
+                  {Object.entries(roleColors).map(([role, color]) => (
+                    <div key={role} className="p-4 border rounded-lg">
+                      <Badge className={color}>{role.replace(/_/g, ' ')}</Badge>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {role === 'admin' && 'Full system access, user management, audit logs'}
+                        {role === 'procurement_manager' && 'Approve vendors, POs, RFPs — management level'}
+                        {role === 'procurement_officer' && 'Create and submit vendors, POs, RFPs — cannot approve'}
+                        {role === 'warehouse_manager' && 'Approve GRNs, inventory adjustments — management level'}
+                        {role === 'warehouse_officer' && 'Create and submit GRNs, adjustments — cannot approve'}
+                        {role === 'accounts_payable' && 'Approve and post invoices — management level'}
+                        {role === 'ap_clerk' && 'Create and submit invoices — cannot approve or post'}
+                        {role === 'requisitioner' && 'Create and submit purchase requisitions only'}
+                        {role === 'viewer' && 'Read-only access to all data'}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
