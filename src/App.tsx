@@ -25,6 +25,10 @@ import RequisitionDetail from "./pages/RequisitionDetail";
 import RFPs from "./pages/RFPs";
 import RFPDetail from "./pages/RFPDetail";
 import VendorPerformance from "./pages/VendorPerformance";
+import ChartOfAccounts from "./pages/ChartOfAccounts";
+import JournalEntries from "./pages/JournalEntries";
+import FinancialReports from "./pages/FinancialReports";
+import FiscalPeriods from "./pages/FiscalPeriods";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

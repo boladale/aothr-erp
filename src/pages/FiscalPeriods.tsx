@@ -26,7 +26,7 @@ export default function FiscalPeriods() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     const { error } = await supabase.from('gl_fiscal_periods').update({ 
-      status: newStatus,
+      status: newStatus as any,
       ...(newStatus === 'closed' ? { closed_at: new Date().toISOString() } : {}),
     }).eq('id', id);
     if (error) { toast.error(error.message); return; }
