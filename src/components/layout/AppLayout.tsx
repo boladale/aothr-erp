@@ -19,7 +19,11 @@ import {
   ChevronDown,
   AlertTriangle,
   FileSearch,
-  BarChart3
+  BarChart3,
+  BookOpen,
+  Calculator,
+  PieChart,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -39,24 +43,58 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/vendors', label: 'Vendors', icon: Building2 },
-  { path: '/vendor-performance', label: 'Vendor Performance', icon: BarChart3 },
-  { path: '/rfps', label: 'Requests for Proposal', icon: FileSearch },
-  { path: '/items', label: 'Items', icon: Package },
-  { path: '/locations', label: 'Locations', icon: MapPin },
-  { path: '/inventory', label: 'Inventory', icon: Boxes },
-  { path: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
-  { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
-  { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
-  { path: '/invoices', label: 'Invoices', icon: Receipt },
-  { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
-  { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
-  { path: '/notifications', label: 'Notifications', icon: Bell },
-  { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
-  { path: '/user-management', label: 'User Management', icon: Shield },
-  { path: '/admin', label: 'Admin', icon: Settings },
+const navSections = [
+  {
+    label: 'Main',
+    items: [
+      { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Procurement',
+    items: [
+      { path: '/vendors', label: 'Vendors', icon: Building2 },
+      { path: '/vendor-performance', label: 'Vendor Performance', icon: BarChart3 },
+      { path: '/rfps', label: 'Requests for Proposal', icon: FileSearch },
+      { path: '/items', label: 'Items', icon: Package },
+      { path: '/locations', label: 'Locations', icon: MapPin },
+      { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
+      { path: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
+    ],
+  },
+  {
+    label: 'Warehouse',
+    items: [
+      { path: '/inventory', label: 'Inventory', icon: Boxes },
+      { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { path: '/chart-of-accounts', label: 'Chart of Accounts', icon: BookOpen },
+      { path: '/journal-entries', label: 'Journal Entries', icon: Calculator },
+      { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
+      { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
+      { path: '/invoices', label: 'Invoices', icon: Receipt },
+      { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
+    ],
+  },
+  {
+    label: 'Reports',
+    items: [
+      { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { path: '/notifications', label: 'Notifications', icon: Bell },
+      { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
+      { path: '/user-management', label: 'User Management', icon: Shield },
+      { path: '/admin', label: 'Admin', icon: Settings },
+    ],
+  },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
