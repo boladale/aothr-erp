@@ -464,6 +464,260 @@ export type Database = {
         }
         Relationships: []
       }
+      gl_account_balances: {
+        Row: {
+          account_id: string
+          balance: number
+          credit_total: number
+          debit_total: number
+          fiscal_period_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          balance?: number
+          credit_total?: number
+          debit_total?: number
+          fiscal_period_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          balance?: number
+          credit_total?: number
+          debit_total?: number
+          fiscal_period_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gl_account_balances_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gl_account_balances_fiscal_period_id_fkey"
+            columns: ["fiscal_period_id"]
+            isOneToOne: false
+            referencedRelation: "gl_fiscal_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gl_accounts: {
+        Row: {
+          account_code: string
+          account_name: string
+          account_type: Database["public"]["Enums"]["gl_account_type"]
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_header: boolean
+          normal_balance: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_code: string
+          account_name: string
+          account_type: Database["public"]["Enums"]["gl_account_type"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_header?: boolean
+          normal_balance?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_code?: string
+          account_name?: string
+          account_type?: Database["public"]["Enums"]["gl_account_type"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_header?: boolean
+          normal_balance?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gl_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gl_fiscal_periods: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          end_date: string
+          fiscal_year: number
+          id: string
+          period_name: string
+          period_number: number
+          start_date: string
+          status: Database["public"]["Enums"]["fiscal_period_status"]
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date: string
+          fiscal_year: number
+          id?: string
+          period_name: string
+          period_number: number
+          start_date: string
+          status?: Database["public"]["Enums"]["fiscal_period_status"]
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          end_date?: string
+          fiscal_year?: number
+          id?: string
+          period_name?: string
+          period_number?: number
+          start_date?: string
+          status?: Database["public"]["Enums"]["fiscal_period_status"]
+        }
+        Relationships: []
+      }
+      gl_journal_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          entry_date: string
+          entry_number: string
+          fiscal_period_id: string | null
+          id: string
+          posted_at: string | null
+          posted_by: string | null
+          reversed_entry_id: string | null
+          source_id: string | null
+          source_module: string | null
+          status: Database["public"]["Enums"]["gl_entry_status"]
+          total_credit: number
+          total_debit: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_number: string
+          fiscal_period_id?: string | null
+          id?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reversed_entry_id?: string | null
+          source_id?: string | null
+          source_module?: string | null
+          status?: Database["public"]["Enums"]["gl_entry_status"]
+          total_credit?: number
+          total_debit?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          entry_date?: string
+          entry_number?: string
+          fiscal_period_id?: string | null
+          id?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reversed_entry_id?: string | null
+          source_id?: string | null
+          source_module?: string | null
+          status?: Database["public"]["Enums"]["gl_entry_status"]
+          total_credit?: number
+          total_debit?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gl_journal_entries_fiscal_period_id_fkey"
+            columns: ["fiscal_period_id"]
+            isOneToOne: false
+            referencedRelation: "gl_fiscal_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gl_journal_entries_reversed_entry_id_fkey"
+            columns: ["reversed_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gl_journal_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          credit: number
+          debit: number
+          description: string | null
+          id: string
+          journal_entry_id: string
+          line_number: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          journal_entry_id: string
+          line_number: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          journal_entry_id?: string
+          line_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gl_journal_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gl_journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_lines: {
         Row: {
           grn_id: string
@@ -2131,6 +2385,9 @@ export type Database = {
       budget_source_type: "po_commitment" | "invoice_actual"
       budget_status: "draft" | "active" | "closed" | "frozen"
       budget_transaction_type: "commit" | "uncommit" | "consume" | "reverse"
+      fiscal_period_status: "open" | "closed" | "locked"
+      gl_account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
+      gl_entry_status: "draft" | "posted" | "reversed"
       hold_type:
         | "match_exception"
         | "approval_pending"
@@ -2319,6 +2576,9 @@ export const Constants = {
       budget_source_type: ["po_commitment", "invoice_actual"],
       budget_status: ["draft", "active", "closed", "frozen"],
       budget_transaction_type: ["commit", "uncommit", "consume", "reverse"],
+      fiscal_period_status: ["open", "closed", "locked"],
+      gl_account_type: ["asset", "liability", "equity", "revenue", "expense"],
+      gl_entry_status: ["draft", "posted", "reversed"],
       hold_type: [
         "match_exception",
         "approval_pending",
