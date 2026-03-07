@@ -24,6 +24,8 @@ import {
   Calculator,
   PieChart,
   Calendar,
+  CreditCard,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -77,6 +79,8 @@ const navSections = [
       { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
       { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
       { path: '/invoices', label: 'Invoices', icon: Receipt },
+      { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
+      { path: '/ap-aging', label: 'AP Aging', icon: Clock },
       { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
     ],
   },
