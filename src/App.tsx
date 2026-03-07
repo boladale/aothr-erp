@@ -29,6 +29,8 @@ import ChartOfAccounts from "./pages/ChartOfAccounts";
 import JournalEntries from "./pages/JournalEntries";
 import FinancialReports from "./pages/FinancialReports";
 import FiscalPeriods from "./pages/FiscalPeriods";
+import APPayments from "./pages/APPayments";
+import APAging from "./pages/APAging";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +82,8 @@ const App = () => (
             <Route path="/journal-entries" element={<ProtectedRoute><JournalEntries /></ProtectedRoute>} />
             <Route path="/financial-reports" element={<ProtectedRoute><FinancialReports /></ProtectedRoute>} />
             <Route path="/fiscal-periods" element={<ProtectedRoute><FiscalPeriods /></ProtectedRoute>} />
+            <Route path="/ap-payments" element={<ProtectedRoute><APPayments /></ProtectedRoute>} />
+            <Route path="/ap-aging" element={<ProtectedRoute><APAging /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

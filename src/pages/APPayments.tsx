@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { DataTable } from '@/components/ui/data-table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,24 +18,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, CreditCard, Send } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 
-interface Vendor {
-  id: string;
-  name: string;
-  code: string;
-}
-
 interface Invoice {
   id: string;
   invoice_number: string;
   total_amount: number;
   payment_status: string;
-  vendor_id: string;
-  vendor?: { name: string };
-}
-
-interface PaymentAllocation {
-  invoice_id: string;
-  allocated_amount: number;
 }
 
 export default function APPayments() {
@@ -48,8 +35,7 @@ export default function APPayments() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [posting, setPosting] = useState(false);
 
-  // Form state
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [selectedVendor, setSelectedVendor] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
@@ -72,8 +58,8 @@ export default function APPayments() {
   };
 
   const openCreateDialog = async () => {
-    const { data: vendorData } = await supabase.from('vendors').select('id, name, code').eq('status', 'active').order('name');
-    setVendors(vendorData || []);
+    const { data } = await supabase.from('vendors').select('id, name, code').eq('status', 'active').order('name');
+    setVendors(data || []);
     setSelectedVendor('');
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setPaymentMethod('bank_transfer');
@@ -89,15 +75,12 @@ export default function APPayments() {
     setSelectedVendor(vendorId);
     setAllocations({});
     setSelectedInvoices(new Set());
-
-    // Fetch posted invoices that aren't fully paid
     const { data } = await supabase
       .from('ap_invoices')
       .select('id, invoice_number, total_amount, payment_status')
       .eq('vendor_id', vendorId)
       .eq('status', 'posted')
       .in('payment_status', ['unpaid', 'partial']);
-    
     setVendorInvoices(data || []);
   };
 
@@ -121,10 +104,7 @@ export default function APPayments() {
       toast({ title: 'Error', description: 'Select a vendor and at least one invoice.', variant: 'destructive' });
       return;
     }
-
-    // Generate payment number
     const payNum = `PAY-${Date.now().toString(36).toUpperCase()}`;
-
     const { data: payment, error: payErr } = await supabase
       .from('ap_payments')
       .insert({
@@ -140,23 +120,15 @@ export default function APPayments() {
       .select()
       .single();
 
-    if (payErr) {
-      toast({ title: 'Error', description: payErr.message, variant: 'destructive' });
-      return;
-    }
+    if (payErr) { toast({ title: 'Error', description: payErr.message, variant: 'destructive' }); return; }
 
-    // Create allocations
     const allocationRows = Array.from(selectedInvoices).map(invoiceId => ({
       payment_id: payment.id,
       invoice_id: invoiceId,
       allocated_amount: allocations[invoiceId] || 0,
     }));
-
     const { error: allocErr } = await supabase.from('ap_payment_allocations').insert(allocationRows);
-    if (allocErr) {
-      toast({ title: 'Error', description: allocErr.message, variant: 'destructive' });
-      return;
-    }
+    if (allocErr) { toast({ title: 'Error', description: allocErr.message, variant: 'destructive' }); return; }
 
     toast({ title: 'Payment created', description: `${payNum} created as draft.` });
     setDialogOpen(false);
@@ -165,11 +137,7 @@ export default function APPayments() {
 
   const handlePost = async (paymentId: string, paymentNumber: string) => {
     setPosting(true);
-    const { error } = await supabase
-      .from('ap_payments')
-      .update({ status: 'posted' })
-      .eq('id', paymentId);
-
+    const { error } = await supabase.from('ap_payments').update({ status: 'posted' }).eq('id', paymentId);
     if (error) {
       toast({ title: 'Post failed', description: error.message, variant: 'destructive' });
     } else {
@@ -180,17 +148,17 @@ export default function APPayments() {
   };
 
   const columns = [
-    { header: 'Payment #', accessorKey: 'payment_number' },
-    { header: 'Vendor', accessorKey: 'vendor', cell: ({ row }: any) => (row.original.vendor as any)?.name || '-' },
-    { header: 'Date', accessorKey: 'payment_date' },
-    { header: 'Method', accessorKey: 'payment_method', cell: ({ row }: any) => row.original.payment_method?.replace('_', ' ') },
-    { header: 'Amount', accessorKey: 'total_amount', cell: ({ row }: any) => formatCurrency(row.original.total_amount || 0) },
-    { header: 'Status', accessorKey: 'status', cell: ({ row }: any) => <StatusBadge status={row.original.status} /> },
+    { key: 'payment_number', header: 'Payment #' },
+    { key: 'vendor', header: 'Vendor', render: (item: any) => (item.vendor as any)?.name || '-' },
+    { key: 'payment_date', header: 'Date' },
+    { key: 'payment_method', header: 'Method', render: (item: any) => item.payment_method?.replace('_', ' ') },
+    { key: 'total_amount', header: 'Amount', render: (item: any) => formatCurrency(item.total_amount || 0) },
+    { key: 'status', header: 'Status', render: (item: any) => <StatusBadge status={item.status} /> },
     ...(canManage ? [{
+      key: 'actions',
       header: 'Actions',
-      id: 'actions',
-      cell: ({ row }: any) => row.original.status === 'draft' ? (
-        <Button variant="outline" size="sm" onClick={() => handlePost(row.original.id, row.original.payment_number)} disabled={posting}>
+      render: (item: any) => item.status === 'draft' ? (
+        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handlePost(item.id, item.payment_number); }} disabled={posting}>
           <Send className="h-3 w-3 mr-1" /> Post
         </Button>
       ) : null,
@@ -203,37 +171,24 @@ export default function APPayments() {
         <PageHeader
           title="AP Payments"
           description="Manage vendor payments and track allocations against invoices."
-          actions={canManage ? (
-            <Button onClick={openCreateDialog}><Plus className="h-4 w-4 mr-2" /> New Payment</Button>
-          ) : undefined}
+          actions={canManage ? <Button onClick={openCreateDialog}><Plus className="h-4 w-4 mr-2" /> New Payment</Button> : undefined}
         />
-
-        {loading ? (
-          <Skeleton className="h-64" />
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <DataTable columns={columns} data={payments} />
-            </CardContent>
-          </Card>
+        {loading ? <Skeleton className="h-64" /> : (
+          <Card><CardContent className="p-0"><DataTable columns={columns} data={payments} /></CardContent></Card>
         )}
 
-        {/* Create Payment Dialog */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> Create Payment</DialogTitle>
             </DialogHeader>
-
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Vendor</Label>
                   <Select value={selectedVendor} onValueChange={onVendorChange}>
                     <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
-                    <SelectContent>
-                      {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name} ({v.code})</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name} ({v.code})</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
@@ -256,12 +211,10 @@ export default function APPayments() {
                   <Input value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} placeholder="e.g. cheque number" />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
               </div>
-
               {selectedVendor && (
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">Allocate to Invoices</Label>
@@ -271,36 +224,22 @@ export default function APPayments() {
                     <div className="border rounded-lg divide-y">
                       {vendorInvoices.map(inv => (
                         <div key={inv.id} className="flex items-center gap-4 p-3">
-                          <Checkbox
-                            checked={selectedInvoices.has(inv.id)}
-                            onCheckedChange={(checked) => toggleInvoice(inv.id, !!checked)}
-                          />
+                          <Checkbox checked={selectedInvoices.has(inv.id)} onCheckedChange={(checked) => toggleInvoice(inv.id, !!checked)} />
                           <div className="flex-1">
                             <p className="text-sm font-medium">{inv.invoice_number}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Total: {formatCurrency(inv.total_amount || 0)} • Status: {inv.payment_status}
-                            </p>
+                            <p className="text-xs text-muted-foreground">Total: {formatCurrency(inv.total_amount || 0)} • {inv.payment_status}</p>
                           </div>
                           {selectedInvoices.has(inv.id) && (
-                            <Input
-                              type="number"
-                              className="w-32"
-                              value={allocations[inv.id] || ''}
-                              onChange={e => setAllocations(prev => ({ ...prev, [inv.id]: parseFloat(e.target.value) || 0 }))}
-                              step="0.01"
-                            />
+                            <Input type="number" className="w-32" value={allocations[inv.id] || ''} onChange={e => setAllocations(prev => ({ ...prev, [inv.id]: parseFloat(e.target.value) || 0 }))} step="0.01" />
                           )}
                         </div>
                       ))}
                     </div>
                   )}
-                  {totalAmount > 0 && (
-                    <p className="text-right font-semibold">Total: {formatCurrency(totalAmount)}</p>
-                  )}
+                  {totalAmount > 0 && <p className="text-right font-semibold">Total: {formatCurrency(totalAmount)}</p>}
                 </div>
               )}
             </div>
-
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleCreate} disabled={selectedInvoices.size === 0}>Create Payment</Button>
