@@ -74,6 +74,7 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_number: string
+          payment_status: string
           po_id: string
           posted_at: string | null
           posted_by: string | null
@@ -90,6 +91,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number: string
+          payment_status?: string
           po_id: string
           posted_at?: string | null
           posted_by?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number?: string
+          payment_status?: string
           po_id?: string
           posted_at?: string | null
           posted_by?: string | null
@@ -125,6 +128,104 @@ export type Database = {
           },
           {
             foreignKeyName: "ap_invoices_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ap_payment_allocations: {
+        Row: {
+          allocated_amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          payment_id: string
+        }
+        Insert: {
+          allocated_amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          payment_id: string
+        }
+        Update: {
+          allocated_amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          payment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ap_payment_allocations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ap_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ap_payment_allocations_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "ap_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ap_payments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string
+          payment_number: string
+          posted_at: string | null
+          posted_by: string | null
+          reference_number: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_number: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reference_number?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string
+          payment_number?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reference_number?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ap_payments_vendor_id_fkey"
             columns: ["vendor_id"]
             isOneToOne: false
             referencedRelation: "vendors"
