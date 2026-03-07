@@ -208,7 +208,7 @@ export default function ChartOfAccounts() {
                           <Select value={form.parent_id} onValueChange={v => setForm(f => ({ ...f, parent_id: v }))}>
                             <SelectTrigger><SelectValue placeholder="None (top-level)" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">None</SelectItem>
+                              <SelectItem value="none">None (top-level)</SelectItem>
                               {accounts.filter(a => a.is_header).map(a => (
                                 <SelectItem key={a.id} value={a.id}>{a.account_code} - {a.account_name}</SelectItem>
                               ))}
