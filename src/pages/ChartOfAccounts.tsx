@@ -205,7 +205,7 @@ export default function ChartOfAccounts() {
                         </div>
                         <div>
                           <Label>Parent Account</Label>
-                          <Select value={form.parent_id} onValueChange={v => setForm(f => ({ ...f, parent_id: v }))}>
+                          <Select value={form.parent_id || 'none'} onValueChange={v => setForm(f => ({ ...f, parent_id: v === 'none' ? '' : v }))}>
                             <SelectTrigger><SelectValue placeholder="None (top-level)" /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">None (top-level)</SelectItem>
