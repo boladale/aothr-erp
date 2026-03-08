@@ -54,6 +54,7 @@ import TaxConfiguration from "./pages/TaxConfiguration";
 import SalesQuotations from "./pages/SalesQuotations";
 import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
+import UserGuide from "./pages/UserGuide";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
