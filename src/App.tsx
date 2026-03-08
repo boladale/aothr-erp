@@ -41,6 +41,9 @@ import BankReconciliation from "./pages/BankReconciliation";
 import FundTransfers from "./pages/FundTransfers";
 import CashFlowForecast from "./pages/CashFlowForecast";
 import InventoryValuation from "./pages/InventoryValuation";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
+import ProjectProfitability from "./pages/ProjectProfitability";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
