@@ -60,6 +60,12 @@ interface RolePermission {
   permission_id: string;
 }
 
+interface AppRolePermission {
+  id: string;
+  app_role: AppRole;
+  permission_id: string;
+}
+
 interface UserWithRoles extends Profile {
   user_roles: { role: AppRole }[];
 }
@@ -90,6 +96,7 @@ export default function UserManagement() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]);
+  const [appRolePermissions, setAppRolePermissions] = useState<AppRolePermission[]>([]);
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,6 +115,11 @@ export default function UserManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
+  // App role programs assignment dialog
+  const [appRoleAssignOpen, setAppRoleAssignOpen] = useState(false);
+  const [selectedAppRole, setSelectedAppRole] = useState<AppRole | null>(null);
+  const [selectedAppRolePerms, setSelectedAppRolePerms] = useState<string[]>([]);
+
   // User role assignment
   const [userRoleDialogOpen, setUserRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
@@ -119,10 +131,11 @@ export default function UserManagement() {
 
   const fetchData = async () => {
     try {
-      const [rolesRes, permsRes, rpRes, profilesRes, userRolesRes] = await Promise.all([
+      const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes] = await Promise.all([
         supabase.from('roles').select('*').order('name'),
         supabase.from('permissions').select('*').order('code'),
         supabase.from('role_permissions').select('*'),
+        supabase.from('app_role_permissions').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('user_roles').select('*'),
       ]);
@@ -130,7 +143,7 @@ export default function UserManagement() {
       setRoles((rolesRes.data || []) as Role[]);
       setPermissions((permsRes.data || []) as Permission[]);
       setRolePermissions((rpRes.data || []) as RolePermission[]);
-
+      setAppRolePermissions((arpRes.data || []) as AppRolePermission[]);
       const profiles = (profilesRes.data || []) as Profile[];
       const uRoles = userRolesRes.data || [];
       const usersWithRoles: UserWithRoles[] = profiles.map(p => ({
@@ -243,6 +256,55 @@ export default function UserManagement() {
     } catch (error) {
       toast.error('Failed to assign programs');
     }
+  };
+
+  // App Role Programs management
+  const ALL_APP_ROLES: AppRole[] = [
+    'admin', 'procurement_manager', 'procurement_officer',
+    'warehouse_manager', 'warehouse_officer',
+    'accounts_payable', 'ap_clerk', 'requisitioner', 'viewer'
+  ];
+
+  const openAppRoleAssign = (role: AppRole) => {
+    setSelectedAppRole(role);
+    const assigned = appRolePermissions
+      .filter(arp => arp.app_role === role)
+      .map(arp => arp.permission_id);
+    setSelectedAppRolePerms(assigned);
+    setAppRoleAssignOpen(true);
+  };
+
+  const toggleAppRolePerm = (permId: string) => {
+    setSelectedAppRolePerms(prev =>
+      prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
+    );
+  };
+
+  const handleSaveAppRolePerms = async () => {
+    if (!selectedAppRole) return;
+    try {
+      // Remove existing
+      await supabase.from('app_role_permissions').delete().eq('app_role', selectedAppRole);
+      // Insert new
+      if (selectedAppRolePerms.length > 0) {
+        const inserts = selectedAppRolePerms.map(pid => ({
+          app_role: selectedAppRole,
+          permission_id: pid,
+        }));
+        const { error } = await supabase.from('app_role_permissions').insert(inserts);
+        if (error) throw error;
+      }
+      toast.success(`Programs updated for ${selectedAppRole.replace(/_/g, ' ')}`);
+      setAppRoleAssignOpen(false);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to save app role programs');
+    }
+  };
+
+  const getAppRolePrograms = (role: AppRole) => {
+    const permIds = appRolePermissions.filter(arp => arp.app_role === role).map(arp => arp.permission_id);
+    return permissions.filter(p => permIds.includes(p.id));
   };
 
   const togglePermission = (permId: string) => {
@@ -442,10 +504,13 @@ export default function UserManagement() {
           description="Create roles, assign programs to roles, and manage user access"
         />
 
-        <Tabs defaultValue="roles">
+        <Tabs defaultValue="app-role-programs">
           <TabsList>
+            <TabsTrigger value="app-role-programs" className="gap-2">
+              <Key className="h-4 w-4" /> Role Programs
+            </TabsTrigger>
             <TabsTrigger value="roles" className="gap-2">
-              <Shield className="h-4 w-4" /> Roles
+              <Shield className="h-4 w-4" /> Custom Roles
             </TabsTrigger>
             <TabsTrigger value="programs" className="gap-2">
               <Key className="h-4 w-4" /> Programs
@@ -454,6 +519,54 @@ export default function UserManagement() {
               <Users className="h-4 w-4" /> Users
             </TabsTrigger>
           </TabsList>
+
+          {/* App Role Programs Tab - Primary tab for mapping system roles to programs */}
+          <TabsContent value="app-role-programs" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="h-5 w-5" /> System Role → Program Access
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure which programs (modules) each system role can access. Users inherit program access through their assigned roles.
+                </p>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {ALL_APP_ROLES.map(role => {
+                    const progs = getAppRolePrograms(role);
+                    return (
+                      <div key={role} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge className={roleColors[role]}>
+                            {role.replace(/_/g, ' ')}
+                          </Badge>
+                          {isAdmin && (
+                            <Button size="sm" variant="outline" onClick={() => openAppRoleAssign(role)}>
+                              Configure
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {role === 'admin' ? (
+                            <Badge variant="secondary" className="text-xs">All Programs</Badge>
+                          ) : progs.length === 0 ? (
+                            <span className="text-xs text-muted-foreground">No programs assigned</span>
+                          ) : (
+                            progs.map(p => (
+                              <Badge key={p.id} variant="secondary" className="text-xs">
+                                {p.code.replace(/_/g, ' ')}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Roles Tab */}
           <TabsContent value="roles" className="space-y-4">
@@ -659,6 +772,44 @@ export default function UserManagement() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setUserRoleDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleAddUserRole}>Add Role</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* App Role Programs Assignment Dialog */}
+        <Dialog open={appRoleAssignOpen} onOpenChange={setAppRoleAssignOpen}>
+          <DialogContent className="max-w-lg max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>
+                Configure Programs for "{selectedAppRole?.replace(/_/g, ' ')}"
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+              {permissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No programs available. Go to the Programs tab to initialize.</p>
+              ) : (
+                permissions.map(perm => (
+                  <label
+                    key={perm.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors"
+                  >
+                    <Checkbox
+                      checked={selectedAppRolePerms.includes(perm.id)}
+                      onCheckedChange={() => toggleAppRolePerm(perm.id)}
+                    />
+                    <div>
+                      <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-muted-foreground">{perm.description}</p>
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAppRoleAssignOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveAppRolePerms}>
+                Save ({selectedAppRolePerms.length} programs)
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
