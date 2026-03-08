@@ -90,7 +90,7 @@ export default function UserGuide() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-greprimary>
+              <CheckCircle2 className="h-5 w-5 text-primary" />
               Getting Started (First 5 Minutes)
             </CardTitle>
           </CardHeader>
