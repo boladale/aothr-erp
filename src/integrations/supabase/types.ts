@@ -233,6 +233,35 @@ export type Database = {
           },
         ]
       }
+      app_role_permissions: {
+        Row: {
+          app_role: Database["public"]["Enums"]["app_role"]
+          created_at: string
+          id: string
+          permission_id: string
+        }
+        Insert: {
+          app_role: Database["public"]["Enums"]["app_role"]
+          created_at?: string
+          id?: string
+          permission_id: string
+        }
+        Update: {
+          app_role?: Database["public"]["Enums"]["app_role"]
+          created_at?: string
+          id?: string
+          permission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_actions: {
         Row: {
           acted_at: string
@@ -3484,6 +3513,7 @@ export type Database = {
         }
         Returns: number
       }
+      get_user_programs: { Args: { p_user_id: string }; Returns: string[] }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
