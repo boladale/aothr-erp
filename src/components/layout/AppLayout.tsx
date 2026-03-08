@@ -168,6 +168,11 @@ const navSections = [
   {
     label: 'Reports',
     items: [
+      { path: '/procurement-reports', label: 'Procurement Reports', icon: BarChart3 },
+      { path: '/warehouse-reports', label: 'Warehouse Reports', icon: BarChart3 },
+      { path: '/ap-reports', label: 'AP Reports', icon: BarChart3 },
+      { path: '/ar-reports', label: 'AR Reports', icon: BarChart3 },
+      { path: '/cash-reports', label: 'Cash Reports', icon: BarChart3 },
       { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
     ],
   },
