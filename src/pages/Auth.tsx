@@ -44,6 +44,9 @@ export default function Auth() {
     }
   }, [user, authLoading, navigate]);
 
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -65,6 +68,25 @@ export default function Auth() {
     } else {
       toast.success('Welcome back!');
       navigate('/');
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Password reset email sent! Check your inbox.');
+      setForgotMode(false);
     }
   };
 
