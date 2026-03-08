@@ -50,6 +50,10 @@ import FinanceAPReports from "./pages/FinanceAPReports";
 import FinanceARReports from "./pages/FinanceARReports";
 import CashReports from "./pages/CashReports";
 import ResetPassword from "./pages/ResetPassword";
+import TaxConfiguration from "./pages/TaxConfiguration";
+import SalesQuotations from "./pages/SalesQuotations";
+import SalesOrders from "./pages/SalesOrders";
+import DeliveryNotes from "./pages/DeliveryNotes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
