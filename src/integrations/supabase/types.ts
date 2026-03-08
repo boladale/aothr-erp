@@ -1168,6 +1168,119 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_note_lines: {
+        Row: {
+          dn_id: string
+          id: string
+          item_id: string | null
+          order_line_id: string
+          qty_delivered: number
+        }
+        Insert: {
+          dn_id: string
+          id?: string
+          item_id?: string | null
+          order_line_id: string
+          qty_delivered: number
+        }
+        Update: {
+          dn_id?: string
+          id?: string
+          item_id?: string | null
+          order_line_id?: string
+          qty_delivered?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_note_lines_dn_id_fkey"
+            columns: ["dn_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_note_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_note_lines_order_line_id_fkey"
+            columns: ["order_line_id"]
+            isOneToOne: false
+            referencedRelation: "sales_order_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          delivery_date: string
+          dn_number: string
+          id: string
+          location_id: string | null
+          notes: string | null
+          order_id: string
+          posted_at: string | null
+          posted_by: string | null
+          status: Database["public"]["Enums"]["delivery_status"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          delivery_date?: string
+          dn_number: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          order_id: string
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          delivery_date?: string
+          dn_number?: string
+          id?: string
+          location_id?: string | null
+          notes?: string | null
+          order_id?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_notes_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_notes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_transfers: {
         Row: {
           amount: number
@@ -1977,6 +2090,35 @@ export type Database = {
             columns: ["match_run_id"]
             isOneToOne: false
             referencedRelation: "match_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      item_tax_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          item_category: string
+          tax_group_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_category: string
+          tax_group_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_category?: string
+          tax_group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_tax_mappings_tax_group_id_fkey"
+            columns: ["tax_group_id"]
+            isOneToOne: false
+            referencedRelation: "tax_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -3255,6 +3397,361 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_order_lines: {
+        Row: {
+          description: string
+          id: string
+          item_id: string | null
+          line_number: number
+          line_total: number | null
+          order_id: string
+          qty_delivered: number
+          qty_invoiced: number
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          description: string
+          id?: string
+          item_id?: string | null
+          line_number: number
+          line_total?: number | null
+          order_id: string
+          qty_delivered?: number
+          qty_invoiced?: number
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          description?: string
+          id?: string
+          item_id?: string | null
+          line_number?: number
+          line_total?: number | null
+          order_id?: string
+          qty_delivered?: number
+          qty_invoiced?: number
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_lines_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          expected_date: string | null
+          id: string
+          notes: string | null
+          order_date: string
+          order_number: string
+          quotation_id: string | null
+          status: Database["public"]["Enums"]["sales_order_status"]
+          subtotal: number | null
+          tax_amount: number | null
+          tax_group_id: string | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          order_number: string
+          quotation_id?: string | null
+          status?: Database["public"]["Enums"]["sales_order_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_group_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          expected_date?: string | null
+          id?: string
+          notes?: string | null
+          order_date?: string
+          order_number?: string
+          quotation_id?: string | null
+          status?: Database["public"]["Enums"]["sales_order_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_group_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_tax_group_id_fkey"
+            columns: ["tax_group_id"]
+            isOneToOne: false
+            referencedRelation: "tax_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quotation_lines: {
+        Row: {
+          description: string
+          id: string
+          item_id: string | null
+          line_number: number
+          line_total: number | null
+          quantity: number
+          quotation_id: string
+          unit_price: number
+        }
+        Insert: {
+          description: string
+          id?: string
+          item_id?: string | null
+          line_number: number
+          line_total?: number | null
+          quantity?: number
+          quotation_id: string
+          unit_price?: number
+        }
+        Update: {
+          description?: string
+          id?: string
+          item_id?: string | null
+          line_number?: number
+          line_total?: number | null
+          quantity?: number
+          quotation_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotation_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotation_lines_quotation_id_fkey"
+            columns: ["quotation_id"]
+            isOneToOne: false
+            referencedRelation: "sales_quotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quotations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          notes: string | null
+          quotation_date: string
+          quotation_number: string
+          status: Database["public"]["Enums"]["quotation_status"]
+          subtotal: number | null
+          tax_amount: number | null
+          tax_group_id: string | null
+          total_amount: number | null
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          notes?: string | null
+          quotation_date?: string
+          quotation_number: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_group_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          quotation_date?: string
+          quotation_number?: string
+          status?: Database["public"]["Enums"]["quotation_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          tax_group_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_quotations_tax_group_id_fkey"
+            columns: ["tax_group_id"]
+            isOneToOne: false
+            referencedRelation: "tax_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tax_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tax_rates: {
+        Row: {
+          created_at: string
+          gl_account_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          rate_pct: number
+          tax_group_id: string
+        }
+        Insert: {
+          created_at?: string
+          gl_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          rate_pct?: number
+          tax_group_id: string
+        }
+        Update: {
+          created_at?: string
+          gl_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          rate_pct?: number
+          tax_group_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_rates_gl_account_id_fkey"
+            columns: ["gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_rates_tax_group_id_fkey"
+            columns: ["tax_group_id"]
+            isOneToOne: false
+            referencedRelation: "tax_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transaction_attachments: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -3576,6 +4073,7 @@ export type Database = {
       budget_source_type: "po_commitment" | "invoice_actual"
       budget_status: "draft" | "active" | "closed" | "frozen"
       budget_transaction_type: "commit" | "uncommit" | "consume" | "reverse"
+      delivery_status: "draft" | "posted"
       fiscal_period_status: "open" | "closed" | "locked"
       fund_transfer_status: "draft" | "posted"
       gl_account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
@@ -3618,6 +4116,7 @@ export type Database = {
         | "awarded"
         | "rejected"
         | "declined"
+      quotation_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
       reconciliation_status: "in_progress" | "completed"
       requisition_status:
         | "draft"
@@ -3630,6 +4129,13 @@ export type Database = {
       reservation_status: "active" | "fulfilled" | "cancelled" | "expired"
       revenue_schedule_status: "active" | "completed" | "cancelled"
       rfp_status: "draft" | "published" | "evaluating" | "awarded" | "cancelled"
+      sales_order_status:
+        | "draft"
+        | "confirmed"
+        | "partially_delivered"
+        | "fully_delivered"
+        | "closed"
+        | "cancelled"
       vendor_status: "draft" | "pending_approval" | "active" | "inactive"
     }
     CompositeTypes: {
@@ -3794,6 +4300,7 @@ export const Constants = {
       budget_source_type: ["po_commitment", "invoice_actual"],
       budget_status: ["draft", "active", "closed", "frozen"],
       budget_transaction_type: ["commit", "uncommit", "consume", "reverse"],
+      delivery_status: ["draft", "posted"],
       fiscal_period_status: ["open", "closed", "locked"],
       fund_transfer_status: ["draft", "posted"],
       gl_account_type: ["asset", "liability", "equity", "revenue", "expense"],
@@ -3842,6 +4349,7 @@ export const Constants = {
         "rejected",
         "declined",
       ],
+      quotation_status: ["draft", "sent", "accepted", "rejected", "expired"],
       reconciliation_status: ["in_progress", "completed"],
       requisition_status: [
         "draft",
@@ -3855,6 +4363,14 @@ export const Constants = {
       reservation_status: ["active", "fulfilled", "cancelled", "expired"],
       revenue_schedule_status: ["active", "completed", "cancelled"],
       rfp_status: ["draft", "published", "evaluating", "awarded", "cancelled"],
+      sales_order_status: [
+        "draft",
+        "confirmed",
+        "partially_delivered",
+        "fully_delivered",
+        "closed",
+        "cancelled",
+      ],
       vendor_status: ["draft", "pending_approval", "active", "inactive"],
     },
   },
