@@ -35,6 +35,7 @@ export interface Vendor {
   project_size_capacity?: 'small' | 'medium' | 'large' | 'enterprise';
   bank_name?: string;
   bank_account_number?: string;
+  rejection_reason?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
