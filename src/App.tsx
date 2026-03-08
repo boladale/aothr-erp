@@ -36,6 +36,10 @@ import ARInvoices from "./pages/ARInvoices";
 import ARReceipts from "./pages/ARReceipts";
 import ARCreditNotes from "./pages/ARCreditNotes";
 import ARAging from "./pages/ARAging";
+import BankAccounts from "./pages/BankAccounts";
+import BankReconciliation from "./pages/BankReconciliation";
+import FundTransfers from "./pages/FundTransfers";
+import CashFlowForecast from "./pages/CashFlowForecast";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
