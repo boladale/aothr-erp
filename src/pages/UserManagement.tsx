@@ -96,6 +96,7 @@ export default function UserManagement() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]);
+  const [appRolePermissions, setAppRolePermissions] = useState<AppRolePermission[]>([]);
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
 
