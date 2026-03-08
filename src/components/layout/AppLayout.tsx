@@ -35,6 +35,9 @@ import {
   TrendingUp,
   Scale,
   FolderKanban,
+  ShoppingCart,
+  FileCheck,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -89,6 +92,10 @@ const pathToProgram: Record<string, string> = {
   '/ap-reports': 'invoices',
   '/ar-reports': 'ar_invoices',
   '/cash-reports': 'bank_accounts',
+  '/tax-configuration': 'tax_configuration',
+  '/sales-quotations': 'sales_quotations',
+  '/sales-orders': 'sales_orders',
+  '/delivery-notes': 'delivery_notes',
   '/notifications': 'notifications',
   '/approval-rules': 'approval_rules',
   '/user-management': 'user_management',
@@ -155,6 +162,14 @@ const navSections = [
     ],
   },
   {
+    label: 'Sales',
+    items: [
+      { path: '/sales-quotations', label: 'Quotations', icon: FileCheck },
+      { path: '/sales-orders', label: 'Sales Orders', icon: ShoppingCart },
+      { path: '/delivery-notes', label: 'Delivery Notes', icon: Truck },
+    ],
+  },
+  {
     label: 'Cash Management',
     items: [
       { path: '/bank-accounts', label: 'Bank Accounts', icon: Landmark },
@@ -184,6 +199,7 @@ const navSections = [
   {
     label: 'Administration',
     items: [
+      { path: '/tax-configuration', label: 'Tax Configuration', icon: Percent },
       { path: '/notifications', label: 'Notifications', icon: Bell },
       { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
       { path: '/user-management', label: 'User Management', icon: Shield },

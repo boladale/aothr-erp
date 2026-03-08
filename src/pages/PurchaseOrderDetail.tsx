@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -246,6 +247,12 @@ export default function PurchaseOrderDetail() {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardContent className="p-6">
+            <AttachmentPanel entityType="purchase_orders" entityId={id!} />
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

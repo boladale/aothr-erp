@@ -50,6 +50,10 @@ import FinanceAPReports from "./pages/FinanceAPReports";
 import FinanceARReports from "./pages/FinanceARReports";
 import CashReports from "./pages/CashReports";
 import ResetPassword from "./pages/ResetPassword";
+import TaxConfiguration from "./pages/TaxConfiguration";
+import SalesQuotations from "./pages/SalesQuotations";
+import SalesOrders from "./pages/SalesOrders";
+import DeliveryNotes from "./pages/DeliveryNotes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -122,6 +126,10 @@ const App = () => (
             <Route path="/ap-reports" element={<ProtectedRoute><FinanceAPReports /></ProtectedRoute>} />
             <Route path="/ar-reports" element={<ProtectedRoute><FinanceARReports /></ProtectedRoute>} />
             <Route path="/cash-reports" element={<ProtectedRoute><CashReports /></ProtectedRoute>} />
+            <Route path="/tax-configuration" element={<ProtectedRoute><TaxConfiguration /></ProtectedRoute>} />
+            <Route path="/sales-quotations" element={<ProtectedRoute><SalesQuotations /></ProtectedRoute>} />
+            <Route path="/sales-orders" element={<ProtectedRoute><SalesOrders /></ProtectedRoute>} />
+            <Route path="/delivery-notes" element={<ProtectedRoute><DeliveryNotes /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
