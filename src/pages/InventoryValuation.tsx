@@ -26,6 +26,7 @@ interface CostingLayer {
 }
 
 interface ValuationSummary {
+  id: string;
   item_code: string;
   item_name: string;
   location_name: string;
