@@ -251,9 +251,14 @@ export default function PurchaseOrders() {
             </Button>
           )}
           {o.status === 'pending_approval' && canApprove && (
-            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(o); }}>
-              Approve
-            </Button>
+            <>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(o); }}>
+                Approve
+              </Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectPO(o); }}>
+                Reject
+              </Button>
+            </>
           )}
           {o.status === 'approved' && canApprove && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSend(o); }}>
