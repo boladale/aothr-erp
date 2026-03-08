@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -225,6 +225,16 @@ export default function PurchaseOrderDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        {po.rejection_reason && po.status === 'draft' && (
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-destructive/50 bg-destructive/5">
+            <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-destructive">Returned for Corrections</p>
+              <p className="text-sm text-muted-foreground mt-1">{po.rejection_reason}</p>
+            </div>
+          </div>
+        )}
 
         {po.notes && (
           <Card>

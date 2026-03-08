@@ -35,6 +35,7 @@ export interface Vendor {
   project_size_capacity?: 'small' | 'medium' | 'large' | 'enterprise';
   bank_name?: string;
   bank_account_number?: string;
+  rejection_reason?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -94,6 +95,7 @@ export interface PurchaseOrder {
   tax_amount?: number;
   total_amount?: number;
   notes?: string;
+  rejection_reason?: string;
   close_ready: boolean;
   created_by?: string;
   approved_by?: string;
@@ -157,6 +159,7 @@ export interface APInvoice {
   tax_amount?: number;
   total_amount?: number;
   status: string;
+  rejection_reason?: string;
   posted_at?: string;
   posted_by?: string;
   created_by?: string;

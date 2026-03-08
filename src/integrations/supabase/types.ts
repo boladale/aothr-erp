@@ -78,6 +78,7 @@ export type Database = {
           po_id: string
           posted_at: string | null
           posted_by: string | null
+          rejection_reason: string | null
           status: string
           subtotal: number | null
           tax_amount: number | null
@@ -95,6 +96,7 @@ export type Database = {
           po_id: string
           posted_at?: string | null
           posted_by?: string | null
+          rejection_reason?: string | null
           status?: string
           subtotal?: number | null
           tax_amount?: number | null
@@ -112,6 +114,7 @@ export type Database = {
           po_id?: string
           posted_at?: string | null
           posted_by?: string | null
+          rejection_reason?: string | null
           status?: string
           subtotal?: number | null
           tax_amount?: number | null
@@ -2573,6 +2576,7 @@ export type Database = {
           notes: string | null
           order_date: string
           po_number: string
+          rejection_reason: string | null
           sent_at: string | null
           ship_to_location_id: string | null
           status: Database["public"]["Enums"]["po_status"]
@@ -2594,6 +2598,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           po_number: string
+          rejection_reason?: string | null
           sent_at?: string | null
           ship_to_location_id?: string | null
           status?: Database["public"]["Enums"]["po_status"]
@@ -2615,6 +2620,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           po_number?: string
+          rejection_reason?: string | null
           sent_at?: string | null
           ship_to_location_id?: string | null
           status?: Database["public"]["Enums"]["po_status"]
@@ -3454,6 +3460,7 @@ export type Database = {
           payment_terms: number | null
           phone: string | null
           project_size_capacity: string | null
+          rejection_reason: string | null
           service_categories: string[] | null
           status: Database["public"]["Enums"]["vendor_status"]
           updated_at: string
@@ -3473,6 +3480,7 @@ export type Database = {
           payment_terms?: number | null
           phone?: string | null
           project_size_capacity?: string | null
+          rejection_reason?: string | null
           service_categories?: string[] | null
           status?: Database["public"]["Enums"]["vendor_status"]
           updated_at?: string
@@ -3492,6 +3500,7 @@ export type Database = {
           payment_terms?: number | null
           phone?: string | null
           project_size_capacity?: string | null
+          rejection_reason?: string | null
           service_categories?: string[] | null
           status?: Database["public"]["Enums"]["vendor_status"]
           updated_at?: string

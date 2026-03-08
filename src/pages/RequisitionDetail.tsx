@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Check, X, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -33,6 +33,7 @@ interface Requisition {
   justification: string | null;
   needed_by_date: string | null;
   notes: string | null;
+  rejection_reason: string | null;
   submitted_at: string | null;
   approved_at: string | null;
   created_at: string;
@@ -71,7 +72,7 @@ export default function RequisitionDetail() {
   const handleSubmit = async () => {
     try {
       const { error } = await supabase.from('requisitions')
-        .update({ status: 'pending_approval', submitted_at: new Date().toISOString() })
+        .update({ status: 'pending_approval', submitted_at: new Date().toISOString(), rejection_reason: null })
         .eq('id', id!);
       if (error) throw error;
       toast.success('Submitted for approval');
@@ -162,6 +163,16 @@ export default function RequisitionDetail() {
             }
           />
         </div>
+
+        {requisition.rejection_reason && requisition.status === 'draft' && (
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-destructive/50 bg-destructive/5">
+            <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-destructive">Returned for Corrections</p>
+              <p className="text-sm text-muted-foreground mt-1">{requisition.rejection_reason}</p>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-6 md:grid-cols-3">
           <Card>

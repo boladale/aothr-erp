@@ -150,7 +150,7 @@ export default function PurchaseOrders() {
     try {
       const { error } = await supabase
         .from('purchase_orders')
-        .update({ status: 'pending_approval' as POStatus })
+        .update({ status: 'pending_approval' as POStatus, rejection_reason: null })
         .eq('id', po.id);
 
       if (error) throw error;
@@ -189,12 +189,16 @@ export default function PurchaseOrders() {
   const handleRejectPO = async (po: POWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error } = await supabase
         .from('purchase_orders')
         .update({ 
           status: 'draft' as POStatus,
-          notes: `[REJECTED] ${reason || 'Returned for corrections'}${po.notes ? '\n' + po.notes : ''}`,
+          rejection_reason: reason,
         })
         .eq('id', po.id);
       if (error) throw error;
@@ -257,7 +261,14 @@ export default function PurchaseOrders() {
     { key: 'vendor', header: 'Vendor', render: (o: POWithDetails) => o.vendors?.name || '-' },
     { key: 'order_date', header: 'Order Date', render: (o: POWithDetails) => new Date(o.order_date).toLocaleDateString() },
     { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => `₦${(o.total_amount || 0).toFixed(2)}` },
-    { key: 'status', header: 'Status', render: (o: POWithDetails) => <StatusBadge status={o.status} /> },
+    { key: 'status', header: 'Status', render: (o: POWithDetails) => (
+      <div>
+        <StatusBadge status={o.status} />
+        {o.status === 'draft' && o.rejection_reason && (
+          <p className="text-xs text-destructive mt-1" title={o.rejection_reason}>⚠ {o.rejection_reason.length > 40 ? o.rejection_reason.slice(0, 40) + '…' : o.rejection_reason}</p>
+        )}
+      </div>
+    )},
     {
       key: 'actions',
       header: '',

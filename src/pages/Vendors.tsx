@@ -54,7 +54,7 @@ export default function Vendors() {
     try {
       const { error } = await supabase
         .from('vendors')
-        .update({ status: 'pending_approval' as VendorStatus })
+        .update({ status: 'pending_approval' as VendorStatus, rejection_reason: null })
         .eq('id', vendor.id);
 
       if (error) throw error;
@@ -88,10 +88,16 @@ export default function Vendors() {
   };
 
   const handleReject = async (vendor: Vendor) => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error: vendorError } = await supabase
         .from('vendors')
-        .update({ status: 'draft' as VendorStatus })
+        .update({ status: 'draft' as VendorStatus, rejection_reason: reason })
         .eq('id', vendor.id);
 
       if (vendorError) throw vendorError;
@@ -102,7 +108,7 @@ export default function Vendors() {
         rejected_at: new Date().toISOString(),
       });
 
-      toast.success('Vendor rejected');
+      toast.success('Vendor returned to draft for corrections');
       fetchVendors();
     } catch (error) {
       toast.error('Failed to reject');
@@ -142,7 +148,14 @@ export default function Vendors() {
     { 
       key: 'status', 
       header: 'Status', 
-      render: (v: Vendor) => <StatusBadge status={v.status} /> 
+      render: (v: Vendor) => (
+        <div>
+          <StatusBadge status={v.status} />
+          {v.status === 'draft' && v.rejection_reason && (
+            <p className="text-xs text-destructive mt-1" title={v.rejection_reason}>⚠ {v.rejection_reason.length > 40 ? v.rejection_reason.slice(0, 40) + '…' : v.rejection_reason}</p>
+          )}
+        </div>
+      )
     },
     {
       key: 'actions',

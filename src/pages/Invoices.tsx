@@ -199,7 +199,7 @@ export default function Invoices() {
     try {
       const { error } = await supabase
         .from('ap_invoices')
-        .update({ status: 'pending_approval' })
+        .update({ status: 'pending_approval', rejection_reason: null })
         .eq('id', invoice.id);
       if (error) throw error;
       toast.success('Invoice submitted for approval');
@@ -226,10 +226,14 @@ export default function Invoices() {
   const handleRejectInvoice = async (invoice: InvoiceWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error } = await supabase
         .from('ap_invoices')
-        .update({ status: 'draft' })
+        .update({ status: 'draft', rejection_reason: reason })
         .eq('id', invoice.id);
       if (error) throw error;
       toast.success('Invoice returned to draft for corrections');
@@ -303,7 +307,14 @@ export default function Invoices() {
     { key: 'po', header: 'PO', render: (i: InvoiceWithDetails) => i.purchase_orders?.po_number || '-' },
     { key: 'invoice_date', header: 'Date', render: (i: InvoiceWithDetails) => new Date(i.invoice_date).toLocaleDateString() },
     { key: 'total_amount', header: 'Total', render: (i: InvoiceWithDetails) => `₦${(i.total_amount || 0).toFixed(2)}` },
-    { key: 'status', header: 'Status', render: (i: InvoiceWithDetails) => <StatusBadge status={i.status} /> },
+    { key: 'status', header: 'Status', render: (i: InvoiceWithDetails) => (
+      <div>
+        <StatusBadge status={i.status} />
+        {i.status === 'draft' && i.rejection_reason && (
+          <p className="text-xs text-destructive mt-1" title={i.rejection_reason}>⚠ {i.rejection_reason.length > 40 ? i.rejection_reason.slice(0, 40) + '…' : i.rejection_reason}</p>
+        )}
+      </div>
+    )},
     {
       key: 'actions',
       header: '',
