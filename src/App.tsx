@@ -98,6 +98,10 @@ const App = () => (
             <Route path="/ar-receipts" element={<ProtectedRoute><ARReceipts /></ProtectedRoute>} />
             <Route path="/ar-credit-notes" element={<ProtectedRoute><ARCreditNotes /></ProtectedRoute>} />
             <Route path="/ar-aging" element={<ProtectedRoute><ARAging /></ProtectedRoute>} />
+            <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
+            <Route path="/bank-reconciliation" element={<ProtectedRoute><BankReconciliation /></ProtectedRoute>} />
+            <Route path="/fund-transfers" element={<ProtectedRoute><FundTransfers /></ProtectedRoute>} />
+            <Route path="/cash-flow-forecast" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
