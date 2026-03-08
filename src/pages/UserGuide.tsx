@@ -29,7 +29,7 @@ const Step = ({ number, children }: { number: number; children: React.ReactNode 
 
 const Tip = ({ children }: { children: React.ReactNode }) => (
   <div className="flex gap-2 items-start p-3 rounded-lg bg-accent/50 border border-accent">
-    <Lightbulb className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+    <Lightbulb className="h-4 w-4 text-primaryex-shrink-0 mt-0.5" />
     <p className="text-xs text-muted-foreground">{children}</p>
   </div>
 );
@@ -90,7 +90,7 @@ export default function UserGuide() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <CheckCircle2 className="h-5 w-5 text-greprimary>
               Getting Started (First 5 Minutes)
             </CardTitle>
           </CardHeader>
