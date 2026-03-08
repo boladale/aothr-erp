@@ -35,6 +35,9 @@ import {
   TrendingUp,
   Scale,
   FolderKanban,
+  ShoppingCart,
+  FileCheck,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
