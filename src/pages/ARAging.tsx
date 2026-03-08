@@ -97,10 +97,10 @@ export default function ARAging() {
         <PageHeader title="AR Aging Report" description="Outstanding receivables by customer aging" />
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <MetricCard title="Total Outstanding" value={formatCurrency(totals.total)} icon={<DollarSign className="h-5 w-5" />} />
-          <MetricCard title="Current" value={formatCurrency(totals.current)} icon={<Clock className="h-5 w-5" />} />
-          <MetricCard title="Overdue (1-60 days)" value={formatCurrency(totals.days30 + totals.days60)} icon={<AlertTriangle className="h-5 w-5" />} />
-          <MetricCard title="Overdue (60+ days)" value={formatCurrency(totals.days90)} icon={<Users className="h-5 w-5" />} />
+          <MetricCard title="Total Outstanding" value={formatCurrency(totals.total)} icon={DollarSign} />
+          <MetricCard title="Current" value={formatCurrency(totals.current)} icon={Clock} />
+          <MetricCard title="Overdue (1-60 days)" value={formatCurrency(totals.days30 + totals.days60)} icon={AlertTriangle} />
+          <MetricCard title="Overdue (60+ days)" value={formatCurrency(totals.days90)} icon={Users} />
         </div>
 
         <Card>
