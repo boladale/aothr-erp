@@ -119,6 +119,13 @@ const navSections = [
     ],
   },
   {
+    label: 'Project Accounting',
+    items: [
+      { path: '/projects', label: 'Projects', icon: FolderKanban },
+      { path: '/project-profitability', label: 'Profitability', icon: TrendingUp },
+    ],
+  },
+  {
     label: 'Reports',
     items: [
       { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
