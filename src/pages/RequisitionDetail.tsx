@@ -72,7 +72,7 @@ export default function RequisitionDetail() {
   const handleSubmit = async () => {
     try {
       const { error } = await supabase.from('requisitions')
-        .update({ status: 'pending_approval', submitted_at: new Date().toISOString() })
+        .update({ status: 'pending_approval', submitted_at: new Date().toISOString(), rejection_reason: null })
         .eq('id', id!);
       if (error) throw error;
       toast.success('Submitted for approval');
