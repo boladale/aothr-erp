@@ -115,6 +115,11 @@ export default function UserManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null);
 
+  // App role programs assignment dialog
+  const [appRoleAssignOpen, setAppRoleAssignOpen] = useState(false);
+  const [selectedAppRole, setSelectedAppRole] = useState<AppRole | null>(null);
+  const [selectedAppRolePerms, setSelectedAppRolePerms] = useState<string[]>([]);
+
   // User role assignment
   const [userRoleDialogOpen, setUserRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
