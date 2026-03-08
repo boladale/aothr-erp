@@ -94,6 +94,7 @@ export interface PurchaseOrder {
   tax_amount?: number;
   total_amount?: number;
   notes?: string;
+  rejection_reason?: string;
   close_ready: boolean;
   created_by?: string;
   approved_by?: string;
