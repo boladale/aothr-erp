@@ -203,6 +203,11 @@ export default function Admin() {
             <TabsTrigger value="audit" className="gap-2">
               <History className="h-4 w-4" /> Audit Log
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="data" className="gap-2">
+                <Database className="h-4 w-4" /> Data Management
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
