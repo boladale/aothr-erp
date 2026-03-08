@@ -405,6 +405,338 @@ export type Database = {
           },
         ]
       }
+      ar_credit_note_lines: {
+        Row: {
+          credit_note_id: string
+          description: string
+          id: string
+          item_id: string | null
+          line_total: number | null
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          credit_note_id: string
+          description: string
+          id?: string
+          item_id?: string | null
+          line_total?: number | null
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          credit_note_id?: string
+          description?: string
+          id?: string
+          item_id?: string | null
+          line_total?: number | null
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_credit_note_lines_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "ar_credit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ar_credit_note_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_credit_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          credit_date: string
+          credit_note_number: string
+          customer_id: string
+          id: string
+          invoice_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["ar_credit_note_status"]
+          subtotal: number | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          credit_note_number: string
+          customer_id: string
+          id?: string
+          invoice_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["ar_credit_note_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          credit_note_number?: string
+          customer_id?: string
+          id?: string
+          invoice_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["ar_credit_note_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_credit_notes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ar_credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ar_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_invoice_lines: {
+        Row: {
+          description: string
+          id: string
+          invoice_id: string
+          item_id: string | null
+          line_total: number | null
+          quantity: number
+          revenue_account_id: string | null
+          unit_price: number
+        }
+        Insert: {
+          description: string
+          id?: string
+          invoice_id: string
+          item_id?: string | null
+          line_total?: number | null
+          quantity?: number
+          revenue_account_id?: string | null
+          unit_price?: number
+        }
+        Update: {
+          description?: string
+          id?: string
+          invoice_id?: string
+          item_id?: string | null
+          line_total?: number | null
+          quantity?: number
+          revenue_account_id?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ar_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ar_invoice_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ar_invoice_lines_revenue_account_id_fkey"
+            columns: ["revenue_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          due_date: string | null
+          id: string
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          payment_status: Database["public"]["Enums"]["ar_payment_status"]
+          posted_at: string | null
+          posted_by: string | null
+          status: Database["public"]["Enums"]["ar_invoice_status"]
+          subtotal: number | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["ar_payment_status"]
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["ar_invoice_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          due_date?: string | null
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          payment_status?: Database["public"]["Enums"]["ar_payment_status"]
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["ar_invoice_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_receipt_allocations: {
+        Row: {
+          allocated_amount: number
+          created_at: string
+          id: string
+          invoice_id: string
+          receipt_id: string
+        }
+        Insert: {
+          allocated_amount: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          receipt_id: string
+        }
+        Update: {
+          allocated_amount?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_receipt_allocations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ar_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ar_receipt_allocations_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "ar_receipts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ar_receipts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          id: string
+          notes: string | null
+          payment_method: string
+          posted_at: string | null
+          posted_by: string | null
+          receipt_date: string
+          receipt_number: string
+          reference_number: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          receipt_date?: string
+          receipt_number: string
+          reference_number?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          receipt_date?: string
+          receipt_number?: string
+          reference_number?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ar_receipts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -561,6 +893,57 @@ export type Database = {
           name?: string
           start_date?: string
           status?: Database["public"]["Enums"]["budget_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          address: string | null
+          city: string | null
+          code: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          credit_limit: number | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          payment_terms: number | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          code: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          payment_terms?: number | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          code?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          credit_limit?: number | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          payment_terms?: number | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1855,6 +2238,105 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_recognition_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          fiscal_period_id: string | null
+          id: string
+          journal_entry_id: string | null
+          posted: boolean
+          recognized_date: string
+          schedule_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fiscal_period_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          posted?: boolean
+          recognized_date: string
+          schedule_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fiscal_period_id?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          posted?: boolean
+          recognized_date?: string
+          schedule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_recognition_entries_fiscal_period_id_fkey"
+            columns: ["fiscal_period_id"]
+            isOneToOne: false
+            referencedRelation: "gl_fiscal_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_recognition_entries_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_recognition_entries_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_recognition_schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revenue_recognition_schedules: {
+        Row: {
+          ar_invoice_line_id: string
+          created_at: string
+          end_date: string
+          id: string
+          recognized_amount: number
+          schedule_type: string
+          start_date: string
+          status: Database["public"]["Enums"]["revenue_schedule_status"]
+          total_amount: number
+        }
+        Insert: {
+          ar_invoice_line_id: string
+          created_at?: string
+          end_date: string
+          id?: string
+          recognized_amount?: number
+          schedule_type?: string
+          start_date: string
+          status?: Database["public"]["Enums"]["revenue_schedule_status"]
+          total_amount: number
+        }
+        Update: {
+          ar_invoice_line_id?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          recognized_amount?: number
+          schedule_type?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["revenue_schedule_status"]
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_recognition_schedules_ar_invoice_line_id_fkey"
+            columns: ["ar_invoice_line_id"]
+            isOneToOne: false
+            referencedRelation: "ar_invoice_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfp_criteria: {
         Row: {
           created_at: string
@@ -2483,6 +2965,9 @@ export type Database = {
         | "rejected"
         | "cancelled"
       approval_step_type: "sequential" | "parallel" | "any_of"
+      ar_credit_note_status: "draft" | "posted" | "void"
+      ar_invoice_status: "draft" | "posted" | "void"
+      ar_payment_status: "unpaid" | "partial" | "paid"
       budget_source_type: "po_commitment" | "invoice_actual"
       budget_status: "draft" | "active" | "closed" | "frozen"
       budget_transaction_type: "commit" | "uncommit" | "consume" | "reverse"
@@ -2524,6 +3009,7 @@ export type Database = {
         | "partially_converted"
         | "fully_converted"
       reservation_status: "active" | "fulfilled" | "cancelled" | "expired"
+      revenue_schedule_status: "active" | "completed" | "cancelled"
       rfp_status: "draft" | "published" | "evaluating" | "awarded" | "cancelled"
       vendor_status: "draft" | "pending_approval" | "active" | "inactive"
     }
@@ -2674,6 +3160,9 @@ export const Constants = {
         "cancelled",
       ],
       approval_step_type: ["sequential", "parallel", "any_of"],
+      ar_credit_note_status: ["draft", "posted", "void"],
+      ar_invoice_status: ["draft", "posted", "void"],
+      ar_payment_status: ["unpaid", "partial", "paid"],
       budget_source_type: ["po_commitment", "invoice_actual"],
       budget_status: ["draft", "active", "closed", "frozen"],
       budget_transaction_type: ["commit", "uncommit", "consume", "reverse"],
@@ -2720,6 +3209,7 @@ export const Constants = {
         "fully_converted",
       ],
       reservation_status: ["active", "fulfilled", "cancelled", "expired"],
+      revenue_schedule_status: ["active", "completed", "cancelled"],
       rfp_status: ["draft", "published", "evaluating", "awarded", "cancelled"],
       vendor_status: ["draft", "pending_approval", "active", "inactive"],
     },
