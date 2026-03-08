@@ -159,6 +159,7 @@ export interface APInvoice {
   tax_amount?: number;
   total_amount?: number;
   status: string;
+  rejection_reason?: string;
   posted_at?: string;
   posted_by?: string;
   created_by?: string;
