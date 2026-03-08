@@ -49,6 +49,46 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Bell } from 'lucide-react';
+import type { AppRole } from '@/lib/supabase';
+
+// Map each nav path to the roles that can access it
+const roleAccess: Record<string, AppRole[]> = {
+  '/': [], // all roles
+  '/vendors': ['admin', 'procurement_manager', 'procurement_officer'],
+  '/vendor-performance': ['admin', 'procurement_manager'],
+  '/rfps': ['admin', 'procurement_manager', 'procurement_officer'],
+  '/items': ['admin', 'procurement_manager', 'warehouse_manager'],
+  '/locations': ['admin', 'procurement_manager', 'warehouse_manager'],
+  '/requisitions': ['admin', 'procurement_manager', 'procurement_officer', 'requisitioner'],
+  '/purchase-orders': ['admin', 'procurement_manager', 'procurement_officer'],
+  '/inventory': ['admin', 'warehouse_manager', 'warehouse_officer'],
+  '/inventory-valuation': ['admin', 'warehouse_manager', 'accounts_payable'],
+  '/goods-receipts': ['admin', 'procurement_manager', 'warehouse_manager', 'warehouse_officer'],
+  '/chart-of-accounts': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/journal-entries': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/financial-reports': ['admin', 'accounts_payable'],
+  '/fiscal-periods': ['admin'],
+  '/invoices': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ap-payments': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ap-aging': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/match-exceptions': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/customers': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-invoices': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-receipts': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-credit-notes': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-aging': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/bank-accounts': ['admin', 'accounts_payable'],
+  '/fund-transfers': ['admin', 'accounts_payable'],
+  '/bank-reconciliation': ['admin', 'accounts_payable'],
+  '/cash-flow-forecast': ['admin', 'accounts_payable'],
+  '/projects': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/project-profitability': ['admin', 'accounts_payable'],
+  '/po-closure': ['admin', 'procurement_manager', 'accounts_payable'],
+  '/notifications': [], // all roles
+  '/approval-rules': ['admin'],
+  '/user-management': ['admin'],
+  '/admin': ['admin'],
+};
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -146,7 +186,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, roles, signOut } = useAuth();
+
+  const canAccess = (path: string) => {
+    const allowed = roleAccess[path];
+    if (!allowed || allowed.length === 0) return true; // accessible to all
+    return roles.some(r => allowed.includes(r));
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -184,32 +230,36 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-2">
-          {navSections.map(section => (
-            <div key={section.label} className="mb-4">
-              {sidebarOpen && (
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                  {section.label}
-                </p>
-              )}
-              <ul className="space-y-0.5">
-                {section.items.map(item => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={cn("nav-item", isActive && "nav-item-active")}
-                        title={!sidebarOpen ? item.label : undefined}
-                      >
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
-                        {sidebarOpen && <span>{item.label}</span>}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+          {navSections.map(section => {
+            const visibleItems = section.items.filter(item => canAccess(item.path));
+            if (visibleItems.length === 0) return null;
+            return (
+              <div key={section.label} className="mb-4">
+                {sidebarOpen && (
+                  <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                    {section.label}
+                  </p>
+                )}
+                <ul className="space-y-0.5">
+                  {visibleItems.map(item => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <li key={item.path}>
+                        <Link
+                          to={item.path}
+                          className={cn("nav-item", isActive && "nav-item-active")}
+                          title={!sidebarOpen ? item.label : undefined}
+                        >
+                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          {sidebarOpen && <span>{item.label}</span>}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
         </nav>
 
         {/* User Menu */}
