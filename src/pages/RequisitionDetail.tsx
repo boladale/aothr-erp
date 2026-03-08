@@ -33,6 +33,7 @@ interface Requisition {
   justification: string | null;
   needed_by_date: string | null;
   notes: string | null;
+  rejection_reason: string | null;
   submitted_at: string | null;
   approved_at: string | null;
   created_at: string;
