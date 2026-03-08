@@ -186,6 +186,24 @@ export default function PurchaseOrders() {
       toast.error('Failed to approve');
     }
   };
+  const handleRejectPO = async (po: POWithDetails) => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ 
+          status: 'draft' as POStatus,
+          notes: `[REJECTED] ${reason || 'Returned for corrections'}${po.notes ? '\n' + po.notes : ''}`,
+        })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('PO returned to draft for corrections');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to reject PO');
+    }
+  };
 
   const handleSend = async (po: POWithDetails) => {
     try {
@@ -251,9 +269,14 @@ export default function PurchaseOrders() {
             </Button>
           )}
           {o.status === 'pending_approval' && canApprove && (
-            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(o); }}>
-              Approve
-            </Button>
+            <>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(o); }}>
+                Approve
+              </Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectPO(o); }}>
+                Reject
+              </Button>
+            </>
           )}
           {o.status === 'approved' && canApprove && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSend(o); }}>

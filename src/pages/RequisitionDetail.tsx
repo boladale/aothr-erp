@@ -95,12 +95,20 @@ export default function RequisitionDetail() {
   };
 
   const handleReject = async () => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
     try {
       const { error } = await supabase.from('requisitions')
-        .update({ status: 'rejected', rejected_at: new Date().toISOString(), rejected_by: user?.id })
+        .update({ 
+          status: 'draft', 
+          rejection_reason: reason || 'Returned for corrections',
+          rejected_at: new Date().toISOString(), 
+          rejected_by: user?.id,
+          submitted_at: null
+        })
         .eq('id', id!);
       if (error) throw error;
-      toast.success('Requisition rejected');
+      toast.success('Requisition returned to draft for corrections');
       fetchData();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to reject');

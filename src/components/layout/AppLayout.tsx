@@ -84,6 +84,11 @@ const pathToProgram: Record<string, string> = {
   '/projects': 'projects',
   '/project-profitability': 'project_profitability',
   '/po-closure': 'po_closure',
+  '/procurement-reports': 'purchase_orders',
+  '/warehouse-reports': 'inventory',
+  '/ap-reports': 'invoices',
+  '/ar-reports': 'ar_invoices',
+  '/cash-reports': 'bank_accounts',
   '/notifications': 'notifications',
   '/approval-rules': 'approval_rules',
   '/user-management': 'user_management',
@@ -168,6 +173,11 @@ const navSections = [
   {
     label: 'Reports',
     items: [
+      { path: '/procurement-reports', label: 'Procurement Reports', icon: BarChart3 },
+      { path: '/warehouse-reports', label: 'Warehouse Reports', icon: BarChart3 },
+      { path: '/ap-reports', label: 'AP Reports', icon: BarChart3 },
+      { path: '/ar-reports', label: 'AR Reports', icon: BarChart3 },
+      { path: '/cash-reports', label: 'Cash Reports', icon: BarChart3 },
       { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
     ],
   },

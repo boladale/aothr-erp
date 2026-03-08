@@ -44,6 +44,11 @@ import InventoryValuation from "./pages/InventoryValuation";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectProfitability from "./pages/ProjectProfitability";
+import ProcurementReports from "./pages/ProcurementReports";
+import WarehouseReports from "./pages/WarehouseReports";
+import FinanceAPReports from "./pages/FinanceAPReports";
+import FinanceARReports from "./pages/FinanceARReports";
+import CashReports from "./pages/CashReports";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -112,6 +117,11 @@ const App = () => (
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
             <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/project-profitability" element={<ProtectedRoute><ProjectProfitability /></ProtectedRoute>} />
+            <Route path="/procurement-reports" element={<ProtectedRoute><ProcurementReports /></ProtectedRoute>} />
+            <Route path="/warehouse-reports" element={<ProtectedRoute><WarehouseReports /></ProtectedRoute>} />
+            <Route path="/ap-reports" element={<ProtectedRoute><FinanceAPReports /></ProtectedRoute>} />
+            <Route path="/ar-reports" element={<ProtectedRoute><FinanceARReports /></ProtectedRoute>} />
+            <Route path="/cash-reports" element={<ProtectedRoute><CashReports /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
