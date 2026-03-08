@@ -75,6 +75,15 @@ const navSections = [
     ],
   },
   {
+    label: 'General Ledger',
+    items: [
+      { path: '/chart-of-accounts', label: 'Chart of Accounts', icon: BookOpen },
+      { path: '/journal-entries', label: 'Journal Entries', icon: Calculator },
+      { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
+      { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
+    ],
+  },
+  {
     label: 'Finance - AP',
     items: [
       { path: '/invoices', label: 'AP Invoices', icon: Receipt },
