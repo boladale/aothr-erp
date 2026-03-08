@@ -4009,6 +4009,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_transactional_data: { Args: never; Returns: undefined }
       consume_fifo_layers: {
         Args: {
           p_consumption_type: string

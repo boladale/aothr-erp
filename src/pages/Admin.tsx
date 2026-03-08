@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
@@ -202,6 +203,11 @@ export default function Admin() {
             <TabsTrigger value="audit" className="gap-2">
               <History className="h-4 w-4" /> Audit Log
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="data" className="gap-2">
+                <Database className="h-4 w-4" /> Data Management
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -265,6 +271,12 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="data" className="space-y-4">
+              <DataManagementPanel />
+            </TabsContent>
+          )}
         </Tabs>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
