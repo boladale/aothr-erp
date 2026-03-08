@@ -199,6 +199,7 @@ const navSections = [
   {
     label: 'Administration',
     items: [
+      { path: '/tax-configuration', label: 'Tax Configuration', icon: Percent },
       { path: '/notifications', label: 'Notifications', icon: Bell },
       { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
       { path: '/user-management', label: 'User Management', icon: Shield },
