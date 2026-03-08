@@ -148,7 +148,14 @@ export default function Vendors() {
     { 
       key: 'status', 
       header: 'Status', 
-      render: (v: Vendor) => <StatusBadge status={v.status} /> 
+      render: (v: Vendor) => (
+        <div>
+          <StatusBadge status={v.status} />
+          {v.status === 'draft' && v.rejection_reason && (
+            <p className="text-xs text-destructive mt-1" title={v.rejection_reason}>⚠ {v.rejection_reason.length > 40 ? v.rejection_reason.slice(0, 40) + '…' : v.rejection_reason}</p>
+          )}
+        </div>
+      )
     },
     {
       key: 'actions',
