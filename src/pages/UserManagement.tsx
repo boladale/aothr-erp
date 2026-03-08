@@ -775,6 +775,44 @@ export default function UserManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* App Role Programs Assignment Dialog */}
+        <Dialog open={appRoleAssignOpen} onOpenChange={setAppRoleAssignOpen}>
+          <DialogContent className="max-w-lg max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>
+                Configure Programs for "{selectedAppRole?.replace(/_/g, ' ')}"
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+              {permissions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No programs available. Go to the Programs tab to initialize.</p>
+              ) : (
+                permissions.map(perm => (
+                  <label
+                    key={perm.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors"
+                  >
+                    <Checkbox
+                      checked={selectedAppRolePerms.includes(perm.id)}
+                      onCheckedChange={() => toggleAppRolePerm(perm.id)}
+                    />
+                    <div>
+                      <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
+                      <p className="text-xs text-muted-foreground">{perm.description}</p>
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAppRoleAssignOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveAppRolePerms}>
+                Save ({selectedAppRolePerms.length} programs)
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
