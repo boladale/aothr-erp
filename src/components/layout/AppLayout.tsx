@@ -49,6 +49,46 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Bell } from 'lucide-react';
+import type { AppRole } from '@/lib/supabase';
+
+// Map each nav path to the roles that can access it
+const roleAccess: Record<string, AppRole[]> = {
+  '/': [], // all roles
+  '/vendors': ['admin', 'procurement_manager', 'procurement_officer'],
+  '/vendor-performance': ['admin', 'procurement_manager'],
+  '/rfps': ['admin', 'procurement_manager', 'procurement_officer'],
+  '/items': ['admin', 'procurement_manager', 'warehouse_manager'],
+  '/locations': ['admin', 'procurement_manager', 'warehouse_manager'],
+  '/requisitions': ['admin', 'procurement_manager', 'procurement_officer', 'requisitioner'],
+  '/purchase-orders': ['admin', 'procurement_manager', 'procurement_officer'],
+  '/inventory': ['admin', 'warehouse_manager', 'warehouse_officer'],
+  '/inventory-valuation': ['admin', 'warehouse_manager', 'accounts_payable'],
+  '/goods-receipts': ['admin', 'procurement_manager', 'warehouse_manager', 'warehouse_officer'],
+  '/chart-of-accounts': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/journal-entries': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/financial-reports': ['admin', 'accounts_payable'],
+  '/fiscal-periods': ['admin'],
+  '/invoices': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ap-payments': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ap-aging': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/match-exceptions': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/customers': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-invoices': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-receipts': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-credit-notes': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/ar-aging': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/bank-accounts': ['admin', 'accounts_payable'],
+  '/fund-transfers': ['admin', 'accounts_payable'],
+  '/bank-reconciliation': ['admin', 'accounts_payable'],
+  '/cash-flow-forecast': ['admin', 'accounts_payable'],
+  '/projects': ['admin', 'accounts_payable', 'ap_clerk'],
+  '/project-profitability': ['admin', 'accounts_payable'],
+  '/po-closure': ['admin', 'procurement_manager', 'accounts_payable'],
+  '/notifications': [], // all roles
+  '/approval-rules': ['admin'],
+  '/user-management': ['admin'],
+  '/admin': ['admin'],
+};
 
 interface AppLayoutProps {
   children: ReactNode;
