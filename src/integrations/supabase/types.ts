@@ -770,6 +770,194 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_accounts: {
+        Row: {
+          account_code: string
+          account_name: string
+          account_number: string | null
+          bank_name: string | null
+          created_at: string
+          currency: string
+          current_balance: number
+          gl_account_id: string | null
+          id: string
+          is_active: boolean
+          opening_balance: number
+          updated_at: string
+        }
+        Insert: {
+          account_code: string
+          account_name: string
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          gl_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          opening_balance?: number
+          updated_at?: string
+        }
+        Update: {
+          account_code?: string
+          account_name?: string
+          account_number?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          gl_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          opening_balance?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_gl_account_id_fkey"
+            columns: ["gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_reconciliations: {
+        Row: {
+          bank_account_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          difference: number
+          gl_balance: number
+          id: string
+          notes: string | null
+          reconciled_balance: number
+          reconciliation_date: string
+          statement_end_date: string
+          statement_ending_balance: number
+          statement_start_date: string
+          status: Database["public"]["Enums"]["reconciliation_status"]
+        }
+        Insert: {
+          bank_account_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference?: number
+          gl_balance?: number
+          id?: string
+          notes?: string | null
+          reconciled_balance?: number
+          reconciliation_date?: string
+          statement_end_date: string
+          statement_ending_balance: number
+          statement_start_date: string
+          status?: Database["public"]["Enums"]["reconciliation_status"]
+        }
+        Update: {
+          bank_account_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          difference?: number
+          gl_balance?: number
+          id?: string
+          notes?: string | null
+          reconciled_balance?: number
+          reconciliation_date?: string
+          statement_end_date?: string
+          statement_ending_balance?: number
+          statement_start_date?: string
+          status?: Database["public"]["Enums"]["reconciliation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliations_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transactions: {
+        Row: {
+          amount: number
+          bank_account_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          gl_journal_entry_id: string | null
+          id: string
+          payee: string | null
+          reconciliation_id: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["bank_txn_status"]
+          transaction_date: string
+          transaction_type: Database["public"]["Enums"]["bank_txn_type"]
+          value_date: string | null
+        }
+        Insert: {
+          amount: number
+          bank_account_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          gl_journal_entry_id?: string | null
+          id?: string
+          payee?: string | null
+          reconciliation_id?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["bank_txn_status"]
+          transaction_date?: string
+          transaction_type: Database["public"]["Enums"]["bank_txn_type"]
+          value_date?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          gl_journal_entry_id?: string | null
+          id?: string
+          payee?: string | null
+          reconciliation_id?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["bank_txn_status"]
+          transaction_date?: string
+          transaction_type?: Database["public"]["Enums"]["bank_txn_type"]
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_gl_journal_entry_id_fkey"
+            columns: ["gl_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transactions_reconciliation_id_fkey"
+            columns: ["reconciliation_id"]
+            isOneToOne: false
+            referencedRelation: "bank_reconciliations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_consumption: {
         Row: {
           amount: number
@@ -947,6 +1135,79 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      fund_transfers: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          from_bank_account_id: string
+          gl_journal_entry_id: string | null
+          id: string
+          notes: string | null
+          posted_at: string | null
+          posted_by: string | null
+          reference: string | null
+          status: Database["public"]["Enums"]["fund_transfer_status"]
+          to_bank_account_id: string
+          transfer_date: string
+          transfer_number: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          from_bank_account_id: string
+          gl_journal_entry_id?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["fund_transfer_status"]
+          to_bank_account_id: string
+          transfer_date?: string
+          transfer_number: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          from_bank_account_id?: string
+          gl_journal_entry_id?: string | null
+          id?: string
+          notes?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reference?: string | null
+          status?: Database["public"]["Enums"]["fund_transfer_status"]
+          to_bank_account_id?: string
+          transfer_date?: string
+          transfer_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fund_transfers_from_bank_account_id_fkey"
+            columns: ["from_bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_transfers_gl_journal_entry_id_fkey"
+            columns: ["gl_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fund_transfers_to_bank_account_id_fkey"
+            columns: ["to_bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gl_account_balances: {
         Row: {
@@ -2968,10 +3229,19 @@ export type Database = {
       ar_credit_note_status: "draft" | "posted" | "void"
       ar_invoice_status: "draft" | "posted" | "void"
       ar_payment_status: "unpaid" | "partial" | "paid"
+      bank_txn_status: "unreconciled" | "reconciled" | "voided"
+      bank_txn_type:
+        | "deposit"
+        | "withdrawal"
+        | "transfer_in"
+        | "transfer_out"
+        | "fee"
+        | "interest"
       budget_source_type: "po_commitment" | "invoice_actual"
       budget_status: "draft" | "active" | "closed" | "frozen"
       budget_transaction_type: "commit" | "uncommit" | "consume" | "reverse"
       fiscal_period_status: "open" | "closed" | "locked"
+      fund_transfer_status: "draft" | "posted"
       gl_account_type: "asset" | "liability" | "equity" | "revenue" | "expense"
       gl_entry_status: "draft" | "posted" | "reversed"
       hold_type:
@@ -3000,6 +3270,7 @@ export type Database = {
         | "awarded"
         | "rejected"
         | "declined"
+      reconciliation_status: "in_progress" | "completed"
       requisition_status:
         | "draft"
         | "pending_approval"
@@ -3163,10 +3434,20 @@ export const Constants = {
       ar_credit_note_status: ["draft", "posted", "void"],
       ar_invoice_status: ["draft", "posted", "void"],
       ar_payment_status: ["unpaid", "partial", "paid"],
+      bank_txn_status: ["unreconciled", "reconciled", "voided"],
+      bank_txn_type: [
+        "deposit",
+        "withdrawal",
+        "transfer_in",
+        "transfer_out",
+        "fee",
+        "interest",
+      ],
       budget_source_type: ["po_commitment", "invoice_actual"],
       budget_status: ["draft", "active", "closed", "frozen"],
       budget_transaction_type: ["commit", "uncommit", "consume", "reverse"],
       fiscal_period_status: ["open", "closed", "locked"],
+      fund_transfer_status: ["draft", "posted"],
       gl_account_type: ["asset", "liability", "equity", "revenue", "expense"],
       gl_entry_status: ["draft", "posted", "reversed"],
       hold_type: [
@@ -3199,6 +3480,7 @@ export const Constants = {
         "rejected",
         "declined",
       ],
+      reconciliation_status: ["in_progress", "completed"],
       requisition_status: [
         "draft",
         "pending_approval",
