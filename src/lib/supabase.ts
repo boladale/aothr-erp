@@ -198,6 +198,23 @@ export interface Profile {
   email: string;
   full_name?: string;
   avatar_url?: string;
+  organization_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  code: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  logo_url?: string;
+  is_active: boolean;
+  created_by?: string;
   created_at: string;
   updated_at: string;
 }
