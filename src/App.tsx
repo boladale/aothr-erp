@@ -41,6 +41,9 @@ import BankReconciliation from "./pages/BankReconciliation";
 import FundTransfers from "./pages/FundTransfers";
 import CashFlowForecast from "./pages/CashFlowForecast";
 import InventoryValuation from "./pages/InventoryValuation";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
+import ProjectProfitability from "./pages/ProjectProfitability";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +107,9 @@ const App = () => (
             <Route path="/fund-transfers" element={<ProtectedRoute><FundTransfers /></ProtectedRoute>} />
             <Route path="/cash-flow-forecast" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
             <Route path="/inventory-valuation" element={<ProtectedRoute><InventoryValuation /></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+            <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+            <Route path="/project-profitability" element={<ProtectedRoute><ProjectProfitability /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

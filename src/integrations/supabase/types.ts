@@ -2294,6 +2294,189 @@ export type Database = {
         }
         Relationships: []
       }
+      project_costs: {
+        Row: {
+          amount: number
+          cost_date: string
+          cost_type: Database["public"]["Enums"]["project_cost_type"]
+          created_at: string
+          created_by: string | null
+          description: string
+          gl_journal_entry_id: string | null
+          id: string
+          posted: boolean
+          posted_at: string | null
+          posted_by: string | null
+          project_id: string
+          source_id: string | null
+          source_module: string | null
+        }
+        Insert: {
+          amount: number
+          cost_date?: string
+          cost_type: Database["public"]["Enums"]["project_cost_type"]
+          created_at?: string
+          created_by?: string | null
+          description: string
+          gl_journal_entry_id?: string | null
+          id?: string
+          posted?: boolean
+          posted_at?: string | null
+          posted_by?: string | null
+          project_id: string
+          source_id?: string | null
+          source_module?: string | null
+        }
+        Update: {
+          amount?: number
+          cost_date?: string
+          cost_type?: Database["public"]["Enums"]["project_cost_type"]
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          gl_journal_entry_id?: string | null
+          id?: string
+          posted?: boolean
+          posted_at?: string | null
+          posted_by?: string | null
+          project_id?: string
+          source_id?: string | null
+          source_module?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_costs_gl_journal_entry_id_fkey"
+            columns: ["gl_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_costs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_revenues: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          description: string
+          gl_journal_entry_id: string | null
+          id: string
+          posted: boolean
+          posted_at: string | null
+          posted_by: string | null
+          project_id: string
+          revenue_date: string
+          source_id: string | null
+          source_module: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          description: string
+          gl_journal_entry_id?: string | null
+          id?: string
+          posted?: boolean
+          posted_at?: string | null
+          posted_by?: string | null
+          project_id: string
+          revenue_date?: string
+          source_id?: string | null
+          source_module?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          gl_journal_entry_id?: string | null
+          id?: string
+          posted?: boolean
+          posted_at?: string | null
+          posted_by?: string | null
+          project_id?: string
+          revenue_date?: string
+          source_id?: string | null
+          source_module?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_revenues_gl_journal_entry_id_fkey"
+            columns: ["gl_journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_revenues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          budgeted_amount: number
+          client_name: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          profit_margin: number | null
+          project_code: string
+          project_name: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          total_costs: number
+          total_revenue: number
+          updated_at: string
+        }
+        Insert: {
+          budgeted_amount?: number
+          client_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          profit_margin?: number | null
+          project_code: string
+          project_name: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          total_costs?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Update: {
+          budgeted_amount?: number
+          client_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          profit_margin?: number | null
+          project_code?: string
+          project_name?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          total_costs?: number
+          total_revenue?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       purchase_order_lines: {
         Row: {
           description: string | null
@@ -3372,6 +3555,18 @@ export type Database = {
         | "partially_received"
         | "fully_received"
         | "closed"
+      project_cost_type:
+        | "labor"
+        | "material"
+        | "expense"
+        | "subcontract"
+        | "overhead"
+      project_status:
+        | "planning"
+        | "active"
+        | "on_hold"
+        | "completed"
+        | "cancelled"
       proposal_status:
         | "invited"
         | "submitted"
@@ -3580,6 +3775,20 @@ export const Constants = {
         "partially_received",
         "fully_received",
         "closed",
+      ],
+      project_cost_type: [
+        "labor",
+        "material",
+        "expense",
+        "subcontract",
+        "overhead",
+      ],
+      project_status: [
+        "planning",
+        "active",
+        "on_hold",
+        "completed",
+        "cancelled",
       ],
       proposal_status: [
         "invited",

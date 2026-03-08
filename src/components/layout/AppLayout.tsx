@@ -34,6 +34,7 @@ import {
   ArrowRightLeft,
   TrendingUp,
   Scale,
+  FolderKanban,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -115,6 +116,13 @@ const navSections = [
       { path: '/fund-transfers', label: 'Fund Transfers', icon: ArrowRightLeft },
       { path: '/bank-reconciliation', label: 'Reconciliation', icon: Scale },
       { path: '/cash-flow-forecast', label: 'Cash Forecast', icon: TrendingUp },
+    ],
+  },
+  {
+    label: 'Project Accounting',
+    items: [
+      { path: '/projects', label: 'Projects', icon: FolderKanban },
+      { path: '/project-profitability', label: 'Profitability', icon: TrendingUp },
     ],
   },
   {
