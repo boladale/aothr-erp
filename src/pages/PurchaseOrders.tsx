@@ -150,7 +150,7 @@ export default function PurchaseOrders() {
     try {
       const { error } = await supabase
         .from('purchase_orders')
-        .update({ status: 'pending_approval' as POStatus })
+        .update({ status: 'pending_approval' as POStatus, rejection_reason: null })
         .eq('id', po.id);
 
       if (error) throw error;
