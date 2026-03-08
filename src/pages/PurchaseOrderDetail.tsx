@@ -247,6 +247,12 @@ export default function PurchaseOrderDetail() {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardContent className="p-6">
+            <AttachmentPanel entityType="purchase_orders" entityId={id!} />
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
