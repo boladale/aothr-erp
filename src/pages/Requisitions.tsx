@@ -19,6 +19,7 @@ interface RequisitionRow {
   department: string | null;
   status: string;
   justification: string | null;
+  rejection_reason: string | null;
   needed_by_date: string | null;
   created_at: string;
   profiles: { full_name: string | null; email: string } | null;
