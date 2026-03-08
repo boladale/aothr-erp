@@ -55,12 +55,13 @@ import SalesQuotations from "./pages/SalesQuotations";
 import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import UserGuide from "./pages/UserGuide";
+import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, organizationId } = useAuth();
   
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
@@ -68,6 +69,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (!organizationId) {
+    return <Navigate to="/org-setup" replace />;
   }
   
   return <>{children}</>;
@@ -83,6 +88,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/org-setup" element={<OrganizationSetup />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><Items /></ProtectedRoute>} />

@@ -9,11 +9,13 @@ interface AuthContextType {
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
+  organizationId: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   isAdmin: boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -37,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRoles([]);
+        setOrganizationId(null);
         setLoading(false);
       }
     });
@@ -63,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (profileResult.data) {
         setProfile(profileResult.data as Profile);
+        setOrganizationId(profileResult.data.organization_id ?? null);
       }
 
       if (rolesResult.data) {
@@ -72,6 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Error fetching user data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchUserData(user.id);
     }
   };
 
@@ -99,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setOrganizationId(null);
   };
 
   const hasRole = (role: AppRole) => roles.includes(role);
@@ -111,11 +123,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       roles,
       loading,
+      organizationId,
       signIn,
       signUp,
       signOut,
       hasRole,
-      isAdmin
+      isAdmin,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>
