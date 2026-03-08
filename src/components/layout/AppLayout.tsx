@@ -186,12 +186,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, roles, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
+  const { hasProgram } = useUserPrograms();
 
   const canAccess = (path: string) => {
-    const allowed = roleAccess[path];
-    if (!allowed || allowed.length === 0) return true; // accessible to all
-    return roles.some(r => allowed.includes(r));
+    const programCode = pathToProgram[path];
+    if (!programCode) return true;
+    return hasProgram(programCode);
   };
 
   const handleSignOut = async () => {
