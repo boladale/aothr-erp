@@ -143,7 +143,7 @@ export default function UserManagement() {
       setRoles((rolesRes.data || []) as Role[]);
       setPermissions((permsRes.data || []) as Permission[]);
       setRolePermissions((rpRes.data || []) as RolePermission[]);
-
+      setAppRolePermissions((arpRes.data || []) as AppRolePermission[]);
       const profiles = (profilesRes.data || []) as Profile[];
       const uRoles = userRolesRes.data || [];
       const usersWithRoles: UserWithRoles[] = profiles.map(p => ({
