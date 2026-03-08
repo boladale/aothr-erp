@@ -85,13 +85,17 @@ export default function Requisitions() {
 
   const handleReject = async (req: RequisitionRow) => {
     const reason = window.prompt('Please enter a reason for rejection:');
-    if (reason === null) return; // cancelled
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error } = await supabase
         .from('requisitions')
         .update({ 
           status: 'draft', 
-          rejection_reason: reason || 'Returned for corrections',
+          rejection_reason: reason,
           rejected_at: new Date().toISOString(), 
           rejected_by: user?.id,
           submitted_at: null

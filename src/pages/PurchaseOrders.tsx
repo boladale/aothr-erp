@@ -189,12 +189,16 @@ export default function PurchaseOrders() {
   const handleRejectPO = async (po: POWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error } = await supabase
         .from('purchase_orders')
         .update({ 
           status: 'draft' as POStatus,
-          notes: `[REJECTED] ${reason || 'Returned for corrections'}${po.notes ? '\n' + po.notes : ''}`,
+          rejection_reason: reason,
         })
         .eq('id', po.id);
       if (error) throw error;

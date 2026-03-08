@@ -226,10 +226,14 @@ export default function Invoices() {
   const handleRejectInvoice = async (invoice: InvoiceWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error } = await supabase
         .from('ap_invoices')
-        .update({ status: 'draft' })
+        .update({ status: 'draft', rejection_reason: reason })
         .eq('id', invoice.id);
       if (error) throw error;
       toast.success('Invoice returned to draft for corrections');

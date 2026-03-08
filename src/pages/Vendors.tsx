@@ -88,10 +88,16 @@ export default function Vendors() {
   };
 
   const handleReject = async (vendor: Vendor) => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
     try {
       const { error: vendorError } = await supabase
         .from('vendors')
-        .update({ status: 'draft' as VendorStatus })
+        .update({ status: 'draft' as VendorStatus, rejection_reason: reason })
         .eq('id', vendor.id);
 
       if (vendorError) throw vendorError;
@@ -102,7 +108,7 @@ export default function Vendors() {
         rejected_at: new Date().toISOString(),
       });
 
-      toast.success('Vendor rejected');
+      toast.success('Vendor returned to draft for corrections');
       fetchVendors();
     } catch (error) {
       toast.error('Failed to reject');
