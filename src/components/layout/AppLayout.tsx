@@ -230,32 +230,36 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-2">
-          {navSections.map(section => (
-            <div key={section.label} className="mb-4">
-              {sidebarOpen && (
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                  {section.label}
-                </p>
-              )}
-              <ul className="space-y-0.5">
-                {section.items.map(item => {
-                  const isActive = location.pathname === item.path;
-                  return (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={cn("nav-item", isActive && "nav-item-active")}
-                        title={!sidebarOpen ? item.label : undefined}
-                      >
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
-                        {sidebarOpen && <span>{item.label}</span>}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+          {navSections.map(section => {
+            const visibleItems = section.items.filter(item => canAccess(item.path));
+            if (visibleItems.length === 0) return null;
+            return (
+              <div key={section.label} className="mb-4">
+                {sidebarOpen && (
+                  <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+                    {section.label}
+                  </p>
+                )}
+                <ul className="space-y-0.5">
+                  {visibleItems.map(item => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <li key={item.path}>
+                        <Link
+                          to={item.path}
+                          className={cn("nav-item", isActive && "nav-item-active")}
+                          title={!sidebarOpen ? item.label : undefined}
+                        >
+                          <item.icon className="h-5 w-5 flex-shrink-0" />
+                          {sidebarOpen && <span>{item.label}</span>}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
         </nav>
 
         {/* User Menu */}
