@@ -44,6 +44,11 @@ import InventoryValuation from "./pages/InventoryValuation";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectProfitability from "./pages/ProjectProfitability";
+import ProcurementReports from "./pages/ProcurementReports";
+import WarehouseReports from "./pages/WarehouseReports";
+import FinanceAPReports from "./pages/FinanceAPReports";
+import FinanceARReports from "./pages/FinanceARReports";
+import CashReports from "./pages/CashReports";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
