@@ -1694,6 +1694,104 @@ export type Database = {
           },
         ]
       }
+      inventory_costing_consumptions: {
+        Row: {
+          consumed_at: string
+          consumption_source_id: string | null
+          consumption_type: string
+          id: string
+          layer_id: string
+          quantity: number
+          total_cost: number | null
+          unit_cost: number
+        }
+        Insert: {
+          consumed_at?: string
+          consumption_source_id?: string | null
+          consumption_type?: string
+          id?: string
+          layer_id: string
+          quantity: number
+          total_cost?: number | null
+          unit_cost: number
+        }
+        Update: {
+          consumed_at?: string
+          consumption_source_id?: string | null
+          consumption_type?: string
+          id?: string
+          layer_id?: string
+          quantity?: number
+          total_cost?: number | null
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_costing_consumptions_layer_id_fkey"
+            columns: ["layer_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_costing_layers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_costing_layers: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          location_id: string
+          original_qty: number
+          receipt_date: string
+          remaining_qty: number
+          source_id: string | null
+          source_type: string
+          total_cost: number | null
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          location_id: string
+          original_qty: number
+          receipt_date?: string
+          remaining_qty: number
+          source_id?: string | null
+          source_type?: string
+          total_cost?: number | null
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          location_id?: string
+          original_qty?: number
+          receipt_date?: string
+          remaining_qty?: number
+          source_id?: string | null
+          source_type?: string
+          total_cost?: number | null
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_costing_layers_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_costing_layers_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_reservations: {
         Row: {
           created_at: string
@@ -3193,6 +3291,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_fifo_layers: {
+        Args: {
+          p_consumption_type: string
+          p_item_id: string
+          p_location_id: string
+          p_quantity: number
+          p_source_id: string
+        }
+        Returns: number
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
