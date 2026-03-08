@@ -26,6 +26,9 @@ import {
   Calendar,
   CreditCard,
   Clock,
+  Users,
+  ArrowDownToLine,
+  FileX,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
