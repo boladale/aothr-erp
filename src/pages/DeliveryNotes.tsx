@@ -74,7 +74,6 @@ export default function DeliveryNotes() {
 
     // Update SO line qty_invoiced
     for (const l of dnLines) {
-      await supabase.rpc('', {}).catch(() => {}); // No RPC needed, just update directly
       const { data: currentLine } = await supabase.from('sales_order_lines').select('qty_invoiced').eq('id', l.order_line_id).single();
       await supabase.from('sales_order_lines').update({
         qty_invoiced: (currentLine?.qty_invoiced || 0) + l.qty_delivered
