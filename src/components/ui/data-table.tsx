@@ -76,35 +76,65 @@ export function DataTable<T extends { id: string }>({
   }
 
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            {columns.map(col => (
-              <TableHead key={col.key} className={col.className}>
-                {col.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map(item => (
-            <TableRow
-              key={item.id}
-              className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
-              onClick={() => onRowClick?.(item)}
-            >
+    <div className="space-y-2">
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
               {columns.map(col => (
-                <TableCell key={col.key} className={col.className}>
-                  {col.render
-                    ? col.render(item)
-                    : (item as Record<string, unknown>)[col.key] as React.ReactNode}
-                </TableCell>
+                <TableHead key={col.key} className={col.className}>
+                  {col.header}
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map(item => (
+              <TableRow
+                key={item.id}
+                className={onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}
+                onClick={() => onRowClick?.(item)}
+              >
+                {columns.map(col => (
+                  <TableCell key={col.key} className={col.className}>
+                    {col.render
+                      ? col.render(item)
+                      : (item as Record<string, unknown>)[col.key] as React.ReactNode}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <p className="text-sm text-muted-foreground">
+            Showing {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, data.length)} of {data.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm px-2">
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage >= totalPages - 1}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
