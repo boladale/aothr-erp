@@ -36,6 +36,10 @@ import ARInvoices from "./pages/ARInvoices";
 import ARReceipts from "./pages/ARReceipts";
 import ARCreditNotes from "./pages/ARCreditNotes";
 import ARAging from "./pages/ARAging";
+import BankAccounts from "./pages/BankAccounts";
+import BankReconciliation from "./pages/BankReconciliation";
+import FundTransfers from "./pages/FundTransfers";
+import CashFlowForecast from "./pages/CashFlowForecast";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +98,10 @@ const App = () => (
             <Route path="/ar-receipts" element={<ProtectedRoute><ARReceipts /></ProtectedRoute>} />
             <Route path="/ar-credit-notes" element={<ProtectedRoute><ARCreditNotes /></ProtectedRoute>} />
             <Route path="/ar-aging" element={<ProtectedRoute><ARAging /></ProtectedRoute>} />
+            <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
+            <Route path="/bank-reconciliation" element={<ProtectedRoute><BankReconciliation /></ProtectedRoute>} />
+            <Route path="/fund-transfers" element={<ProtectedRoute><FundTransfers /></ProtectedRoute>} />
+            <Route path="/cash-flow-forecast" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

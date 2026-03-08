@@ -29,6 +29,10 @@ import {
   Users,
   ArrowDownToLine,
   FileX,
+  Landmark,
+  ArrowRightLeft,
+  TrendingUp,
+  Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -100,6 +104,15 @@ const navSections = [
       { path: '/ar-receipts', label: 'AR Receipts', icon: ArrowDownToLine },
       { path: '/ar-credit-notes', label: 'Credit Notes', icon: FileX },
       { path: '/ar-aging', label: 'AR Aging', icon: Clock },
+    ],
+  },
+  {
+    label: 'Cash Management',
+    items: [
+      { path: '/bank-accounts', label: 'Bank Accounts', icon: Landmark },
+      { path: '/fund-transfers', label: 'Fund Transfers', icon: ArrowRightLeft },
+      { path: '/bank-reconciliation', label: 'Reconciliation', icon: Scale },
+      { path: '/cash-flow-forecast', label: 'Cash Forecast', icon: TrendingUp },
     ],
   },
   {
