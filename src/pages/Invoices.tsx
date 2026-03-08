@@ -199,7 +199,7 @@ export default function Invoices() {
     try {
       const { error } = await supabase
         .from('ap_invoices')
-        .update({ status: 'pending_approval' })
+        .update({ status: 'pending_approval', rejection_reason: null })
         .eq('id', invoice.id);
       if (error) throw error;
       toast.success('Invoice submitted for approval');
