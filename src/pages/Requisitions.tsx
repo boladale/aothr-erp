@@ -120,7 +120,14 @@ export default function Requisitions() {
     { key: 'requester', header: 'Requester', render: (r: RequisitionRow) => r.profiles?.full_name || r.profiles?.email || '-' },
     { key: 'department', header: 'Department', render: (r: RequisitionRow) => r.department || '-' },
     { key: 'needed_by_date', header: 'Needed By', render: (r: RequisitionRow) => r.needed_by_date ? new Date(r.needed_by_date).toLocaleDateString() : '-' },
-    { key: 'status', header: 'Status', render: (r: RequisitionRow) => <StatusBadge status={r.status} /> },
+    { key: 'status', header: 'Status', render: (r: RequisitionRow) => (
+      <div>
+        <StatusBadge status={r.status} />
+        {r.status === 'draft' && r.rejection_reason && (
+          <p className="text-xs text-destructive mt-1" title={r.rejection_reason}>⚠ {r.rejection_reason.length > 40 ? r.rejection_reason.slice(0, 40) + '…' : r.rejection_reason}</p>
+        )}
+      </div>
+    )},
     {
       key: 'actions',
       header: '',

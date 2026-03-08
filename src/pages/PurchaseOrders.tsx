@@ -261,7 +261,14 @@ export default function PurchaseOrders() {
     { key: 'vendor', header: 'Vendor', render: (o: POWithDetails) => o.vendors?.name || '-' },
     { key: 'order_date', header: 'Order Date', render: (o: POWithDetails) => new Date(o.order_date).toLocaleDateString() },
     { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => `₦${(o.total_amount || 0).toFixed(2)}` },
-    { key: 'status', header: 'Status', render: (o: POWithDetails) => <StatusBadge status={o.status} /> },
+    { key: 'status', header: 'Status', render: (o: POWithDetails) => (
+      <div>
+        <StatusBadge status={o.status} />
+        {o.status === 'draft' && o.rejection_reason && (
+          <p className="text-xs text-destructive mt-1" title={o.rejection_reason}>⚠ {o.rejection_reason.length > 40 ? o.rejection_reason.slice(0, 40) + '…' : o.rejection_reason}</p>
+        )}
+      </div>
+    )},
     {
       key: 'actions',
       header: '',
