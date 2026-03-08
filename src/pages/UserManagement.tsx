@@ -60,6 +60,12 @@ interface RolePermission {
   permission_id: string;
 }
 
+interface AppRolePermission {
+  id: string;
+  app_role: AppRole;
+  permission_id: string;
+}
+
 interface UserWithRoles extends Profile {
   user_roles: { role: AppRole }[];
 }
