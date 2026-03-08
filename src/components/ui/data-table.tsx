@@ -24,6 +24,7 @@ interface DataTableProps<T> {
   loading?: boolean;
   onRowClick?: (item: T) => void;
   emptyMessage?: string;
+  pageSize?: number;
 }
 
 export function DataTable<T extends { id: string }>({
