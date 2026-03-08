@@ -164,6 +164,16 @@ export default function RequisitionDetail() {
           />
         </div>
 
+        {requisition.rejection_reason && requisition.status === 'draft' && (
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-destructive/50 bg-destructive/5">
+            <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium text-destructive">Returned for Corrections</p>
+              <p className="text-sm text-muted-foreground mt-1">{requisition.rejection_reason}</p>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader><CardTitle className="text-sm">Justification</CardTitle></CardHeader>
