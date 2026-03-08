@@ -162,6 +162,14 @@ const navSections = [
     ],
   },
   {
+    label: 'Sales',
+    items: [
+      { path: '/sales-quotations', label: 'Quotations', icon: FileCheck },
+      { path: '/sales-orders', label: 'Sales Orders', icon: ShoppingCart },
+      { path: '/delivery-notes', label: 'Delivery Notes', icon: Truck },
+    ],
+  },
+  {
     label: 'Cash Management',
     items: [
       { path: '/bank-accounts', label: 'Bank Accounts', icon: Landmark },
