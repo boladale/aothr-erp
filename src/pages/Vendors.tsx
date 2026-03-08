@@ -54,7 +54,7 @@ export default function Vendors() {
     try {
       const { error } = await supabase
         .from('vendors')
-        .update({ status: 'pending_approval' as VendorStatus })
+        .update({ status: 'pending_approval' as VendorStatus, rejection_reason: null })
         .eq('id', vendor.id);
 
       if (error) throw error;
