@@ -38,6 +38,7 @@ import {
   ShoppingCart,
   FileCheck,
   Percent,
+  BookOpenCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -204,6 +205,7 @@ const navSections = [
       { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
       { path: '/user-management', label: 'User Management', icon: Shield },
       { path: '/admin', label: 'Admin', icon: Settings },
+      { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },
     ],
   },
 ];

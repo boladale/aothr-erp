@@ -54,6 +54,7 @@ import TaxConfiguration from "./pages/TaxConfiguration";
 import SalesQuotations from "./pages/SalesQuotations";
 import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
+import UserGuide from "./pages/UserGuide";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -130,6 +131,7 @@ const App = () => (
             <Route path="/sales-quotations" element={<ProtectedRoute><SalesQuotations /></ProtectedRoute>} />
             <Route path="/sales-orders" element={<ProtectedRoute><SalesOrders /></ProtectedRoute>} />
             <Route path="/delivery-notes" element={<ProtectedRoute><DeliveryNotes /></ProtectedRoute>} />
+            <Route path="/user-guide" element={<ProtectedRoute><UserGuide /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
