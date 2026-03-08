@@ -29,7 +29,7 @@ const Step = ({ number, children }: { number: number; children: React.ReactNode 
 
 const Tip = ({ children }: { children: React.ReactNode }) => (
   <div className="flex gap-2 items-start p-3 rounded-lg bg-accent/50 border border-accent">
-    <Lightbulb className="h-4 w-4 text-yellow-500 flex-shrink-0 mt-0.5" />
+    <Lightbulb className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
     <p className="text-xs text-muted-foreground">{children}</p>
   </div>
 );
