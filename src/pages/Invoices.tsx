@@ -309,7 +309,22 @@ export default function Invoices() {
       header: '',
       render: (i: InvoiceWithDetails) => (
         <div className="flex gap-2 justify-end">
-          {i.status === 'draft' && (
+          {i.status === 'draft' && i.created_by === user?.id && (
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitInvoice(i); }}>
+              Submit
+            </Button>
+          )}
+          {i.status === 'pending_approval' && canApprove && (
+            <>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApproveInvoice(i); }}>
+                Approve
+              </Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectInvoice(i); }}>
+                Reject
+              </Button>
+            </>
+          )}
+          {i.status === 'approved' && canApprove && (
             <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handlePost(i); }}>
               Post
             </Button>
