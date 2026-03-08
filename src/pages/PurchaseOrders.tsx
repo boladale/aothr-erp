@@ -205,8 +205,7 @@ export default function PurchaseOrders() {
     }
   };
 
-
-    try {
+  const handleSend = async (po: POWithDetails) => {
       const { error } = await supabase
         .from('purchase_orders')
         .update({ 
