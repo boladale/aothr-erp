@@ -3527,6 +3527,12 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      gl_carry_forward_balances: {
+        Args: { p_from_year: number; p_to_year: number }
+        Returns: string
+      }
+      gl_period_end_summary: { Args: { p_period_id: string }; Returns: string }
+      gl_year_end_close: { Args: { p_fiscal_year: number }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
