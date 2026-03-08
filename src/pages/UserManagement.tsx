@@ -504,10 +504,13 @@ export default function UserManagement() {
           description="Create roles, assign programs to roles, and manage user access"
         />
 
-        <Tabs defaultValue="roles">
+        <Tabs defaultValue="app-role-programs">
           <TabsList>
+            <TabsTrigger value="app-role-programs" className="gap-2">
+              <Key className="h-4 w-4" /> Role Programs
+            </TabsTrigger>
             <TabsTrigger value="roles" className="gap-2">
-              <Shield className="h-4 w-4" /> Roles
+              <Shield className="h-4 w-4" /> Custom Roles
             </TabsTrigger>
             <TabsTrigger value="programs" className="gap-2">
               <Key className="h-4 w-4" /> Programs
@@ -516,6 +519,54 @@ export default function UserManagement() {
               <Users className="h-4 w-4" /> Users
             </TabsTrigger>
           </TabsList>
+
+          {/* App Role Programs Tab - Primary tab for mapping system roles to programs */}
+          <TabsContent value="app-role-programs" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Key className="h-5 w-5" /> System Role → Program Access
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure which programs (modules) each system role can access. Users inherit program access through their assigned roles.
+                </p>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {ALL_APP_ROLES.map(role => {
+                    const progs = getAppRolePrograms(role);
+                    return (
+                      <div key={role} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge className={roleColors[role]}>
+                            {role.replace(/_/g, ' ')}
+                          </Badge>
+                          {isAdmin && (
+                            <Button size="sm" variant="outline" onClick={() => openAppRoleAssign(role)}>
+                              Configure
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {role === 'admin' ? (
+                            <Badge variant="secondary" className="text-xs">All Programs</Badge>
+                          ) : progs.length === 0 ? (
+                            <span className="text-xs text-muted-foreground">No programs assigned</span>
+                          ) : (
+                            progs.map(p => (
+                              <Badge key={p.id} variant="secondary" className="text-xs">
+                                {p.code.replace(/_/g, ' ')}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Roles Tab */}
           <TabsContent value="roles" className="space-y-4">
