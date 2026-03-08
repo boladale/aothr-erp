@@ -75,16 +75,22 @@ const navSections = [
     ],
   },
   {
-    label: 'Finance',
+    label: 'Finance - AP',
     items: [
-      { path: '/chart-of-accounts', label: 'Chart of Accounts', icon: BookOpen },
-      { path: '/journal-entries', label: 'Journal Entries', icon: Calculator },
-      { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
-      { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
-      { path: '/invoices', label: 'Invoices', icon: Receipt },
+      { path: '/invoices', label: 'AP Invoices', icon: Receipt },
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
       { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
+    ],
+  },
+  {
+    label: 'Finance - AR',
+    items: [
+      { path: '/customers', label: 'Customers', icon: Users },
+      { path: '/ar-invoices', label: 'AR Invoices', icon: Receipt },
+      { path: '/ar-receipts', label: 'AR Receipts', icon: ArrowDownToLine },
+      { path: '/ar-credit-notes', label: 'Credit Notes', icon: FileX },
+      { path: '/ar-aging', label: 'AR Aging', icon: Clock },
     ],
   },
   {
