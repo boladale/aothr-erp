@@ -6,6 +6,7 @@ import {
   Package, 
   MapPin, 
   Boxes,
+  DollarSign,
   FileText,
   Truck,
   Receipt,
