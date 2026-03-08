@@ -816,6 +816,96 @@ export default function UserGuide() {
                   You can't delete posted transactions, but you can <strong>reverse</strong> them by creating a new journal entry that does the opposite. This keeps a complete audit trail.
                 </AccordionContent>
               </AccordionItem>
+              <AccordionItem value="faq6">
+                <AccordionTrigger className="text-sm">How do I create a Purchase Order from a Requisition?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Once a requisition is approved, open it and click <strong>"Convert to PO"</strong>. The system will copy all the items and quantities into a new Purchase Order for you to review and send to the vendor.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq7">
+                <AccordionTrigger className="text-sm">What happens when I "post" a Goods Receipt?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Posting a Goods Receipt increases your inventory quantities automatically. The items become available in the Inventory module, and the PO status updates to reflect partial or full receipt.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq8">
+                <AccordionTrigger className="text-sm">Can I partially receive a Purchase Order?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Yes! When creating a Goods Receipt, you can enter fewer items than ordered. The PO will show as <strong>"Partially Received"</strong> and you can create additional receipts later for the remaining items.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq9">
+                <AccordionTrigger className="text-sm">What is FIFO and why does it matter for inventory?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  FIFO stands for <strong>"First In, First Out"</strong>. It means the oldest items you bought are used (or valued) first. This is important for accurate costing — if you bought pens at $1 last month and $1.50 this month, the $1 pens are counted first.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq10">
+                <AccordionTrigger className="text-sm">How do I convert a Quotation to a Sales Order?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Open the quotation you want to convert and click <strong>"Convert to Sales Order"</strong>. All items, quantities, and prices will be copied to a new Sales Order. The quotation status will change to "Accepted."
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq11">
+                <AccordionTrigger className="text-sm">How does bank reconciliation work?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Enter your bank statement's ending balance and date range, then match each transaction in BizOps with your bank statement. When all items are checked off and the difference shows <strong>$0</strong>, you're reconciled! This ensures your books match what the bank says.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq12">
+                <AccordionTrigger className="text-sm">What are approval rules and how do I set them up?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Approval rules define who needs to approve transactions before they proceed. Go to <strong>Administration → Approval Rules</strong>, create a rule (e.g., "POs over $5,000"), set conditions, and add approval steps with the required approver role or specific user. You can create multi-step chains where multiple people approve in sequence.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq13">
+                <AccordionTrigger className="text-sm">How do I set up taxes for my invoices?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Go to <strong>Administration → Tax Configuration</strong>. Create a Tax Group (e.g., "Standard VAT"), then add rates within it (e.g., 15%). Each rate can be linked to a GL account so tax amounts are automatically posted to the correct ledger account.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq14">
+                <AccordionTrigger className="text-sm">Can multiple users work in the system at the same time?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Yes! BizOps supports multiple simultaneous users. Each person signs in with their own account and sees only the modules their role allows. Changes are saved in real-time.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq15">
+                <AccordionTrigger className="text-sm">What file types can I attach to transactions?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  You can attach most common file types: <strong>PDFs, images (JPG, PNG), spreadsheets (XLS, XLSX, CSV), and documents (DOC, DOCX)</strong>. The maximum file size is 10MB per attachment.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq16">
+                <AccordionTrigger className="text-sm">How do I export a report to Excel?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  On any list or report page, look for the <strong>Export</strong> buttons (usually at the top). Click <strong>"CSV"</strong> to download a file you can open directly in Microsoft Excel or Google Sheets. Use "PDF" for a printable version.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq17">
+                <AccordionTrigger className="text-sm">What does "aging" mean in AP Aging or AR Aging?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Aging means <strong>how old an unpaid invoice is</strong>. Invoices are grouped into buckets: Current (not yet due), 1-30 days past due, 31-60 days, 61-90 days, and 90+ days. The older the invoice, the more urgent it is to collect or pay.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq18">
+                <AccordionTrigger className="text-sm">What's the difference between a Debit and a Credit?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  In double-entry accounting: <strong>Debits</strong> increase asset and expense accounts, while <strong>Credits</strong> increase liability, equity, and revenue accounts. Every journal entry must have equal debits and credits — this keeps the books balanced.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq19">
+                <AccordionTrigger className="text-sm">How do I close a fiscal period?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  Go to <strong>General Ledger → Fiscal Periods</strong>. Make sure all transactions for the month are posted and reconciled, then click <strong>"Close Period"</strong>. Once closed, no new transactions can be posted to that period, keeping your financial records locked and accurate.
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="faq20">
+                <AccordionTrigger className="text-sm">What is a Match Exception?</AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  A Match Exception occurs when the Purchase Order, Goods Receipt, and Invoice don't agree — for example, the vendor charged $110 but the PO says $100, or you received 8 items but the invoice says 10. These are flagged for review so you can resolve the discrepancy before paying.
+                </AccordionContent>
+              </AccordionItem>
             </Accordion>
           </CardContent>
         </Card>
