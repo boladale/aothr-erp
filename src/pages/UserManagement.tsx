@@ -258,7 +258,55 @@ export default function UserManagement() {
     }
   };
 
-  const togglePermission = (permId: string) => {
+  // App Role Programs management
+  const ALL_APP_ROLES: AppRole[] = [
+    'admin', 'procurement_manager', 'procurement_officer',
+    'warehouse_manager', 'warehouse_officer',
+    'accounts_payable', 'ap_clerk', 'requisitioner', 'viewer'
+  ];
+
+  const openAppRoleAssign = (role: AppRole) => {
+    setSelectedAppRole(role);
+    const assigned = appRolePermissions
+      .filter(arp => arp.app_role === role)
+      .map(arp => arp.permission_id);
+    setSelectedAppRolePerms(assigned);
+    setAppRoleAssignOpen(true);
+  };
+
+  const toggleAppRolePerm = (permId: string) => {
+    setSelectedAppRolePerms(prev =>
+      prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
+    );
+  };
+
+  const handleSaveAppRolePerms = async () => {
+    if (!selectedAppRole) return;
+    try {
+      // Remove existing
+      await supabase.from('app_role_permissions').delete().eq('app_role', selectedAppRole);
+      // Insert new
+      if (selectedAppRolePerms.length > 0) {
+        const inserts = selectedAppRolePerms.map(pid => ({
+          app_role: selectedAppRole,
+          permission_id: pid,
+        }));
+        const { error } = await supabase.from('app_role_permissions').insert(inserts);
+        if (error) throw error;
+      }
+      toast.success(`Programs updated for ${selectedAppRole.replace(/_/g, ' ')}`);
+      setAppRoleAssignOpen(false);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to save app role programs');
+    }
+  };
+
+  const getAppRolePrograms = (role: AppRole) => {
+    const permIds = appRolePermissions.filter(arp => arp.app_role === role).map(arp => arp.permission_id);
+    return permissions.filter(p => permIds.includes(p.id));
+  };
+
     setSelectedPermissions(prev =>
       prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
     );
