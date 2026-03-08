@@ -31,6 +31,11 @@ import FinancialReports from "./pages/FinancialReports";
 import FiscalPeriods from "./pages/FiscalPeriods";
 import APPayments from "./pages/APPayments";
 import APAging from "./pages/APAging";
+import Customers from "./pages/Customers";
+import ARInvoices from "./pages/ARInvoices";
+import ARReceipts from "./pages/ARReceipts";
+import ARCreditNotes from "./pages/ARCreditNotes";
+import ARAging from "./pages/ARAging";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +89,11 @@ const App = () => (
             <Route path="/fiscal-periods" element={<ProtectedRoute><FiscalPeriods /></ProtectedRoute>} />
             <Route path="/ap-payments" element={<ProtectedRoute><APPayments /></ProtectedRoute>} />
             <Route path="/ap-aging" element={<ProtectedRoute><APAging /></ProtectedRoute>} />
+            <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+            <Route path="/ar-invoices" element={<ProtectedRoute><ARInvoices /></ProtectedRoute>} />
+            <Route path="/ar-receipts" element={<ProtectedRoute><ARReceipts /></ProtectedRoute>} />
+            <Route path="/ar-credit-notes" element={<ProtectedRoute><ARCreditNotes /></ProtectedRoute>} />
+            <Route path="/ar-aging" element={<ProtectedRoute><ARAging /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
