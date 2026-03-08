@@ -195,9 +195,52 @@ export default function Invoices() {
     }
   };
 
+  const handleSubmitInvoice = async (invoice: InvoiceWithDetails) => {
+    try {
+      const { error } = await supabase
+        .from('ap_invoices')
+        .update({ status: 'pending_approval' })
+        .eq('id', invoice.id);
+      if (error) throw error;
+      toast.success('Invoice submitted for approval');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to submit invoice');
+    }
+  };
+
+  const handleApproveInvoice = async (invoice: InvoiceWithDetails) => {
+    try {
+      const { error } = await supabase
+        .from('ap_invoices')
+        .update({ status: 'approved' })
+        .eq('id', invoice.id);
+      if (error) throw error;
+      toast.success('Invoice approved. You can now post it.');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to approve');
+    }
+  };
+
+  const handleRejectInvoice = async (invoice: InvoiceWithDetails) => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    try {
+      const { error } = await supabase
+        .from('ap_invoices')
+        .update({ status: 'draft' })
+        .eq('id', invoice.id);
+      if (error) throw error;
+      toast.success('Invoice returned to draft for corrections');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to reject');
+    }
+  };
+
   const handlePost = async (invoice: InvoiceWithDetails) => {
     try {
-      // Attempt to post - the database trigger will run three-way match
       const { error } = await supabase
         .from('ap_invoices')
         .update({ 
@@ -208,7 +251,6 @@ export default function Invoices() {
         .eq('id', invoice.id);
 
       if (error) {
-        // Check if it's a hold-related error
         if (error.message?.includes('unresolved hold')) {
           toast.error('Invoice has unresolved exceptions. Please resolve them first.');
           return;
@@ -216,7 +258,6 @@ export default function Invoices() {
         throw error;
       }
 
-      // Check if the invoice was actually posted (trigger may have reverted status)
       const { data: updated } = await supabase
         .from('ap_invoices')
         .select('status')
@@ -224,7 +265,6 @@ export default function Invoices() {
         .single();
 
       if (updated?.status === 'draft') {
-        // Invoice was blocked by three-way match
         toast.error('Invoice failed three-way matching. Check Match Exceptions for details.');
         fetchData();
         return;
