@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
