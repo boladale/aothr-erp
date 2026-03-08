@@ -31,6 +31,11 @@ import FinancialReports from "./pages/FinancialReports";
 import FiscalPeriods from "./pages/FiscalPeriods";
 import APPayments from "./pages/APPayments";
 import APAging from "./pages/APAging";
+import Customers from "./pages/Customers";
+import ARInvoices from "./pages/ARInvoices";
+import ARReceipts from "./pages/ARReceipts";
+import ARCreditNotes from "./pages/ARCreditNotes";
+import ARAging from "./pages/ARAging";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
