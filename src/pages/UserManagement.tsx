@@ -131,10 +131,11 @@ export default function UserManagement() {
 
   const fetchData = async () => {
     try {
-      const [rolesRes, permsRes, rpRes, profilesRes, userRolesRes] = await Promise.all([
+      const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes] = await Promise.all([
         supabase.from('roles').select('*').order('name'),
         supabase.from('permissions').select('*').order('code'),
         supabase.from('role_permissions').select('*'),
+        supabase.from('app_role_permissions').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('user_roles').select('*'),
       ]);
