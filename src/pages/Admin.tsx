@@ -271,6 +271,12 @@ export default function Admin() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {isAdmin && (
+            <TabsContent value="data" className="space-y-4">
+              <DataManagementPanel />
+            </TabsContent>
+          )}
         </Tabs>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
