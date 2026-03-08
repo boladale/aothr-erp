@@ -82,6 +82,7 @@ export default function InventoryValuation() {
       existing.weighted_avg_cost = existing.total_value / existing.total_qty;
     } else {
       summaryMap.set(key, {
+        id: key,
         item_code: l.items?.code || '',
         item_name: l.items?.name || '',
         location_name: l.locations?.name || '',

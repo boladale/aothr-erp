@@ -75,6 +75,7 @@ const navSections = [
     label: 'Warehouse',
     items: [
       { path: '/inventory', label: 'Inventory', icon: Boxes },
+      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
     ],
   },
