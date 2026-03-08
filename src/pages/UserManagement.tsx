@@ -307,6 +307,7 @@ export default function UserManagement() {
     return permissions.filter(p => permIds.includes(p.id));
   };
 
+  const togglePermission = (permId: string) => {
     setSelectedPermissions(prev =>
       prev.includes(permId) ? prev.filter(id => id !== permId) : [...prev, permId]
     );
