@@ -32,8 +32,12 @@ export function DataTable<T extends { id: string }>({
   data,
   loading,
   onRowClick,
-  emptyMessage = 'No data found'
+  emptyMessage = 'No data found',
+  pageSize = 25
 }: DataTableProps<T>) {
+  const [currentPage, setCurrentPage] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
+  const paginatedData = data.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   if (loading) {
     return (
       <div className="rounded-lg border bg-card">
