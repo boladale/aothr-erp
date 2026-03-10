@@ -44,6 +44,8 @@ export default function Admin() {
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newRole, setNewRole] = useState<AppRole>('viewer');
+  const [userToDelete, setUserToDelete] = useState<UserWithRoles | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
