@@ -145,9 +145,20 @@ export default function Admin() {
     { 
       key: 'email', 
       header: 'Email', 
-      render: (u: UserWithRoles) => <span className="font-medium">{u.email}</span> 
+      render: (u: UserWithRoles) => (
+        <span className={`font-medium ${!u.is_active ? 'text-muted-foreground line-through' : ''}`}>{u.email}</span>
+      )
     },
     { key: 'full_name', header: 'Name', render: (u: UserWithRoles) => u.full_name || '-' },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (u: UserWithRoles) => (
+        <Badge className={u.is_active ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}>
+          {u.is_active ? 'Active' : 'Inactive'}
+        </Badge>
+      )
+    },
     { 
       key: 'roles', 
       header: 'Roles', 
@@ -178,13 +189,30 @@ export default function Admin() {
       key: 'actions',
       header: '',
       render: (u: UserWithRoles) => isAdmin && (
-        <Button 
-          size="sm" 
-          variant="outline"
-          onClick={(e) => { e.stopPropagation(); setSelectedUser(u); setDialogOpen(true); }}
-        >
-          <UserPlus className="h-4 w-4 mr-1" /> Add Role
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={(e) => { e.stopPropagation(); setSelectedUser(u); setDialogOpen(true); }}
+          >
+            <UserPlus className="h-4 w-4 mr-1" /> Add Role
+          </Button>
+          <Button
+            size="sm"
+            variant={u.is_active ? 'outline' : 'default'}
+            onClick={(e) => { e.stopPropagation(); handleManageUser(u.user_id, u.is_active ? 'deactivate' : 'activate'); }}
+          >
+            {u.is_active ? <UserX className="h-4 w-4 mr-1" /> : <UserCheck className="h-4 w-4 mr-1" />}
+            {u.is_active ? 'Deactivate' : 'Activate'}
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={(e) => { e.stopPropagation(); setUserToDelete(u); setDeleteConfirmOpen(true); }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        </div>
       )
     }
   ];
