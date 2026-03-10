@@ -26,6 +26,8 @@ export default function OrganizationSetup() {
     country: '',
   });
 
+  const [autoCreateCOA, setAutoCreateCOA] = useState(true);
+
   const [joinCode, setJoinCode] = useState('');
 
   const handleCreateOrg = async (e: React.FormEvent) => {
