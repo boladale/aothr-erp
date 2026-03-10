@@ -54,7 +54,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { Bell } from 'lucide-react';
+import { ChangePasswordDialog } from '@/components/admin/ChangePasswordDialog';
+import { Bell, KeyRound } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
 const pathToProgram: Record<string, string> = {
@@ -213,6 +214,7 @@ const navSections = [
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
@@ -334,6 +336,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span className="text-xs text-muted-foreground">{user?.email}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setChangePasswordOpen(true)}>
+                <KeyRound className="h-4 w-4 mr-2" />
+                Change Password
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -350,6 +357,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}>
         {children}
       </main>
+      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </div>
   );
 }

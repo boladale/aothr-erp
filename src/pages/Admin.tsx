@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database, Palette } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette, Plus } from 'lucide-react';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
+import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -39,6 +40,7 @@ export default function Admin() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newRole, setNewRole] = useState<AppRole>('viewer');
 
@@ -218,10 +220,15 @@ export default function Admin() {
 
           <TabsContent value="users" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" /> User Management
                 </CardTitle>
+                {isAdmin && (
+                  <Button onClick={() => setCreateUserOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> Create User
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <DataTable
@@ -289,6 +296,8 @@ export default function Admin() {
             </TabsContent>
           )}
         </Tabs>
+
+        <CreateUserDialog open={createUserOpen} onOpenChange={setCreateUserOpen} onCreated={fetchData} />
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
