@@ -374,6 +374,26 @@ export default function Admin() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete User</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to permanently delete {userToDelete?.full_name || userToDelete?.email}? This action cannot be undone. Users with transaction history cannot be deleted.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => {
+                if (userToDelete) {
+                  handleManageUser(userToDelete.user_id, 'delete');
+                  setDeleteConfirmOpen(false);
+                }
+              }}>Delete User</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
