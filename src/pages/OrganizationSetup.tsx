@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Loader2, Building2, Plus, LogIn } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
 
 export default function OrganizationSetup() {
   const navigate = useNavigate();
