@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette } from 'lucide-react';
+import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
