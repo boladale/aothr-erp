@@ -26,7 +26,7 @@ const signupSchema = loginSchema.extend({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signIn, signUp } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, organizationId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('login');
 
@@ -40,9 +40,13 @@ export default function Auth() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/');
+      if (organizationId) {
+        navigate('/');
+      } else {
+        navigate('/org-setup');
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, organizationId, navigate]);
 
   const [forgotMode, setForgotMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
