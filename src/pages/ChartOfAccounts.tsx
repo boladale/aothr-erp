@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Plus, ChevronRight, ChevronDown, Search } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, Search, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
 
 interface GLAccount {
   id: string;
