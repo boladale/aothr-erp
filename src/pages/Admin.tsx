@@ -220,10 +220,15 @@ export default function Admin() {
 
           <TabsContent value="users" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" /> User Management
                 </CardTitle>
+                {isAdmin && (
+                  <Button onClick={() => setCreateUserOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> Create User
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <DataTable
