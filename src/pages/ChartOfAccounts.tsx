@@ -111,6 +111,7 @@ export default function ChartOfAccounts() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [form, setForm] = useState({
     account_code: '', account_name: '', account_type: 'asset' as string, 
     parent_id: '', is_header: false, description: '', normal_balance: 'debit',
