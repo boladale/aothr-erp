@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Loader2, Building2, Plus, LogIn } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
 
 export default function OrganizationSetup() {
   const navigate = useNavigate();
@@ -25,6 +27,8 @@ export default function OrganizationSetup() {
     city: '',
     country: '',
   });
+
+  const [autoCreateCOA, setAutoCreateCOA] = useState(true);
 
   const [joinCode, setJoinCode] = useState('');
 
@@ -82,6 +86,15 @@ export default function OrganizationSetup() {
 
       if (roleError && !roleError.message.includes('duplicate')) {
         console.error('Failed to assign admin role:', roleError);
+      }
+
+      // Seed basic Chart of Accounts if requested
+      if (autoCreateCOA) {
+        const coaError = await seedBasicChartOfAccounts(org.id);
+        if (coaError) {
+          console.error('Failed to seed COA:', coaError);
+          toast.warning('Organization created but Chart of Accounts could not be seeded. You can create it manually.');
+        }
       }
 
       await refreshProfile();
@@ -238,6 +251,15 @@ export default function OrganizationSetup() {
                       value={createForm.country}
                       onChange={e => setCreateForm({ ...createForm, country: e.target.value })}
                     />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
+                  <Switch checked={autoCreateCOA} onCheckedChange={setAutoCreateCOA} id="auto-coa" />
+                  <div>
+                    <Label htmlFor="auto-coa" className="font-medium cursor-pointer">Auto-create Chart of Accounts</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Seed a basic COA (Assets, Liabilities, Equity, Revenue, Expenses). You can customize it later.
+                    </p>
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>

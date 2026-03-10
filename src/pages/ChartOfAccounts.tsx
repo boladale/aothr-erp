@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Plus, ChevronRight, ChevronDown, Search } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, Search, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
 
 interface GLAccount {
   id: string;
@@ -110,6 +111,7 @@ export default function ChartOfAccounts() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [form, setForm] = useState({
     account_code: '', account_name: '', account_type: 'asset' as string, 
     parent_id: '', is_header: false, description: '', normal_balance: 'debit',
@@ -141,6 +143,20 @@ export default function ChartOfAccounts() {
 
   const expandAll = () => setExpanded(new Set(accounts.map(a => a.id)));
   const collapseAll = () => setExpanded(new Set());
+
+  const handleSeedCOA = async () => {
+    if (!hasRole('admin')) { toast.error('Only admins can seed the Chart of Accounts'); return; }
+    // Get current user's org id
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id || '').single();
+    if (!profile?.organization_id) { toast.error('No organization found'); return; }
+    
+    setSeeding(true);
+    const err = await seedBasicChartOfAccounts(profile.organization_id);
+    setSeeding(false);
+    if (err) { toast.error(err); return; }
+    toast.success('Basic Chart of Accounts created successfully');
+    fetchAccounts();
+  };
 
   const handleCreate = async () => {
     if (!form.account_code || !form.account_name) { toast.error('Code and name required'); return; }
@@ -177,6 +193,11 @@ export default function ChartOfAccounts() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={expandAll}>Expand All</Button>
               <Button variant="outline" size="sm" onClick={collapseAll}>Collapse All</Button>
+              {canManage && accounts.length === 0 && (
+                <Button variant="secondary" size="sm" onClick={handleSeedCOA} disabled={seeding}>
+                  <Sparkles className="h-4 w-4 mr-1" /> {seeding ? 'Seeding...' : 'Seed Basic COA'}
+                </Button>
+              )}
               {canManage && (
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
