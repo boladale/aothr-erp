@@ -99,6 +99,20 @@ export default function Admin() {
     }
   };
 
+  const handleManageUser = async (userId: string, action: 'delete' | 'deactivate' | 'activate') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: { action, target_user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data.message);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || `Failed to ${action} user`);
+    }
+  };
+
   const handleRemoveRole = async (userId: string, role: AppRole) => {
     try {
       const { error } = await supabase
