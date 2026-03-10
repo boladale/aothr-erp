@@ -144,6 +144,20 @@ export default function ChartOfAccounts() {
   const expandAll = () => setExpanded(new Set(accounts.map(a => a.id)));
   const collapseAll = () => setExpanded(new Set());
 
+  const handleSeedCOA = async () => {
+    if (!hasRole('admin')) { toast.error('Only admins can seed the Chart of Accounts'); return; }
+    // Get current user's org id
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id || '').single();
+    if (!profile?.organization_id) { toast.error('No organization found'); return; }
+    
+    setSeeding(true);
+    const err = await seedBasicChartOfAccounts(profile.organization_id);
+    setSeeding(false);
+    if (err) { toast.error(err); return; }
+    toast.success('Basic Chart of Accounts created successfully');
+    fetchAccounts();
+  };
+
   const handleCreate = async () => {
     if (!form.account_code || !form.account_name) { toast.error('Code and name required'); return; }
     const { error } = await supabase.from('gl_accounts').insert({
