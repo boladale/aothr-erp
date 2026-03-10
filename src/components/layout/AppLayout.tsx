@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { useUserPrograms } from '@/hooks/useUserPrograms';
 import { Button } from '@/components/ui/button';
 import {
@@ -216,6 +217,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { hasProgram } = useUserPrograms();
+  const { appName, logoUrl } = useOrgBranding();
 
   const canAccess = (path: string) => {
     const programCode = pathToProgram[path];
@@ -242,7 +244,15 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
           {sidebarOpen && (
-            <span className="text-xl font-bold text-sidebar-foreground">BizOps</span>
+            <div className="flex items-center gap-2 min-w-0">
+              {logoUrl && (
+                <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded object-contain flex-shrink-0" />
+              )}
+              <span className="text-xl font-bold text-sidebar-foreground truncate">{appName}</span>
+            </div>
+          )}
+          {!sidebarOpen && logoUrl && (
+            <img src={logoUrl} alt="Logo" className="h-8 w-8 rounded object-contain" />
           )}
           <div className="flex items-center gap-1">
             {sidebarOpen && <NotificationBell />}

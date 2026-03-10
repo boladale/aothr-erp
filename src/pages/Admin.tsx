@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette } from 'lucide-react';
+import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -208,6 +209,11 @@ export default function Admin() {
                 <Database className="h-4 w-4" /> Data Management
               </TabsTrigger>
             )}
+            {isAdmin && (
+              <TabsTrigger value="branding" className="gap-2">
+                <Palette className="h-4 w-4" /> Branding
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -275,6 +281,11 @@ export default function Admin() {
           {isAdmin && (
             <TabsContent value="data" className="space-y-4">
               <DataManagementPanel />
+            </TabsContent>
+          )}
+          {isAdmin && (
+            <TabsContent value="branding" className="space-y-4">
+              <OrganizationBranding />
             </TabsContent>
           )}
         </Tabs>
