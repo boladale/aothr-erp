@@ -253,6 +253,15 @@ export default function OrganizationSetup() {
                     />
                   </div>
                 </div>
+                <div className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
+                  <Switch checked={autoCreateCOA} onCheckedChange={setAutoCreateCOA} id="auto-coa" />
+                  <div>
+                    <Label htmlFor="auto-coa" className="font-medium cursor-pointer">Auto-create Chart of Accounts</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Seed a basic COA (Assets, Liabilities, Equity, Revenue, Expenses). You can customize it later.
+                    </p>
+                  </div>
+                </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create Organization
