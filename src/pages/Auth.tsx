@@ -38,11 +38,17 @@ export default function Auth() {
     fullName: '',
   });
 
+  const { organizationId } = useAuth();
+
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/');
+      if (organizationId) {
+        navigate('/');
+      } else {
+        navigate('/org-setup');
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, organizationId, navigate]);
 
   const [forgotMode, setForgotMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
