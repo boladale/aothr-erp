@@ -26,7 +26,7 @@ const signupSchema = loginSchema.extend({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signIn, signUp } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, organizationId } = useAuth();
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('login');
 
@@ -37,8 +37,6 @@ export default function Auth() {
     confirmPassword: '',
     fullName: '',
   });
-
-  const { organizationId } = useAuth();
 
   useEffect(() => {
     if (!authLoading && user) {
