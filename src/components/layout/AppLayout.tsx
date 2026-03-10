@@ -217,6 +217,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { hasProgram } = useUserPrograms();
+  const { appName, logoUrl } = useOrgBranding();
 
   const canAccess = (path: string) => {
     const programCode = pathToProgram[path];
