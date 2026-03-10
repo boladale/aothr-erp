@@ -83,13 +83,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create profile for the new user in the same organization
-    await adminClient.from("profiles").upsert({
-      user_id: newUser.user.id,
-      email,
+    // Update profile created by trigger to include organization
+    await adminClient.from("profiles").update({
       full_name: full_name || null,
       organization_id: callerProfile?.organization_id || null,
-    });
+    }).eq("user_id", newUser.user.id);
 
     // Assign role if provided
     if (role) {
