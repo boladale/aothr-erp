@@ -297,6 +297,8 @@ export default function Admin() {
           )}
         </Tabs>
 
+        <CreateUserDialog open={createUserOpen} onOpenChange={setCreateUserOpen} onCreated={fetchData} />
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
             <DialogHeader>

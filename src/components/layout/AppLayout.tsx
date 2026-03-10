@@ -54,7 +54,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
-import { Bell } from 'lucide-react';
+import { ChangePasswordDialog } from '@/components/admin/ChangePasswordDialog';
+import { Bell, KeyRound } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
 const pathToProgram: Record<string, string> = {
