@@ -12,6 +12,20 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("admin-create-user: request received");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !serviceRoleKey || !anonKey) {
+      console.error("Missing env vars:", { hasUrl: !!supabaseUrl, hasKey: !!serviceRoleKey, hasAnon: !!anonKey });
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -20,10 +34,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    const callerClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    const callerClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user: caller } } = await callerClient.auth.getUser();
@@ -50,6 +61,7 @@ Deno.serve(async (req) => {
     }
 
     const { email, full_name, role } = await req.json();
+    console.log("Creating user:", email);
 
     if (!email) {
       return new Response(JSON.stringify({ error: "Email is required" }), {
@@ -71,11 +83,14 @@ Deno.serve(async (req) => {
     });
 
     if (inviteError) {
+      console.error("Invite error:", inviteError.message);
       return new Response(JSON.stringify({ error: inviteError.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("User invited:", inviteData.user.id);
 
     // Update profile with organization
     await adminClient.from("profiles").update({
@@ -99,6 +114,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (err) {
+    console.error("Unexpected error:", err.message);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
