@@ -88,6 +88,15 @@ export default function OrganizationSetup() {
         console.error('Failed to assign admin role:', roleError);
       }
 
+      // Seed basic Chart of Accounts if requested
+      if (autoCreateCOA) {
+        const coaError = await seedBasicChartOfAccounts(org.id);
+        if (coaError) {
+          console.error('Failed to seed COA:', coaError);
+          toast.warning('Organization created but Chart of Accounts could not be seeded. You can create it manually.');
+        }
+      }
+
       await refreshProfile();
       toast.success('Organization created! You are now the admin.');
       navigate('/');
