@@ -199,6 +199,7 @@ export interface Profile {
   full_name?: string;
   avatar_url?: string;
   organization_id?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

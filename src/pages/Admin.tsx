@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database, Palette, Plus } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck } from 'lucide-react';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -43,6 +44,8 @@ export default function Admin() {
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newRole, setNewRole] = useState<AppRole>('viewer');
+  const [userToDelete, setUserToDelete] = useState<UserWithRoles | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -99,6 +102,20 @@ export default function Admin() {
     }
   };
 
+  const handleManageUser = async (userId: string, action: 'delete' | 'deactivate' | 'activate') => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: { action, target_user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(data.message);
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.message || `Failed to ${action} user`);
+    }
+  };
+
   const handleRemoveRole = async (userId: string, role: AppRole) => {
     try {
       const { error } = await supabase
@@ -131,9 +148,20 @@ export default function Admin() {
     { 
       key: 'email', 
       header: 'Email', 
-      render: (u: UserWithRoles) => <span className="font-medium">{u.email}</span> 
+      render: (u: UserWithRoles) => (
+        <span className={`font-medium ${!u.is_active ? 'text-muted-foreground line-through' : ''}`}>{u.email}</span>
+      )
     },
     { key: 'full_name', header: 'Name', render: (u: UserWithRoles) => u.full_name || '-' },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (u: UserWithRoles) => (
+        <Badge className={u.is_active ? 'bg-success text-success-foreground' : 'bg-muted text-muted-foreground'}>
+          {u.is_active ? 'Active' : 'Inactive'}
+        </Badge>
+      )
+    },
     { 
       key: 'roles', 
       header: 'Roles', 
@@ -164,13 +192,30 @@ export default function Admin() {
       key: 'actions',
       header: '',
       render: (u: UserWithRoles) => isAdmin && (
-        <Button 
-          size="sm" 
-          variant="outline"
-          onClick={(e) => { e.stopPropagation(); setSelectedUser(u); setDialogOpen(true); }}
-        >
-          <UserPlus className="h-4 w-4 mr-1" /> Add Role
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={(e) => { e.stopPropagation(); setSelectedUser(u); setDialogOpen(true); }}
+          >
+            <UserPlus className="h-4 w-4 mr-1" /> Add Role
+          </Button>
+          <Button
+            size="sm"
+            variant={u.is_active ? 'outline' : 'default'}
+            onClick={(e) => { e.stopPropagation(); handleManageUser(u.user_id, u.is_active ? 'deactivate' : 'activate'); }}
+          >
+            {u.is_active ? <UserX className="h-4 w-4 mr-1" /> : <UserCheck className="h-4 w-4 mr-1" />}
+            {u.is_active ? 'Deactivate' : 'Activate'}
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={(e) => { e.stopPropagation(); setUserToDelete(u); setDeleteConfirmOpen(true); }}
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </Button>
+        </div>
       )
     }
   ];
@@ -326,6 +371,26 @@ export default function Admin() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleAddRole}>Add Role</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete User</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to permanently delete {userToDelete?.full_name || userToDelete?.email}? This action cannot be undone. Users with transaction history cannot be deleted.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => {
+                if (userToDelete) {
+                  handleManageUser(userToDelete.user_id, 'delete');
+                  setDeleteConfirmOpen(false);
+                }
+              }}>Delete User</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
