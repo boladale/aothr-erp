@@ -283,6 +283,11 @@ export default function Admin() {
               <DataManagementPanel />
             </TabsContent>
           )}
+          {isAdmin && (
+            <TabsContent value="branding" className="space-y-4">
+              <OrganizationBranding />
+            </TabsContent>
+          )}
         </Tabs>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

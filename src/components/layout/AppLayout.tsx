@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { useUserPrograms } from '@/hooks/useUserPrograms';
 import { Button } from '@/components/ui/button';
 import {
