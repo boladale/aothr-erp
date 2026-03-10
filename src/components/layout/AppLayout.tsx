@@ -357,6 +357,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       )}>
         {children}
       </main>
+      <ChangePasswordDialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen} />
     </div>
   );
 }
