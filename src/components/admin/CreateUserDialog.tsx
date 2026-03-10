@@ -17,33 +17,27 @@ interface CreateUserDialogProps {
 
 export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDialogProps) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<AppRole | ''>('');
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
-    if (!email || !password) {
-      toast.error('Email and password are required');
-      return;
-    }
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (!email) {
+      toast.error('Email is required');
       return;
     }
 
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
-        body: { email, password, full_name: fullName, role: role || undefined },
+        body: { email, full_name: fullName, role: role || undefined },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`User ${email} created successfully`);
+      toast.success(`Invite sent to ${email}. They will receive an email to set their password.`);
       setEmail('');
-      setPassword('');
       setFullName('');
       setRole('');
       onOpenChange(false);
@@ -59,7 +53,7 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
+          <DialogTitle>Invite New User</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -70,10 +64,9 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
             <Label htmlFor="email">Email *</Label>
             <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password *</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" />
-          </div>
+          <p className="text-sm text-muted-foreground">
+            An invite email will be sent to the user with a link to set their password.
+          </p>
           <div className="space-y-2">
             <Label>Initial Role (optional)</Label>
             <Select value={role} onValueChange={v => setRole(v as AppRole)}>
@@ -98,7 +91,7 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
           <Button onClick={handleCreate} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Create User
+            Send Invite
           </Button>
         </DialogFooter>
       </DialogContent>
