@@ -2641,6 +2641,7 @@ export type Database = {
       organizations: {
         Row: {
           address: string | null
+          app_name: string | null
           city: string | null
           code: string
           country: string | null
@@ -2656,6 +2657,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          app_name?: string | null
           city?: string | null
           code: string
           country?: string | null
@@ -2671,6 +2673,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          app_name?: string | null
           city?: string | null
           code?: string
           country?: string | null
