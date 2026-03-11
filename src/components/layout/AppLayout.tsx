@@ -123,6 +123,17 @@ const navSections = [
     ],
   },
   {
+    label: 'Dashboards',
+    items: [
+      { path: '/vendor-dashboard', label: 'Vendor Mgmt', icon: Building2 },
+      { path: '/procurement-dashboard', label: 'Procurement', icon: FileText },
+      { path: '/warehouse-dashboard', label: 'Warehouse', icon: Boxes },
+      { path: '/finance-dashboard', label: 'Finance', icon: Calculator },
+      { path: '/sales-dashboard', label: 'Sales', icon: ShoppingCart },
+      { path: '/cash-dashboard', label: 'Cash Mgmt', icon: Landmark },
+    ],
+  },
+  {
     label: 'Procurement',
     items: [
       { path: '/vendors', label: 'Vendors', icon: Building2 },
