@@ -55,6 +55,7 @@ import SalesQuotations from "./pages/SalesQuotations";
 import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import UserGuide from "./pages/UserGuide";
+import UserProfile from "./pages/UserProfile";
 import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 
@@ -158,6 +159,7 @@ const App = () => (
             <Route path="/sales-orders" element={<ProtectedRoute><SalesOrders /></ProtectedRoute>} />
             <Route path="/delivery-notes" element={<ProtectedRoute><DeliveryNotes /></ProtectedRoute>} />
             <Route path="/user-guide" element={<ProtectedRoute><UserGuide /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
