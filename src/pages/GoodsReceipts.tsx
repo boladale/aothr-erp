@@ -185,6 +185,8 @@ export default function GoodsReceipts() {
   };
 
   const handlePost = async (grn: GRNWithDetails) => {
+    if (postingId) return;
+    setPostingId(grn.id);
     try {
       // Get GRN lines to update inventory
       const { data: grnLines, error: linesError } = await supabase
@@ -240,6 +242,8 @@ export default function GoodsReceipts() {
       const message = error instanceof Error ? error.message : 'Failed to post GRN';
       console.error('Error posting GRN:', error);
       toast.error(message);
+    } finally {
+      setPostingId(null);
     }
   };
 
