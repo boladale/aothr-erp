@@ -56,6 +56,12 @@ import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import UserGuide from "./pages/UserGuide";
 import UserProfile from "./pages/UserProfile";
+import VendorDashboard from "./pages/VendorDashboard";
+import ProcurementDashboardPage from "./pages/ProcurementDashboardPage";
+import WarehouseDashboardPage from "./pages/WarehouseDashboardPage";
+import FinanceDashboardPage from "./pages/FinanceDashboardPage";
+import SalesDashboardPage from "./pages/SalesDashboardPage";
+import CashDashboardPage from "./pages/CashDashboardPage";
 import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 
