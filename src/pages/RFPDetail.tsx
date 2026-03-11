@@ -729,6 +729,36 @@ export default function RFPDetail() {
             }))}
           />
         )}
+
+        {/* Create PO from Awarded RFP */}
+        {rfp.status === 'awarded' && (() => {
+          const awarded = proposals.find(p => p.status === 'awarded');
+          if (!awarded) return null;
+          return (
+            <CreatePOFromRFPDialog
+              open={createPOOpen}
+              onOpenChange={setCreatePOOpen}
+              rfpId={rfp.id}
+              rfpNumber={rfp.rfp_number}
+              rfpTitle={rfp.title}
+              awardedProposal={{
+                id: awarded.id,
+                vendor_id: awarded.vendor_id,
+                total_amount: awarded.total_amount,
+                delivery_timeline_days: awarded.delivery_timeline_days,
+                vendors: awarded.vendors ? { code: awarded.vendors.code, name: awarded.vendors.name } : null,
+              }}
+              rfpItems={rfpItems.map(i => ({
+                id: i.id,
+                item_id: i.item_id,
+                quantity: i.quantity,
+                specifications: i.specifications,
+                items: i.items ? { code: i.items.code, name: i.items.name, unit_of_measure: '' } : null,
+              }))}
+              onSuccess={fetchData}
+            />
+          );
+        })()}
       </div>
     </AppLayout>
   );
