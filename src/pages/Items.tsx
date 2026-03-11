@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import type { Item } from '@/lib/supabase';
 
-export default function Items() {
+const { organizationId } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
