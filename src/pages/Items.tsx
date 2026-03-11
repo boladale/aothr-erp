@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
 import type { Item } from '@/lib/supabase';
 
 export default function Items() {
+  const { organizationId } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -62,7 +64,7 @@ export default function Items() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('items').insert(form);
+      const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
       if (error) throw error;
       
       toast.success('Item created');
