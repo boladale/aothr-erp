@@ -79,9 +79,28 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
     fetchAll();
   }, [open, poId, organizationId]);
 
+  const markAsSentIfApproved = async () => {
+    if (poStatus !== 'approved') return;
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ status: 'sent' as POStatus, sent_at: new Date().toISOString() })
+        .eq('id', poId);
+      if (error) throw error;
+      toast.success('PO automatically marked as Sent');
+      onStatusChange?.();
+    } catch (err) {
+      console.error('Failed to auto-mark PO as sent:', err);
+    }
+  };
+
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
+
+    // Auto-mark as sent when printing an approved PO
+    markAsSentIfApproved();
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
