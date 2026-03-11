@@ -152,6 +152,15 @@ export default function RFPDetail() {
       });
       setEditingScores(scoreMap);
       setScoreComments(commentMap);
+
+      // Check if a PO already exists for this RFP
+      const { data: existingPO } = await supabase
+        .from('purchase_orders')
+        .select('id')
+        .like('notes', `%RFP ${rfpRes.data.rfp_number}%`)
+        .limit(1)
+        .maybeSingle();
+      setExistingPOId(existingPO?.id || null);
     } catch (error) {
       console.error(error);
       toast.error('Failed to load RFP details');
