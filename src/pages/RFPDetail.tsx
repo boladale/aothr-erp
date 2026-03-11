@@ -356,7 +356,12 @@ export default function RFPDetail() {
                   <Star className="mr-2 h-4 w-4" /> Start Evaluation
                 </Button>
               )}
-              {rfp.status === 'awarded' && (
+              {rfp.status === 'awarded' && existingPOId && (
+                <Button onClick={() => navigate(`/purchase-orders/${existingPOId}`)}>
+                  <ShoppingCart className="mr-2 h-4 w-4" /> View Purchase Order
+                </Button>
+              )}
+              {rfp.status === 'awarded' && !existingPOId && (
                 <Button onClick={() => setCreatePOOpen(true)}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> Create Purchase Order
                 </Button>
