@@ -286,6 +286,13 @@ export default function FiscalPeriods() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Generate Periods Dialog */}
+      <GeneratePeriodsDialog
+        open={genOpen}
+        onOpenChange={setGenOpen}
+        existingYears={fiscalYears}
+        onGenerated={fetchPeriods}
+      />
     </AppLayout>
   );
 }
