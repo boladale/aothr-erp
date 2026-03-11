@@ -226,6 +226,14 @@ export default function RequisitionDetail() {
           </CardContent>
         </Card>
 
+        {/* Bid Collection - show for approved/partially_converted requisitions */}
+        {['approved', 'partially_converted'].includes(requisition.status) && (
+          <BidCollectionPanel
+            requisitionId={requisition.id}
+            lines={lines}
+          />
+        )}
+
         {canConvert && (
           <ConvertToPODialog
             open={convertOpen}
