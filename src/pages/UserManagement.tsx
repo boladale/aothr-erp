@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shield, Plus, Trash2, Key, Users, UserPlus } from 'lucide-react';
+import { Shield, Plus, Trash2, Key, Users, UserPlus, MailPlus, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -124,6 +124,23 @@ export default function UserManagement() {
   const [userRoleDialogOpen, setUserRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newAppRole, setNewAppRole] = useState<AppRole>('viewer');
+  const [resendingEmail, setResendingEmail] = useState<string | null>(null);
+
+  const handleResendInvite = async (email: string) => {
+    setResendingEmail(email);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-resend-invite', {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Invite resent to ${email}`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to resend invite');
+    } finally {
+      setResendingEmail(null);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -481,17 +498,31 @@ export default function UserManagement() {
       header: '',
       render: (u: UserWithRoles) =>
         isAdmin && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedUser(u);
-              setUserRoleDialogOpen(true);
-            }}
-          >
-            <UserPlus className="h-4 w-4 mr-1" /> Add Role
-          </Button>
+          <div className="flex gap-2 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResendInvite(u.email);
+              }}
+              disabled={resendingEmail === u.email}
+            >
+              {resendingEmail === u.email ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <MailPlus className="h-4 w-4 mr-1" />}
+              Resend Invite
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedUser(u);
+                setUserRoleDialogOpen(true);
+              }}
+            >
+              <UserPlus className="h-4 w-4 mr-1" /> Add Role
+            </Button>
+          </div>
         ),
     },
   ];
