@@ -115,6 +115,7 @@ export default function RFPs() {
           onOpenChange={setDialogOpen}
           onSuccess={fetchRFPs}
           userId={user?.id}
+          organizationId={organizationId}
         />
       </div>
     </AppLayout>
