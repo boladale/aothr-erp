@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   const [expectedDate, setExpectedDate] = useState('');
   const [poLines, setPOLines] = useState<POLine[]>([]);
   const [saving, setSaving] = useState(false);
+  const [createdPOId, setCreatedPOId] = useState<string | null>(null);
+  const [showDocument, setShowDocument] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -152,9 +155,10 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       if (linesError) throw linesError;
 
       toast.success(`PO ${poNumber} created from RFP`);
+      setCreatedPOId(po.id);
       onOpenChange(false);
       onSuccess();
-      navigate(`/purchase-orders/${po.id}`);
+      setShowDocument(true);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to create PO');
     } finally {
@@ -163,6 +167,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -264,5 +269,19 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {createdPOId && (
+      <PODocumentDialog
+        open={showDocument}
+        onOpenChange={(open) => {
+          setShowDocument(open);
+          if (!open) {
+            navigate(`/purchase-orders/${createdPOId}`);
+          }
+        }}
+        poId={createdPOId}
+      />
+    )}
+    </>
   );
 }

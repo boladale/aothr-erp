@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
+import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -31,6 +32,7 @@ export default function PurchaseOrderDetail() {
   const [po, setPO] = useState<POWithDetails | null>(null);
   const [lines, setLines] = useState<POLineWithItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDocument, setShowDocument] = useState(false);
 
   useEffect(() => {
     if (id) fetchPO();
@@ -120,9 +122,14 @@ export default function PurchaseOrderDetail() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">{po.vendors?.name}</p>
           </div>
-          {po.close_ready && po.status !== 'closed' && (
-            <Button onClick={handleClose}>Close PO</Button>
-          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowDocument(true)}>
+              <FileText className="h-4 w-4 mr-1" /> View PO Document
+            </Button>
+            {po.close_ready && po.status !== 'closed' && (
+              <Button onClick={handleClose}>Close PO</Button>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -253,6 +260,14 @@ export default function PurchaseOrderDetail() {
             <AttachmentPanel entityType="purchase_orders" entityId={id!} />
           </CardContent>
         </Card>
+
+        {id && (
+          <PODocumentDialog
+            open={showDocument}
+            onOpenChange={setShowDocument}
+            poId={id}
+          />
+        )}
       </div>
     </AppLayout>
   );
