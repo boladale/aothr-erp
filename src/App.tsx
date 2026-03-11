@@ -55,6 +55,7 @@ import SalesQuotations from "./pages/SalesQuotations";
 import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import UserGuide from "./pages/UserGuide";
+import UserProfile from "./pages/UserProfile";
 import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 
