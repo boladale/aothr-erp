@@ -300,7 +300,7 @@ export default function GoodsReceipts() {
           title="Goods Receipts"
           description="Receive goods against purchase orders"
           actions={
-            <Button onClick={() => setDialogOpen(true)} disabled={openPOs.length === 0}>
+            <Button onClick={handleOpenCreateDialog} disabled={loading}>
               <Plus className="mr-2 h-4 w-4" /> Create GRN
             </Button>
           }
