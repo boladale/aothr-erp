@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -224,6 +225,14 @@ export default function RequisitionDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Bid Collection - show for approved/partially_converted requisitions */}
+        {['approved', 'partially_converted'].includes(requisition.status) && (
+          <BidCollectionPanel
+            requisitionId={requisition.id}
+            lines={lines}
+          />
+        )}
 
         {canConvert && (
           <ConvertToPODialog

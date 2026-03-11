@@ -3267,6 +3267,118 @@ export type Database = {
           },
         ]
       }
+      requisition_bid_entries: {
+        Row: {
+          bid_request_id: string
+          created_at: string
+          id: string
+          is_recommended: boolean
+          notes: string | null
+          quantity: number
+          requisition_line_id: string
+          unit_price: number
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          bid_request_id: string
+          created_at?: string
+          id?: string
+          is_recommended?: boolean
+          notes?: string | null
+          quantity?: number
+          requisition_line_id: string
+          unit_price?: number
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          bid_request_id?: string
+          created_at?: string
+          id?: string
+          is_recommended?: boolean
+          notes?: string | null
+          quantity?: number
+          requisition_line_id?: string
+          unit_price?: number
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_bid_entries_bid_request_id_fkey"
+            columns: ["bid_request_id"]
+            isOneToOne: false
+            referencedRelation: "requisition_bid_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_bid_entries_requisition_line_id_fkey"
+            columns: ["requisition_line_id"]
+            isOneToOne: false
+            referencedRelation: "requisition_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_bid_entries_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_bid_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          id: string
+          notes: string | null
+          organization_id: string | null
+          requisition_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          requisition_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          requisition_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_bid_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_bid_requests_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "requisitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requisition_lines: {
         Row: {
           created_at: string
