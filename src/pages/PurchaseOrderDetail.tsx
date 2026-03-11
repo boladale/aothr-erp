@@ -30,6 +30,7 @@ export default function PurchaseOrderDetail() {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
+  const canSend = canApprove || hasRole('procurement_officer');
   const [po, setPO] = useState<POWithDetails | null>(null);
   const [lines, setLines] = useState<POLineWithItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -235,7 +236,7 @@ export default function PurchaseOrderDetail() {
                 </Button>
               </>
             )}
-            {po.status === 'approved' && canApprove && (
+            {po.status === 'approved' && canSend && (
               <Button onClick={handleSend} disabled={actionLoading}>
                 Mark as Sent
               </Button>
