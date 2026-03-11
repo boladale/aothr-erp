@@ -122,9 +122,14 @@ export default function PurchaseOrderDetail() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">{po.vendors?.name}</p>
           </div>
-          {po.close_ready && po.status !== 'closed' && (
-            <Button onClick={handleClose}>Close PO</Button>
-          )}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowDocument(true)}>
+              <FileText className="h-4 w-4 mr-1" /> View PO Document
+            </Button>
+            {po.close_ready && po.status !== 'closed' && (
+              <Button onClick={handleClose}>Close PO</Button>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
