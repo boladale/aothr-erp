@@ -57,6 +57,23 @@ export function RFPEditDialog({
   const [criteria, setCriteria] = useState<CriterionLine[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
+  const distributeWeights = (list: CriterionLine[]): CriterionLine[] => {
+    if (list.length === 0) return list;
+    const base = Math.floor(100 / list.length);
+    const remainder = 100 - base * list.length;
+    return list.map((c, i) => ({ ...c, weight: base + (i < remainder ? 1 : 0) }));
+  };
+
+  const addCriterion = () => {
+    const updated = [...criteria, { criterion_name: '', weight: 0, description: '' }];
+    setCriteria(distributeWeights(updated));
+  };
+
+  const removeCriterion = (idx: number) => {
+    const updated = criteria.filter((_, i) => i !== idx);
+    setCriteria(distributeWeights(updated));
+  };
+
   useEffect(() => {
     if (open) {
       setTitle(initialData.title);
@@ -206,7 +223,7 @@ export function RFPEditDialog({
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-base font-semibold">Evaluation Criteria (Total: {totalWeight}%)</Label>
-              <Button type="button" size="sm" variant="outline" onClick={() => setCriteria([...criteria, { criterion_name: '', weight: 0, description: '' }])}>
+              <Button type="button" size="sm" variant="outline" onClick={addCriterion}>
                 <Plus className="h-3 w-3 mr-1" /> Add Criterion
               </Button>
             </div>
@@ -225,7 +242,7 @@ export function RFPEditDialog({
                   </div>
                   <div className="col-span-1">
                     {criteria.length > 1 && (
-                      <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => setCriteria(criteria.filter((_, i) => i !== idx))}>
+                      <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => removeCriterion(idx)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
