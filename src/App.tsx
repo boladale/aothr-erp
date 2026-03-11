@@ -56,6 +56,12 @@ import SalesOrders from "./pages/SalesOrders";
 import DeliveryNotes from "./pages/DeliveryNotes";
 import UserGuide from "./pages/UserGuide";
 import UserProfile from "./pages/UserProfile";
+import VendorDashboard from "./pages/VendorDashboard";
+import ProcurementDashboardPage from "./pages/ProcurementDashboardPage";
+import WarehouseDashboardPage from "./pages/WarehouseDashboardPage";
+import FinanceDashboardPage from "./pages/FinanceDashboardPage";
+import SalesDashboardPage from "./pages/SalesDashboardPage";
+import CashDashboardPage from "./pages/CashDashboardPage";
 import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 
@@ -126,6 +132,12 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
+            <Route path="/procurement-dashboard" element={<ProtectedRoute><ProcurementDashboardPage /></ProtectedRoute>} />
+            <Route path="/warehouse-dashboard" element={<ProtectedRoute><WarehouseDashboardPage /></ProtectedRoute>} />
+            <Route path="/finance-dashboard" element={<ProtectedRoute><FinanceDashboardPage /></ProtectedRoute>} />
+            <Route path="/sales-dashboard" element={<ProtectedRoute><SalesDashboardPage /></ProtectedRoute>} />
+            <Route path="/cash-dashboard" element={<ProtectedRoute><CashDashboardPage /></ProtectedRoute>} />
             <Route path="/vendors" element={<ProtectedRoute><Vendors /></ProtectedRoute>} />
             <Route path="/items" element={<ProtectedRoute><Items /></ProtectedRoute>} />
             <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
