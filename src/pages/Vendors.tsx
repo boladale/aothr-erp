@@ -162,7 +162,7 @@ export default function Vendors() {
       header: '',
       render: (v: Vendor) => (
         <div className="flex gap-2 justify-end">
-          {v.status === 'draft' && canInitiate && v.created_by === user?.id && (
+          {v.status === 'draft' && canInitiate && (v.created_by === user?.id || canApprove) && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitForApproval(v); }}>
               Submit
             </Button>
