@@ -61,7 +61,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, organizationId, isAdmin, signOut } = useAuth();
+  const { user, loading, organizationId, roles, signOut } = useAuth();
   
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
