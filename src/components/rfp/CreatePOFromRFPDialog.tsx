@@ -119,6 +119,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   const handleCreate = async () => {
     if (poLines.length === 0) { toast.error('No items to convert'); return; }
     setSaving(true);
+    let createdPoIdForRollback: string | null = null;
+
     try {
       const poNumber = `PO-${Date.now().toString(36).toUpperCase()}`;
       const subtotal = poLines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
@@ -141,6 +143,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
 
       if (poError) throw poError;
 
+      createdPoIdForRollback = po.id;
+
       const poLineInserts = poLines.map((l, idx) => ({
         po_id: po.id,
         line_number: idx + 1,
@@ -153,7 +157,10 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         .from('purchase_order_lines')
         .insert(poLineInserts);
 
-      if (linesError) throw linesError;
+      if (linesError) {
+        await supabase.from('purchase_orders').delete().eq('id', po.id);
+        throw linesError;
+      }
 
       toast.success(`PO ${poNumber} created from RFP`);
       setCreatedPOId(po.id);
@@ -161,6 +168,9 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       onSuccess();
       setShowDocument(true);
     } catch (error: unknown) {
+      if (createdPoIdForRollback) {
+        await supabase.from('purchase_orders').delete().eq('id', createdPoIdForRollback);
+      }
       toast.error(error instanceof Error ? error.message : 'Failed to create PO');
     } finally {
       setSaving(false);
