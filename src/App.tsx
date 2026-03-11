@@ -61,7 +61,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, organizationId } = useAuth();
+  const { user, loading, organizationId, isAdmin, signOut } = useAuth();
   
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
@@ -72,7 +72,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!organizationId) {
-    return <Navigate to="/org-setup" replace />;
+    // Admins without an org can go to org-setup; regular users see a pending message
+    if (isAdmin) {
+      return <Navigate to="/org-setup" replace />;
+    }
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h2 className="text-2xl font-semibold text-foreground">Account Pending</h2>
+          <p className="text-muted-foreground">
+            Your account has not been assigned to an organization yet. Please contact your administrator to complete setup.
+          </p>
+          <button onClick={signOut} className="text-sm text-muted-foreground hover:text-foreground underline">
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
   }
   
   return <>{children}</>;
