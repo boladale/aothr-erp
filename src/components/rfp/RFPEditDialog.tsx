@@ -223,7 +223,7 @@ export function RFPEditDialog({
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-base font-semibold">Evaluation Criteria (Total: {totalWeight}%)</Label>
-              <Button type="button" size="sm" variant="outline" onClick={() => setCriteria([...criteria, { criterion_name: '', weight: 0, description: '' }])}>
+              <Button type="button" size="sm" variant="outline" onClick={addCriterion}>
                 <Plus className="h-3 w-3 mr-1" /> Add Criterion
               </Button>
             </div>
