@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import type { POStatus } from '@/lib/supabase';
 
 interface POLine {
   line_number: number;
