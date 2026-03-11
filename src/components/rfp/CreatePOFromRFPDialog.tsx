@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import {
   Dialog,
   DialogContent,
