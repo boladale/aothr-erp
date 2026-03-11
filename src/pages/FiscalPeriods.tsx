@@ -133,6 +133,9 @@ export default function FiscalPeriods() {
           description="Manage accounting periods, year-end close, and opening balances"
           actions={isAdmin ? (
             <div className="flex gap-2">
+              <Button onClick={() => setGenOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Generate Periods
+              </Button>
               <Button variant="outline" onClick={() => setYeCloseOpen(true)}>
                 <CalendarCheck className="h-4 w-4 mr-1" /> Year-End Close
               </Button>
