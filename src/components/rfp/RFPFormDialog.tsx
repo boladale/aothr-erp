@@ -37,7 +37,7 @@ interface CriterionLine {
   description: string;
 }
 
-export function RFPFormDialog({ open, onOpenChange, onSuccess, userId }: RFPFormDialogProps) {
+export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizationId }: RFPFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
