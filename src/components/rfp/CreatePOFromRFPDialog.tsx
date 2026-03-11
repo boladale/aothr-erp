@@ -68,7 +68,7 @@ interface POLine {
 }
 
 export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rfpTitle, awardedProposal, rfpItems, onSuccess }: Props) {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const navigate = useNavigate();
   const [locations, setLocations] = useState<Location[]>([]);
   const [locationId, setLocationId] = useState('');
