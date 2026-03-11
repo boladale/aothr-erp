@@ -45,6 +45,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   poId: string;
+  poStatus?: string;
+  onStatusChange?: () => void;
 }
 
 export function PODocumentDialog({ open, onOpenChange, poId }: Props) {
