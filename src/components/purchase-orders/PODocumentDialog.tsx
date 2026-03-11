@@ -49,8 +49,8 @@ interface Props {
   onStatusChange?: () => void;
 }
 
-export function PODocumentDialog({ open, onOpenChange, poId }: Props) {
-  const { organizationId } = useAuth();
+export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusChange }: Props) {
+  const { organizationId, user } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   const [po, setPO] = useState<POData | null>(null);
   const [lines, setLines] = useState<POLine[]>([]);
