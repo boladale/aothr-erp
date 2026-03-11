@@ -141,7 +141,6 @@ export default function UserManagement() {
       setResendingEmail(null);
     }
   };
-  const [newAppRole, setNewAppRole] = useState<AppRole>('viewer');
 
   useEffect(() => {
     fetchData();
