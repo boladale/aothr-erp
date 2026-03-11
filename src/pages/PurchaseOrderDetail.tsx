@@ -236,7 +236,7 @@ export default function PurchaseOrderDetail() {
                 </Button>
               </>
             )}
-            {po.status === 'approved' && canApprove && (
+            {po.status === 'approved' && canSend && (
               <Button onClick={handleSend} disabled={actionLoading}>
                 Mark as Sent
               </Button>

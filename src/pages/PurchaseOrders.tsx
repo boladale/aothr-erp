@@ -290,7 +290,7 @@ export default function PurchaseOrders() {
               </Button>
             </>
           )}
-          {o.status === 'approved' && canApprove && (
+          {o.status === 'approved' && canSend && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSend(o); }}>
               Send
             </Button>
