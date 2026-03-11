@@ -75,6 +75,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   const [expectedDate, setExpectedDate] = useState('');
   const [poLines, setPOLines] = useState<POLine[]>([]);
   const [saving, setSaving] = useState(false);
+  const [createdPOId, setCreatedPOId] = useState<string | null>(null);
+  const [showDocument, setShowDocument] = useState(false);
 
   useEffect(() => {
     if (!open) return;
