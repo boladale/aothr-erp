@@ -129,7 +129,7 @@ export default function UserProfile() {
                 Organization
               </Label>
               <Input
-                value={profile?.organization_id ? 'Assigned' : 'Not assigned'}
+                value={appName}
                 disabled
                 className="bg-muted"
               />
