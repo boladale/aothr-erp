@@ -27,6 +27,7 @@ const roleLabels: Record<string, string> = {
 
 export default function UserProfile() {
   const { user, profile, roles, refreshProfile } = useAuth();
+  const { appName } = useOrgBranding();
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [saving, setSaving] = useState(false);
 
