@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -26,6 +27,7 @@ const roleLabels: Record<string, string> = {
 
 export default function UserProfile() {
   const { user, profile, roles, refreshProfile } = useAuth();
+  const { appName } = useOrgBranding();
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [saving, setSaving] = useState(false);
 
@@ -127,7 +129,7 @@ export default function UserProfile() {
                 Organization
               </Label>
               <Input
-                value={profile?.organization_id ? 'Assigned' : 'Not assigned'}
+                value={appName}
                 disabled
                 className="bg-muted"
               />
