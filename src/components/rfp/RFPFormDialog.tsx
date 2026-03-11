@@ -22,6 +22,7 @@ interface RFPFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userId?: string;
+  organizationId?: string | null;
 }
 
 interface RFPItemLine {
