@@ -216,10 +216,30 @@ export default function PurchaseOrderDetail() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">{po.vendors?.name}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => setShowDocument(true)}>
               <FileText className="h-4 w-4 mr-1" /> View PO Document
             </Button>
+            {po.status === 'draft' && po.created_by === user?.id && (
+              <Button onClick={handleSubmitForApproval} disabled={actionLoading}>
+                Submit for Approval
+              </Button>
+            )}
+            {po.status === 'pending_approval' && canApprove && (
+              <>
+                <Button onClick={handleApprove} disabled={actionLoading}>
+                  Approve
+                </Button>
+                <Button variant="outline" onClick={handleReject} disabled={actionLoading}>
+                  Reject
+                </Button>
+              </>
+            )}
+            {po.status === 'approved' && canApprove && (
+              <Button onClick={handleSend} disabled={actionLoading}>
+                Mark as Sent
+              </Button>
+            )}
             {po.close_ready && po.status !== 'closed' && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
