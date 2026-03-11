@@ -124,6 +124,24 @@ export default function UserManagement() {
   const [userRoleDialogOpen, setUserRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [newAppRole, setNewAppRole] = useState<AppRole>('viewer');
+  const [resendingEmail, setResendingEmail] = useState<string | null>(null);
+
+  const handleResendInvite = async (email: string) => {
+    setResendingEmail(email);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-resend-invite', {
+        body: { email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Invite resent to ${email}`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to resend invite');
+    } finally {
+      setResendingEmail(null);
+    }
+  };
+  const [newAppRole, setNewAppRole] = useState<AppRole>('viewer');
 
   useEffect(() => {
     fetchData();
