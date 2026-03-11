@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Lock, Unlock, BookOpen, CalendarCheck, ArrowRight } from 'lucide-react';
+import { Lock, Unlock, BookOpen, CalendarCheck, ArrowRight, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
