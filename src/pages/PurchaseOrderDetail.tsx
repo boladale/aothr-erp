@@ -32,6 +32,7 @@ export default function PurchaseOrderDetail() {
   const [po, setPO] = useState<POWithDetails | null>(null);
   const [lines, setLines] = useState<POLineWithItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDocument, setShowDocument] = useState(false);
 
   useEffect(() => {
     if (id) fetchPO();
