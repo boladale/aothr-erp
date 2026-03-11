@@ -336,6 +336,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <span className="text-xs text-muted-foreground">{user?.email}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <Users className="h-4 w-4 mr-2" />
+                My Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setChangePasswordOpen(true)}>
                 <KeyRound className="h-4 w-4 mr-2" />
                 Change Password
