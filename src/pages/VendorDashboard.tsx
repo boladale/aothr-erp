@@ -32,7 +32,7 @@ export default function VendorDashboard() {
         supabase.from('vendors').select('id', { count: 'exact', head: true }),
         supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
-        supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+        supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('status', 'inactive'),
         supabase.from('rfps').select('id', { count: 'exact', head: true }),
         supabase.from('rfps').select('id', { count: 'exact', head: true }).in('status', ['draft', 'published', 'evaluating']),
         supabase.from('vendors').select('id, code, name, status, city, country, created_at').order('created_at', { ascending: false }).limit(8),
