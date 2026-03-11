@@ -13,8 +13,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle, ShoppingCart } from 'lucide-react';
 import { RFPEditDialog } from '@/components/rfp/RFPEditDialog';
+import { CreatePOFromRFPDialog } from '@/components/rfp/CreatePOFromRFPDialog';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -94,6 +95,8 @@ export default function RFPDetail() {
 
   // Edit dialog state
   const [editOpen, setEditOpen] = useState(false);
+  // Create PO dialog state
+  const [createPOOpen, setCreatePOOpen] = useState(false);
 
   // Score editing
   const [editingScores, setEditingScores] = useState<Record<string, Record<string, number>>>({});
@@ -340,6 +343,11 @@ export default function RFPDetail() {
               {rfp.status === 'published' && (
                 <Button onClick={handleStartEvaluation}>
                   <Star className="mr-2 h-4 w-4" /> Start Evaluation
+                </Button>
+              )}
+              {rfp.status === 'awarded' && (
+                <Button onClick={() => setCreatePOOpen(true)}>
+                  <ShoppingCart className="mr-2 h-4 w-4" /> Create Purchase Order
                 </Button>
               )}
             </div>
@@ -721,6 +729,36 @@ export default function RFPDetail() {
             }))}
           />
         )}
+
+        {/* Create PO from Awarded RFP */}
+        {rfp.status === 'awarded' && (() => {
+          const awarded = proposals.find(p => p.status === 'awarded');
+          if (!awarded) return null;
+          return (
+            <CreatePOFromRFPDialog
+              open={createPOOpen}
+              onOpenChange={setCreatePOOpen}
+              rfpId={rfp.id}
+              rfpNumber={rfp.rfp_number}
+              rfpTitle={rfp.title}
+              awardedProposal={{
+                id: awarded.id,
+                vendor_id: awarded.vendor_id,
+                total_amount: awarded.total_amount,
+                delivery_timeline_days: awarded.delivery_timeline_days,
+                vendors: awarded.vendors ? { code: awarded.vendors.code, name: awarded.vendors.name } : null,
+              }}
+              rfpItems={rfpItems.map(i => ({
+                id: i.id,
+                item_id: i.item_id,
+                quantity: i.quantity,
+                specifications: i.specifications,
+                items: i.items ? { code: i.items.code, name: i.items.name, unit_of_measure: '' } : null,
+              }))}
+              onSuccess={fetchData}
+            />
+          );
+        })()}
       </div>
     </AppLayout>
   );
