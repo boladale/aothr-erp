@@ -28,11 +28,13 @@ interface POLineWithItem extends PurchaseOrderLine {
 export default function PurchaseOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const [po, setPO] = useState<POWithDetails | null>(null);
   const [lines, setLines] = useState<POLineWithItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDocument, setShowDocument] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (id) fetchPO();
@@ -53,6 +55,98 @@ export default function PurchaseOrderDetail() {
       toast.error('Failed to load purchase order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!po) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ status: 'pending_approval' as POStatus, rejection_reason: null })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('Submitted for approval');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to submit');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!po) return;
+    setActionLoading(true);
+    try {
+      const { error: poError } = await supabase
+        .from('purchase_orders')
+        .update({ 
+          status: 'approved' as POStatus,
+          approved_by: user?.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', po.id);
+      if (poError) throw poError;
+
+      await supabase.from('po_approvals').insert({
+        po_id: po.id,
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
+      });
+
+      toast.success('PO approved');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to approve');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!po) return;
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ status: 'draft' as POStatus, rejection_reason: reason })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('PO returned to draft for corrections');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to reject');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!po) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ 
+          status: 'sent' as POStatus,
+          sent_at: new Date().toISOString(),
+        })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('PO marked as sent to vendor');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to send');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -122,10 +216,30 @@ export default function PurchaseOrderDetail() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">{po.vendors?.name}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => setShowDocument(true)}>
               <FileText className="h-4 w-4 mr-1" /> View PO Document
             </Button>
+            {po.status === 'draft' && po.created_by === user?.id && (
+              <Button onClick={handleSubmitForApproval} disabled={actionLoading}>
+                Submit for Approval
+              </Button>
+            )}
+            {po.status === 'pending_approval' && canApprove && (
+              <>
+                <Button onClick={handleApprove} disabled={actionLoading}>
+                  Approve
+                </Button>
+                <Button variant="outline" onClick={handleReject} disabled={actionLoading}>
+                  Reject
+                </Button>
+              </>
+            )}
+            {po.status === 'approved' && canApprove && (
+              <Button onClick={handleSend} disabled={actionLoading}>
+                Mark as Sent
+              </Button>
+            )}
             {po.close_ready && po.status !== 'closed' && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
