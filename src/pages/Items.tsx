@@ -64,7 +64,7 @@ export default function Items() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('items').insert(form);
+      const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
       if (error) throw error;
       
       toast.success('Item created');
