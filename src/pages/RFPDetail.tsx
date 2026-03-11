@@ -95,6 +95,8 @@ export default function RFPDetail() {
 
   // Edit dialog state
   const [editOpen, setEditOpen] = useState(false);
+  // Create PO dialog state
+  const [createPOOpen, setCreatePOOpen] = useState(false);
 
   // Score editing
   const [editingScores, setEditingScores] = useState<Record<string, Record<string, number>>>({});
