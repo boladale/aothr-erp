@@ -22,6 +22,7 @@ interface RFPFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userId?: string;
+  organizationId?: string | null;
 }
 
 interface RFPItemLine {
@@ -36,7 +37,7 @@ interface CriterionLine {
   description: string;
 }
 
-export function RFPFormDialog({ open, onOpenChange, onSuccess, userId }: RFPFormDialogProps) {
+export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizationId }: RFPFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -76,6 +77,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId }: RFPForm
           description: description || null,
           deadline: deadline || null,
           created_by: userId,
+          organization_id: organizationId,
         })
         .select()
         .single();

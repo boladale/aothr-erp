@@ -27,7 +27,7 @@ interface RFP {
 }
 
 export default function RFPs() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const navigate = useNavigate();
   const [rfps, setRfps] = useState<RFP[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,6 +115,7 @@ export default function RFPs() {
           onOpenChange={setDialogOpen}
           onSuccess={fetchRFPs}
           userId={user?.id}
+          organizationId={organizationId}
         />
       </div>
     </AppLayout>
