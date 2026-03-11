@@ -56,6 +56,7 @@ export default function GoodsReceipts() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [postingId, setPostingId] = useState<string | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [poLines, setPOLines] = useState<POLineWithItem[]>([]);
   const [form, setForm] = useState({
