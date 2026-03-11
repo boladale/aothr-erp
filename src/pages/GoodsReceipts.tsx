@@ -261,6 +261,16 @@ export default function GoodsReceipts() {
     r.purchase_orders?.po_number?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const hasReceivablePOs = openPOs.length > 0;
+
+  const handleOpenCreateDialog = () => {
+    if (!hasReceivablePOs) {
+      toast.error('No eligible purchase orders found. Only Sent or Partially Received POs can be received.');
+      return;
+    }
+    setDialogOpen(true);
+  };
+
   const columns = [
     { key: 'grn_number', header: 'GRN Number', render: (r: GRNWithDetails) => <span className="font-medium">{r.grn_number}</span> },
     { key: 'po', header: 'PO', render: (r: GRNWithDetails) => r.purchase_orders?.po_number || '-' },
