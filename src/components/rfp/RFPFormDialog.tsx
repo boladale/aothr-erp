@@ -44,11 +44,28 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   const [items, setItems] = useState<Item[]>([]);
   const [rfpItems, setRfpItems] = useState<RFPItemLine[]>([{ item_id: '', quantity: 1, specifications: '' }]);
   const [criteria, setCriteria] = useState<CriterionLine[]>([
-    { criterion_name: 'Price', weight: 30, description: 'Total cost competitiveness' },
+    { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
     { criterion_name: 'Experience', weight: 25, description: 'Past performance and relevant projects' },
-    { criterion_name: 'Delivery Timeline', weight: 20, description: 'Proposed delivery schedule' },
+    { criterion_name: 'Delivery Timeline', weight: 25, description: 'Proposed delivery schedule' },
     { criterion_name: 'Quality', weight: 25, description: 'Quality standards and certifications' },
   ]);
+
+  const distributeWeights = (list: CriterionLine[]): CriterionLine[] => {
+    if (list.length === 0) return list;
+    const base = Math.floor(100 / list.length);
+    const remainder = 100 - base * list.length;
+    return list.map((c, i) => ({ ...c, weight: base + (i < remainder ? 1 : 0) }));
+  };
+
+  const addCriterion = () => {
+    const updated = [...criteria, { criterion_name: '', weight: 0, description: '' }];
+    setCriteria(distributeWeights(updated));
+  };
+
+  const removeCriterion = (idx: number) => {
+    const updated = criteria.filter((_, i) => i !== idx);
+    setCriteria(distributeWeights(updated));
+  };
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
