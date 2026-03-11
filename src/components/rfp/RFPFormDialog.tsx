@@ -141,9 +141,9 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
     setDeadline('');
     setRfpItems([{ item_id: '', quantity: 1, specifications: '' }]);
     setCriteria([
-      { criterion_name: 'Price', weight: 30, description: 'Total cost competitiveness' },
+      { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
       { criterion_name: 'Experience', weight: 25, description: 'Past performance and relevant projects' },
-      { criterion_name: 'Delivery Timeline', weight: 20, description: 'Proposed delivery schedule' },
+      { criterion_name: 'Delivery Timeline', weight: 25, description: 'Proposed delivery schedule' },
       { criterion_name: 'Quality', weight: 25, description: 'Quality standards and certifications' },
     ]);
   };
