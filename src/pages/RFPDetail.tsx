@@ -97,6 +97,8 @@ export default function RFPDetail() {
   const [editOpen, setEditOpen] = useState(false);
   // Create PO dialog state
   const [createPOOpen, setCreatePOOpen] = useState(false);
+  // Existing PO for this RFP
+  const [existingPOId, setExistingPOId] = useState<string | null>(null);
 
   // Score editing
   const [editingScores, setEditingScores] = useState<Record<string, Record<string, number>>>({});
@@ -150,6 +152,15 @@ export default function RFPDetail() {
       });
       setEditingScores(scoreMap);
       setScoreComments(commentMap);
+
+      // Check if a PO already exists for this RFP
+      const { data: existingPO } = await supabase
+        .from('purchase_orders')
+        .select('id')
+        .like('notes', `%RFP ${rfpRes.data.rfp_number}%`)
+        .limit(1)
+        .maybeSingle();
+      setExistingPOId(existingPO?.id || null);
     } catch (error) {
       console.error(error);
       toast.error('Failed to load RFP details');
@@ -345,7 +356,12 @@ export default function RFPDetail() {
                   <Star className="mr-2 h-4 w-4" /> Start Evaluation
                 </Button>
               )}
-              {rfp.status === 'awarded' && (
+              {rfp.status === 'awarded' && existingPOId && (
+                <Button onClick={() => navigate(`/purchase-orders/${existingPOId}`)}>
+                  <ShoppingCart className="mr-2 h-4 w-4" /> View Purchase Order
+                </Button>
+              )}
+              {rfp.status === 'awarded' && !existingPOId && (
                 <Button onClick={() => setCreatePOOpen(true)}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> Create Purchase Order
                 </Button>
