@@ -185,7 +185,7 @@ export function RFPEditDialog({
                     </Select>
                   </div>
                   <div className="col-span-2">
-                    <Input type="number" min={1} value={line.quantity} onChange={e => { const n = [...rfpItems]; n[idx].quantity = Number(e.target.value); setRfpItems(n); }} placeholder="Qty" />
+                    <Input type="number" min={1} value={line.quantity} readOnly disabled className="opacity-70 cursor-not-allowed" placeholder="Qty" />
                   </div>
                   <div className="col-span-4">
                     <Input value={line.specifications} onChange={e => { const n = [...rfpItems]; n[idx].specifications = e.target.value; setRfpItems(n); }} placeholder="Specifications" />
