@@ -93,6 +93,9 @@ export default function RFPDetail() {
   const [availableVendors, setAvailableVendors] = useState<Vendor[]>([]);
   const [qualifiedVendors, setQualifiedVendors] = useState<Vendor[]>([]);
 
+  // Edit dialog state
+  const [editOpen, setEditOpen] = useState(false);
+
   // Score editing
   const [editingScores, setEditingScores] = useState<Record<string, Record<string, number>>>({});
   const [scoreComments, setScoreComments] = useState<Record<string, Record<string, string>>>({});
