@@ -498,17 +498,31 @@ export default function UserManagement() {
       header: '',
       render: (u: UserWithRoles) =>
         isAdmin && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedUser(u);
-              setUserRoleDialogOpen(true);
-            }}
-          >
-            <UserPlus className="h-4 w-4 mr-1" /> Add Role
-          </Button>
+          <div className="flex gap-2 justify-end">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResendInvite(u.email);
+              }}
+              disabled={resendingEmail === u.email}
+            >
+              {resendingEmail === u.email ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <MailPlus className="h-4 w-4 mr-1" />}
+              Resend Invite
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedUser(u);
+                setUserRoleDialogOpen(true);
+              }}
+            >
+              <UserPlus className="h-4 w-4 mr-1" /> Add Role
+            </Button>
+          </div>
         ),
     },
   ];
