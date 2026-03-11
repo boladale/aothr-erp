@@ -305,6 +305,9 @@ export default function RFPDetail() {
             <div className="flex gap-2">
               {rfp.status === 'draft' && (
                 <>
+                  <Button variant="outline" onClick={() => setEditOpen(true)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit RFP
+                  </Button>
                   <Button variant="outline" onClick={openInviteDialog}>
                     <UserPlus className="mr-2 h-4 w-4" /> Invite Vendors
                   </Button>
