@@ -9,12 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Send, Award, UserPlus, Star, Pencil } from 'lucide-react';
+import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle } from 'lucide-react';
 import { RFPEditDialog } from '@/components/rfp/RFPEditDialog';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
@@ -100,6 +99,10 @@ export default function RFPDetail() {
   const [editingScores, setEditingScores] = useState<Record<string, Record<string, number>>>({});
   const [scoreComments, setScoreComments] = useState<Record<string, Record<string, string>>>({});
 
+  // Controlled amount/delivery inputs
+  const [editAmounts, setEditAmounts] = useState<Record<string, number>>({});
+  const [editDays, setEditDays] = useState<Record<string, string>>({});
+
   const fetchData = useCallback(async () => {
     if (!id) return;
     try {
@@ -115,10 +118,21 @@ export default function RFPDetail() {
       setRfp(rfpRes.data as unknown as RFPData);
       setRfpItems((itemsRes.data || []) as unknown as RFPItem[]);
       setCriteria((criteriaRes.data || []) as unknown as Criterion[]);
-      setProposals((proposalsRes.data || []) as unknown as Proposal[]);
+      const proposalData = (proposalsRes.data || []) as unknown as Proposal[];
+      setProposals(proposalData);
+
+      // Sync controlled amount/delivery inputs
+      const amounts: Record<string, number> = {};
+      const days: Record<string, string> = {};
+      proposalData.forEach(p => {
+        amounts[p.id] = p.total_amount;
+        days[p.id] = p.delivery_timeline_days?.toString() || '';
+      });
+      setEditAmounts(amounts);
+      setEditDays(days);
 
       // Filter scores for this RFP's proposals
-      const proposalIds = (proposalsRes.data || []).map((p: { id: string }) => p.id);
+      const proposalIds = proposalData.map(p => p.id);
       const rfpScores = (scoresRes.data || []).filter((s: { proposal_id: string }) => proposalIds.includes(s.proposal_id));
       setScores(rfpScores as unknown as Score[]);
 
@@ -163,29 +177,18 @@ export default function RFPDetail() {
   };
 
   const openInviteDialog = async () => {
-    // Get all active vendors
     const { data: vendors } = await supabase.from('vendors').select('*').eq('status', 'active');
     const allVendors = (vendors || []) as unknown as Vendor[];
-
-    // Get item categories for this RFP
-    const itemCategories = rfpItems
-      .map(i => i.items?.category)
-      .filter(Boolean)
-      .map(c => c!.toLowerCase());
-
-    // Get already-invited vendor IDs
+    const itemCategories = rfpItems.map(i => i.items?.category).filter(Boolean).map(c => c!.toLowerCase());
     const invitedIds = proposals.map(p => p.vendor_id);
 
-    // Filter qualified vendors: matching category, not already invited
     const qualified = allVendors.filter(v => {
       if (invitedIds.includes(v.id)) return false;
       const vendorCats = (v.service_categories || []).map(c => c.toLowerCase());
-      const categoryMatch = itemCategories.length === 0 || itemCategories.some(ic => vendorCats.some(vc => vc.includes(ic) || ic.includes(vc)));
-      return categoryMatch;
+      return itemCategories.length === 0 || itemCategories.some(ic => vendorCats.some(vc => vc.includes(ic) || ic.includes(vc)));
     });
 
     const others = allVendors.filter(v => !invitedIds.includes(v.id) && !qualified.some(q => q.id === v.id));
-
     setQualifiedVendors(qualified);
     setAvailableVendors(others);
     setInviteOpen(true);
@@ -205,20 +208,34 @@ export default function RFPDetail() {
   };
 
   const handleRecordProposal = async (proposal: Proposal) => {
-    // Mark proposal as submitted (in real scenario vendor would submit)
+    const amount = editAmounts[proposal.id] ?? proposal.total_amount;
+    const daysVal = editDays[proposal.id] ? Number(editDays[proposal.id]) : null;
+    
     const { error } = await supabase.from('rfp_proposals')
-      .update({ status: 'submitted', submitted_at: new Date().toISOString() })
+      .update({ 
+        status: 'submitted', 
+        submitted_at: new Date().toISOString(),
+        total_amount: amount,
+        delivery_timeline_days: daysVal,
+      })
       .eq('id', proposal.id);
     if (error) { toast.error(error.message); return; }
-    toast.success('Proposal marked as submitted');
+    toast.success('Proposal recorded with quoted amount');
     fetchData();
   };
 
-  const updateProposalAmount = async (proposalId: string, amount: number, days: number | null) => {
+  const handleSaveAmount = async (proposalId: string) => {
+    const amount = editAmounts[proposalId] ?? 0;
+    const daysVal = editDays[proposalId] ? Number(editDays[proposalId]) : null;
     const { error } = await supabase.from('rfp_proposals')
-      .update({ total_amount: amount, delivery_timeline_days: days })
+      .update({ total_amount: amount, delivery_timeline_days: daysVal })
       .eq('id', proposalId);
-    if (error) toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Amount saved');
+      fetchData();
+    }
   };
 
   const handleSaveScores = async (proposalId: string) => {
@@ -259,20 +276,22 @@ export default function RFPDetail() {
 
   const handleAward = async (proposal: Proposal) => {
     if (!rfp) return;
+    // Ensure the proposal has been scored
+    if (proposal.weighted_score <= 0) {
+      toast.error('Please score this vendor before awarding');
+      return;
+    }
     try {
-      // Update RFP
       await supabase.from('rfps').update({
         status: 'awarded',
         awarded_vendor_id: proposal.vendor_id,
         awarded_proposal_id: proposal.id,
       }).eq('id', rfp.id);
 
-      // Update winning proposal
       await supabase.from('rfp_proposals')
         .update({ status: 'awarded' })
         .eq('id', proposal.id);
 
-      // Reject others
       await supabase.from('rfp_proposals')
         .update({ status: 'rejected' })
         .eq('rfp_id', rfp.id)
@@ -290,6 +309,8 @@ export default function RFPDetail() {
   if (!rfp) return <AppLayout><div className="page-container"><p>RFP not found</p></div></AppLayout>;
 
   const sortedProposals = [...proposals].sort((a, b) => b.weighted_score - a.weighted_score);
+  const showEvaluation = rfp.status === 'evaluating' || rfp.status === 'awarded';
+  const highestScore = sortedProposals.length > 0 ? sortedProposals[0]?.weighted_score : 0;
 
   return (
     <AppLayout>
@@ -331,12 +352,12 @@ export default function RFPDetail() {
           <Badge variant="secondary">{proposals.length} Vendor(s) Invited</Badge>
         </div>
 
-        <Tabs defaultValue="items">
+        <Tabs defaultValue={showEvaluation ? 'evaluation' : 'proposals'}>
           <TabsList>
             <TabsTrigger value="items">Items ({rfpItems.length})</TabsTrigger>
             <TabsTrigger value="criteria">Criteria ({criteria.length})</TabsTrigger>
             <TabsTrigger value="proposals">Proposals ({proposals.length})</TabsTrigger>
-            {rfp.status === 'evaluating' && <TabsTrigger value="evaluation">Evaluation</TabsTrigger>}
+            {showEvaluation && <TabsTrigger value="evaluation">Evaluation & Scoring</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="items">
@@ -404,142 +425,217 @@ export default function RFPDetail() {
                       <TableHead>Categories</TableHead>
                       <TableHead>Capacity</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>Quoted Amount</TableHead>
                       <TableHead>Delivery (days)</TableHead>
                       <TableHead>Score</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedProposals.map(p => (
-                      <TableRow key={p.id}>
-                        <TableCell className="font-medium">{p.vendors?.name}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {(p.vendors?.service_categories || []).slice(0, 2).map(c => (
-                              <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell>{p.vendors?.project_size_capacity || '-'}</TableCell>
-                        <TableCell><StatusBadge status={p.status} /></TableCell>
-                        <TableCell>
-                          {rfp.status !== 'awarded' && p.status !== 'awarded' ? (
-                            <Input
-                              type="number"
-                              className="w-28"
-                              defaultValue={p.total_amount}
-                              onBlur={e => updateProposalAmount(p.id, Number(e.target.value), p.delivery_timeline_days)}
-                            />
-                          ) : (
-                            formatCurrency(p.total_amount)
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {rfp.status !== 'awarded' && p.status !== 'awarded' ? (
-                            <Input
-                              type="number"
-                              className="w-20"
-                              defaultValue={p.delivery_timeline_days || ''}
-                              onBlur={e => updateProposalAmount(p.id, p.total_amount, Number(e.target.value) || null)}
-                            />
-                          ) : (
-                            p.delivery_timeline_days || '-'
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-semibold">{p.weighted_score.toFixed(1)}%</span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {p.status === 'invited' && (
-                              <Button size="sm" variant="outline" onClick={() => handleRecordProposal(p)}>
-                                Record Submission
-                              </Button>
+                    {sortedProposals.map(p => {
+                      const isEditable = rfp.status !== 'awarded' && p.status !== 'awarded';
+                      return (
+                        <TableRow key={p.id} className={p.status === 'awarded' ? 'bg-success/5' : ''}>
+                          <TableCell className="font-medium">
+                            {p.vendors?.name}
+                            {p.status === 'awarded' && <Trophy className="h-4 w-4 inline ml-1 text-yellow-500" />}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {(p.vendors?.service_categories || []).slice(0, 2).map(c => (
+                                <Badge key={c} variant="secondary" className="text-xs">{c}</Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>{p.vendors?.project_size_capacity || '-'}</TableCell>
+                          <TableCell><StatusBadge status={p.status} /></TableCell>
+                          <TableCell>
+                            {isEditable ? (
+                              <Input
+                                type="number"
+                                className="w-32"
+                                value={editAmounts[p.id] ?? 0}
+                                onChange={e => setEditAmounts(prev => ({ ...prev, [p.id]: Number(e.target.value) }))}
+                                onBlur={() => handleSaveAmount(p.id)}
+                              />
+                            ) : (
+                              <span className="font-semibold">{formatCurrency(p.total_amount)}</span>
                             )}
-                            {rfp.status === 'evaluating' && p.status === 'submitted' && (
-                              <Button size="sm" onClick={() => handleAward(p)}>
-                                <Award className="h-3 w-3 mr-1" /> Award
-                              </Button>
+                          </TableCell>
+                          <TableCell>
+                            {isEditable ? (
+                              <Input
+                                type="number"
+                                className="w-20"
+                                value={editDays[p.id] ?? ''}
+                                onChange={e => setEditDays(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                onBlur={() => handleSaveAmount(p.id)}
+                              />
+                            ) : (
+                              p.delivery_timeline_days || '-'
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            <span className={`font-semibold ${p.weighted_score > 0 && p.weighted_score === highestScore ? 'text-green-600' : ''}`}>
+                              {p.weighted_score.toFixed(1)}%
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {p.status === 'invited' && (
+                                <Button size="sm" variant="outline" onClick={() => handleRecordProposal(p)}>
+                                  <CheckCircle className="h-3 w-3 mr-1" /> Record Submission
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="evaluation">
-            <div className="space-y-6">
-              {sortedProposals.filter(p => p.status === 'submitted').map(proposal => (
-                <Card key={proposal.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>{proposal.vendors?.name} — Score: {proposal.weighted_score.toFixed(1)}%</CardTitle>
-                      <Button size="sm" onClick={() => handleSaveScores(proposal.id)}>Save Scores</Button>
-                    </div>
-                  </CardHeader>
+          {showEvaluation && (
+            <TabsContent value="evaluation">
+              <div className="space-y-6">
+                {/* Scoring Summary Card */}
+                <Card>
+                  <CardHeader><CardTitle className="flex items-center gap-2"><Trophy className="h-5 w-5" /> Score Summary & Award</CardTitle></CardHeader>
                   <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Criterion</TableHead>
-                          <TableHead>Weight</TableHead>
-                          <TableHead>Score (0-10)</TableHead>
-                          <TableHead>Weighted</TableHead>
-                          <TableHead>Comments</TableHead>
+                          <TableHead>Rank</TableHead>
+                          <TableHead>Vendor</TableHead>
+                          <TableHead>Quoted Amount</TableHead>
+                          <TableHead>Delivery</TableHead>
+                          {criteria.map(c => (
+                            <TableHead key={c.id} className="text-center text-xs">
+                              {c.criterion_name}<br/><span className="text-muted-foreground">({c.weight}%)</span>
+                            </TableHead>
+                          ))}
+                          <TableHead className="text-center font-bold">Total Score</TableHead>
+                          <TableHead></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {criteria.map(c => {
-                          const score = editingScores[proposal.id]?.[c.id] ?? 0;
-                          const weighted = (score / 10) * c.weight;
-                          return (
-                            <TableRow key={c.id}>
-                              <TableCell className="font-medium">{c.criterion_name}</TableCell>
-                              <TableCell>{c.weight}%</TableCell>
-                              <TableCell>
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={10}
-                                  className="w-20"
-                                  value={score}
-                                  onChange={e => {
-                                    const val = Math.min(10, Math.max(0, Number(e.target.value)));
-                                    setEditingScores(prev => ({
-                                      ...prev,
-                                      [proposal.id]: { ...prev[proposal.id], [c.id]: val }
-                                    }));
-                                  }}
-                                />
-                              </TableCell>
-                              <TableCell>{weighted.toFixed(1)}%</TableCell>
-                              <TableCell>
-                                <Input
-                                  value={scoreComments[proposal.id]?.[c.id] || ''}
-                                  onChange={e => {
-                                    setScoreComments(prev => ({
-                                      ...prev,
-                                      [proposal.id]: { ...prev[proposal.id], [c.id]: e.target.value }
-                                    }));
-                                  }}
-                                  placeholder="Comments"
-                                />
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {sortedProposals.filter(p => p.status === 'submitted' || p.status === 'awarded').map((p, idx) => (
+                          <TableRow key={p.id} className={p.status === 'awarded' ? 'bg-success/10 font-semibold' : ''}>
+                            <TableCell>
+                              <Badge variant={idx === 0 && p.weighted_score > 0 ? 'default' : 'secondary'}>
+                                #{idx + 1}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {p.vendors?.name}
+                              {p.status === 'awarded' && <Badge className="ml-2 bg-yellow-500 text-white">Awarded</Badge>}
+                            </TableCell>
+                            <TableCell className="font-semibold">{formatCurrency(p.total_amount)}</TableCell>
+                            <TableCell>{p.delivery_timeline_days ? `${p.delivery_timeline_days} days` : '-'}</TableCell>
+                            {criteria.map(c => {
+                              const score = editingScores[p.id]?.[c.id] ?? 0;
+                              const weighted = (score / 10) * c.weight;
+                              return (
+                                <TableCell key={c.id} className="text-center">
+                                  <div className="text-sm">{score}/10</div>
+                                  <div className="text-xs text-muted-foreground">{weighted.toFixed(1)}%</div>
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="text-center">
+                              <span className={`text-lg font-bold ${idx === 0 && p.weighted_score > 0 ? 'text-green-600' : ''}`}>
+                                {p.weighted_score.toFixed(1)}%
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              {rfp.status === 'evaluating' && p.status === 'submitted' && p.weighted_score > 0 && (
+                                <Button size="sm" onClick={() => handleAward(p)}>
+                                  <Award className="h-3 w-3 mr-1" /> Award
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
+
+                {/* Per-vendor scoring cards */}
+                {rfp.status === 'evaluating' && sortedProposals.filter(p => p.status === 'submitted').map(proposal => (
+                  <Card key={proposal.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-3">
+                          {proposal.vendors?.name}
+                          <Badge variant="outline">Quoted: {formatCurrency(proposal.total_amount)}</Badge>
+                          <Badge variant="secondary">Score: {proposal.weighted_score.toFixed(1)}%</Badge>
+                        </CardTitle>
+                        <Button size="sm" onClick={() => handleSaveScores(proposal.id)}>Save Scores</Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Criterion</TableHead>
+                            <TableHead>Weight</TableHead>
+                            <TableHead>Score (0-10)</TableHead>
+                            <TableHead>Weighted</TableHead>
+                            <TableHead>Comments</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {criteria.map(c => {
+                            const score = editingScores[proposal.id]?.[c.id] ?? 0;
+                            const weighted = (score / 10) * c.weight;
+                            return (
+                              <TableRow key={c.id}>
+                                <TableCell className="font-medium">{c.criterion_name}</TableCell>
+                                <TableCell>{c.weight}%</TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={10}
+                                    className="w-20"
+                                    value={score}
+                                    onChange={e => {
+                                      const val = Math.min(10, Math.max(0, Number(e.target.value)));
+                                      setEditingScores(prev => ({
+                                        ...prev,
+                                        [proposal.id]: { ...prev[proposal.id], [c.id]: val }
+                                      }));
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell>{weighted.toFixed(1)}%</TableCell>
+                                <TableCell>
+                                  <Input
+                                    value={scoreComments[proposal.id]?.[c.id] || ''}
+                                    onChange={e => {
+                                      setScoreComments(prev => ({
+                                        ...prev,
+                                        [proposal.id]: { ...prev[proposal.id], [c.id]: e.target.value }
+                                      }));
+                                    }}
+                                    placeholder="Comments"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Invite Dialog */}
