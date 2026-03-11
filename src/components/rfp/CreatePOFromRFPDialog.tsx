@@ -134,6 +134,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           total_amount: subtotal,
           notes: `Created from RFP ${rfpNumber} — ${rfpTitle}`,
           created_by: user?.id,
+          organization_id: organizationId,
         })
         .select()
         .single();
