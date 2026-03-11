@@ -260,6 +260,14 @@ export default function PurchaseOrderDetail() {
             <AttachmentPanel entityType="purchase_orders" entityId={id!} />
           </CardContent>
         </Card>
+
+        {id && (
+          <PODocumentDialog
+            open={showDocument}
+            onOpenChange={setShowDocument}
+            poId={id}
+          />
+        )}
       </div>
     </AppLayout>
   );
