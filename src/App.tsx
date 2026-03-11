@@ -61,7 +61,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, organizationId, isAdmin, signOut } = useAuth();
+  const { user, loading, organizationId, roles, signOut } = useAuth();
   
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
@@ -72,8 +72,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!organizationId) {
-    // Admins without an org can go to org-setup; regular users see a pending message
-    if (isAdmin) {
+    // Self-registered user (no roles) → let them create an org
+    // Admin-created user (has roles but no org) → show pending message
+    if (roles.length === 0) {
       return <Navigate to="/org-setup" replace />;
     }
     return (
