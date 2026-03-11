@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Send, Award, UserPlus, Star } from 'lucide-react';
+import { ArrowLeft, Send, Award, UserPlus, Star, Pencil } from 'lucide-react';
+import { RFPEditDialog } from '@/components/rfp/RFPEditDialog';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -91,6 +92,9 @@ export default function RFPDetail() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [availableVendors, setAvailableVendors] = useState<Vendor[]>([]);
   const [qualifiedVendors, setQualifiedVendors] = useState<Vendor[]>([]);
+
+  // Edit dialog state
+  const [editOpen, setEditOpen] = useState(false);
 
   // Score editing
   const [editingScores, setEditingScores] = useState<Record<string, Record<string, number>>>({});
@@ -301,6 +305,9 @@ export default function RFPDetail() {
             <div className="flex gap-2">
               {rfp.status === 'draft' && (
                 <>
+                  <Button variant="outline" onClick={() => setEditOpen(true)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit RFP
+                  </Button>
                   <Button variant="outline" onClick={openInviteDialog}>
                     <UserPlus className="mr-2 h-4 w-4" /> Invite Vendors
                   </Button>
@@ -591,6 +598,33 @@ export default function RFPDetail() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Dialog */}
+        {rfp.status === 'draft' && (
+          <RFPEditDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSuccess={fetchData}
+            rfpId={rfp.id}
+            initialData={{
+              title: rfp.title,
+              description: rfp.description,
+              deadline: rfp.deadline,
+            }}
+            initialItems={rfpItems.map(i => ({
+              id: i.id,
+              item_id: i.item_id,
+              quantity: i.quantity,
+              specifications: i.specifications,
+            }))}
+            initialCriteria={criteria.map(c => ({
+              id: c.id,
+              criterion_name: c.criterion_name,
+              weight: c.weight,
+              description: c.description,
+            }))}
+          />
+        )}
       </div>
     </AppLayout>
   );
