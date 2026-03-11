@@ -234,7 +234,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
                   </div>
                   <div className="col-span-1">
                     {criteria.length > 1 && (
-                      <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => setCriteria(criteria.filter((_, i) => i !== idx))}>
+                      <Button type="button" size="icon" variant="ghost" className="text-destructive" onClick={() => removeCriterion(idx)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
