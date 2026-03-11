@@ -61,6 +61,21 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function OrgSetupRoute() {
+  const { user, loading, organizationId } = useAuth();
+  
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
+  }
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+  if (organizationId) {
+    return <Navigate to="/" replace />;
+  }
+  return <OrganizationSetup />;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, organizationId, roles, signOut } = useAuth();
   
