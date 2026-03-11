@@ -77,7 +77,10 @@ export function GeneratePeriodsDialog({
         });
       }
 
-      const { error } = await supabase.from('gl_fiscal_periods').insert(periods as any);
+      const { error } = await supabase.from('gl_fiscal_periods').upsert(periods as any, {
+        onConflict: 'organization_id,fiscal_year,period_number',
+        ignoreDuplicates: true,
+      });
       if (error) throw error;
 
       toast.success(`Generated 12 fiscal periods for FY${yearNum}`);
