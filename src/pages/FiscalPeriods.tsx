@@ -42,6 +42,8 @@ export default function FiscalPeriods() {
   const [cfFromYear, setCfFromYear] = useState<string>('');
   const [cfToYear, setCfToYear] = useState<string>('');
 
+  // Generate periods dialog
+  const [genOpen, setGenOpen] = useState(false);
   useEffect(() => { fetchPeriods(); }, []);
 
   const fetchPeriods = async () => {
