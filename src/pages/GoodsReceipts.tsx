@@ -188,43 +188,7 @@ export default function GoodsReceipts() {
     if (postingId) return;
     setPostingId(grn.id);
     try {
-      // Get GRN lines to update inventory
-      const { data: grnLines, error: linesError } = await supabase
-        .from('goods_receipt_lines')
-        .select('*')
-        .eq('grn_id', grn.id);
-
-      if (linesError) throw linesError;
-
-      // Update inventory for each line
-      for (const line of grnLines || []) {
-        const { data: balance } = await supabase
-          .from('inventory_balances')
-          .select('quantity')
-          .eq('item_id', line.item_id)
-          .eq('location_id', grn.location_id)
-          .maybeSingle();
-
-        const newQty = (balance?.quantity || 0) + line.qty_received;
-
-        if (balance) {
-          await supabase
-            .from('inventory_balances')
-            .update({ quantity: newQty, last_updated: new Date().toISOString() })
-            .eq('item_id', line.item_id)
-            .eq('location_id', grn.location_id);
-        } else {
-          await supabase
-            .from('inventory_balances')
-            .insert({
-              item_id: line.item_id,
-              location_id: grn.location_id,
-              quantity: newQty,
-            });
-        }
-      }
-
-      // Post GRN — database triggers will update PO line qty_received and PO status
+      // Post GRN — database triggers handle inventory balances, PO qty_received, GL entries, and costing layers
       const { error: postError } = await supabase
         .from('goods_receipts')
         .update({ 
