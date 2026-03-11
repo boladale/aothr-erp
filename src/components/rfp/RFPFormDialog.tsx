@@ -77,6 +77,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
           description: description || null,
           deadline: deadline || null,
           created_by: userId,
+          organization_id: organizationId,
         })
         .select()
         .single();
