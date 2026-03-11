@@ -269,5 +269,19 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {createdPOId && (
+      <PODocumentDialog
+        open={showDocument}
+        onOpenChange={(open) => {
+          setShowDocument(open);
+          if (!open) {
+            navigate(`/purchase-orders/${createdPOId}`);
+          }
+        }}
+        poId={createdPOId}
+      />
+    )}
+    </>
   );
 }
