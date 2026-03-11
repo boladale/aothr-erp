@@ -58,6 +58,98 @@ export default function PurchaseOrderDetail() {
     }
   };
 
+  const handleSubmitForApproval = async () => {
+    if (!po) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ status: 'pending_approval' as POStatus, rejection_reason: null })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('Submitted for approval');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to submit');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!po) return;
+    setActionLoading(true);
+    try {
+      const { error: poError } = await supabase
+        .from('purchase_orders')
+        .update({ 
+          status: 'approved' as POStatus,
+          approved_by: user?.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', po.id);
+      if (poError) throw poError;
+
+      await supabase.from('po_approvals').insert({
+        po_id: po.id,
+        approved_by: user?.id,
+        approved_at: new Date().toISOString(),
+      });
+
+      toast.success('PO approved');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to approve');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!po) return;
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+      toast.error('A rejection reason is required');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ status: 'draft' as POStatus, rejection_reason: reason })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('PO returned to draft for corrections');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to reject');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!po) return;
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({ 
+          status: 'sent' as POStatus,
+          sent_at: new Date().toISOString(),
+        })
+        .eq('id', po.id);
+      if (error) throw error;
+      toast.success('PO marked as sent to vendor');
+      fetchPO();
+    } catch (error) {
+      toast.error('Failed to send');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleClose = async () => {
     if (!po?.close_ready) {
       toast.error('PO is not ready to be closed. All items must be fully received and invoiced.');
