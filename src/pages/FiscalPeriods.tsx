@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Lock, Unlock, BookOpen, CalendarCheck, ArrowRight } from 'lucide-react';
+import { Lock, Unlock, BookOpen, CalendarCheck, ArrowRight, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { GeneratePeriodsDialog } from '@/components/fiscal/GeneratePeriodsDialog';
 
 export default function FiscalPeriods() {
   const { hasRole } = useAuth();
@@ -41,6 +42,8 @@ export default function FiscalPeriods() {
   const [cfFromYear, setCfFromYear] = useState<string>('');
   const [cfToYear, setCfToYear] = useState<string>('');
 
+  // Generate periods dialog
+  const [genOpen, setGenOpen] = useState(false);
   useEffect(() => { fetchPeriods(); }, []);
 
   const fetchPeriods = async () => {
@@ -130,6 +133,9 @@ export default function FiscalPeriods() {
           description="Manage accounting periods, year-end close, and opening balances"
           actions={isAdmin ? (
             <div className="flex gap-2">
+              <Button onClick={() => setGenOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Generate Periods
+              </Button>
               <Button variant="outline" onClick={() => setYeCloseOpen(true)}>
                 <CalendarCheck className="h-4 w-4 mr-1" /> Year-End Close
               </Button>
@@ -280,6 +286,13 @@ export default function FiscalPeriods() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Generate Periods Dialog */}
+      <GeneratePeriodsDialog
+        open={genOpen}
+        onOpenChange={setGenOpen}
+        existingYears={fiscalYears}
+        onGenerated={fetchPeriods}
+      />
     </AppLayout>
   );
 }
