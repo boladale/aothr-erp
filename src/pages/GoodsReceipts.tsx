@@ -56,6 +56,7 @@ export default function GoodsReceipts() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [postingId, setPostingId] = useState<string | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [poLines, setPOLines] = useState<POLineWithItem[]>([]);
   const [form, setForm] = useState({
@@ -184,6 +185,8 @@ export default function GoodsReceipts() {
   };
 
   const handlePost = async (grn: GRNWithDetails) => {
+    if (postingId) return;
+    setPostingId(grn.id);
     try {
       // Get GRN lines to update inventory
       const { data: grnLines, error: linesError } = await supabase
@@ -239,6 +242,8 @@ export default function GoodsReceipts() {
       const message = error instanceof Error ? error.message : 'Failed to post GRN';
       console.error('Error posting GRN:', error);
       toast.error(message);
+    } finally {
+      setPostingId(null);
     }
   };
 
@@ -284,8 +289,8 @@ export default function GoodsReceipts() {
       render: (r: GRNWithDetails) => (
         <div className="flex gap-2 justify-end">
           {r.status === 'draft' && (
-            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
-              Post
+            <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
+              {postingId === r.id ? 'Posting...' : 'Post'}
             </Button>
           )}
         </div>
