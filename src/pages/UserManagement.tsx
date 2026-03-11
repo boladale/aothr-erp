@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shield, Plus, Trash2, Key, Users, UserPlus } from 'lucide-react';
+import { Shield, Plus, Trash2, Key, Users, UserPlus, MailPlus, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
