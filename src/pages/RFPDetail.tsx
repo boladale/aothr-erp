@@ -598,6 +598,33 @@ export default function RFPDetail() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Dialog */}
+        {rfp.status === 'draft' && (
+          <RFPEditDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSuccess={fetchData}
+            rfpId={rfp.id}
+            initialData={{
+              title: rfp.title,
+              description: rfp.description,
+              deadline: rfp.deadline,
+            }}
+            initialItems={rfpItems.map(i => ({
+              id: i.id,
+              item_id: i.item_id,
+              quantity: i.quantity,
+              specifications: i.specifications,
+            }))}
+            initialCriteria={criteria.map(c => ({
+              id: c.id,
+              criterion_name: c.criterion_name,
+              weight: c.weight,
+              description: c.description,
+            }))}
+          />
+        )}
       </div>
     </AppLayout>
   );
