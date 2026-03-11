@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Send, Award, UserPlus, Star } from 'lucide-react';
+import { ArrowLeft, Send, Award, UserPlus, Star, Pencil } from 'lucide-react';
+import { RFPEditDialog } from '@/components/rfp/RFPEditDialog';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
