@@ -289,8 +289,8 @@ export default function GoodsReceipts() {
       render: (r: GRNWithDetails) => (
         <div className="flex gap-2 justify-end">
           {r.status === 'draft' && (
-            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
-              Post
+            <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
+              {postingId === r.id ? 'Posting...' : 'Post'}
             </Button>
           )}
         </div>
