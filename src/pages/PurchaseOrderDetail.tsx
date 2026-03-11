@@ -381,6 +381,8 @@ export default function PurchaseOrderDetail() {
             open={showDocument}
             onOpenChange={setShowDocument}
             poId={id}
+            poStatus={po.status}
+            onStatusChange={fetchPO}
           />
         )}
       </div>
