@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { GeneratePeriodsDialog } from '@/components/fiscal/GeneratePeriodsDialog';
 
 export default function FiscalPeriods() {
   const { hasRole } = useAuth();
