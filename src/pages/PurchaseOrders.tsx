@@ -43,6 +43,7 @@ export default function PurchaseOrders() {
   const navigate = useNavigate();
   const { user, hasRole } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
+  const canSend = canApprove || hasRole('procurement_officer');
   const canInitiate = !!user;
   const [orders, setOrders] = useState<POWithDetails[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
