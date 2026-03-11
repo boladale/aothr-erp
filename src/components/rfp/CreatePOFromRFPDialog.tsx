@@ -155,9 +155,10 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       if (linesError) throw linesError;
 
       toast.success(`PO ${poNumber} created from RFP`);
+      setCreatedPOId(po.id);
       onOpenChange(false);
       onSuccess();
-      navigate(`/purchase-orders/${po.id}`);
+      setShowDocument(true);
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to create PO');
     } finally {
