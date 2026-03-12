@@ -209,11 +209,11 @@ export default function InventoryIssues() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <PageHeader title="Inventory Issues" description="Issue items from warehouse to staff or departments">
+        <PageHeader title="Inventory Issues" description="Issue items from warehouse to staff or departments" actions={
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> New Issue
           </Button>
-        </PageHeader>
+        } />
 
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
