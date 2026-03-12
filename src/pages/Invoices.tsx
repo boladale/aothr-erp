@@ -61,6 +61,7 @@ export default function Invoices() {
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
   const [invoices, setInvoices] = useState<InvoiceWithDetails[]>([]);
   const [receivedPOs, setReceivedPOs] = useState<POWithVendor[]>([]);
+  const [glAccounts, setGLAccounts] = useState<GLAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
