@@ -140,8 +140,8 @@ export default function Vendors() {
       const checks = await Promise.all([
         supabase.from('purchase_orders').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
         supabase.from('ap_invoices').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
-        supabase.from('rfp_responses').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
-        supabase.from('requisition_bids').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('rfp_proposals').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('requisition_bid_entries').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
       ]);
       const totalRefs = checks.reduce((sum, r) => sum + (r.count || 0), 0);
       if (totalRefs > 0) {
