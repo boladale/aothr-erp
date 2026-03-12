@@ -73,7 +73,7 @@ export default function SalesQuotations() {
       })));
       toast.success('Quotation updated');
     } else {
-      const qNum = `SQ-${Date.now().toString(36).toUpperCase()}`;
+      const qNum = await getNextTransactionNumber(organizationId!, 'SQ', 'SQ');
       const { data: q, error } = await supabase.from('sales_quotations').insert({
         quotation_number: qNum, customer_id: form.customer_id, valid_until: form.valid_until || null,
         notes: form.notes || null, subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
