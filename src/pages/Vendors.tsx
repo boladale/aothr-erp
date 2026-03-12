@@ -277,9 +277,10 @@ export default function Vendors() {
 
         <VendorFormDialog
           open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditVendor(null); }}
           onSuccess={fetchVendors}
           userId={user?.id}
+          editVendor={editVendor}
         />
       </div>
     </AppLayout>

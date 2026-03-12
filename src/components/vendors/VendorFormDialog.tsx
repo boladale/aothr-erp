@@ -435,8 +435,8 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={saving || uploadingDocs}>
-            {uploadingDocs ? 'Uploading...' : saving ? 'Creating...' : 'Create Vendor'}
+          <Button onClick={handleSave} disabled={saving || uploadingDocs}>
+            {uploadingDocs ? 'Uploading...' : saving ? 'Saving...' : isEdit ? 'Update Vendor' : 'Create Vendor'}
           </Button>
         </DialogFooter>
       </DialogContent>
