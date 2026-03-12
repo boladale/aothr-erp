@@ -82,6 +82,7 @@ const pathToProgram: Record<string, string> = {
   '/journal-entries': 'journal_entries',
   '/financial-reports': 'financial_reports',
   '/fiscal-periods': 'fiscal_periods',
+  '/audit-report': 'financial_reports',
   '/invoices': 'invoices',
   '/ap-payments': 'ap_payments',
   '/ap-aging': 'ap_aging',
