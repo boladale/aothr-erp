@@ -39,6 +39,13 @@ interface POLineWithItem extends PurchaseOrderLine {
   items: Item | null;
 }
 
+interface GLAccount {
+  id: string;
+  account_code: string;
+  account_name: string;
+  account_type: string;
+}
+
 interface InvoiceLine {
   po_line_id: string;
   item_id: string;
@@ -46,6 +53,7 @@ interface InvoiceLine {
   unit_price: number;
   max_invoiceable: number;
   item_name: string;
+  expense_account_id: string;
 }
 
 export default function Invoices() {
