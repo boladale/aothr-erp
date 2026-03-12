@@ -110,9 +110,8 @@ export default function InventoryIssues() {
     setLines(updated);
   };
 
-  const generateIssueNumber = () => {
-    const ts = Date.now().toString(36).toUpperCase();
-    return `ISS-${ts}`;
+  const generateIssueNumber = async () => {
+    return await getNextTransactionNumber(organizationId!, 'ISS', 'ISS');
   };
 
   const handleCreate = async () => {
