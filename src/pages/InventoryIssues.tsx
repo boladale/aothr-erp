@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, PackageMinus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
