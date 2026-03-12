@@ -53,7 +53,7 @@ interface Props {
 }
 
 export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequisition }: Props) {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
