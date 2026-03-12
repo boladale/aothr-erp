@@ -165,6 +165,7 @@ const navSections = [
       { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
       { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
       { path: '/audit-report', label: 'Audit Report', icon: FileSearch },
+      { path: '/account-statement', label: 'Statement of Account', icon: FileText },
     ],
   },
   {
