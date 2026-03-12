@@ -46,7 +46,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Projects() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
