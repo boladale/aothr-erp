@@ -155,7 +155,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
     }
   };
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!form.code || !form.name) {
       toast.error('Code and Name are required');
       return;
@@ -163,7 +163,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
 
     setSaving(true);
     try {
-      const { data: vendor, error } = await supabase.from('vendors').insert({
+      const payload = {
         code: form.code,
         name: form.name,
         email: form.email || null,
@@ -176,22 +176,39 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
         project_size_capacity: form.project_size_capacity,
         bank_name: form.bank_name || null,
         bank_account_number: form.bank_account_number || null,
-        created_by: userId,
-      }).select('id').single();
+      };
 
-      if (error) throw error;
+      if (isEdit && editVendor) {
+        const { error } = await supabase.from('vendors').update(payload).eq('id', editVendor.id);
+        if (error) throw error;
 
-      if (pendingDocuments.length > 0 && vendor) {
-        setUploadingDocs(true);
-        await uploadDocuments(vendor.id);
+        if (pendingDocuments.length > 0) {
+          setUploadingDocs(true);
+          await uploadDocuments(editVendor.id);
+        }
+
+        toast.success('Vendor updated');
+      } else {
+        const { data: vendor, error } = await supabase.from('vendors').insert({
+          ...payload,
+          created_by: userId,
+        }).select('id').single();
+
+        if (error) throw error;
+
+        if (pendingDocuments.length > 0 && vendor) {
+          setUploadingDocs(true);
+          await uploadDocuments(vendor.id);
+        }
+
+        toast.success('Vendor created');
       }
 
-      toast.success('Vendor created');
       onOpenChange(false);
       resetForm();
       onSuccess();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to create vendor';
+      const message = error instanceof Error ? error.message : 'Failed to save vendor';
       toast.error(message);
     } finally {
       setSaving(false);
