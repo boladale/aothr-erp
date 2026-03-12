@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
