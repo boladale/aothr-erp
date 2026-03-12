@@ -26,6 +26,7 @@ interface VendorFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userId?: string;
+  editVendor?: import('@/lib/supabase').Vendor | null;
 }
 
 const SERVICE_CATEGORIES = [
