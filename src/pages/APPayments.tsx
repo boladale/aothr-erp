@@ -15,15 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, CreditCard, Send } from 'lucide-react';
+import { Plus, CreditCard, Send, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 
-interface Invoice {
-  id: string;
-  invoice_number: string;
-  total_amount: number;
-  payment_status: string;
-}
+interface Invoice { id: string; invoice_number: string; total_amount: number; payment_status: string; }
 
 export default function APPayments() {
   const { toast } = useToast();
@@ -34,6 +29,7 @@ export default function APPayments() {
   const [payments, setPayments] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
 
   const [vendors, setVendors] = useState<any[]>([]);
   const [selectedVendor, setSelectedVendor] = useState('');
@@ -49,10 +45,7 @@ export default function APPayments() {
 
   const fetchPayments = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('ap_payments')
-      .select('*, vendor:vendors(name, code)')
-      .order('created_at', { ascending: false });
+    const { data } = await supabase.from('ap_payments').select('*, vendor:vendors(name, code)').order('created_at', { ascending: false });
     setPayments(data || []);
     setLoading(false);
   };
@@ -60,27 +53,52 @@ export default function APPayments() {
   const openCreateDialog = async () => {
     const { data } = await supabase.from('vendors').select('id, name, code').eq('status', 'active').order('name');
     setVendors(data || []);
-    setSelectedVendor('');
-    setPaymentDate(new Date().toISOString().split('T')[0]);
-    setPaymentMethod('bank_transfer');
-    setReferenceNumber('');
-    setNotes('');
-    setVendorInvoices([]);
-    setAllocations({});
-    setSelectedInvoices(new Set());
+    resetForm();
     setDialogOpen(true);
   };
 
+  const openEditDialog = async (payment: any) => {
+    const { data: vendorData } = await supabase.from('vendors').select('id, name, code').eq('status', 'active').order('name');
+    setVendors(vendorData || []);
+    setEditingPayment(payment);
+    setSelectedVendor(payment.vendor_id);
+    setPaymentDate(payment.payment_date);
+    setPaymentMethod(payment.payment_method);
+    setReferenceNumber(payment.reference_number || '');
+    setNotes(payment.notes || '');
+    // Load existing allocations
+    const { data: invs } = await supabase.from('ap_invoices').select('id, invoice_number, total_amount, payment_status')
+      .eq('vendor_id', payment.vendor_id).eq('status', 'posted').in('payment_status', ['unpaid', 'partial']);
+    // Also get the invoices already allocated to this payment
+    const { data: existingAllocs } = await supabase.from('ap_payment_allocations').select('invoice_id, allocated_amount').eq('payment_id', payment.id);
+    const existingAllocMap = new Map((existingAllocs || []).map((a: any) => [a.invoice_id, a.allocated_amount]));
+    // Include invoices that are in the allocations even if they might have changed status
+    const { data: allocatedInvs } = existingAllocs && existingAllocs.length > 0
+      ? await supabase.from('ap_invoices').select('id, invoice_number, total_amount, payment_status').in('id', existingAllocs.map((a: any) => a.invoice_id))
+      : { data: [] };
+    const allInvs = new Map<string, Invoice>();
+    [...(invs || []), ...(allocatedInvs || [])].forEach((inv: any) => allInvs.set(inv.id, inv));
+    const mergedInvoices = Array.from(allInvs.values());
+    setVendorInvoices(mergedInvoices);
+
+    const newSelected = new Set<string>();
+    const newAllocations: Record<string, number> = {};
+    existingAllocMap.forEach((amount, invoiceId) => { newSelected.add(invoiceId); newAllocations[invoiceId] = amount; });
+    setSelectedInvoices(newSelected);
+    setAllocations(newAllocations);
+    setDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setEditingPayment(null); setSelectedVendor(''); setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentMethod('bank_transfer'); setReferenceNumber(''); setNotes('');
+    setVendorInvoices([]); setAllocations({}); setSelectedInvoices(new Set());
+  };
+
   const onVendorChange = async (vendorId: string) => {
-    setSelectedVendor(vendorId);
-    setAllocations({});
-    setSelectedInvoices(new Set());
-    const { data } = await supabase
-      .from('ap_invoices')
-      .select('id, invoice_number, total_amount, payment_status')
-      .eq('vendor_id', vendorId)
-      .eq('status', 'posted')
-      .in('payment_status', ['unpaid', 'partial']);
+    setSelectedVendor(vendorId); setAllocations({}); setSelectedInvoices(new Set());
+    const { data } = await supabase.from('ap_invoices').select('id, invoice_number, total_amount, payment_status')
+      .eq('vendor_id', vendorId).eq('status', 'posted').in('payment_status', ['unpaid', 'partial']);
     setVendorInvoices(data || []);
   };
 
@@ -99,39 +117,44 @@ export default function APPayments() {
 
   const totalAmount = Object.values(allocations).reduce((sum, v) => sum + (v || 0), 0);
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!selectedVendor || selectedInvoices.size === 0 || totalAmount <= 0) {
       toast({ title: 'Error', description: 'Select a vendor and at least one invoice.', variant: 'destructive' });
       return;
     }
-    const payNum = `PAY-${Date.now().toString(36).toUpperCase()}`;
-    const { data: payment, error: payErr } = await supabase
-      .from('ap_payments')
-      .insert({
-        payment_number: payNum,
-        vendor_id: selectedVendor,
-        payment_date: paymentDate,
-        payment_method: paymentMethod,
-        reference_number: referenceNumber || null,
-        total_amount: totalAmount,
-        notes: notes || null,
-        created_by: (await supabase.auth.getUser()).data.user?.id,
-        organization_id: organizationId,
-      })
-      .select()
-      .single();
 
-    if (payErr) { toast({ title: 'Error', description: payErr.message, variant: 'destructive' }); return; }
+    if (editingPayment) {
+      // Update existing draft payment
+      const { error: payErr } = await supabase.from('ap_payments').update({
+        vendor_id: selectedVendor, payment_date: paymentDate, payment_method: paymentMethod,
+        reference_number: referenceNumber || null, total_amount: totalAmount, notes: notes || null,
+      }).eq('id', editingPayment.id);
+      if (payErr) { toast({ title: 'Error', description: payErr.message, variant: 'destructive' }); return; }
+      // Replace allocations
+      await supabase.from('ap_payment_allocations').delete().eq('payment_id', editingPayment.id);
+      const allocationRows = Array.from(selectedInvoices).map(invoiceId => ({
+        payment_id: editingPayment.id, invoice_id: invoiceId, allocated_amount: allocations[invoiceId] || 0,
+      }));
+      const { error: allocErr } = await supabase.from('ap_payment_allocations').insert(allocationRows);
+      if (allocErr) { toast({ title: 'Error', description: allocErr.message, variant: 'destructive' }); return; }
+      toast({ title: 'Payment updated', description: `${editingPayment.payment_number} updated.` });
+    } else {
+      const payNum = `PAY-${Date.now().toString(36).toUpperCase()}`;
+      const { data: payment, error: payErr } = await supabase.from('ap_payments').insert({
+        payment_number: payNum, vendor_id: selectedVendor, payment_date: paymentDate,
+        payment_method: paymentMethod, reference_number: referenceNumber || null,
+        total_amount: totalAmount, notes: notes || null,
+        created_by: (await supabase.auth.getUser()).data.user?.id, organization_id: organizationId,
+      }).select().single();
+      if (payErr) { toast({ title: 'Error', description: payErr.message, variant: 'destructive' }); return; }
+      const allocationRows = Array.from(selectedInvoices).map(invoiceId => ({
+        payment_id: payment.id, invoice_id: invoiceId, allocated_amount: allocations[invoiceId] || 0,
+      }));
+      const { error: allocErr } = await supabase.from('ap_payment_allocations').insert(allocationRows);
+      if (allocErr) { toast({ title: 'Error', description: allocErr.message, variant: 'destructive' }); return; }
+      toast({ title: 'Payment created', description: `${payNum} created as draft.` });
+    }
 
-    const allocationRows = Array.from(selectedInvoices).map(invoiceId => ({
-      payment_id: payment.id,
-      invoice_id: invoiceId,
-      allocated_amount: allocations[invoiceId] || 0,
-    }));
-    const { error: allocErr } = await supabase.from('ap_payment_allocations').insert(allocationRows);
-    if (allocErr) { toast({ title: 'Error', description: allocErr.message, variant: 'destructive' }); return; }
-
-    toast({ title: 'Payment created', description: `${payNum} created as draft.` });
     setDialogOpen(false);
     fetchPayments();
   };
@@ -156,12 +179,14 @@ export default function APPayments() {
     { key: 'total_amount', header: 'Amount', render: (item: any) => formatCurrency(item.total_amount || 0) },
     { key: 'status', header: 'Status', render: (item: any) => <StatusBadge status={item.status} /> },
     ...(canManage ? [{
-      key: 'actions',
-      header: 'Actions',
+      key: 'actions', header: 'Actions',
       render: (item: any) => item.status === 'draft' ? (
-        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handlePost(item.id, item.payment_number); }} disabled={posting}>
-          <Send className="h-3 w-3 mr-1" /> Post
-        </Button>
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEditDialog(item); }}><Pencil className="h-3 w-3" /></Button>
+          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handlePost(item.id, item.payment_number); }} disabled={posting}>
+            <Send className="h-3 w-3 mr-1" /> Post
+          </Button>
+        </div>
       ) : null,
     }] : []),
   ];
@@ -169,11 +194,8 @@ export default function APPayments() {
   return (
     <AppLayout>
       <div className="page-container">
-        <PageHeader
-          title="AP Payments"
-          description="Manage vendor payments and track allocations against invoices."
-          actions={canManage ? <Button onClick={openCreateDialog}><Plus className="h-4 w-4 mr-2" /> New Payment</Button> : undefined}
-        />
+        <PageHeader title="AP Payments" description="Manage vendor payments and track allocations against invoices."
+          actions={canManage ? <Button onClick={openCreateDialog}><Plus className="h-4 w-4 mr-2" /> New Payment</Button> : undefined} />
         {loading ? <Skeleton className="h-64" /> : (
           <Card><CardContent className="p-0"><DataTable columns={columns} data={payments} /></CardContent></Card>
         )}
@@ -181,21 +203,22 @@ export default function APPayments() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> Create Payment</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> {editingPayment ? 'Edit Payment' : 'Create Payment'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Vendor</Label>
-                  <Select value={selectedVendor} onValueChange={onVendorChange}>
-                    <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
-                    <SelectContent>{vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name} ({v.code})</SelectItem>)}</SelectContent>
-                  </Select>
+                  {editingPayment ? (
+                    <Input value={vendors.find(v => v.id === selectedVendor)?.name || ''} disabled />
+                  ) : (
+                    <Select value={selectedVendor} onValueChange={onVendorChange}>
+                      <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
+                      <SelectContent>{vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.name} ({v.code})</SelectItem>)}</SelectContent>
+                    </Select>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label>Payment Date</Label>
-                  <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} />
-                </div>
+                <div className="space-y-2"><Label>Payment Date</Label><Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} /></div>
                 <div className="space-y-2">
                   <Label>Payment Method</Label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -207,15 +230,9 @@ export default function APPayments() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Reference Number</Label>
-                  <Input value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} placeholder="e.g. cheque number" />
-                </div>
+                <div className="space-y-2"><Label>Reference Number</Label><Input value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} placeholder="e.g. cheque number" /></div>
               </div>
-              <div className="space-y-2">
-                <Label>Notes</Label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
-              </div>
+              <div className="space-y-2"><Label>Notes</Label><Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></div>
               {selectedVendor && (
                 <div className="space-y-2">
                   <Label className="text-base font-semibold">Allocate to Invoices</Label>
@@ -243,7 +260,7 @@ export default function APPayments() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={selectedInvoices.size === 0}>Create Payment</Button>
+              <Button onClick={handleSave} disabled={selectedInvoices.size === 0}>{editingPayment ? 'Update Payment' : 'Create Payment'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Check, Truck } from 'lucide-react';
+import { Plus, Check, Truck, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,13 +25,12 @@ export default function SalesOrders() {
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<any>(null);
   const [detailOrder, setDetailOrder] = useState<any>(null);
   const [orderLines, setOrderLines] = useState<any[]>([]);
   const [dnDialogOpen, setDnDialogOpen] = useState(false);
   const [dnLocationId, setDnLocationId] = useState('');
   const [dnLines, setDnLines] = useState<{ order_line_id: string; qty: string; item_name: string; max_qty: number }[]>([]);
-
-  // New SO form
   const [form, setForm] = useState({ customer_id: '', expected_date: '', notes: '' });
   const [lines, setLines] = useState<{ item_id: string; description: string; quantity: string; unit_price: string }[]>([]);
 
@@ -44,38 +43,59 @@ export default function SalesOrders() {
       supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true).order('name'),
       supabase.from('locations').select('id, name, code').eq('is_active', true).order('name'),
     ]);
-    setOrders(oRes.data || []);
-    setCustomers(cRes.data || []);
-    setItems(iRes.data || []);
-    setLocations(lRes.data || []);
+    setOrders(oRes.data || []); setCustomers(cRes.data || []); setItems(iRes.data || []); setLocations(lRes.data || []);
     setLoading(false);
   };
 
-  const handleCreate = async () => {
+  const openEditDialog = async (order: any) => {
+    setEditingOrder(order);
+    setForm({ customer_id: order.customer_id, expected_date: order.expected_date || '', notes: order.notes || '' });
+    const { data } = await supabase.from('sales_order_lines').select('*').eq('order_id', order.id).order('line_number');
+    setLines((data || []).map((l: any) => ({ item_id: l.item_id || '', description: l.description, quantity: String(l.quantity), unit_price: String(l.unit_price) })));
+    setDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setEditingOrder(null);
+    setForm({ customer_id: '', expected_date: '', notes: '' });
+    setLines([]);
+  };
+
+  const handleSave = async () => {
     if (!form.customer_id) return toast.error('Select a customer');
     if (lines.length === 0) return toast.error('Add at least one line');
     const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
-    const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
-    const { data: so, error } = await supabase.from('sales_orders').insert({
-      order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
-      subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
-    }).select().single();
-    if (error) return toast.error(error.message);
-    await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
-      order_id: so.id, line_number: i + 1, item_id: l.item_id || null, description: l.description,
-      quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-    })));
-    toast.success(`Sales Order ${soNumber} created`);
-    setDialogOpen(false);
-    setForm({ customer_id: '', expected_date: '', notes: '' });
-    setLines([]);
-    fetchData();
+
+    if (editingOrder) {
+      const { error } = await supabase.from('sales_orders').update({
+        customer_id: form.customer_id, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
+      }).eq('id', editingOrder.id);
+      if (error) return toast.error(error.message);
+      await supabase.from('sales_order_lines').delete().eq('order_id', editingOrder.id);
+      await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
+        order_id: editingOrder.id, line_number: i + 1, item_id: l.item_id || null,
+        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      })));
+      toast.success('Sales Order updated');
+    } else {
+      const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
+      const { data: so, error } = await supabase.from('sales_orders').insert({
+        order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
+        subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) return toast.error(error.message);
+      await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
+        order_id: so.id, line_number: i + 1, item_id: l.item_id || null,
+        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      })));
+      toast.success(`Sales Order ${soNumber} created`);
+    }
+    setDialogOpen(false); resetForm(); fetchData();
   };
 
   const handleConfirm = async (id: string) => {
     await supabase.from('sales_orders').update({ status: 'confirmed' as any }).eq('id', id);
-    toast.success('Order confirmed');
-    fetchData();
+    toast.success('Order confirmed'); fetchData();
   };
 
   const openDelivery = async (order: any) => {
@@ -84,10 +104,8 @@ export default function SalesOrders() {
     if (deliverableLines.length === 0) return toast.info('All lines fully delivered');
     setDetailOrder(order);
     setDnLines(deliverableLines.map((l: any) => ({
-      order_line_id: l.id,
-      qty: String(l.quantity - l.qty_delivered),
-      item_name: l.items?.name || l.description,
-      max_qty: l.quantity - l.qty_delivered,
+      order_line_id: l.id, qty: String(l.quantity - l.qty_delivered),
+      item_name: l.items?.name || l.description, max_qty: l.quantity - l.qty_delivered,
     })));
     setDnDialogOpen(true);
   };
@@ -100,37 +118,25 @@ export default function SalesOrders() {
       location_id: dnLocationId, created_by: user?.id, organization_id: organizationId,
     }).select().single();
     if (error) return toast.error(error.message);
-
     const validLines = dnLines.filter(l => parseFloat(l.qty) > 0);
-    await supabase.from('delivery_note_lines').insert(validLines.map(l => {
-      const soLine = (orders.find(o => o.id === detailOrder.id) as any);
-      return {
-        dn_id: dn.id, order_line_id: l.order_line_id, qty_delivered: parseFloat(l.qty),
-        item_id: null, // Will be populated from order line
-      };
-    }));
-
-    // Post the delivery note
+    await supabase.from('delivery_note_lines').insert(validLines.map(l => ({
+      dn_id: dn.id, order_line_id: l.order_line_id, qty_delivered: parseFloat(l.qty), item_id: null,
+    })));
     await supabase.from('delivery_notes').update({ status: 'posted' as any }).eq('id', dn.id);
     toast.success(`Delivery Note ${dnNumber} created and posted`);
-    setDnDialogOpen(false);
-    fetchData();
+    setDnDialogOpen(false); fetchData();
   };
 
   const viewOrderDetail = async (order: any) => {
     const { data } = await supabase.from('sales_order_lines').select('*, items(name, code)').eq('order_id', order.id);
-    setOrderLines(data || []);
-    setDetailOrder(order);
+    setOrderLines(data || []); setDetailOrder(order);
   };
 
   const addLine = () => setLines([...lines, { item_id: '', description: '', quantity: '1', unit_price: '0' }]);
 
   const exportColumns = [
-    { key: 'order_number', header: 'Order #' },
-    { key: 'customer_name', header: 'Customer' },
-    { key: 'order_date', header: 'Date' },
-    { key: 'status', header: 'Status' },
-    { key: 'total_amount', header: 'Total' },
+    { key: 'order_number', header: 'Order #' }, { key: 'customer_name', header: 'Customer' },
+    { key: 'order_date', header: 'Date' }, { key: 'status', header: 'Status' }, { key: 'total_amount', header: 'Total' },
   ];
 
   return (
@@ -139,9 +145,7 @@ export default function SalesOrders() {
         <PageHeader title="Sales Orders" description="Manage sales orders and deliveries" actions={
           <div className="flex gap-2">
             <ExportButtons data={orders.map(o => ({ ...o, customer_name: o.customers?.name }))} filename="sales-orders" title="Sales Orders" columns={exportColumns} />
-            <Button onClick={() => { setDialogOpen(true); setLines([]); }}>
-              <Plus className="h-4 w-4 mr-1" /> New Order
-            </Button>
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New Order</Button>
           </div>
         } />
 
@@ -172,14 +176,13 @@ export default function SalesOrders() {
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         <div className="flex gap-1 justify-end">
                           {o.status === 'draft' && (
-                            <Button variant="outline" size="sm" onClick={() => handleConfirm(o.id)}>
-                              <Check className="h-3 w-3 mr-1" /> Confirm
-                            </Button>
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => openEditDialog(o)}><Pencil className="h-3 w-3" /></Button>
+                              <Button variant="outline" size="sm" onClick={() => handleConfirm(o.id)}><Check className="h-3 w-3 mr-1" /> Confirm</Button>
+                            </>
                           )}
                           {['confirmed', 'partially_delivered'].includes(o.status) && (
-                            <Button variant="outline" size="sm" onClick={() => openDelivery(o)}>
-                              <Truck className="h-3 w-3 mr-1" /> Deliver
-                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => openDelivery(o)}><Truck className="h-3 w-3 mr-1" /> Deliver</Button>
                           )}
                         </div>
                       </td>
@@ -191,28 +194,22 @@ export default function SalesOrders() {
           </CardContent>
         </Card>
 
-        {/* Order Detail */}
         {detailOrder && !dnDialogOpen && (
           <Card className="mt-4">
             <CardContent className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold">{detailOrder.order_number}</h3>
-                  <p className="text-sm text-muted-foreground">{detailOrder.customers?.name}</p>
-                </div>
+                <div><h3 className="text-lg font-semibold">{detailOrder.order_number}</h3><p className="text-sm text-muted-foreground">{detailOrder.customers?.name}</p></div>
                 <Button variant="ghost" size="sm" onClick={() => setDetailOrder(null)}>Close</Button>
               </div>
               <table className="w-full mb-4">
-                <thead>
-                  <tr className="border-b">
-                    <th className="py-2 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
-                    <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Qty</th>
-                    <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Price</th>
-                    <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Total</th>
-                    <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Delivered</th>
-                    <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Invoiced</th>
-                  </tr>
-                </thead>
+                <thead><tr className="border-b">
+                  <th className="py-2 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
+                  <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Qty</th>
+                  <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Price</th>
+                  <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Total</th>
+                  <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Delivered</th>
+                  <th className="py-2 text-right text-xs font-medium text-muted-foreground uppercase">Invoiced</th>
+                </tr></thead>
                 <tbody className="divide-y">
                   {orderLines.map((l: any) => (
                     <tr key={l.id}>
@@ -232,10 +229,9 @@ export default function SalesOrders() {
         )}
       </div>
 
-      {/* New Order Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>New Sales Order</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingOrder ? 'Edit Sales Order' : 'New Sales Order'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -245,16 +241,10 @@ export default function SalesOrders() {
                   <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.code} - {c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Expected Date</Label>
-                <Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} />
-              </div>
+              <div><Label>Expected Date</Label><Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} /></div>
             </div>
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Lines</Label>
-                <Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" /> Add Line</Button>
-              </div>
+              <div className="flex items-center justify-between mb-2"><Label>Lines</Label><Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" /> Add Line</Button></div>
               {lines.map((line, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 mb-2">
                   <div className="col-span-4">
@@ -275,13 +265,12 @@ export default function SalesOrders() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate}>Create Order</Button>
+            <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
+            <Button onClick={handleSave}>{editingOrder ? 'Update Order' : 'Create Order'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delivery Note Dialog */}
       <Dialog open={dnDialogOpen} onOpenChange={setDnDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Create Delivery Note</DialogTitle></DialogHeader>
