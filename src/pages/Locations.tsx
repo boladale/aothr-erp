@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, MapPin } from 'lucide-react';
+import { Plus, Search, MapPin, Pencil, Trash2, Power } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -19,11 +20,13 @@ import { toast } from 'sonner';
 import type { Location } from '@/lib/supabase';
 
 export default function Locations() {
+  const { organizationId } = useAuth();
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editLocation, setEditLocation] = useState<Location | null>(null);
   const [form, setForm] = useState({
     code: '',
     name: '',
@@ -51,7 +54,23 @@ export default function Locations() {
     }
   };
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setEditLocation(null);
+    setForm({ code: '', name: '', address: '' });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (loc: Location) => {
+    setEditLocation(loc);
+    setForm({
+      code: loc.code,
+      name: loc.name,
+      address: loc.address || '',
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!form.code || !form.name) {
       toast.error('Code and Name are required');
       return;
@@ -59,18 +78,48 @@ export default function Locations() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('locations').insert(form);
-      if (error) throw error;
-      
-      toast.success('Location created');
+      if (editLocation) {
+        const { error } = await supabase.from('locations').update({
+          code: form.code,
+          name: form.name,
+          address: form.address || null,
+        }).eq('id', editLocation.id);
+        if (error) throw error;
+        toast.success('Location updated');
+      } else {
+        const { error } = await supabase.from('locations').insert({ ...form, organization_id: organizationId });
+        if (error) throw error;
+        toast.success('Location created');
+      }
       setDialogOpen(false);
-      setForm({ code: '', name: '', address: '' });
       fetchLocations();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to create location';
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : 'Failed to save location');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (loc: Location) => {
+    try {
+      const { error } = await supabase.from('locations').update({ is_active: !loc.is_active }).eq('id', loc.id);
+      if (error) throw error;
+      toast.success(loc.is_active ? 'Location disabled' : 'Location enabled');
+      fetchLocations();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update location');
+    }
+  };
+
+  const handleDelete = async (loc: Location) => {
+    if (!window.confirm(`Delete location "${loc.name}"? This cannot be undone.`)) return;
+    try {
+      const { error } = await supabase.from('locations').delete().eq('id', loc.id);
+      if (error) throw error;
+      toast.success('Location deleted');
+      fetchLocations();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete location. It may be in use.');
     }
   };
 
@@ -92,6 +141,23 @@ export default function Locations() {
         </Badge>
       )
     },
+    {
+      key: 'actions',
+      header: '',
+      render: (l: Location) => (
+        <div className="flex gap-1 justify-end">
+          <Button size="sm" variant="ghost" onClick={() => openEdit(l)} title="Edit">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => handleToggleActive(l)} title={l.is_active ? 'Disable' : 'Enable'}>
+            <Power className={`h-4 w-4 ${l.is_active ? 'text-muted-foreground' : 'text-green-600'}`} />
+          </Button>
+          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(l)} title="Delete">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )
+    },
   ];
 
   return (
@@ -101,7 +167,7 @@ export default function Locations() {
           title="Locations"
           description="Manage warehouse and storage locations"
           actions={
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button onClick={openCreate}>
               <Plus className="mr-2 h-4 w-4" /> Add Location
             </Button>
           }
@@ -130,7 +196,7 @@ export default function Locations() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" /> New Location
+                <MapPin className="h-5 w-5" /> {editLocation ? 'Edit Location' : 'New Location'}
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -163,8 +229,8 @@ export default function Locations() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={saving}>
-                {saving ? 'Creating...' : 'Create Location'}
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : (editLocation ? 'Update Location' : 'Create Location')}
               </Button>
             </DialogFooter>
           </DialogContent>

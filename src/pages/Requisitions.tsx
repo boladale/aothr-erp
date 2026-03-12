@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -21,6 +21,7 @@ interface RequisitionRow {
   justification: string | null;
   rejection_reason: string | null;
   needed_by_date: string | null;
+  notes: string | null;
   created_at: string;
   profiles: { full_name: string | null; email: string } | null;
 }
@@ -34,6 +35,7 @@ export default function Requisitions() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editReq, setEditReq] = useState<RequisitionRow | null>(null);
 
   useEffect(() => {
     fetchRequisitions();
@@ -110,6 +112,25 @@ export default function Requisitions() {
     }
   };
 
+  const handleEdit = (req: RequisitionRow) => {
+    setEditReq(req);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (req: RequisitionRow) => {
+    if (!window.confirm(`Delete requisition ${req.req_number}? This cannot be undone.`)) return;
+    try {
+      // Delete lines first, then header
+      await supabase.from('requisition_lines').delete().eq('requisition_id', req.id);
+      const { error } = await supabase.from('requisitions').delete().eq('id', req.id);
+      if (error) throw error;
+      toast.success('Requisition deleted');
+      fetchRequisitions();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete');
+    }
+  };
+
   const filtered = requisitions.filter(r =>
     r.req_number.toLowerCase().includes(search.toLowerCase()) ||
     (r.department || '').toLowerCase().includes(search.toLowerCase())
@@ -134,9 +155,17 @@ export default function Requisitions() {
       render: (r: RequisitionRow) => (
         <div className="flex gap-2 justify-end">
           {r.status === 'draft' && canInitiate && r.requester_id === user?.id && (
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmit(r); }}>
-              Submit
-            </Button>
+            <>
+              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(r); }} title="Edit">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(r); }} title="Delete">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmit(r); }}>
+                Submit
+              </Button>
+            </>
           )}
           {r.status === 'pending_approval' && canApprove && (
             <>
@@ -160,7 +189,7 @@ export default function Requisitions() {
           title="Requisitions"
           description="Create and manage procurement requisitions"
           actions={
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button onClick={() => { setEditReq(null); setDialogOpen(true); }}>
               <Plus className="mr-2 h-4 w-4" /> New Requisition
             </Button>
           }
@@ -188,8 +217,9 @@ export default function Requisitions() {
 
         <RequisitionFormDialog
           open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditReq(null); }}
           onSuccess={fetchRequisitions}
+          editRequisition={editReq}
         />
       </div>
     </AppLayout>
