@@ -66,6 +66,7 @@ import CashDashboardPage from "./pages/CashDashboardPage";
 import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 import AuditReport from "./pages/AuditReport";
+import AccountStatement from "./pages/AccountStatement";
 
 const queryClient = new QueryClient();
 
