@@ -41,7 +41,7 @@ interface POLine {
 
 export default function PurchaseOrders() {
   const navigate = useNavigate();
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, organizationId } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canSend = canApprove || hasRole('procurement_officer');
   const canInitiate = !!user;
