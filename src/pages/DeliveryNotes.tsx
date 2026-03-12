@@ -14,7 +14,7 @@ import { Receipt } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DeliveryNotes() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
