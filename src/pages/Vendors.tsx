@@ -223,6 +223,21 @@ export default function Vendors() {
               </Button>
             </>
           )}
+          {v.status === 'draft' && (
+            <Button size="sm" variant="ghost" title="Edit" onClick={(e) => { e.stopPropagation(); handleEdit(v); }}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {(v.status === 'active' || v.status === 'inactive') && (
+            <Button size="sm" variant="ghost" title={v.status === 'active' ? 'Disable' : 'Enable'} onClick={(e) => { e.stopPropagation(); handleToggleActive(v); }}>
+              <Power className={`h-4 w-4 ${v.status === 'inactive' ? 'text-muted-foreground' : 'text-primary'}`} />
+            </Button>
+          )}
+          {v.status === 'draft' && (
+            <Button size="sm" variant="ghost" title="Delete" onClick={(e) => { e.stopPropagation(); handleDelete(v); }}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
         </div>
       )
     }
