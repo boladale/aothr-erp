@@ -75,6 +75,7 @@ const pathToProgram: Record<string, string> = {
   '/purchase-orders': 'purchase_orders',
   '/inventory': 'inventory',
   '/inventory-valuation': 'inventory_valuation',
+  '/inventory-issues': 'inventory_issues',
   '/goods-receipts': 'goods_receipts',
   '/chart-of-accounts': 'chart_of_accounts',
   '/journal-entries': 'journal_entries',
