@@ -39,6 +39,13 @@ interface POLineWithItem extends PurchaseOrderLine {
   items: Item | null;
 }
 
+interface GLAccount {
+  id: string;
+  account_code: string;
+  account_name: string;
+  account_type: string;
+}
+
 interface InvoiceLine {
   po_line_id: string;
   item_id: string;
@@ -46,6 +53,7 @@ interface InvoiceLine {
   unit_price: number;
   max_invoiceable: number;
   item_name: string;
+  expense_account_id: string;
 }
 
 export default function Invoices() {
@@ -53,6 +61,7 @@ export default function Invoices() {
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
   const [invoices, setInvoices] = useState<InvoiceWithDetails[]>([]);
   const [receivedPOs, setReceivedPOs] = useState<POWithVendor[]>([]);
+  const [glAccounts, setGLAccounts] = useState<GLAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,13 +87,15 @@ export default function Invoices() {
 
   const fetchData = async () => {
     try {
-      const [invoicesRes, posRes] = await Promise.all([
+      const [invoicesRes, posRes, glRes] = await Promise.all([
         supabase.from('ap_invoices').select('*, vendors(*), purchase_orders(po_number)').order('created_at', { ascending: false }),
         supabase.from('purchase_orders').select('*, vendors(id, name)').in('status', ['partially_received', 'fully_received']).order('po_number'),
+        supabase.from('gl_accounts').select('id, account_code, account_name, account_type').eq('is_header', false).eq('is_active', true).order('account_code'),
       ]);
 
       setInvoices((invoicesRes.data || []) as InvoiceWithDetails[]);
       setReceivedPOs((posRes.data || []) as POWithVendor[]);
+      setGLAccounts((glRes.data || []) as GLAccount[]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
@@ -113,6 +124,7 @@ export default function Invoices() {
         unit_price: pl.unit_price,
         max_invoiceable: pl.qty_received - pl.qty_invoiced,
         item_name: pl.items?.name || '',
+        expense_account_id: '',
       })));
     } catch (error) {
       console.error('Error fetching PO lines:', error);
@@ -171,6 +183,7 @@ export default function Invoices() {
         item_id: l.item_id,
         quantity: l.quantity,
         unit_price: l.unit_price,
+        expense_account_id: l.expense_account_id || null,
       }));
 
       const { error: linesError } = await supabase
@@ -435,25 +448,46 @@ export default function Invoices() {
                   <Label>Items to Invoice</Label>
                   <div className="border rounded-lg divide-y">
                     {lines.map((line, idx) => (
-                      <div key={line.po_line_id} className="p-3 flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="font-medium">{line.item_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Max invoiceable: {line.max_invoiceable} @ ₦{line.unit_price.toFixed(2)}
-                          </p>
+                      <div key={line.po_line_id} className="p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="font-medium">{line.item_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Max invoiceable: {line.max_invoiceable} @ ₦{line.unit_price.toFixed(2)}
+                            </p>
+                          </div>
+                          <Input
+                            type="number"
+                            min="0"
+                            max={line.max_invoiceable}
+                            className="w-28"
+                            value={line.quantity}
+                            onChange={e => updateLineQty(idx, parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                          />
+                          <span className="w-24 text-right font-medium">
+                            ₦{(line.quantity * line.unit_price).toFixed(2)}
+                          </span>
                         </div>
-                        <Input
-                          type="number"
-                          min="0"
-                          max={line.max_invoiceable}
-                          className="w-28"
-                          value={line.quantity}
-                          onChange={e => updateLineQty(idx, parseFloat(e.target.value) || 0)}
-                          placeholder="0"
-                        />
-                        <span className="w-24 text-right font-medium">
-                          ₦{(line.quantity * line.unit_price).toFixed(2)}
-                        </span>
+                        <Select
+                          value={line.expense_account_id}
+                          onValueChange={(val) => {
+                            const newLines = [...lines];
+                            newLines[idx].expense_account_id = val;
+                            setLines(newLines);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select GL Account (defaults to COGS)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {glAccounts.map(a => (
+                              <SelectItem key={a.id} value={a.id}>
+                                {a.account_code} - {a.account_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     ))}
                   </div>

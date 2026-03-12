@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ap_invoice_lines: {
         Row: {
+          expense_account_id: string | null
           id: string
           invoice_id: string
           item_id: string
@@ -25,6 +26,7 @@ export type Database = {
           unit_price: number
         }
         Insert: {
+          expense_account_id?: string | null
           id?: string
           invoice_id: string
           item_id: string
@@ -34,6 +36,7 @@ export type Database = {
           unit_price: number
         }
         Update: {
+          expense_account_id?: string | null
           id?: string
           invoice_id?: string
           item_id?: string
@@ -43,6 +46,13 @@ export type Database = {
           unit_price?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "ap_invoice_lines_expense_account_id_fkey"
+            columns: ["expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ap_invoice_lines_invoice_id_fkey"
             columns: ["invoice_id"]
