@@ -79,7 +79,7 @@ export default function SalesOrders() {
       })));
       toast.success('Sales Order updated');
     } else {
-      const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
+      const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
       const { data: so, error } = await supabase.from('sales_orders').insert({
         order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
         subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
