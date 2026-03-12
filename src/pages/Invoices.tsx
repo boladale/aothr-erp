@@ -448,25 +448,46 @@ export default function Invoices() {
                   <Label>Items to Invoice</Label>
                   <div className="border rounded-lg divide-y">
                     {lines.map((line, idx) => (
-                      <div key={line.po_line_id} className="p-3 flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="font-medium">{line.item_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Max invoiceable: {line.max_invoiceable} @ ₦{line.unit_price.toFixed(2)}
-                          </p>
+                      <div key={line.po_line_id} className="p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <p className="font-medium">{line.item_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Max invoiceable: {line.max_invoiceable} @ ₦{line.unit_price.toFixed(2)}
+                            </p>
+                          </div>
+                          <Input
+                            type="number"
+                            min="0"
+                            max={line.max_invoiceable}
+                            className="w-28"
+                            value={line.quantity}
+                            onChange={e => updateLineQty(idx, parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                          />
+                          <span className="w-24 text-right font-medium">
+                            ₦{(line.quantity * line.unit_price).toFixed(2)}
+                          </span>
                         </div>
-                        <Input
-                          type="number"
-                          min="0"
-                          max={line.max_invoiceable}
-                          className="w-28"
-                          value={line.quantity}
-                          onChange={e => updateLineQty(idx, parseFloat(e.target.value) || 0)}
-                          placeholder="0"
-                        />
-                        <span className="w-24 text-right font-medium">
-                          ₦{(line.quantity * line.unit_price).toFixed(2)}
-                        </span>
+                        <Select
+                          value={line.expense_account_id}
+                          onValueChange={(val) => {
+                            const newLines = [...lines];
+                            newLines[idx].expense_account_id = val;
+                            setLines(newLines);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select GL Account (defaults to COGS)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {glAccounts.map(a => (
+                              <SelectItem key={a.id} value={a.id}>
+                                {a.account_code} - {a.account_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     ))}
                   </div>
