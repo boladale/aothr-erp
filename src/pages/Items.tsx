@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Package } from 'lucide-react';
+import { Plus, Search, Package, Pencil, Trash2, Power } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -26,6 +26,7 @@ export default function Items() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editItem, setEditItem] = useState<Item | null>(null);
   const [form, setForm] = useState({
     code: '',
     name: '',
@@ -56,7 +57,26 @@ export default function Items() {
     }
   };
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setEditItem(null);
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0 });
+    setDialogOpen(true);
+  };
+
+  const openEdit = (item: Item) => {
+    setEditItem(item);
+    setForm({
+      code: item.code,
+      name: item.name,
+      description: item.description || '',
+      category: item.category || '',
+      unit_of_measure: item.unit_of_measure,
+      unit_cost: item.unit_cost || 0,
+    });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!form.code || !form.name) {
       toast.error('Code and Name are required');
       return;
@@ -64,18 +84,51 @@ export default function Items() {
 
     setSaving(true);
     try {
-      const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
-      if (error) throw error;
-      
-      toast.success('Item created');
+      if (editItem) {
+        const { error } = await supabase.from('items').update({
+          code: form.code,
+          name: form.name,
+          description: form.description || null,
+          category: form.category || null,
+          unit_of_measure: form.unit_of_measure,
+          unit_cost: form.unit_cost,
+        }).eq('id', editItem.id);
+        if (error) throw error;
+        toast.success('Item updated');
+      } else {
+        const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
+        if (error) throw error;
+        toast.success('Item created');
+      }
       setDialogOpen(false);
-      setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0 });
       fetchItems();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to create item';
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : 'Failed to save item');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleActive = async (item: Item) => {
+    try {
+      const { error } = await supabase.from('items').update({ is_active: !item.is_active }).eq('id', item.id);
+      if (error) throw error;
+      toast.success(item.is_active ? 'Item disabled' : 'Item enabled');
+      fetchItems();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update item');
+    }
+  };
+
+  const handleDelete = async (item: Item) => {
+    if (!window.confirm(`Delete item "${item.name}"? This cannot be undone.`)) return;
+    try {
+      const { error } = await supabase.from('items').delete().eq('id', item.id);
+      if (error) throw error;
+      toast.success('Item deleted');
+      fetchItems();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete item. It may be in use.');
     }
   };
 
@@ -103,6 +156,23 @@ export default function Items() {
         </Badge>
       )
     },
+    {
+      key: 'actions',
+      header: '',
+      render: (i: Item) => (
+        <div className="flex gap-1 justify-end">
+          <Button size="sm" variant="ghost" onClick={() => openEdit(i)} title="Edit">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => handleToggleActive(i)} title={i.is_active ? 'Disable' : 'Enable'}>
+            <Power className={`h-4 w-4 ${i.is_active ? 'text-muted-foreground' : 'text-green-600'}`} />
+          </Button>
+          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(i)} title="Delete">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )
+    },
   ];
 
   return (
@@ -112,7 +182,7 @@ export default function Items() {
           title="Items"
           description="Manage your item master data"
           actions={
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button onClick={openCreate}>
               <Plus className="mr-2 h-4 w-4" /> Add Item
             </Button>
           }
@@ -141,7 +211,7 @@ export default function Items() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" /> New Item
+                <Package className="h-5 w-5" /> {editItem ? 'Edit Item' : 'New Item'}
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -201,8 +271,8 @@ export default function Items() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={saving}>
-                {saving ? 'Creating...' : 'Create Item'}
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : (editItem ? 'Update Item' : 'Create Item')}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -30,19 +30,29 @@ interface Item {
 }
 
 interface ReqLine {
+  id?: string;
   item_id: string;
   quantity: number;
   estimated_unit_cost: number;
   specifications: string;
 }
 
+interface EditRequisition {
+  id: string;
+  department: string | null;
+  justification: string | null;
+  needed_by_date: string | null;
+  notes: string | null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  editRequisition?: EditRequisition | null;
 }
 
-export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) {
+export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequisition }: Props) {
   const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [saving, setSaving] = useState(false);
@@ -56,12 +66,40 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
     { item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' },
   ]);
 
+  const isEdit = !!editRequisition;
+
   useEffect(() => {
     if (open) {
       supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true).order('name')
         .then(({ data }) => setItems((data || []) as Item[]));
+
+      if (editRequisition) {
+        setForm({
+          department: editRequisition.department || '',
+          justification: editRequisition.justification || '',
+          needed_by_date: editRequisition.needed_by_date || '',
+          notes: editRequisition.notes || '',
+        });
+        // Fetch existing lines
+        supabase.from('requisition_lines').select('id, item_id, quantity, estimated_unit_cost, specifications')
+          .eq('requisition_id', editRequisition.id).order('line_number')
+          .then(({ data }) => {
+            if (data && data.length > 0) {
+              setLines(data.map(l => ({
+                id: l.id,
+                item_id: l.item_id,
+                quantity: l.quantity,
+                estimated_unit_cost: l.estimated_unit_cost || 0,
+                specifications: l.specifications || '',
+              })));
+            }
+          });
+      } else {
+        setForm({ department: '', justification: '', needed_by_date: '', notes: '' });
+        setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
+      }
     }
-  }, [open]);
+  }, [open, editRequisition]);
 
   const addLine = () => {
     setLines([...lines, { item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
@@ -69,7 +107,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
 
   const updateLine = (idx: number, field: keyof ReqLine, value: string | number) => {
     const newLines = [...lines];
-    (newLines[idx] as Record<keyof ReqLine, string | number>)[field] = value;
+    (newLines[idx] as Record<keyof ReqLine, string | number | undefined>)[field] = value;
     if (field === 'item_id') {
       const item = items.find(i => i.id === value);
       if (item) newLines[idx].estimated_unit_cost = item.unit_cost || 0;
@@ -81,7 +119,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
     if (lines.length > 1) setLines(lines.filter((_, i) => i !== idx));
   };
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     const validLines = lines.filter(l => l.item_id && l.quantity > 0);
     if (validLines.length === 0) {
       toast.error('Add at least one line item');
@@ -90,43 +128,80 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
 
     setSaving(true);
     try {
-      const reqNumber = `REQ-${Date.now().toString(36).toUpperCase()}`;
+      if (isEdit && editRequisition) {
+        // Update header
+        const { error: headerError } = await supabase
+          .from('requisitions')
+          .update({
+            department: form.department || null,
+            justification: form.justification || null,
+            needed_by_date: form.needed_by_date || null,
+            notes: form.notes || null,
+          })
+          .eq('id', editRequisition.id);
+        if (headerError) throw headerError;
 
-      const { data: req, error: reqError } = await supabase
-        .from('requisitions')
-        .insert({
-          req_number: reqNumber,
-          requester_id: user?.id,
-          department: form.department || null,
-          justification: form.justification || null,
-          needed_by_date: form.needed_by_date || null,
-          notes: form.notes || null,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
+        // Delete existing lines and re-insert
+        const { error: delError } = await supabase
+          .from('requisition_lines')
+          .delete()
+          .eq('requisition_id', editRequisition.id);
+        if (delError) throw delError;
 
-      if (reqError) throw reqError;
+        const lineInserts = validLines.map((l, idx) => ({
+          requisition_id: editRequisition.id,
+          line_number: idx + 1,
+          item_id: l.item_id,
+          quantity: l.quantity,
+          estimated_unit_cost: l.estimated_unit_cost,
+          specifications: l.specifications || null,
+        }));
 
-      const lineInserts = validLines.map((l, idx) => ({
-        requisition_id: req.id,
-        line_number: idx + 1,
-        item_id: l.item_id,
-        quantity: l.quantity,
-        estimated_unit_cost: l.estimated_unit_cost,
-        specifications: l.specifications || null,
-      }));
+        const { error: linesError } = await supabase.from('requisition_lines').insert(lineInserts);
+        if (linesError) throw linesError;
 
-      const { error: linesError } = await supabase.from('requisition_lines').insert(lineInserts);
-      if (linesError) throw linesError;
+        toast.success('Requisition updated');
+      } else {
+        // Create new
+        const reqNumber = `REQ-${Date.now().toString(36).toUpperCase()}`;
 
-      toast.success('Requisition created');
+        const { data: req, error: reqError } = await supabase
+          .from('requisitions')
+          .insert({
+            req_number: reqNumber,
+            requester_id: user?.id,
+            department: form.department || null,
+            justification: form.justification || null,
+            needed_by_date: form.needed_by_date || null,
+            notes: form.notes || null,
+            created_by: user?.id,
+          })
+          .select()
+          .single();
+
+        if (reqError) throw reqError;
+
+        const lineInserts = validLines.map((l, idx) => ({
+          requisition_id: req.id,
+          line_number: idx + 1,
+          item_id: l.item_id,
+          quantity: l.quantity,
+          estimated_unit_cost: l.estimated_unit_cost,
+          specifications: l.specifications || null,
+        }));
+
+        const { error: linesError } = await supabase.from('requisition_lines').insert(lineInserts);
+        if (linesError) throw linesError;
+
+        toast.success('Requisition created');
+      }
+
       onOpenChange(false);
       setForm({ department: '', justification: '', needed_by_date: '', notes: '' });
       setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create requisition');
+      toast.error(error instanceof Error ? error.message : `Failed to ${isEdit ? 'update' : 'create'} requisition`);
     } finally {
       setSaving(false);
     }
@@ -139,7 +214,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5" /> New Requisition
+            <ClipboardList className="h-5 w-5" /> {isEdit ? 'Edit Requisition' : 'New Requisition'}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -238,8 +313,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess }: Props) 
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={saving}>
-            {saving ? 'Creating...' : 'Create Requisition'}
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Requisition' : 'Create Requisition')}
           </Button>
         </DialogFooter>
       </DialogContent>
