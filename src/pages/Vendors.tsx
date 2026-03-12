@@ -28,6 +28,7 @@ export default function Vendors() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editVendor, setEditVendor] = useState<Vendor | null>(null);
 
   useEffect(() => {
     fetchVendors();
