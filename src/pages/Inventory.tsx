@@ -98,7 +98,7 @@ export default function Inventory() {
       }
 
       // Generate adjustment number
-      const adjNumber = `ADJ-${Date.now().toString(36).toUpperCase()}`;
+      const adjNumber = await getNextTransactionNumber(organizationId!, 'ADJ', 'ADJ');
 
       // Create adjustment record
       const { data: adjustment, error: adjError } = await supabase

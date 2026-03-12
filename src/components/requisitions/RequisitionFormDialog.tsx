@@ -164,7 +164,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
         toast.success('Requisition updated');
       } else {
         // Create new
-        const reqNumber = `REQ-${Date.now().toString(36).toUpperCase()}`;
+        const reqNumber = await getNextTransactionNumber(organizationId!, 'REQ', 'REQ');
 
         const { data: req, error: reqError } = await supabase
           .from('requisitions')

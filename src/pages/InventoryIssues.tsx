@@ -121,7 +121,7 @@ export default function InventoryIssues() {
 
     setSaving(true);
     try {
-      const issueNumber = generateIssueNumber();
+      const issueNumber = await generateIssueNumber();
       const { data: issue, error: issueErr } = await supabase
         .from('inventory_issues')
         .insert({

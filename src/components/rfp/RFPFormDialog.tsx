@@ -85,7 +85,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
 
     setSubmitting(true);
     try {
-      const rfpNumber = `RFP-${Date.now().toString(36).toUpperCase()}`;
+      const rfpNumber = await getNextTransactionNumber(organizationId!, 'RFP', 'RFP');
 
       const { data: rfp, error: rfpError } = await supabase
         .from('rfps')

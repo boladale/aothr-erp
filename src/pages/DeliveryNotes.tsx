@@ -49,7 +49,7 @@ export default function DeliveryNotes() {
     // Get the SO to get tax info
     const { data: so } = await supabase.from('sales_orders').select('*').eq('id', dn.order_id).single();
 
-    const invNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+    const invNumber = await getNextTransactionNumber(organizationId!, 'AR_INV', 'INV');
     const subtotal = dnLines.reduce((s: number, l: any) => s + (l.qty_delivered * (l.sales_order_lines?.unit_price || 0)), 0);
 
     const { data: inv, error } = await supabase.from('ar_invoices').insert({

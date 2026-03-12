@@ -93,7 +93,7 @@ export default function JournalEntries() {
       })));
       toast.success('Journal entry updated');
     } else {
-      const entryNumber = `JE-${new Date().toISOString().replace(/[-T:.Z]/g, '').slice(0, 14)}`;
+      const entryNumber = await getNextTransactionNumber(organizationId!, 'JE', 'JE');
       const { data: entry, error } = await supabase.from('gl_journal_entries').insert({
         entry_number: entryNumber, entry_date: form.entry_date, description: form.description,
         fiscal_period_id: form.fiscal_period_id, total_debit: totalDebit, total_credit: totalCredit,

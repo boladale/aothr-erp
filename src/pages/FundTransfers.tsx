@@ -82,7 +82,7 @@ export default function FundTransfers() {
       if (error) { toast.error(error.message); return; }
       toast.success('Transfer updated');
     } else {
-      const txNum = `FT-${Date.now().toString(36).toUpperCase()}`;
+      const txNum = await getNextTransactionNumber(organizationId!, 'FT', 'FT');
       const { error } = await supabase.from('fund_transfers').insert({
         transfer_number: txNum, from_bank_account_id: form.from_bank_account_id,
         to_bank_account_id: form.to_bank_account_id, amount,

@@ -121,7 +121,7 @@ export default function PurchaseOrders() {
         toast.success('Purchase Order updated');
       } else {
         // Create new
-        const poNumber = `PO-${Date.now().toString(36).toUpperCase()}`;
+        const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
         const { data: po, error: poError } = await supabase.from('purchase_orders').insert({
           po_number: poNumber, vendor_id: form.vendor_id, ship_to_location_id: form.ship_to_location_id || null,
           expected_date: form.expected_date || null, notes: form.notes, subtotal, total_amount: subtotal,

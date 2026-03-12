@@ -103,7 +103,7 @@ export default function GoodsReceipts() {
         })));
         toast.success('Goods Receipt updated');
       } else {
-        const grnNumber = `GRN-${Date.now().toString(36).toUpperCase()}`;
+        const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
         const { data: grn, error } = await supabase.from('goods_receipts').insert({
           grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
           receipt_date: form.receipt_date, notes: form.notes, created_by: user?.id, organization_id: organizationId,

@@ -117,7 +117,7 @@ export default function ARReceipts() {
       await supabase.from('ar_receipt_allocations').insert(allocInserts);
       toast.success('Receipt updated');
     } else {
-      const recNum = `REC-${Date.now().toString(36).toUpperCase()}`;
+      const recNum = await getNextTransactionNumber(organizationId!, 'REC', 'REC');
       const { data: rec, error } = await supabase.from('ar_receipts').insert({
         receipt_number: recNum, customer_id: form.customer_id, receipt_date: form.receipt_date,
         total_amount: totalAllocated, payment_method: form.payment_method,

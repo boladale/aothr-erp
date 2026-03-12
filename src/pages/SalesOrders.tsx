@@ -113,7 +113,7 @@ export default function SalesOrders() {
 
   const handleCreateDelivery = async () => {
     if (!dnLocationId) return toast.error('Select a location');
-    const dnNumber = `DN-${Date.now().toString(36).toUpperCase()}`;
+    const dnNumber = await getNextTransactionNumber(organizationId!, 'DN', 'DN');
     const { data: dn, error } = await supabase.from('delivery_notes').insert({
       dn_number: dnNumber, order_id: detailOrder.id, customer_id: detailOrder.customer_id,
       location_id: dnLocationId, created_by: user?.id, organization_id: organizationId,

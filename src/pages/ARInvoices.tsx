@@ -113,7 +113,7 @@ export default function ARInvoices() {
       })));
       toast.success('Invoice updated');
     } else {
-      const invNum = `INV-${Date.now().toString(36).toUpperCase()}`;
+      const invNum = await getNextTransactionNumber(organizationId!, 'AR_INV', 'INV');
       const { data: inv, error } = await supabase.from('ar_invoices').insert({
         invoice_number: invNum, customer_id: form.customer_id, invoice_date: form.invoice_date,
         due_date: dueDate.toISOString().split('T')[0], subtotal, tax_amount: tax, total_amount: total,

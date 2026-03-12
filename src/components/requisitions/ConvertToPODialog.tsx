@@ -180,7 +180,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
 
     setSaving(true);
     try {
-      const poNumber = `PO-${Date.now().toString(36).toUpperCase()}`;
+      const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
       const subtotal = linesToConvert.reduce((s, l) => s + l.quantity * l.unit_price, 0);
 
       const { data: po, error: poError } = await supabase

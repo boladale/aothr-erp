@@ -96,7 +96,7 @@ export default function SalesQuotations() {
   const handleConvertToSO = async (q: any) => {
     const { data: qLines } = await supabase.from('sales_quotation_lines').select('*').eq('quotation_id', q.id);
     if (!qLines || qLines.length === 0) return toast.error('No lines to convert');
-    const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
+    const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
     const { data: so, error } = await supabase.from('sales_orders').insert({
       order_number: soNumber, customer_id: q.customer_id, quotation_id: q.id,
       subtotal: q.subtotal, tax_amount: q.tax_amount, total_amount: q.total_amount,
