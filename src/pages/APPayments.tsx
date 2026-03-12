@@ -28,7 +28,6 @@ interface Invoice {
 export default function APPayments() {
   const { toast } = useToast();
   const { hasRole, organizationId } = useAuth();
-  const { organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable') || hasRole('ap_clerk');
 
   const [loading, setLoading] = useState(true);
