@@ -116,6 +116,51 @@ export default function Vendors() {
     }
   };
 
+  const handleEdit = (vendor: Vendor) => {
+    setEditVendor(vendor);
+    setDialogOpen(true);
+  };
+
+  const handleToggleActive = async (vendor: Vendor) => {
+    const newStatus: VendorStatus = vendor.status === 'inactive' ? 'active' : 'inactive';
+    try {
+      const { error } = await supabase.from('vendors').update({ status: newStatus }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success(`Vendor ${newStatus === 'active' ? 'enabled' : 'disabled'}`);
+      fetchVendors();
+    } catch (error) {
+      toast.error('Failed to update vendor status');
+    }
+  };
+
+  const handleDelete = async (vendor: Vendor) => {
+    if (!window.confirm(`Delete vendor "${vendor.name}"? This cannot be undone.`)) return;
+    try {
+      // Check for references in POs, invoices, bids, RFP responses
+      const checks = await Promise.all([
+        supabase.from('purchase_orders').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('ap_invoices').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('rfp_responses').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('requisition_bids').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+      ]);
+      const totalRefs = checks.reduce((sum, r) => sum + (r.count || 0), 0);
+      if (totalRefs > 0) {
+        toast.error('Cannot delete: vendor has existing transactions or bids');
+        return;
+      }
+      // Delete documents first, then vendor
+      await supabase.from('vendor_documents').delete().eq('vendor_id', vendor.id);
+      await supabase.from('vendor_approvals').delete().eq('vendor_id', vendor.id);
+      const { error } = await supabase.from('vendors').delete().eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Vendor deleted');
+      fetchVendors();
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Failed to delete vendor';
+      toast.error(msg);
+    }
+  };
+
   const filtered = vendors.filter(v =>
     v.name.toLowerCase().includes(search.toLowerCase()) ||
     v.code.toLowerCase().includes(search.toLowerCase()) ||
