@@ -57,7 +57,7 @@ interface InvoiceLine {
 }
 
 export default function Invoices() {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, organizationId } = useAuth();
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
   const [invoices, setInvoices] = useState<InvoiceWithDetails[]>([]);
   const [receivedPOs, setReceivedPOs] = useState<POWithVendor[]>([]);
