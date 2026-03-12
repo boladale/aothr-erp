@@ -194,6 +194,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
         const { data: vendor, error } = await supabase.from('vendors').insert({
           ...payload,
           created_by: userId,
+          organization_id: organizationId,
         }).select('id').single();
 
         if (error) throw error;

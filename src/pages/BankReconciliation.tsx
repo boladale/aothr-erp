@@ -101,6 +101,7 @@ export default function BankReconciliation() {
       difference: stmtBal - glBal - reconciledTotal,
       status: 'completed',
       completed_at: new Date().toISOString(),
+      organization_id: organizationId,
     }).select().single();
 
     if (recErr) { toast.error(recErr.message); return; }
