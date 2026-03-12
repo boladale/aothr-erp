@@ -71,7 +71,7 @@ interface AwardedBidInfo {
 }
 
 export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSuccess }: Props) {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [vendorId, setVendorId] = useState('');
