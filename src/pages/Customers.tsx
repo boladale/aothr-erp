@@ -28,7 +28,7 @@ interface Customer {
 }
 
 export default function Customers() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
