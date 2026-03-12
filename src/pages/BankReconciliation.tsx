@@ -31,7 +31,7 @@ interface Reconciliation {
 }
 
 export default function BankReconciliation() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [reconciliations, setReconciliations] = useState<Reconciliation[]>([]);
