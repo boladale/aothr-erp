@@ -56,7 +56,8 @@ interface PendingDocument {
   type: string;
 }
 
-export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: VendorFormDialogProps) {
+export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVendor }: VendorFormDialogProps) {
+  const isEdit = !!editVendor;
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     code: '',
@@ -72,6 +73,31 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
     bank_name: '',
     bank_account_number: '',
   });
+
+  // Populate form when editing
+  useState(() => {});
+  // Use effect-like pattern via open + editVendor
+  const prevEditRef = useState<string | null>(null);
+  if (open && editVendor && prevEditRef[0] !== editVendor.id) {
+    prevEditRef[1](editVendor.id);
+    setForm({
+      code: editVendor.code,
+      name: editVendor.name,
+      email: editVendor.email || '',
+      phone: editVendor.phone || '',
+      address: editVendor.address || '',
+      city: editVendor.city || '',
+      country: editVendor.country || '',
+      payment_terms: editVendor.payment_terms || 30,
+      service_categories: editVendor.service_categories || [],
+      project_size_capacity: editVendor.project_size_capacity || 'medium',
+      bank_name: editVendor.bank_name || '',
+      bank_account_number: editVendor.bank_account_number || '',
+    });
+  }
+  if (!open && prevEditRef[0] !== null) {
+    prevEditRef[1](null);
+  }
   const [pendingDocuments, setPendingDocuments] = useState<PendingDocument[]>([]);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
