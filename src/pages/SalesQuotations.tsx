@@ -55,7 +55,7 @@ export default function SalesQuotations() {
       notes: form.notes || null,
       subtotal,
       total_amount: subtotal,
-      created_by: user?.id,
+      created_by: user?.id, organization_id: organizationId,
     }).select().single();
 
     if (error) return toast.error(error.message);
