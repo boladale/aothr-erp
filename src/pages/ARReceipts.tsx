@@ -25,7 +25,7 @@ interface ARReceipt {
 }
 
 export default function ARReceipts() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [receipts, setReceipts] = useState<ARReceipt[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
