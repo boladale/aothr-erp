@@ -39,6 +39,7 @@ import {
   FileCheck,
   Percent,
   BookOpenCheck,
+  PackageMinus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
@@ -75,6 +76,7 @@ const pathToProgram: Record<string, string> = {
   '/purchase-orders': 'purchase_orders',
   '/inventory': 'inventory',
   '/inventory-valuation': 'inventory_valuation',
+  '/inventory-issues': 'inventory_issues',
   '/goods-receipts': 'goods_receipts',
   '/chart-of-accounts': 'chart_of_accounts',
   '/journal-entries': 'journal_entries',
@@ -150,6 +152,7 @@ const navSections = [
     items: [
       { path: '/inventory', label: 'Inventory', icon: Boxes },
       { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
+      { path: '/inventory-issues', label: 'Inventory Issues', icon: PackageMinus },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
     ],
   },

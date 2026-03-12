@@ -2172,6 +2172,121 @@ export type Database = {
           },
         ]
       }
+      inventory_issue_lines: {
+        Row: {
+          description: string | null
+          id: string
+          issue_id: string
+          item_id: string
+          quantity: number
+          target_gl_account_id: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          issue_id: string
+          item_id: string
+          quantity: number
+          target_gl_account_id?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          issue_id?: string
+          item_id?: string
+          quantity?: number
+          target_gl_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_issue_lines_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_issue_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_issue_lines_target_gl_account_id_fkey"
+            columns: ["target_gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_issues: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department: string | null
+          id: string
+          issue_date: string
+          issue_number: string
+          issued_to: string | null
+          location_id: string
+          notes: string | null
+          organization_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          status: Database["public"]["Enums"]["issue_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          id?: string
+          issue_date?: string
+          issue_number: string
+          issued_to?: string | null
+          location_id: string
+          notes?: string | null
+          organization_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["issue_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          id?: string
+          issue_date?: string
+          issue_number?: string
+          issued_to?: string | null
+          location_id?: string
+          notes?: string | null
+          organization_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          status?: Database["public"]["Enums"]["issue_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_issues_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_issues_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_reservations: {
         Row: {
           created_at: string
@@ -4786,6 +4901,7 @@ export type Database = {
         | "approval_pending"
         | "budget_exceeded"
         | "manual"
+      issue_status: "draft" | "posted"
       match_line_status:
         | "matched"
         | "qty_exception"
@@ -5014,6 +5130,7 @@ export const Constants = {
         "budget_exceeded",
         "manual",
       ],
+      issue_status: ["draft", "posted"],
       match_line_status: [
         "matched",
         "qty_exception",

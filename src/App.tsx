@@ -41,6 +41,7 @@ import BankReconciliation from "./pages/BankReconciliation";
 import FundTransfers from "./pages/FundTransfers";
 import CashFlowForecast from "./pages/CashFlowForecast";
 import InventoryValuation from "./pages/InventoryValuation";
+import InventoryIssues from "./pages/InventoryIssues";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ProjectProfitability from "./pages/ProjectProfitability";
@@ -173,6 +174,7 @@ const App = () => (
             <Route path="/fund-transfers" element={<ProtectedRoute><FundTransfers /></ProtectedRoute>} />
             <Route path="/cash-flow-forecast" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
             <Route path="/inventory-valuation" element={<ProtectedRoute><InventoryValuation /></ProtectedRoute>} />
+            <Route path="/inventory-issues" element={<ProtectedRoute><InventoryIssues /></ProtectedRoute>} />
             <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
             <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/project-profitability" element={<ProtectedRoute><ProjectProfitability /></ProtectedRoute>} />
