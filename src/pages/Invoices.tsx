@@ -124,6 +124,7 @@ export default function Invoices() {
         unit_price: pl.unit_price,
         max_invoiceable: pl.qty_received - pl.qty_invoiced,
         item_name: pl.items?.name || '',
+        expense_account_id: '',
       })));
     } catch (error) {
       console.error('Error fetching PO lines:', error);
