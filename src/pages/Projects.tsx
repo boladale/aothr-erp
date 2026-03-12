@@ -97,7 +97,7 @@ export default function Projects() {
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         budgeted_amount: form.budgeted_amount,
-        created_by: user?.id,
+        created_by: user?.id, organization_id: organizationId,
       });
       if (error) throw error;
       toast.success('Project created');

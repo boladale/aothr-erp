@@ -174,7 +174,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
             justification: form.justification || null,
             needed_by_date: form.needed_by_date || null,
             notes: form.notes || null,
-            created_by: user?.id,
+            created_by: user?.id, organization_id: organizationId,
           })
           .select()
           .single();

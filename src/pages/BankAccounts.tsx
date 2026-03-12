@@ -55,7 +55,7 @@ export default function BankAccounts() {
       account_code: form.account_code, account_name: form.account_name,
       bank_name: form.bank_name || null, account_number: form.account_number || null,
       currency: form.currency, gl_account_id: form.gl_account_id || null,
-      opening_balance: opening, current_balance: opening,
+      opening_balance: opening, current_balance: opening, organization_id: organizationId,
     });
     if (error) { toast.error(error.message); return; }
     toast.success('Bank account created');

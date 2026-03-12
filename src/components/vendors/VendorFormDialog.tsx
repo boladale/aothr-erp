@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, Upload, X, FileText } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
