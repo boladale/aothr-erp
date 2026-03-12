@@ -58,7 +58,7 @@ export default function DeliveryNotes() {
       total_amount: subtotal + (so?.tax_amount || 0),
       tax_amount: so?.tax_amount || 0,
       notes: `Generated from DN ${dn.dn_number}`,
-      created_by: user?.id,
+      created_by: user?.id, organization_id: organizationId,
     }).select().single();
 
     if (error) return toast.error(error.message);

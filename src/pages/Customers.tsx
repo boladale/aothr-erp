@@ -55,7 +55,7 @@ export default function Customers() {
       phone: form.phone || null, address: form.address || null,
       city: form.city || null, country: form.country || null,
       payment_terms: parseInt(form.payment_terms) || 30,
-      credit_limit: parseFloat(form.credit_limit) || 0,
+      credit_limit: parseFloat(form.credit_limit) || 0, organization_id: organizationId,
     });
     if (error) { toast.error(error.message); return; }
     toast.success('Customer created');

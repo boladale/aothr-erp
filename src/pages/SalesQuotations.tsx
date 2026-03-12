@@ -97,7 +97,7 @@ export default function SalesQuotations() {
       subtotal: q.subtotal,
       tax_amount: q.tax_amount,
       total_amount: q.total_amount,
-      created_by: user?.id,
+      created_by: user?.id, organization_id: organizationId,
     }).select().single();
 
     if (error) return toast.error(error.message);
