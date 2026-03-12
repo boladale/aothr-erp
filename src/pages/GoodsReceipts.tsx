@@ -48,7 +48,7 @@ interface GRNLine {
 }
 
 export default function GoodsReceipts() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [receipts, setReceipts] = useState<GRNWithDetails[]>([]);
   const [openPOs, setOpenPOs] = useState<POWithVendor[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -153,6 +153,7 @@ export default function GoodsReceipts() {
           receipt_date: form.receipt_date,
           notes: form.notes,
           created_by: user?.id,
+          organization_id: organizationId,
         })
         .select()
         .single();

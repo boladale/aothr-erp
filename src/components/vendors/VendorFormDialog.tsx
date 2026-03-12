@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Building2, Upload, X, FileText } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -57,6 +58,7 @@ interface PendingDocument {
 }
 
 export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVendor }: VendorFormDialogProps) {
+  const { organizationId } = useAuth();
   const isEdit = !!editVendor;
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -192,6 +194,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
         const { data: vendor, error } = await supabase.from('vendors').insert({
           ...payload,
           created_by: userId,
+          organization_id: organizationId,
         }).select('id').single();
 
         if (error) throw error;

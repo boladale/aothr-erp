@@ -31,7 +31,7 @@ interface Reconciliation {
 }
 
 export default function BankReconciliation() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [reconciliations, setReconciliations] = useState<Reconciliation[]>([]);
@@ -101,6 +101,7 @@ export default function BankReconciliation() {
       difference: stmtBal - glBal - reconciledTotal,
       status: 'completed',
       completed_at: new Date().toISOString(),
+      organization_id: organizationId,
     }).select().single();
 
     if (recErr) { toast.error(recErr.message); return; }

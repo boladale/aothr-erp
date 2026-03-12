@@ -18,7 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
 export default function SalesOrders() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -58,7 +58,7 @@ export default function SalesOrders() {
     const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
     const { data: so, error } = await supabase.from('sales_orders').insert({
       order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
-      subtotal, total_amount: subtotal, created_by: user?.id,
+      subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
     }).select().single();
     if (error) return toast.error(error.message);
     await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
@@ -97,7 +97,7 @@ export default function SalesOrders() {
     const dnNumber = `DN-${Date.now().toString(36).toUpperCase()}`;
     const { data: dn, error } = await supabase.from('delivery_notes').insert({
       dn_number: dnNumber, order_id: detailOrder.id, customer_id: detailOrder.customer_id,
-      location_id: dnLocationId, created_by: user?.id,
+      location_id: dnLocationId, created_by: user?.id, organization_id: organizationId,
     }).select().single();
     if (error) return toast.error(error.message);
 

@@ -27,7 +27,7 @@ interface Invoice {
 
 export default function APPayments() {
   const { toast } = useToast();
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable') || hasRole('ap_clerk');
 
   const [loading, setLoading] = useState(true);
@@ -116,6 +116,7 @@ export default function APPayments() {
         total_amount: totalAmount,
         notes: notes || null,
         created_by: (await supabase.auth.getUser()).data.user?.id,
+        organization_id: organizationId,
       })
       .select()
       .single();

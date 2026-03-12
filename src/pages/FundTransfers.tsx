@@ -24,7 +24,7 @@ interface FundTransfer {
 }
 
 export default function FundTransfers() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [transfers, setTransfers] = useState<FundTransfer[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -72,7 +72,7 @@ export default function FundTransfers() {
     const { error } = await supabase.from('fund_transfers').insert({
       transfer_number: txNum, from_bank_account_id: form.from_bank_account_id,
       to_bank_account_id: form.to_bank_account_id, amount,
-      transfer_date: form.transfer_date, reference: form.reference || null, notes: form.notes || null,
+      transfer_date: form.transfer_date, reference: form.reference || null, notes: form.notes || null, organization_id: organizationId,
     });
     if (error) { toast.error(error.message); return; }
     toast.success('Transfer created');

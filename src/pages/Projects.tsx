@@ -46,7 +46,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Projects() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +97,7 @@ export default function Projects() {
         start_date: form.start_date || null,
         end_date: form.end_date || null,
         budgeted_amount: form.budgeted_amount,
-        created_by: user?.id,
+        created_by: user?.id, organization_id: organizationId,
       });
       if (error) throw error;
       toast.success('Project created');

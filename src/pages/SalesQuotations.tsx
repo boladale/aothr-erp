@@ -18,7 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
 export default function SalesQuotations() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [quotations, setQuotations] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -55,7 +55,7 @@ export default function SalesQuotations() {
       notes: form.notes || null,
       subtotal,
       total_amount: subtotal,
-      created_by: user?.id,
+      created_by: user?.id, organization_id: organizationId,
     }).select().single();
 
     if (error) return toast.error(error.message);
@@ -97,7 +97,7 @@ export default function SalesQuotations() {
       subtotal: q.subtotal,
       tax_amount: q.tax_amount,
       total_amount: q.total_amount,
-      created_by: user?.id,
+      created_by: user?.id, organization_id: organizationId,
     }).select().single();
 
     if (error) return toast.error(error.message);

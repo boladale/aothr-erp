@@ -71,7 +71,7 @@ interface AwardedBidInfo {
 }
 
 export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSuccess }: Props) {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [vendorId, setVendorId] = useState('');
@@ -192,7 +192,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
           subtotal,
           total_amount: subtotal,
           notes: `Converted from ${requisition.req_number}`,
-          created_by: user?.id,
+          created_by: user?.id, organization_id: organizationId,
         })
         .select()
         .single();

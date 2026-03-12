@@ -14,7 +14,7 @@ import { Receipt } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function DeliveryNotes() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
@@ -58,7 +58,7 @@ export default function DeliveryNotes() {
       total_amount: subtotal + (so?.tax_amount || 0),
       tax_amount: so?.tax_amount || 0,
       notes: `Generated from DN ${dn.dn_number}`,
-      created_by: user?.id,
+      created_by: user?.id, organization_id: organizationId,
     }).select().single();
 
     if (error) return toast.error(error.message);

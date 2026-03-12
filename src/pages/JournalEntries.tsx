@@ -25,7 +25,7 @@ interface JournalLine {
 }
 
 export default function JournalEntries() {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable') || hasRole('ap_clerk');
   const [entries, setEntries] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -90,6 +90,7 @@ export default function JournalEntries() {
       total_debit: totalDebit,
       total_credit: totalCredit,
       created_by: user?.id,
+      organization_id: organizationId,
     }).select().single();
 
     if (error) { toast.error(error.message); return; }
