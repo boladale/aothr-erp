@@ -25,7 +25,7 @@ interface BankAccount {
 }
 
 export default function BankAccounts() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [glAccounts, setGlAccounts] = useState<GLAccount[]>([]);
