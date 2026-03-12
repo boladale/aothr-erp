@@ -276,7 +276,12 @@ export default function AccountStatement() {
                           closingBalance < 0 ? 'text-destructive' : ''
                         )}>
                           {formatCurrency(Math.abs(closingBalance))}
-                          {closingBalance < 0 ? ' CR' : ' DR'}
+                          {(() => {
+                            const isDebitNormal = selectedAccountInfo?.normal_balance === 'debit';
+                            if (closingBalance === 0) return '';
+                            if (closingBalance > 0) return isDebitNormal ? ' DR' : ' CR';
+                            return isDebitNormal ? ' CR' : ' DR';
+                          })()}
                         </TableCell>
                       </TableRow>
                     </TableFooter>
