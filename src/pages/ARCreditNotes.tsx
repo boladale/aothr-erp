@@ -69,7 +69,7 @@ export default function ARCreditNotes() {
     const { data: cn, error: cnErr } = await supabase.from('ar_credit_notes').insert({
       credit_note_number: cnNum, customer_id: form.customer_id,
       invoice_id: form.invoice_id || null, credit_date: form.credit_date,
-      subtotal, total_amount: subtotal, reason: form.reason || null,
+      subtotal, total_amount: subtotal, reason: form.reason || null, organization_id: organizationId,
     }).select().single();
     
     if (cnErr) { toast.error(cnErr.message); return; }

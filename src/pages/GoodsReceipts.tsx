@@ -153,6 +153,7 @@ export default function GoodsReceipts() {
           receipt_date: form.receipt_date,
           notes: form.notes,
           created_by: user?.id,
+          organization_id: organizationId,
         })
         .select()
         .single();

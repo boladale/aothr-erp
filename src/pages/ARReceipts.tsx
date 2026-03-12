@@ -86,7 +86,7 @@ export default function ARReceipts() {
       receipt_number: recNum, customer_id: form.customer_id,
       receipt_date: form.receipt_date, total_amount: totalAllocated,
       payment_method: form.payment_method,
-      reference_number: form.reference_number || null, notes: form.notes || null,
+      reference_number: form.reference_number || null, notes: form.notes || null, organization_id: organizationId,
     }).select().single();
     
     if (recErr) { toast.error(recErr.message); return; }

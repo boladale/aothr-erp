@@ -88,7 +88,7 @@ export default function ARInvoices() {
     const { data: inv, error: invErr } = await supabase.from('ar_invoices').insert({
       invoice_number: invNum, customer_id: form.customer_id,
       invoice_date: form.invoice_date, due_date: dueDate.toISOString().split('T')[0],
-      subtotal, tax_amount: tax, total_amount: total, notes: form.notes || null,
+      subtotal, tax_amount: tax, total_amount: total, notes: form.notes || null, organization_id: organizationId,
     }).select().single();
     
     if (invErr) { toast.error(invErr.message); return; }

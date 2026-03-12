@@ -90,6 +90,7 @@ export default function JournalEntries() {
       total_debit: totalDebit,
       total_credit: totalCredit,
       created_by: user?.id,
+      organization_id: organizationId,
     }).select().single();
 
     if (error) { toast.error(error.message); return; }

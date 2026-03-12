@@ -58,7 +58,7 @@ export default function SalesOrders() {
     const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
     const { data: so, error } = await supabase.from('sales_orders').insert({
       order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
-      subtotal, total_amount: subtotal, created_by: user?.id,
+      subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
     }).select().single();
     if (error) return toast.error(error.message);
     await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({

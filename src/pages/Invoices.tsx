@@ -171,6 +171,7 @@ export default function Invoices() {
           subtotal,
           total_amount: subtotal,
           created_by: user?.id,
+          organization_id: organizationId,
         })
         .select()
         .single();

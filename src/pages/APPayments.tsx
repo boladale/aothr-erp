@@ -117,6 +117,7 @@ export default function APPayments() {
         total_amount: totalAmount,
         notes: notes || null,
         created_by: (await supabase.auth.getUser()).data.user?.id,
+        organization_id: organizationId,
       })
       .select()
       .single();
