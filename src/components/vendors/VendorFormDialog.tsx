@@ -239,7 +239,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" /> New Vendor
+            <Building2 className="h-5 w-5" /> {isEdit ? 'Edit Vendor' : 'New Vendor'}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
