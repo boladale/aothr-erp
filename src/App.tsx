@@ -66,6 +66,7 @@ import CashDashboardPage from "./pages/CashDashboardPage";
 import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 import AuditReport from "./pages/AuditReport";
+import AccountStatement from "./pages/AccountStatement";
 
 const queryClient = new QueryClient();
 
@@ -190,6 +191,7 @@ const App = () => (
             <Route path="/delivery-notes" element={<ProtectedRoute><DeliveryNotes /></ProtectedRoute>} />
             <Route path="/user-guide" element={<ProtectedRoute><UserGuide /></ProtectedRoute>} />
             <Route path="/audit-report" element={<ProtectedRoute><AuditReport /></ProtectedRoute>} />
+            <Route path="/account-statement" element={<ProtectedRoute><AccountStatement /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
