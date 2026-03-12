@@ -28,7 +28,7 @@ interface ARInvoice {
 }
 
 export default function ARInvoices() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [invoices, setInvoices] = useState<ARInvoice[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
