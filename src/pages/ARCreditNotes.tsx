@@ -27,7 +27,7 @@ interface ARCreditNote {
 }
 
 export default function ARCreditNotes() {
-  const { hasRole } = useAuth();
+  const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [creditNotes, setCreditNotes] = useState<ARCreditNote[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
