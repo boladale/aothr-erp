@@ -183,6 +183,7 @@ export default function Invoices() {
         item_id: l.item_id,
         quantity: l.quantity,
         unit_price: l.unit_price,
+        expense_account_id: l.expense_account_id || null,
       }));
 
       const { error: linesError } = await supabase
