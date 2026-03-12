@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Power } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -28,6 +28,7 @@ export default function Vendors() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editVendor, setEditVendor] = useState<Vendor | null>(null);
 
   useEffect(() => {
     fetchVendors();
@@ -115,6 +116,51 @@ export default function Vendors() {
     }
   };
 
+  const handleEdit = (vendor: Vendor) => {
+    setEditVendor(vendor);
+    setDialogOpen(true);
+  };
+
+  const handleToggleActive = async (vendor: Vendor) => {
+    const newStatus: VendorStatus = vendor.status === 'inactive' ? 'active' : 'inactive';
+    try {
+      const { error } = await supabase.from('vendors').update({ status: newStatus }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success(`Vendor ${newStatus === 'active' ? 'enabled' : 'disabled'}`);
+      fetchVendors();
+    } catch (error) {
+      toast.error('Failed to update vendor status');
+    }
+  };
+
+  const handleDelete = async (vendor: Vendor) => {
+    if (!window.confirm(`Delete vendor "${vendor.name}"? This cannot be undone.`)) return;
+    try {
+      // Check for references in POs, invoices, bids, RFP responses
+      const checks = await Promise.all([
+        supabase.from('purchase_orders').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('ap_invoices').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('rfp_proposals').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+        supabase.from('requisition_bid_entries').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
+      ]);
+      const totalRefs = checks.reduce((sum, r) => sum + (r.count || 0), 0);
+      if (totalRefs > 0) {
+        toast.error('Cannot delete: vendor has existing transactions or bids');
+        return;
+      }
+      // Delete documents first, then vendor
+      await supabase.from('vendor_documents').delete().eq('vendor_id', vendor.id);
+      await supabase.from('vendor_approvals').delete().eq('vendor_id', vendor.id);
+      const { error } = await supabase.from('vendors').delete().eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Vendor deleted');
+      fetchVendors();
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Failed to delete vendor';
+      toast.error(msg);
+    }
+  };
+
   const filtered = vendors.filter(v =>
     v.name.toLowerCase().includes(search.toLowerCase()) ||
     v.code.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,6 +223,21 @@ export default function Vendors() {
               </Button>
             </>
           )}
+          {v.status === 'draft' && (
+            <Button size="sm" variant="ghost" title="Edit" onClick={(e) => { e.stopPropagation(); handleEdit(v); }}>
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {(v.status === 'active' || v.status === 'inactive') && (
+            <Button size="sm" variant="ghost" title={v.status === 'active' ? 'Disable' : 'Enable'} onClick={(e) => { e.stopPropagation(); handleToggleActive(v); }}>
+              <Power className={`h-4 w-4 ${v.status === 'inactive' ? 'text-muted-foreground' : 'text-primary'}`} />
+            </Button>
+          )}
+          {v.status === 'draft' && (
+            <Button size="sm" variant="ghost" title="Delete" onClick={(e) => { e.stopPropagation(); handleDelete(v); }}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
         </div>
       )
     }
@@ -216,9 +277,10 @@ export default function Vendors() {
 
         <VendorFormDialog
           open={dialogOpen}
-          onOpenChange={setDialogOpen}
+          onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditVendor(null); }}
           onSuccess={fetchVendors}
           userId={user?.id}
+          editVendor={editVendor}
         />
       </div>
     </AppLayout>

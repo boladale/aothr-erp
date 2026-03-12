@@ -26,6 +26,7 @@ interface VendorFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userId?: string;
+  editVendor?: import('@/lib/supabase').Vendor | null;
 }
 
 const SERVICE_CATEGORIES = [
@@ -55,7 +56,8 @@ interface PendingDocument {
   type: string;
 }
 
-export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: VendorFormDialogProps) {
+export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVendor }: VendorFormDialogProps) {
+  const isEdit = !!editVendor;
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     code: '',
@@ -71,6 +73,31 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
     bank_name: '',
     bank_account_number: '',
   });
+
+  // Populate form when editing
+  useState(() => {});
+  // Use effect-like pattern via open + editVendor
+  const prevEditRef = useState<string | null>(null);
+  if (open && editVendor && prevEditRef[0] !== editVendor.id) {
+    prevEditRef[1](editVendor.id);
+    setForm({
+      code: editVendor.code,
+      name: editVendor.name,
+      email: editVendor.email || '',
+      phone: editVendor.phone || '',
+      address: editVendor.address || '',
+      city: editVendor.city || '',
+      country: editVendor.country || '',
+      payment_terms: editVendor.payment_terms || 30,
+      service_categories: editVendor.service_categories || [],
+      project_size_capacity: editVendor.project_size_capacity || 'medium',
+      bank_name: editVendor.bank_name || '',
+      bank_account_number: editVendor.bank_account_number || '',
+    });
+  }
+  if (!open && prevEditRef[0] !== null) {
+    prevEditRef[1](null);
+  }
   const [pendingDocuments, setPendingDocuments] = useState<PendingDocument[]>([]);
   const [uploadingDocs, setUploadingDocs] = useState(false);
 
@@ -128,7 +155,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
     }
   };
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!form.code || !form.name) {
       toast.error('Code and Name are required');
       return;
@@ -136,7 +163,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
 
     setSaving(true);
     try {
-      const { data: vendor, error } = await supabase.from('vendors').insert({
+      const payload = {
         code: form.code,
         name: form.name,
         email: form.email || null,
@@ -149,22 +176,39 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
         project_size_capacity: form.project_size_capacity,
         bank_name: form.bank_name || null,
         bank_account_number: form.bank_account_number || null,
-        created_by: userId,
-      }).select('id').single();
+      };
 
-      if (error) throw error;
+      if (isEdit && editVendor) {
+        const { error } = await supabase.from('vendors').update(payload).eq('id', editVendor.id);
+        if (error) throw error;
 
-      if (pendingDocuments.length > 0 && vendor) {
-        setUploadingDocs(true);
-        await uploadDocuments(vendor.id);
+        if (pendingDocuments.length > 0) {
+          setUploadingDocs(true);
+          await uploadDocuments(editVendor.id);
+        }
+
+        toast.success('Vendor updated');
+      } else {
+        const { data: vendor, error } = await supabase.from('vendors').insert({
+          ...payload,
+          created_by: userId,
+        }).select('id').single();
+
+        if (error) throw error;
+
+        if (pendingDocuments.length > 0 && vendor) {
+          setUploadingDocs(true);
+          await uploadDocuments(vendor.id);
+        }
+
+        toast.success('Vendor created');
       }
 
-      toast.success('Vendor created');
       onOpenChange(false);
       resetForm();
       onSuccess();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to create vendor';
+      const message = error instanceof Error ? error.message : 'Failed to save vendor';
       toast.error(message);
     } finally {
       setSaving(false);
@@ -195,7 +239,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5" /> New Vendor
+            <Building2 className="h-5 w-5" /> {isEdit ? 'Edit Vendor' : 'New Vendor'}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -391,8 +435,8 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId }: Vend
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={saving || uploadingDocs}>
-            {uploadingDocs ? 'Uploading...' : saving ? 'Creating...' : 'Create Vendor'}
+          <Button onClick={handleSave} disabled={saving || uploadingDocs}>
+            {uploadingDocs ? 'Uploading...' : saving ? 'Saving...' : isEdit ? 'Update Vendor' : 'Create Vendor'}
           </Button>
         </DialogFooter>
       </DialogContent>
