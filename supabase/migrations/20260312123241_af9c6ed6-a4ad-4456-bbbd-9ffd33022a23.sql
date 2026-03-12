@@ -1,0 +1,1 @@
+ALTER TABLE public.locations ADD CONSTRAINT locations_code_org_unique UNIQUE (code, organization_id);
