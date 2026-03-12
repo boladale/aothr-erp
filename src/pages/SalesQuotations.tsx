@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ export default function SalesQuotations() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingQuotation, setEditingQuotation] = useState<any>(null);
   const [form, setForm] = useState({ customer_id: '', valid_until: '', notes: '' });
   const [lines, setLines] = useState<{ item_id: string; description: string; quantity: string; unit_price: string }[]>([]);
 
@@ -35,112 +36,94 @@ export default function SalesQuotations() {
       supabase.from('customers').select('id, name, code').eq('is_active', true).order('name'),
       supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true).order('name'),
     ]);
-    setQuotations(qRes.data || []);
-    setCustomers(cRes.data || []);
-    setItems(iRes.data || []);
+    setQuotations(qRes.data || []); setCustomers(cRes.data || []); setItems(iRes.data || []);
     setLoading(false);
   };
 
-  const generateNumber = () => `SQ-${Date.now().toString(36).toUpperCase()}`;
+  const openEditDialog = async (q: any) => {
+    setEditingQuotation(q);
+    setForm({ customer_id: q.customer_id, valid_until: q.valid_until || '', notes: q.notes || '' });
+    const { data } = await supabase.from('sales_quotation_lines').select('*').eq('quotation_id', q.id).order('line_number');
+    setLines((data || []).map((l: any) => ({ item_id: l.item_id || '', description: l.description, quantity: String(l.quantity), unit_price: String(l.unit_price) })));
+    setDialogOpen(true);
+  };
 
-  const handleCreate = async () => {
-    if (!form.customer_id) return toast.error('Select a customer');
-    if (lines.length === 0) return toast.error('Add at least one line');
-
-    const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
-    const { data: q, error } = await supabase.from('sales_quotations').insert({
-      quotation_number: generateNumber(),
-      customer_id: form.customer_id,
-      valid_until: form.valid_until || null,
-      notes: form.notes || null,
-      subtotal,
-      total_amount: subtotal,
-      created_by: user?.id, organization_id: organizationId,
-    }).select().single();
-
-    if (error) return toast.error(error.message);
-
-    const lineInserts = lines.map((l, i) => ({
-      quotation_id: q.id,
-      line_number: i + 1,
-      item_id: l.item_id || null,
-      description: l.description,
-      quantity: parseFloat(l.quantity) || 1,
-      unit_price: parseFloat(l.unit_price) || 0,
-    }));
-    await supabase.from('sales_quotation_lines').insert(lineInserts);
-
-    toast.success('Quotation created');
-    setDialogOpen(false);
+  const resetForm = () => {
+    setEditingQuotation(null);
     setForm({ customer_id: '', valid_until: '', notes: '' });
     setLines([]);
-    fetchData();
+  };
+
+  const handleSave = async () => {
+    if (!form.customer_id) return toast.error('Select a customer');
+    if (lines.length === 0) return toast.error('Add at least one line');
+    const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
+
+    if (editingQuotation) {
+      const { error } = await supabase.from('sales_quotations').update({
+        customer_id: form.customer_id, valid_until: form.valid_until || null,
+        notes: form.notes || null, subtotal, total_amount: subtotal,
+      }).eq('id', editingQuotation.id);
+      if (error) return toast.error(error.message);
+      await supabase.from('sales_quotation_lines').delete().eq('quotation_id', editingQuotation.id);
+      await supabase.from('sales_quotation_lines').insert(lines.map((l, i) => ({
+        quotation_id: editingQuotation.id, line_number: i + 1, item_id: l.item_id || null,
+        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      })));
+      toast.success('Quotation updated');
+    } else {
+      const qNum = `SQ-${Date.now().toString(36).toUpperCase()}`;
+      const { data: q, error } = await supabase.from('sales_quotations').insert({
+        quotation_number: qNum, customer_id: form.customer_id, valid_until: form.valid_until || null,
+        notes: form.notes || null, subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) return toast.error(error.message);
+      await supabase.from('sales_quotation_lines').insert(lines.map((l, i) => ({
+        quotation_id: q.id, line_number: i + 1, item_id: l.item_id || null,
+        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      })));
+      toast.success('Quotation created');
+    }
+    setDialogOpen(false); resetForm(); fetchData();
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    const { error } = await supabase.from('sales_quotations').update({ status: status as any }).eq('id', id);
-    if (error) return toast.error(error.message);
-    toast.success(`Quotation ${status}`);
-    fetchData();
+    await supabase.from('sales_quotations').update({ status: status as any }).eq('id', id);
+    toast.success(`Quotation ${status}`); fetchData();
   };
 
   const handleConvertToSO = async (q: any) => {
-    // Fetch quotation lines
     const { data: qLines } = await supabase.from('sales_quotation_lines').select('*').eq('quotation_id', q.id);
     if (!qLines || qLines.length === 0) return toast.error('No lines to convert');
-
     const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
     const { data: so, error } = await supabase.from('sales_orders').insert({
-      order_number: soNumber,
-      customer_id: q.customer_id,
-      quotation_id: q.id,
-      subtotal: q.subtotal,
-      tax_amount: q.tax_amount,
-      total_amount: q.total_amount,
+      order_number: soNumber, customer_id: q.customer_id, quotation_id: q.id,
+      subtotal: q.subtotal, tax_amount: q.tax_amount, total_amount: q.total_amount,
       created_by: user?.id, organization_id: organizationId,
     }).select().single();
-
     if (error) return toast.error(error.message);
-
-    const soLines = qLines.map((l: any, i: number) => ({
-      order_id: so.id,
-      line_number: i + 1,
-      item_id: l.item_id,
-      description: l.description,
-      quantity: l.quantity,
-      unit_price: l.unit_price,
-    }));
-    await supabase.from('sales_order_lines').insert(soLines);
-
+    await supabase.from('sales_order_lines').insert(qLines.map((l: any, i: number) => ({
+      order_id: so.id, line_number: i + 1, item_id: l.item_id, description: l.description,
+      quantity: l.quantity, unit_price: l.unit_price,
+    })));
     await supabase.from('sales_quotations').update({ status: 'accepted' as any }).eq('id', q.id);
-    toast.success(`Sales Order ${soNumber} created from quotation`);
-    fetchData();
+    toast.success(`Sales Order ${soNumber} created from quotation`); fetchData();
   };
 
   const addLine = () => setLines([...lines, { item_id: '', description: '', quantity: '1', unit_price: '0' }]);
 
   const exportColumns = [
-    { key: 'quotation_number', header: 'Quotation #' },
-    { key: 'customer_name', header: 'Customer' },
-    { key: 'quotation_date', header: 'Date' },
-    { key: 'status', header: 'Status' },
-    { key: 'total_amount', header: 'Total' },
+    { key: 'quotation_number', header: 'Quotation #' }, { key: 'customer_name', header: 'Customer' },
+    { key: 'quotation_date', header: 'Date' }, { key: 'status', header: 'Status' }, { key: 'total_amount', header: 'Total' },
   ];
-
-  const exportData = quotations.map(q => ({
-    ...q,
-    customer_name: q.customers?.name,
-  }));
 
   return (
     <AppLayout>
       <div className="page-container">
         <PageHeader title="Sales Quotations" description="Create and manage customer quotations" actions={
           <div className="flex gap-2">
-            <ExportButtons data={exportData} filename="sales-quotations" title="Sales Quotations" columns={exportColumns} />
-            <Button onClick={() => { setDialogOpen(true); setLines([]); }}>
-              <Plus className="h-4 w-4 mr-1" /> New Quotation
-            </Button>
+            <ExportButtons data={quotations.map(q => ({ ...q, customer_name: q.customers?.name }))} filename="sales-quotations" title="Sales Quotations" columns={exportColumns} />
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New Quotation</Button>
           </div>
         } />
 
@@ -173,7 +156,10 @@ export default function SalesQuotations() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex gap-1 justify-end">
                           {q.status === 'draft' && (
-                            <Button variant="outline" size="sm" onClick={() => handleStatusChange(q.id, 'sent')}>Send</Button>
+                            <>
+                              <Button variant="ghost" size="sm" onClick={() => openEditDialog(q)}><Pencil className="h-3 w-3" /></Button>
+                              <Button variant="outline" size="sm" onClick={() => handleStatusChange(q.id, 'sent')}>Send</Button>
+                            </>
                           )}
                           {q.status === 'sent' && (
                             <Button variant="outline" size="sm" onClick={() => handleConvertToSO(q)}>
@@ -191,65 +177,45 @@ export default function SalesQuotations() {
         </Card>
       </div>
 
-      {/* New Quotation Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>New Sales Quotation</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingQuotation ? 'Edit Sales Quotation' : 'New Sales Quotation'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Customer</Label>
                 <Select value={form.customer_id} onValueChange={v => setForm({ ...form, customer_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                  <SelectContent>
-                    {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.code} - {c.name}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent>{customers.map(c => <SelectItem key={c.id} value={c.id}>{c.code} - {c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Valid Until</Label>
-                <Input type="date" value={form.valid_until} onChange={e => setForm({ ...form, valid_until: e.target.value })} />
-              </div>
+              <div><Label>Valid Until</Label><Input type="date" value={form.valid_until} onChange={e => setForm({ ...form, valid_until: e.target.value })} /></div>
             </div>
             <div><Label>Notes</Label><Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Lines</Label>
-                <Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" /> Add Line</Button>
-              </div>
+              <div className="flex items-center justify-between mb-2"><Label>Lines</Label><Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" /> Add Line</Button></div>
               {lines.map((line, i) => (
                 <div key={i} className="grid grid-cols-12 gap-2 mb-2">
                   <div className="col-span-4">
                     <Select value={line.item_id} onValueChange={v => {
                       const item = items.find((it: any) => it.id === v);
-                      const updated = [...lines];
-                      updated[i] = { ...updated[i], item_id: v, description: item?.name || '', unit_price: String(item?.unit_cost || 0) };
-                      setLines(updated);
+                      const u = [...lines]; u[i] = { ...u[i], item_id: v, description: item?.name || '', unit_price: String(item?.unit_cost || 0) }; setLines(u);
                     }}>
                       <SelectTrigger><SelectValue placeholder="Item" /></SelectTrigger>
                       <SelectContent>{items.map((it: any) => <SelectItem key={it.id} value={it.id}>{it.code} - {it.name}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-3">
-                    <Input placeholder="Description" value={line.description} onChange={e => { const u = [...lines]; u[i].description = e.target.value; setLines(u); }} />
-                  </div>
-                  <div className="col-span-2">
-                    <Input type="number" placeholder="Qty" value={line.quantity} onChange={e => { const u = [...lines]; u[i].quantity = e.target.value; setLines(u); }} />
-                  </div>
-                  <div className="col-span-2">
-                    <Input type="number" placeholder="Price" value={line.unit_price} onChange={e => { const u = [...lines]; u[i].unit_price = e.target.value; setLines(u); }} />
-                  </div>
-                  <div className="col-span-1 flex items-center">
-                    <Button variant="ghost" size="icon" onClick={() => setLines(lines.filter((_, j) => j !== i))}>×</Button>
-                  </div>
+                  <div className="col-span-3"><Input placeholder="Description" value={line.description} onChange={e => { const u = [...lines]; u[i].description = e.target.value; setLines(u); }} /></div>
+                  <div className="col-span-2"><Input type="number" placeholder="Qty" value={line.quantity} onChange={e => { const u = [...lines]; u[i].quantity = e.target.value; setLines(u); }} /></div>
+                  <div className="col-span-2"><Input type="number" placeholder="Price" value={line.unit_price} onChange={e => { const u = [...lines]; u[i].unit_price = e.target.value; setLines(u); }} /></div>
+                  <div className="col-span-1 flex items-center"><Button variant="ghost" size="icon" onClick={() => setLines(lines.filter((_, j) => j !== i))}>×</Button></div>
                 </div>
               ))}
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate}>Create Quotation</Button>
+            <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
+            <Button onClick={handleSave}>{editingQuotation ? 'Update Quotation' : 'Create Quotation'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

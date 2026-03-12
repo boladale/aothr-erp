@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
-import { Plus, Send } from 'lucide-react';
+import { Plus, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
@@ -34,6 +34,7 @@ export default function ARCreditNotes() {
   const [customerInvoices, setCustomerInvoices] = useState<ARInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCN, setEditingCN] = useState<ARCreditNote | null>(null);
   const [form, setForm] = useState({ customer_id: '', invoice_id: '', credit_date: new Date().toISOString().split('T')[0], reason: '' });
   const [lines, setLines] = useState<CreditNoteLine[]>([{ description: '', quantity: '1', unit_price: '0' }]);
 
@@ -52,39 +53,61 @@ export default function ARCreditNotes() {
   const onCustomerChange = async (customerId: string) => {
     setForm(f => ({ ...f, customer_id: customerId, invoice_id: '' }));
     if (!customerId) { setCustomerInvoices([]); return; }
-    const { data } = await supabase.from('ar_invoices')
-      .select('id, invoice_number, total_amount')
-      .eq('customer_id', customerId).eq('status', 'posted');
+    const { data } = await supabase.from('ar_invoices').select('id, invoice_number, total_amount').eq('customer_id', customerId).eq('status', 'posted');
     setCustomerInvoices((data || []) as ARInvoice[]);
+  };
+
+  const openEditDialog = async (cn: ARCreditNote) => {
+    setEditingCN(cn);
+    setForm({ customer_id: cn.customer_id, invoice_id: cn.invoice_id || '', credit_date: cn.credit_date, reason: cn.reason || '' });
+    // Load customer invoices
+    const { data: invs } = await supabase.from('ar_invoices').select('id, invoice_number, total_amount').eq('customer_id', cn.customer_id).eq('status', 'posted');
+    setCustomerInvoices((invs || []) as ARInvoice[]);
+    // Load lines
+    const { data: cnLines } = await supabase.from('ar_credit_note_lines').select('*').eq('credit_note_id', cn.id);
+    setLines((cnLines || []).map((l: any) => ({ description: l.description, quantity: String(l.quantity), unit_price: String(l.unit_price) })));
+    setDialogOpen(true);
+  };
+
+  const resetForm = () => {
+    setEditingCN(null);
+    setForm({ customer_id: '', invoice_id: '', credit_date: new Date().toISOString().split('T')[0], reason: '' });
+    setLines([{ description: '', quantity: '1', unit_price: '0' }]);
   };
 
   const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!form.customer_id) { toast.error('Select a customer'); return; }
     if (lines.some(l => !l.description)) { toast.error('All lines need a description'); return; }
 
-    const cnNum = `CN-${Date.now().toString(36).toUpperCase()}`;
-    
-    const { data: cn, error: cnErr } = await supabase.from('ar_credit_notes').insert({
-      credit_note_number: cnNum, customer_id: form.customer_id,
-      invoice_id: form.invoice_id || null, credit_date: form.credit_date,
-      subtotal, total_amount: subtotal, reason: form.reason || null, organization_id: organizationId,
-    }).select().single();
-    
-    if (cnErr) { toast.error(cnErr.message); return; }
-
-    const lineInserts = lines.map(l => ({
-      credit_note_id: cn.id, description: l.description,
-      quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-    }));
-    
-    await supabase.from('ar_credit_note_lines').insert(lineInserts);
-
-    toast.success('Credit note created');
+    if (editingCN) {
+      const { error } = await supabase.from('ar_credit_notes').update({
+        customer_id: form.customer_id, invoice_id: form.invoice_id || null,
+        credit_date: form.credit_date, subtotal, total_amount: subtotal, reason: form.reason || null,
+      }).eq('id', editingCN.id);
+      if (error) { toast.error(error.message); return; }
+      await supabase.from('ar_credit_note_lines').delete().eq('credit_note_id', editingCN.id);
+      await supabase.from('ar_credit_note_lines').insert(lines.map(l => ({
+        credit_note_id: editingCN.id, description: l.description,
+        quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      })));
+      toast.success('Credit note updated');
+    } else {
+      const cnNum = `CN-${Date.now().toString(36).toUpperCase()}`;
+      const { data: cn, error } = await supabase.from('ar_credit_notes').insert({
+        credit_note_number: cnNum, customer_id: form.customer_id, invoice_id: form.invoice_id || null,
+        credit_date: form.credit_date, subtotal, total_amount: subtotal, reason: form.reason || null, organization_id: organizationId,
+      }).select().single();
+      if (error) { toast.error(error.message); return; }
+      await supabase.from('ar_credit_note_lines').insert(lines.map(l => ({
+        credit_note_id: cn.id, description: l.description,
+        quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      })));
+      toast.success('Credit note created');
+    }
     setDialogOpen(false);
-    setForm({ customer_id: '', invoice_id: '', credit_date: new Date().toISOString().split('T')[0], reason: '' });
-    setLines([{ description: '', quantity: '1', unit_price: '0' }]);
+    resetForm();
     fetchAll();
   };
 
@@ -98,83 +121,8 @@ export default function ARCreditNotes() {
   return (
     <AppLayout>
       <div className="page-container">
-        <PageHeader
-          title="Credit Notes"
-          description="Issue credit memos and process refunds"
-          actions={canManage ? (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Credit Note</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>New Credit Note</DialogTitle></DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Customer</Label>
-                      <Select value={form.customer_id || 'none'} onValueChange={v => onCustomerChange(v === 'none' ? '' : v)}>
-                        <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Select customer...</SelectItem>
-                          {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.code} - {c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Against Invoice (optional)</Label>
-                      <Select value={form.invoice_id || 'none'} onValueChange={v => setForm(f => ({ ...f, invoice_id: v === 'none' ? '' : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No linked invoice</SelectItem>
-                          {customerInvoices.map(inv => <SelectItem key={inv.id} value={inv.id}>{inv.invoice_number} ({formatCurrency(inv.total_amount)})</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div><Label>Credit Date</Label><Input type="date" value={form.credit_date} onChange={e => setForm(f => ({ ...f, credit_date: e.target.value }))} /></div>
-                  </div>
-                  <div><Label>Reason</Label><Textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></div>
-
-                  <Card>
-                    <CardHeader className="py-3"><CardTitle className="text-sm">Lines</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                      {lines.map((line, i) => (
-                        <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                          <div className="col-span-6">
-                            {i === 0 && <Label className="text-xs">Description</Label>}
-                            <Input className="h-9" value={line.description} onChange={e => {
-                              const u = [...lines]; u[i] = { ...u[i], description: e.target.value }; setLines(u);
-                            }} />
-                          </div>
-                          <div className="col-span-2">
-                            {i === 0 && <Label className="text-xs">Qty</Label>}
-                            <Input className="h-9" type="number" value={line.quantity} onChange={e => {
-                              const u = [...lines]; u[i] = { ...u[i], quantity: e.target.value }; setLines(u);
-                            }} />
-                          </div>
-                          <div className="col-span-3">
-                            {i === 0 && <Label className="text-xs">Unit Price</Label>}
-                            <Input className="h-9" type="number" value={line.unit_price} onChange={e => {
-                              const u = [...lines]; u[i] = { ...u[i], unit_price: e.target.value }; setLines(u);
-                            }} />
-                          </div>
-                          <div className="col-span-1">
-                            {lines.length > 1 && <Button variant="ghost" size="sm" className="h-9" onClick={() => setLines(lines.filter((_, idx) => idx !== i))}>×</Button>}
-                          </div>
-                        </div>
-                      ))}
-                      <Button variant="outline" size="sm" onClick={() => setLines([...lines, { description: '', quantity: '1', unit_price: '0' }])}>+ Add Line</Button>
-                      <div className="pt-2 text-right font-semibold">Total: {formatCurrency(subtotal)}</div>
-                    </CardContent>
-                  </Card>
-
-                  <Button onClick={handleCreate} className="w-full">Create Credit Note</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          ) : undefined}
-        />
+        <PageHeader title="Credit Notes" description="Issue credit memos and process refunds"
+          actions={canManage ? <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New Credit Note</Button> : undefined} />
 
         <Card>
           <CardContent className="p-0">
@@ -205,9 +153,10 @@ export default function ARCreditNotes() {
                       {canManage && (
                         <td className="px-4 py-2.5">
                           {cn.status === 'draft' && (
-                            <Button variant="outline" size="sm" onClick={() => handlePost(cn.id)}>
-                              <Send className="h-3 w-3 mr-1" /> Post
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="sm" onClick={() => openEditDialog(cn)}><Pencil className="h-3 w-3" /></Button>
+                              <Button variant="outline" size="sm" onClick={() => handlePost(cn.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
+                            </div>
                           )}
                         </td>
                       )}
@@ -221,6 +170,62 @@ export default function ARCreditNotes() {
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{editingCN ? 'Edit Credit Note' : 'New Credit Note'}</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Customer</Label>
+                  {editingCN ? (
+                    <Input value={customers.find(c => c.id === form.customer_id)?.name || ''} disabled />
+                  ) : (
+                    <Select value={form.customer_id || 'none'} onValueChange={v => onCustomerChange(v === 'none' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Select customer" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Select customer...</SelectItem>
+                        {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.code} - {c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div>
+                  <Label>Against Invoice (optional)</Label>
+                  <Select value={form.invoice_id || 'none'} onValueChange={v => setForm(f => ({ ...f, invoice_id: v === 'none' ? '' : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No linked invoice</SelectItem>
+                      {customerInvoices.map(inv => <SelectItem key={inv.id} value={inv.id}>{inv.invoice_number} ({formatCurrency(inv.total_amount)})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><Label>Credit Date</Label><Input type="date" value={form.credit_date} onChange={e => setForm(f => ({ ...f, credit_date: e.target.value }))} /></div>
+              </div>
+              <div><Label>Reason</Label><Textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} /></div>
+
+              <Card>
+                <CardHeader className="py-3"><CardTitle className="text-sm">Lines</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                  {lines.map((line, i) => (
+                    <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                      <div className="col-span-6">{i === 0 && <Label className="text-xs">Description</Label>}<Input className="h-9" value={line.description} onChange={e => { const u = [...lines]; u[i] = { ...u[i], description: e.target.value }; setLines(u); }} /></div>
+                      <div className="col-span-2">{i === 0 && <Label className="text-xs">Qty</Label>}<Input className="h-9" type="number" value={line.quantity} onChange={e => { const u = [...lines]; u[i] = { ...u[i], quantity: e.target.value }; setLines(u); }} /></div>
+                      <div className="col-span-3">{i === 0 && <Label className="text-xs">Unit Price</Label>}<Input className="h-9" type="number" value={line.unit_price} onChange={e => { const u = [...lines]; u[i] = { ...u[i], unit_price: e.target.value }; setLines(u); }} /></div>
+                      <div className="col-span-1">{lines.length > 1 && <Button variant="ghost" size="sm" className="h-9" onClick={() => setLines(lines.filter((_, idx) => idx !== i))}>×</Button>}</div>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={() => setLines([...lines, { description: '', quantity: '1', unit_price: '0' }])}>+ Add Line</Button>
+                  <div className="pt-2 text-right font-semibold">Total: {formatCurrency(subtotal)}</div>
+                </CardContent>
+              </Card>
+
+              <Button onClick={handleSave} className="w-full">{editingCN ? 'Update Credit Note' : 'Create Credit Note'}</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
