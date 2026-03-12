@@ -18,7 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
 export default function SalesQuotations() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [quotations, setQuotations] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
