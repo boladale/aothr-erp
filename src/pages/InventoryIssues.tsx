@@ -189,19 +189,16 @@ export default function InventoryIssues() {
   );
 
   const columns = [
-    { header: 'Issue #', accessorKey: 'issue_number' as const },
-    { header: 'Date', accessorKey: 'issue_date' as const, cell: (row: IssueRow) => format(new Date(row.issue_date), 'dd MMM yyyy') },
-    { header: 'Location', accessorKey: 'location_id' as const, cell: (row: IssueRow) => row.locations?.name || '-' },
-    { header: 'Issued To', accessorKey: 'issued_to' as const, cell: (row: IssueRow) => row.issued_to || '-' },
-    { header: 'Department', accessorKey: 'department' as const, cell: (row: IssueRow) => row.department || '-' },
+    { key: 'issue_number', header: 'Issue #' },
+    { key: 'issue_date', header: 'Date', render: (row: IssueRow) => format(new Date(row.issue_date), 'dd MMM yyyy') },
+    { key: 'location', header: 'Location', render: (row: IssueRow) => row.locations?.name || '-' },
+    { key: 'issued_to', header: 'Issued To', render: (row: IssueRow) => row.issued_to || '-' },
+    { key: 'department', header: 'Department', render: (row: IssueRow) => row.department || '-' },
+    { key: 'status', header: 'Status', render: (row: IssueRow) => <StatusBadge status={row.status} /> },
     {
-      header: 'Status', accessorKey: 'status' as const,
-      cell: (row: IssueRow) => <StatusBadge status={row.status} />,
-    },
-    {
-      header: 'Actions', accessorKey: 'id' as const,
-      cell: (row: IssueRow) => row.status === 'draft' ? (
-        <Button size="sm" onClick={() => handlePost(row)}>Post</Button>
+      key: 'actions', header: 'Actions',
+      render: (row: IssueRow) => row.status === 'draft' ? (
+        <Button size="sm" onClick={(e) => { e.stopPropagation(); handlePost(row); }}>Post</Button>
       ) : <span className="text-xs text-muted-foreground">Posted</span>,
     },
   ];
