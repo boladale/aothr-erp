@@ -58,6 +58,7 @@ interface PendingDocument {
 }
 
 export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVendor }: VendorFormDialogProps) {
+  const { organizationId } = useAuth();
   const isEdit = !!editVendor;
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
