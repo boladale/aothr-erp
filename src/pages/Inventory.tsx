@@ -34,7 +34,7 @@ interface BalanceWithDetails extends InventoryBalance {
 }
 
 export default function Inventory() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [balances, setBalances] = useState<BalanceWithDetails[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
