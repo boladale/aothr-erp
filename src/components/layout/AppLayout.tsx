@@ -82,6 +82,7 @@ const pathToProgram: Record<string, string> = {
   '/journal-entries': 'journal_entries',
   '/financial-reports': 'financial_reports',
   '/fiscal-periods': 'fiscal_periods',
+  '/audit-report': 'financial_reports',
   '/invoices': 'invoices',
   '/ap-payments': 'ap_payments',
   '/ap-aging': 'ap_aging',
@@ -163,6 +164,7 @@ const navSections = [
       { path: '/journal-entries', label: 'Journal Entries', icon: Calculator },
       { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
       { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
+      { path: '/audit-report', label: 'Audit Report', icon: FileSearch },
     ],
   },
   {

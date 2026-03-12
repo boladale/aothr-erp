@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -84,7 +85,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
 
     setSubmitting(true);
     try {
-      const rfpNumber = `RFP-${Date.now().toString(36).toUpperCase()}`;
+      const rfpNumber = await getNextTransactionNumber(organizationId!, 'RFP', 'RFP');
 
       const { data: rfp, error: rfpError } = await supabase
         .from('rfps')

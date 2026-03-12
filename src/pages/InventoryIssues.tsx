@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, PackageMinus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -109,9 +110,8 @@ export default function InventoryIssues() {
     setLines(updated);
   };
 
-  const generateIssueNumber = () => {
-    const ts = Date.now().toString(36).toUpperCase();
-    return `ISS-${ts}`;
+  const generateIssueNumber = async () => {
+    return await getNextTransactionNumber(organizationId!, 'ISS', 'ISS');
   };
 
   const handleCreate = async () => {
@@ -121,7 +121,7 @@ export default function InventoryIssues() {
 
     setSaving(true);
     try {
-      const issueNumber = generateIssueNumber();
+      const issueNumber = await generateIssueNumber();
       const { data: issue, error: issueErr } = await supabase
         .from('inventory_issues')
         .insert({

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -139,7 +140,7 @@ export default function APPayments() {
       if (allocErr) { toast({ title: 'Error', description: allocErr.message, variant: 'destructive' }); return; }
       toast({ title: 'Payment updated', description: `${editingPayment.payment_number} updated.` });
     } else {
-      const payNum = `PAY-${Date.now().toString(36).toUpperCase()}`;
+      const payNum = await getNextTransactionNumber(organizationId!, 'PAY', 'PAY');
       const { data: payment, error: payErr } = await supabase.from('ap_payments').insert({
         payment_number: payNum, vendor_id: selectedVendor, payment_date: paymentDate,
         payment_method: paymentMethod, reference_number: referenceNumber || null,

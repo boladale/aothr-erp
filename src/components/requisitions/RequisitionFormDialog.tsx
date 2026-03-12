@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import {
@@ -163,7 +164,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
         toast.success('Requisition updated');
       } else {
         // Create new
-        const reqNumber = `REQ-${Date.now().toString(36).toUpperCase()}`;
+        const reqNumber = await getNextTransactionNumber(organizationId!, 'REQ', 'REQ');
 
         const { data: req, error: reqError } = await supabase
           .from('requisitions')

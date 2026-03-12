@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Boxes, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
@@ -33,7 +34,7 @@ interface BalanceWithDetails extends InventoryBalance {
 }
 
 export default function Inventory() {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const [balances, setBalances] = useState<BalanceWithDetails[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -97,7 +98,7 @@ export default function Inventory() {
       }
 
       // Generate adjustment number
-      const adjNumber = `ADJ-${Date.now().toString(36).toUpperCase()}`;
+      const adjNumber = await getNextTransactionNumber(organizationId!, 'ADJ', 'ADJ');
 
       // Create adjustment record
       const { data: adjustment, error: adjError } = await supabase

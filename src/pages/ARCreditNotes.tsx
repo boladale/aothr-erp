@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -94,7 +95,7 @@ export default function ARCreditNotes() {
       })));
       toast.success('Credit note updated');
     } else {
-      const cnNum = `CN-${Date.now().toString(36).toUpperCase()}`;
+      const cnNum = await getNextTransactionNumber(organizationId!, 'CN', 'CN');
       const { data: cn, error } = await supabase.from('ar_credit_notes').insert({
         credit_note_number: cnNum, customer_id: form.customer_id, invoice_id: form.invoice_id || null,
         credit_date: form.credit_date, subtotal, total_amount: subtotal, reason: form.reason || null, organization_id: organizationId,

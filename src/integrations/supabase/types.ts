@@ -4517,6 +4517,38 @@ export type Database = {
           },
         ]
       }
+      transaction_counters: {
+        Row: {
+          document_type: string
+          id: string
+          last_number: number
+          organization_id: string
+          prefix: string
+        }
+        Insert: {
+          document_type: string
+          id?: string
+          last_number?: number
+          organization_id: string
+          prefix: string
+        }
+        Update: {
+          document_type?: string
+          id?: string
+          last_number?: number
+          organization_id?: string
+          prefix?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_counters_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4854,6 +4886,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      next_transaction_number: {
+        Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
+        Returns: string
       }
       run_three_way_match: { Args: { p_invoice_id: string }; Returns: string }
     }

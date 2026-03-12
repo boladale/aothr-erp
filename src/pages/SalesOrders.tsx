@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -78,7 +79,7 @@ export default function SalesOrders() {
       })));
       toast.success('Sales Order updated');
     } else {
-      const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
+      const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
       const { data: so, error } = await supabase.from('sales_orders').insert({
         order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
         subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
@@ -112,7 +113,7 @@ export default function SalesOrders() {
 
   const handleCreateDelivery = async () => {
     if (!dnLocationId) return toast.error('Select a location');
-    const dnNumber = `DN-${Date.now().toString(36).toUpperCase()}`;
+    const dnNumber = await getNextTransactionNumber(organizationId!, 'DN', 'DN');
     const { data: dn, error } = await supabase.from('delivery_notes').insert({
       dn_number: dnNumber, order_id: detailOrder.id, customer_id: detailOrder.customer_id,
       location_id: dnLocationId, created_by: user?.id, organization_id: organizationId,

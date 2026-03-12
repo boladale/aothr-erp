@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -116,7 +117,7 @@ export default function ARReceipts() {
       await supabase.from('ar_receipt_allocations').insert(allocInserts);
       toast.success('Receipt updated');
     } else {
-      const recNum = `REC-${Date.now().toString(36).toUpperCase()}`;
+      const recNum = await getNextTransactionNumber(organizationId!, 'REC', 'REC');
       const { data: rec, error } = await supabase.from('ar_receipts').insert({
         receipt_number: recNum, customer_id: form.customer_id, receipt_date: form.receipt_date,
         total_amount: totalAllocated, payment_method: form.payment_method,

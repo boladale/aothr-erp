@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ export default function SalesQuotations() {
       })));
       toast.success('Quotation updated');
     } else {
-      const qNum = `SQ-${Date.now().toString(36).toUpperCase()}`;
+      const qNum = await getNextTransactionNumber(organizationId!, 'SQ', 'SQ');
       const { data: q, error } = await supabase.from('sales_quotations').insert({
         quotation_number: qNum, customer_id: form.customer_id, valid_until: form.valid_until || null,
         notes: form.notes || null, subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
@@ -95,7 +96,7 @@ export default function SalesQuotations() {
   const handleConvertToSO = async (q: any) => {
     const { data: qLines } = await supabase.from('sales_quotation_lines').select('*').eq('quotation_id', q.id);
     if (!qLines || qLines.length === 0) return toast.error('No lines to convert');
-    const soNumber = `SO-${Date.now().toString(36).toUpperCase()}`;
+    const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
     const { data: so, error } = await supabase.from('sales_orders').insert({
       order_number: soNumber, customer_id: q.customer_id, quotation_id: q.id,
       subtotal: q.subtotal, tax_amount: q.tax_amount, total_amount: q.total_amount,
