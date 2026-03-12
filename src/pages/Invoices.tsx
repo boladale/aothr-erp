@@ -87,13 +87,15 @@ export default function Invoices() {
 
   const fetchData = async () => {
     try {
-      const [invoicesRes, posRes] = await Promise.all([
+      const [invoicesRes, posRes, glRes] = await Promise.all([
         supabase.from('ap_invoices').select('*, vendors(*), purchase_orders(po_number)').order('created_at', { ascending: false }),
         supabase.from('purchase_orders').select('*, vendors(id, name)').in('status', ['partially_received', 'fully_received']).order('po_number'),
+        supabase.from('gl_accounts').select('id, account_code, account_name, account_type').eq('is_header', false).eq('is_active', true).order('account_code'),
       ]);
 
       setInvoices((invoicesRes.data || []) as InvoiceWithDetails[]);
       setReceivedPOs((posRes.data || []) as POWithVendor[]);
+      setGLAccounts((glRes.data || []) as GLAccount[]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
