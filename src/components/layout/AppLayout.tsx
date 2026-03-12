@@ -39,6 +39,7 @@ import {
   FileCheck,
   Percent,
   BookOpenCheck,
+  PackageMinus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
