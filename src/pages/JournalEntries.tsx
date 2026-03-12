@@ -25,7 +25,7 @@ interface JournalLine {
 }
 
 export default function JournalEntries() {
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable') || hasRole('ap_clerk');
   const [entries, setEntries] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
