@@ -193,10 +193,25 @@ export default function BankReconciliation() {
                   {selectedBank && (
                     <Card>
                       <CardHeader className="py-3">
-                        <CardTitle className="text-sm flex justify-between">
+                        <CardTitle className="text-sm flex justify-between items-center">
                           <span>Unreconciled Transactions</span>
-                          <span className="text-muted-foreground">{checkedTxns.size} selected • {formatCurrency(reconciledTotal)}</span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAiSuggest}
+                              disabled={aiLoading || transactions.length === 0}
+                              className="text-xs"
+                            >
+                              {aiLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                              AI Match
+                            </Button>
+                            <span className="text-muted-foreground">{checkedTxns.size} selected • {formatCurrency(reconciledTotal)}</span>
+                          </div>
                         </CardTitle>
+                        {aiReasoning && (
+                          <p className="text-xs text-muted-foreground mt-1 bg-primary/5 p-2 rounded">{aiReasoning}</p>
+                        )}
                       </CardHeader>
                       <CardContent>
                         {transactions.length === 0 ? (
