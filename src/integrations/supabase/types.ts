@@ -1576,6 +1576,7 @@ export type Database = {
           normal_balance: string
           organization_id: string | null
           parent_id: string | null
+          status: string
           updated_at: string
         }
         Insert: {
@@ -1590,6 +1591,7 @@ export type Database = {
           normal_balance?: string
           organization_id?: string | null
           parent_id?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -1604,6 +1606,7 @@ export type Database = {
           normal_balance?: string
           organization_id?: string | null
           parent_id?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -4873,6 +4876,10 @@ export type Database = {
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      gl_account_has_transactions: {
+        Args: { p_account_id: string }
+        Returns: boolean
       }
       gl_carry_forward_balances: {
         Args: { p_from_year: number; p_to_year: number }
