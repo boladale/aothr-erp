@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, CheckCircle } from 'lucide-react';
+import { Plus, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
@@ -45,6 +45,8 @@ export default function BankReconciliation() {
   const [stmtEndDate, setStmtEndDate] = useState('');
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [checkedTxns, setCheckedTxns] = useState<Set<string>>(new Set());
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiReasoning, setAiReasoning] = useState('');
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -81,6 +83,41 @@ export default function BankReconciliation() {
   const reconciledTotal = transactions
     .filter(t => checkedTxns.has(t.id))
     .reduce((s, t) => s + t.amount, 0);
+
+  const handleAiSuggest = async () => {
+    if (!selectedBank || transactions.length === 0) {
+      toast.error('Select a bank account with unreconciled transactions first');
+      return;
+    }
+    setAiLoading(true);
+    setAiReasoning('');
+    try {
+      const bank = bankAccounts.find(b => b.id === selectedBank);
+      const resp = await supabase.functions.invoke('ai-reconcile', {
+        body: {
+          transactions,
+          statementEndBalance: parseFloat(stmtEndBalance) || 0,
+          glBalance: bank?.current_balance || 0,
+          statementStartDate: stmtStartDate,
+          statementEndDate: stmtEndDate,
+        }
+      });
+      if (resp.error) throw resp.error;
+      const data = resp.data as { suggestedIds?: string[]; reasoning?: string; error?: string };
+      if (data.error) { toast.error(data.error); return; }
+      if (data.suggestedIds && data.suggestedIds.length > 0) {
+        setCheckedTxns(new Set(data.suggestedIds));
+        setAiReasoning(data.reasoning || '');
+        toast.success(`AI suggested ${data.suggestedIds.length} transaction(s)`);
+      } else {
+        toast.info(data.reasoning || 'AI could not find matching transactions');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'AI reconciliation failed');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleReconcile = async () => {
     if (!selectedBank || !stmtEndBalance || !stmtStartDate || !stmtEndDate) {
@@ -156,10 +193,25 @@ export default function BankReconciliation() {
                   {selectedBank && (
                     <Card>
                       <CardHeader className="py-3">
-                        <CardTitle className="text-sm flex justify-between">
+                        <CardTitle className="text-sm flex justify-between items-center">
                           <span>Unreconciled Transactions</span>
-                          <span className="text-muted-foreground">{checkedTxns.size} selected • {formatCurrency(reconciledTotal)}</span>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleAiSuggest}
+                              disabled={aiLoading || transactions.length === 0}
+                              className="text-xs"
+                            >
+                              {aiLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1" />}
+                              AI Match
+                            </Button>
+                            <span className="text-muted-foreground">{checkedTxns.size} selected • {formatCurrency(reconciledTotal)}</span>
+                          </div>
                         </CardTitle>
+                        {aiReasoning && (
+                          <p className="text-xs text-muted-foreground mt-1 bg-primary/5 p-2 rounded">{aiReasoning}</p>
+                        )}
                       </CardHeader>
                       <CardContent>
                         {transactions.length === 0 ? (
