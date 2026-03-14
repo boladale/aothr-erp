@@ -45,6 +45,8 @@ export default function BankReconciliation() {
   const [stmtEndDate, setStmtEndDate] = useState('');
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [checkedTxns, setCheckedTxns] = useState<Set<string>>(new Set());
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiReasoning, setAiReasoning] = useState('');
 
   useEffect(() => { fetchAll(); }, []);
 
