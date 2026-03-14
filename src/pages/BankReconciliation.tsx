@@ -84,6 +84,41 @@ export default function BankReconciliation() {
     .filter(t => checkedTxns.has(t.id))
     .reduce((s, t) => s + t.amount, 0);
 
+  const handleAiSuggest = async () => {
+    if (!selectedBank || transactions.length === 0) {
+      toast.error('Select a bank account with unreconciled transactions first');
+      return;
+    }
+    setAiLoading(true);
+    setAiReasoning('');
+    try {
+      const bank = bankAccounts.find(b => b.id === selectedBank);
+      const resp = await supabase.functions.invoke('ai-reconcile', {
+        body: {
+          transactions,
+          statementEndBalance: parseFloat(stmtEndBalance) || 0,
+          glBalance: bank?.current_balance || 0,
+          statementStartDate: stmtStartDate,
+          statementEndDate: stmtEndDate,
+        }
+      });
+      if (resp.error) throw resp.error;
+      const data = resp.data as { suggestedIds?: string[]; reasoning?: string; error?: string };
+      if (data.error) { toast.error(data.error); return; }
+      if (data.suggestedIds && data.suggestedIds.length > 0) {
+        setCheckedTxns(new Set(data.suggestedIds));
+        setAiReasoning(data.reasoning || '');
+        toast.success(`AI suggested ${data.suggestedIds.length} transaction(s)`);
+      } else {
+        toast.info(data.reasoning || 'AI could not find matching transactions');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'AI reconciliation failed');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleReconcile = async () => {
     if (!selectedBank || !stmtEndBalance || !stmtStartDate || !stmtEndDate) {
       toast.error('Fill all reconciliation fields'); return;
