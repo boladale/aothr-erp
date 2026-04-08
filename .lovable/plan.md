@@ -1,23 +1,47 @@
 
-## Workflow Engine Implementation
+# ERP Enhancement Plan
 
-### Phase 1: Database Schema
-Create tables to define workflows:
-- **`workflows`** — defines a workflow per entity type (e.g., Purchase Orders, Vendors, Invoices)
-- **`workflow_states`** — the statuses/steps in each workflow (e.g., Draft, Pending Approval, Approved, Sent, Closed)
-- **`workflow_transitions`** — allowed transitions between states with conditions (e.g., Draft → Pending Approval requires "submit" action)
-- **`workflow_auto_actions`** — auto-actions triggered on state entry (e.g., send notification, update field)
+## Feature 1: Recurring Journal Entries
+**Database:**
+- `gl_recurring_entries` — template header: name, frequency (monthly/quarterly/yearly), next_run_date, gl_account mappings, active/inactive
+- `gl_recurring_entry_lines` — template lines: account_id, debit, credit, description
 
-### Phase 2: Workflow Configuration UI
-- **Workflow list page** (`/workflows`) — shows all configured workflows grouped by entity type
-- **Workflow detail/editor** — visual representation of states and transitions, ability to add/edit/remove states, define transition conditions (role required, amount thresholds), and configure auto-actions (notifications, escalations)
+**UI:**
+- Recurring entries list page under Finance menu
+- Create/edit recurring template form
+- "Generate Now" button to manually trigger entry creation
+- Auto-generation based on schedule (checked on page load or via cron-like logic)
 
-### Phase 3: Integration
-- Wire existing approval engine to use workflow definitions
-- Status transitions on POs, Vendors, Invoices check workflow_transitions table for allowed moves
-- Auto-actions fire on state changes
+---
 
-### Scope for now
-- Database tables + seed default workflows for existing entities (Vendors, POs, Invoices, Requisitions, GRN)
-- Visual workflow configuration page with state/transition management
-- Keep existing approval rules working alongside
+## Feature 2: Period-End Closing
+**Database:**
+- `gl_closing_entries` — tracks year-end closing runs: fiscal_year, journal_entry_id, status
+- Database function `run_period_close(fiscal_year)` that:
+  1. Sums all Revenue & Expense account balances for the year
+  2. Creates a closing journal entry (DR Revenue, CR Expense, net to Retained Earnings)
+  3. Marks the fiscal year periods as "closed"
+
+**UI:**
+- "Close Period" button on the Fiscal Periods page
+- Confirmation dialog showing P&L summary before closing
+- Visual indicator for closed years
+
+---
+
+## Feature 3: Bank Statement Import
+**Database:**
+- No new tables needed — imports create `bank_transactions` records
+
+**UI:**
+- Import button on Bank Reconciliation page
+- CSV upload with column mapping (date, description, amount, reference)
+- Preview imported rows before confirming
+- Support for common CSV formats (date, description, debit/credit or amount)
+
+---
+
+## Implementation Order
+1. Recurring Journal Entries (schema + UI)
+2. Period-End Closing (schema + function + UI)
+3. Bank Statement Import (UI only, uses existing tables)
