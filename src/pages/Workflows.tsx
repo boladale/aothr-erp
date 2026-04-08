@@ -247,11 +247,12 @@ export default function Workflows() {
       <PageHeader
         title="Workflow Engine"
         description="Define and manage document lifecycle workflows, states, and transitions"
-      >
-        <Button onClick={() => setShowCreateWorkflow(true)}>
-          <Plus className="h-4 w-4 mr-1" /> New Workflow
-        </Button>
-      </PageHeader>
+        actions={
+          <Button onClick={() => setShowCreateWorkflow(true)}>
+            <Plus className="h-4 w-4 mr-1" /> New Workflow
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <div className="space-y-4">
