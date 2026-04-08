@@ -1,6 +1,7 @@
 /**
- * CSV + Print/PDF export utilities
+ * CSV + XLSX + Print/PDF export utilities
  */
+import * as XLSX from 'xlsx';
 
 /** Convert array of objects to CSV string and trigger download */
 export function exportToCSV(data: Record<string, any>[], filename: string) {
@@ -28,8 +29,36 @@ export function exportToCSV(data: Record<string, any>[], filename: string) {
   URL.revokeObjectURL(url);
 }
 
+/** Export data to XLSX (Excel) format */
+export function exportToXLSX(data: Record<string, any>[], filename: string, sheetName = 'Sheet1') {
+  if (data.length === 0) return;
+
+  const ws = XLSX.utils.json_to_sheet(data);
+
+  // Auto-size columns
+  const colWidths = Object.keys(data[0]).map(key => {
+    const maxLen = Math.max(
+      key.length,
+      ...data.map(row => String(row[key] ?? '').length)
+    );
+    return { wch: Math.min(maxLen + 2, 40) };
+  });
+  ws['!cols'] = colWidths;
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, `${filename}.xlsx`);
+}
+
 /** Open a print-friendly version of data in a new window */
-export function printReport(title: string, headers: string[], rows: string[][], options?: { subtitle?: string }) {
+export function printReport(title: string, headers: string[], rows: string[][], options?: { subtitle?: string; orgName?: string; logoUrl?: string }) {
+  const logoHtml = options?.logoUrl
+    ? `<img src="${options.logoUrl}" alt="Logo" style="height:40px;margin-bottom:8px;" />`
+    : '';
+  const orgHtml = options?.orgName
+    ? `<div style="font-size:14px;font-weight:600;color:#333;margin-bottom:4px;">${options.orgName}</div>`
+    : '';
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -54,6 +83,8 @@ export function printReport(title: string, headers: string[], rows: string[][], 
 </head>
 <body>
   <div class="header">
+    ${logoHtml}
+    ${orgHtml}
     <h1>${title}</h1>
     ${options?.subtitle ? `<p>${options.subtitle}</p>` : ''}
     <p>Generated: ${new Date().toLocaleString()}</p>
@@ -62,7 +93,7 @@ export function printReport(title: string, headers: string[], rows: string[][], 
     <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.map(row => `<tr>${row.map(c => `<td>${c ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
   </table>
-  <div class="footer">Printed from BizOps ERP</div>
+  <div class="footer">Printed from ERP System</div>
   <script>window.onload = () => window.print();</script>
 </body>
 </html>`;
