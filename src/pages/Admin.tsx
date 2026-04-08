@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
+import { BackupManagementPanel } from '@/components/admin/BackupManagementPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
@@ -257,6 +258,10 @@ export default function Admin() {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="backups" className="gap-2">
+                <HardDrive className="h-4 w-4" /> Backups
+              </TabsTrigger>
+            {isAdmin && (
               <TabsTrigger value="branding" className="gap-2">
                 <Palette className="h-4 w-4" /> Branding
               </TabsTrigger>
@@ -334,6 +339,13 @@ export default function Admin() {
             <TabsContent value="data" className="space-y-4">
               <DataManagementPanel />
             </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="backups" className="space-y-4">
+              <BackupManagementPanel />
+            </TabsContent>
+          )}
           )}
           {isAdmin && (
             <TabsContent value="branding" className="space-y-4">
