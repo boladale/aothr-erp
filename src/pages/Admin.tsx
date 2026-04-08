@@ -347,7 +347,6 @@ export default function Admin() {
               <BackupManagementPanel />
             </TabsContent>
           )}
-          )}
           {isAdmin && (
             <TabsContent value="branding" className="space-y-4">
               <OrganizationBranding />
