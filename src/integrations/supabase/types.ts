@@ -1312,6 +1312,56 @@ export type Database = {
           },
         ]
       }
+      data_backups: {
+        Row: {
+          backup_name: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          organization_id: string | null
+          status: string
+          tables_included: string[]
+        }
+        Insert: {
+          backup_name: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          organization_id?: string | null
+          status?: string
+          tables_included?: string[]
+        }
+        Update: {
+          backup_name?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          organization_id?: string | null
+          status?: string
+          tables_included?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_backups_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_note_lines: {
         Row: {
           dn_id: string
