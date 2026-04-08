@@ -99,10 +99,10 @@ export default function Workflows() {
     queryKey: ["workflows"],
     queryFn: async () => {
       const [wfRes, stRes, trRes, aaRes] = await Promise.all([
-        supabase.from("workflows").select("*").order("entity_type"),
-        supabase.from("workflow_states").select("*").order("state_order"),
-        supabase.from("workflow_transitions").select("*"),
-        supabase.from("workflow_auto_actions").select("*"),
+        (supabase as any).from("workflows").select("*").order("entity_type"),
+        (supabase as any).from("workflow_states").select("*").order("state_order"),
+        (supabase as any).from("workflow_transitions").select("*"),
+        (supabase as any).from("workflow_auto_actions").select("*"),
       ]);
       if (wfRes.error) throw wfRes.error;
       if (stRes.error) throw stRes.error;
