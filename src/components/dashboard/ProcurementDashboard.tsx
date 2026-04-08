@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/currency';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export function ProcurementDashboard() {
   const navigate = useNavigate();
@@ -16,29 +17,17 @@ export function ProcurementDashboard() {
   const isManager = hasRole('admin') || hasRole('procurement_manager');
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState({
-    totalPOs: 0,
-    draftPOs: 0,
-    pendingApprovalPOs: 0,
-    sentPOs: 0,
-    activeVendors: 0,
-    pendingVendors: 0,
-    openRFPs: 0,
-    pendingRequisitions: 0,
+    totalPOs: 0, draftPOs: 0, pendingApprovalPOs: 0, sentPOs: 0,
+    activeVendors: 0, pendingVendors: 0, openRFPs: 0, pendingRequisitions: 0,
   });
   const [recentPOs, setRecentPOs] = useState<any[]>([]);
   const [recentVendors, setRecentVendors] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
-      const [
-        totalPOs, draftPOs, pendingPOs, sentPOs,
-        activeVendors, pendingVendors, openRFPs, pendingReqs,
-        recentPOsRes, recentVendorsRes
-      ] = await Promise.all([
+      const [totalPOs, draftPOs, pendingPOs, sentPOs, activeVendors, pendingVendors, openRFPs, pendingReqs, recentPOsRes, recentVendorsRes] = await Promise.all([
         supabase.from('purchase_orders').select('id', { count: 'exact', head: true }),
         supabase.from('purchase_orders').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
         supabase.from('purchase_orders').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
@@ -52,22 +41,16 @@ export function ProcurementDashboard() {
       ]);
 
       setMetrics({
-        totalPOs: totalPOs.count || 0,
-        draftPOs: draftPOs.count || 0,
-        pendingApprovalPOs: pendingPOs.count || 0,
-        sentPOs: sentPOs.count || 0,
-        activeVendors: activeVendors.count || 0,
-        pendingVendors: pendingVendors.count || 0,
-        openRFPs: openRFPs.count || 0,
-        pendingRequisitions: pendingReqs.count || 0,
+        totalPOs: totalPOs.count || 0, draftPOs: draftPOs.count || 0,
+        pendingApprovalPOs: pendingPOs.count || 0, sentPOs: sentPOs.count || 0,
+        activeVendors: activeVendors.count || 0, pendingVendors: pendingVendors.count || 0,
+        openRFPs: openRFPs.count || 0, pendingRequisitions: pendingReqs.count || 0,
       });
       setRecentPOs((recentPOsRes.data || []).map((po: any) => ({ ...po, vendor: po.vendor as { name: string } | null })));
       setRecentVendors(recentVendorsRes.data || []);
     } catch (error) {
       console.error('Error fetching procurement dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   if (loading) {
@@ -79,18 +62,50 @@ export function ProcurementDashboard() {
     );
   }
 
+  const poStatusData = [
+    { name: 'Draft', value: metrics.draftPOs },
+    { name: 'Pending', value: metrics.pendingApprovalPOs },
+    { name: 'Sent', value: metrics.sentPOs },
+  ];
+
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-foreground">Procurement Overview</h2>
 
       <div className="card-grid">
-        <MetricCard title="Total Purchase Orders" value={metrics.totalPOs} icon={FileText} />
-        <MetricCard title="Active Vendors" value={metrics.activeVendors} icon={Building2} />
-        <MetricCard title="Open RFPs" value={metrics.openRFPs} icon={FileSearch} />
+        <div className="cursor-pointer" onClick={() => navigate('/purchase-orders')}>
+          <MetricCard title="Total Purchase Orders" value={metrics.totalPOs} icon={FileText} />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate('/vendors')}>
+          <MetricCard title="Active Vendors" value={metrics.activeVendors} icon={Building2} />
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate('/rfps')}>
+          <MetricCard title="Open RFPs" value={metrics.openRFPs} icon={FileSearch} />
+        </div>
         {isManager && (
-          <MetricCard title="Pending Approvals" value={metrics.pendingApprovalPOs + metrics.pendingVendors + metrics.pendingRequisitions} icon={AlertCircle} />
+          <div className="cursor-pointer" onClick={() => navigate('/requisitions')}>
+            <MetricCard title="Pending Approvals" value={metrics.pendingApprovalPOs + metrics.pendingVendors + metrics.pendingRequisitions} icon={AlertCircle} />
+          </div>
         )}
       </div>
+
+      {/* PO Status Chart */}
+      {metrics.totalPOs > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">PO Status Breakdown</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={poStatusData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis type="number" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} className="fill-muted-foreground" width={70} />
+                <Tooltip />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Action alerts for managers */}
       {isManager && (metrics.pendingApprovalPOs > 0 || metrics.pendingVendors > 0 || metrics.pendingRequisitions > 0) && (
@@ -132,13 +147,10 @@ export function ProcurementDashboard() {
       )}
 
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent POs */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base">Recent Purchase Orders</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/purchase-orders')}>
-              View All <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/purchase-orders')}>View All <ArrowRight className="ml-1 h-4 w-4" /></Button>
           </CardHeader>
           <CardContent>
             {recentPOs.length === 0 ? (
@@ -162,13 +174,10 @@ export function ProcurementDashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Vendors */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base">Recent Vendors</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/vendors')}>
-              View All <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/vendors')}>View All <ArrowRight className="ml-1 h-4 w-4" /></Button>
           </CardHeader>
           <CardContent>
             {recentVendors.length === 0 ? (
