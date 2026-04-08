@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
   Plus, ArrowRight, Pencil, Trash2, CheckCircle, XCircle,
-  GitBranch, Circle, Settings2, ChevronDown, ChevronUp,
+  GitBranch, Circle, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 interface WorkflowState {
