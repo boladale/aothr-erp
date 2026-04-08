@@ -35,6 +35,7 @@ import {
   BookOpenCheck,
   PackageMinus,
   Bell,
+  GitBranch,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
@@ -91,6 +92,7 @@ export const pathToProgram: Record<string, string> = {
   '/notifications': 'notifications',
   '/approval-rules': 'approval_rules',
   '/user-management': 'user_management',
+  '/workflows': 'workflows',
   '/admin': 'admin',
 };
 
@@ -204,6 +206,7 @@ export const navSections = [
       { path: '/tax-configuration', label: 'Tax Configuration', icon: Percent },
       { path: '/notifications', label: 'Notifications', icon: Bell },
       { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
+      { path: '/workflows', label: 'Workflows', icon: GitBranch },
       { path: '/user-management', label: 'User Management', icon: Shield },
       { path: '/admin', label: 'Admin', icon: Settings },
       { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },

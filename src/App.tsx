@@ -67,6 +67,7 @@ import OrganizationSetup from "./pages/OrganizationSetup";
 import NotFound from "./pages/NotFound";
 import AuditReport from "./pages/AuditReport";
 import AccountStatement from "./pages/AccountStatement";
+import Workflows from "./pages/Workflows";
 
 const queryClient = new QueryClient();
 
@@ -193,6 +194,7 @@ const App = () => (
             <Route path="/audit-report" element={<ProtectedRoute><AuditReport /></ProtectedRoute>} />
             <Route path="/account-statement" element={<ProtectedRoute><AccountStatement /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
