@@ -4855,6 +4855,184 @@ export type Database = {
           },
         ]
       }
+      workflow_auto_actions: {
+        Row: {
+          action_type: string
+          config: Json | null
+          created_at: string
+          id: string
+          transition_id: string
+          trigger_type: string
+        }
+        Insert: {
+          action_type: string
+          config?: Json | null
+          created_at?: string
+          id?: string
+          transition_id: string
+          trigger_type?: string
+        }
+        Update: {
+          action_type?: string
+          config?: Json | null
+          created_at?: string
+          id?: string
+          transition_id?: string
+          trigger_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_auto_actions_transition_id_fkey"
+            columns: ["transition_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_transitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_states: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_initial: boolean | null
+          is_terminal: boolean | null
+          state_label: string
+          state_name: string
+          state_order: number
+          workflow_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_initial?: boolean | null
+          is_terminal?: boolean | null
+          state_label: string
+          state_name: string
+          state_order?: number
+          workflow_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_initial?: boolean | null
+          is_terminal?: boolean | null
+          state_label?: string
+          state_name?: string
+          state_order?: number
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_states_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_transitions: {
+        Row: {
+          action_label: string
+          conditions: Json | null
+          created_at: string
+          from_state_id: string
+          id: string
+          required_role: string | null
+          requires_approval: boolean | null
+          to_state_id: string
+          workflow_id: string
+        }
+        Insert: {
+          action_label: string
+          conditions?: Json | null
+          created_at?: string
+          from_state_id: string
+          id?: string
+          required_role?: string | null
+          requires_approval?: boolean | null
+          to_state_id: string
+          workflow_id: string
+        }
+        Update: {
+          action_label?: string
+          conditions?: Json | null
+          created_at?: string
+          from_state_id?: string
+          id?: string
+          required_role?: string | null
+          requires_approval?: boolean | null
+          to_state_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_transitions_from_state_id_fkey"
+            columns: ["from_state_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_transitions_to_state_id_fkey"
+            columns: ["to_state_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_states"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_transitions_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflows: {
+        Row: {
+          created_at: string
+          description: string | null
+          entity_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          entity_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          entity_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflows_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
