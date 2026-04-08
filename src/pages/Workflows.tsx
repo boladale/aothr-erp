@@ -175,7 +175,7 @@ export default function Workflows() {
 
   const updateStateMutation = useMutation({
     mutationFn: async (data: WorkflowState) => {
-      const { id, _workflow_id, ...rest } = data;
+      const { id, workflow_id: _, ...rest } = data;
       const { error } = await (supabase as any).from("workflow_states").update(rest).eq("id", id);
       if (error) throw error;
     },
@@ -215,7 +215,7 @@ export default function Workflows() {
 
   const updateTransitionMutation = useMutation({
     mutationFn: async (data: WorkflowTransition) => {
-      const { id, _workflow_id, ...rest } = data;
+      const { id, workflow_id: _, ...rest } = data;
       const { error } = await (supabase as any).from("workflow_transitions").update(rest).eq("id", id);
       if (error) throw error;
     },
