@@ -36,6 +36,7 @@ import {
   PackageMinus,
   Bell,
   GitBranch,
+  Repeat,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
@@ -93,6 +94,7 @@ export const pathToProgram: Record<string, string> = {
   '/approval-rules': 'approval_rules',
   '/user-management': 'user_management',
   '/workflows': 'workflows',
+  '/recurring-entries': 'recurring_entries',
   '/admin': 'admin',
 };
 
@@ -142,6 +144,7 @@ export const navSections = [
       { path: '/journal-entries', label: 'Journal Entries', icon: Calculator },
       { path: '/financial-reports', label: 'Financial Reports', icon: PieChart },
       { path: '/fiscal-periods', label: 'Fiscal Periods', icon: Calendar },
+      { path: '/recurring-entries', label: 'Recurring Entries', icon: Repeat },
       { path: '/audit-report', label: 'Audit Report', icon: FileSearch },
       { path: '/account-statement', label: 'Statement of Account', icon: FileText },
     ],

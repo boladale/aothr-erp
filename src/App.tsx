@@ -68,6 +68,7 @@ import NotFound from "./pages/NotFound";
 import AuditReport from "./pages/AuditReport";
 import AccountStatement from "./pages/AccountStatement";
 import Workflows from "./pages/Workflows";
+import RecurringEntries from "./pages/RecurringEntries";
 
 const queryClient = new QueryClient();
 
@@ -195,6 +196,7 @@ const App = () => (
             <Route path="/account-statement" element={<ProtectedRoute><AccountStatement /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
+            <Route path="/recurring-entries" element={<ProtectedRoute><RecurringEntries /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
