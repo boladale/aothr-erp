@@ -126,7 +126,7 @@ export default function Workflows() {
 
   const createWorkflowMutation = useMutation({
     mutationFn: async (data: typeof newWorkflow) => {
-      const { error } = await supabase.from("workflows").insert(data);
+      const { error } = await (supabase as any).from("workflows").insert(data);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -140,7 +140,7 @@ export default function Workflows() {
 
   const toggleWorkflowActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
-      const { error } = await supabase.from("workflows").update({ is_active }).eq("id", id);
+      const { error } = await (supabase as any).from("workflows").update({ is_active }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["workflows"] }),
@@ -149,7 +149,7 @@ export default function Workflows() {
 
   const deleteWorkflowMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("workflows").delete().eq("id", id);
+      const { error } = await (supabase as any).from("workflows").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -161,7 +161,7 @@ export default function Workflows() {
 
   const createStateMutation = useMutation({
     mutationFn: async (data: { workflow_id: string } & typeof newState) => {
-      const { error } = await supabase.from("workflow_states").insert(data);
+      const { error } = await (supabase as any).from("workflow_states").insert(data);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -175,8 +175,8 @@ export default function Workflows() {
 
   const updateStateMutation = useMutation({
     mutationFn: async (data: WorkflowState) => {
-      const { id, workflow_id, ...rest } = data;
-      const { error } = await supabase.from("workflow_states").update(rest).eq("id", id);
+      const { id, _workflow_id, ...rest } = data;
+      const { error } = await (supabase as any).from("workflow_states").update(rest).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -189,7 +189,7 @@ export default function Workflows() {
 
   const deleteStateMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("workflow_states").delete().eq("id", id);
+      const { error } = await (supabase as any).from("workflow_states").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -201,7 +201,7 @@ export default function Workflows() {
 
   const createTransitionMutation = useMutation({
     mutationFn: async (data: { workflow_id: string; from_state_id: string; to_state_id: string; action_label: string; required_role: string | null; requires_approval: boolean }) => {
-      const { error } = await supabase.from("workflow_transitions").insert(data);
+      const { error } = await (supabase as any).from("workflow_transitions").insert(data);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -215,8 +215,8 @@ export default function Workflows() {
 
   const updateTransitionMutation = useMutation({
     mutationFn: async (data: WorkflowTransition) => {
-      const { id, workflow_id, ...rest } = data;
-      const { error } = await supabase.from("workflow_transitions").update(rest).eq("id", id);
+      const { id, _workflow_id, ...rest } = data;
+      const { error } = await (supabase as any).from("workflow_transitions").update(rest).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -229,7 +229,7 @@ export default function Workflows() {
 
   const deleteTransitionMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("workflow_transitions").delete().eq("id", id);
+      const { error } = await (supabase as any).from("workflow_transitions").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
