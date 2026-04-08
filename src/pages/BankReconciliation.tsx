@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Plus, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
+import { BankStatementImport } from '@/components/bank/BankStatementImport';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
@@ -165,10 +166,18 @@ export default function BankReconciliation() {
           title="Bank Reconciliation"
           description="Match bank statement entries against GL transactions"
           actions={canManage ? (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Reconciliation</Button>
-              </DialogTrigger>
+            <div className="flex gap-2">
+              {bankAccounts.length > 0 && (
+                <BankStatementImport
+                  bankAccountId={bankAccounts[0]?.id}
+                  bankAccountName={bankAccounts[0]?.account_name}
+                  onImported={fetchAll}
+                />
+              )}
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Reconciliation</Button>
+                </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle>Bank Reconciliation</DialogTitle></DialogHeader>
                 <div className="space-y-4">
