@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, FileText, Pencil } from 'lucide-react';
+import { Plus, Search, FileText, Pencil, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
+import { BulkActionBar } from '@/components/ui/bulk-action-bar';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,8 @@ export default function PurchaseOrders() {
     notes: '',
   });
   const [lines, setLines] = useState<POLine[]>([{ item_id: '', quantity: 1, unit_price: 0 }]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -263,7 +266,35 @@ export default function PurchaseOrders() {
             <Input placeholder="Search POs..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
           </div>
         </div>
-        <DataTable columns={columns} data={filtered} loading={loading} onRowClick={po => navigate(`/purchase-orders/${po.id}`)} emptyMessage="No purchase orders found." />
+        {canApprove && (
+          <BulkActionBar
+            selectedCount={selectedIds.length}
+            onClearSelection={() => setSelectedIds([])}
+            actions={[
+              { label: 'Approve', icon: <CheckCircle className="h-4 w-4 mr-1" />, onClick: async () => {
+                const ids = selectedIds.filter(id => orders.find(o => o.id === id)?.status === 'pending_approval');
+                if (!ids.length) { toast.error('No pending POs selected'); return; }
+                if (!window.confirm(`Approve ${ids.length} POs?`)) return;
+                setBulkProcessing(true);
+                const { error } = await supabase.from('purchase_orders').update({ status: 'approved' as POStatus, approved_by: user?.id, approved_at: new Date().toISOString() }).in('id', ids);
+                if (error) toast.error(error.message); else { toast.success(`${ids.length} POs approved`); setSelectedIds([]); fetchData(); }
+                setBulkProcessing(false);
+              }, disabled: bulkProcessing, variant: 'default' },
+              { label: 'Reject', icon: <XCircle className="h-4 w-4 mr-1" />, onClick: async () => {
+                const ids = selectedIds.filter(id => orders.find(o => o.id === id)?.status === 'pending_approval');
+                if (!ids.length) { toast.error('No pending POs selected'); return; }
+                const reason = window.prompt(`Reject ${ids.length} POs. Reason:`);
+                if (!reason?.trim()) return;
+                setBulkProcessing(true);
+                const { error } = await supabase.from('purchase_orders').update({ status: 'draft' as POStatus, rejection_reason: reason }).in('id', ids);
+                if (error) toast.error(error.message); else { toast.success(`${ids.length} POs rejected`); setSelectedIds([]); fetchData(); }
+                setBulkProcessing(false);
+              }, disabled: bulkProcessing, variant: 'destructive' },
+            ]}
+          />
+        )}
+
+        <DataTable columns={columns} data={filtered} loading={loading} onRowClick={po => navigate(`/purchase-orders/${po.id}`)} emptyMessage="No purchase orders found." selectable={canApprove} selectedIds={selectedIds} onSelectionChange={setSelectedIds} />
 
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">

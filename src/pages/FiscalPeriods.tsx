@@ -3,28 +3,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Lock, Unlock, BookOpen, CalendarCheck, ArrowRight, Plus } from 'lucide-react';
+import { Lock, Unlock, BookOpen, CalendarCheck, ArrowRight, Plus, CheckCircle, AlertTriangle, Loader2, Play } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GeneratePeriodsDialog } from '@/components/fiscal/GeneratePeriodsDialog';
+import { Checkbox } from '@/components/ui/checkbox';
+
+interface ClosingCheck {
+  label: string;
+  status: 'pass' | 'warn' | 'fail' | 'loading';
+  detail: string;
+}
 
 export default function FiscalPeriods() {
   const { hasRole } = useAuth();
@@ -44,6 +40,15 @@ export default function FiscalPeriods() {
 
   // Generate periods dialog
   const [genOpen, setGenOpen] = useState(false);
+
+  // Automated period-end wizard
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardYear, setWizardYear] = useState<string>('');
+  const [wizardStep, setWizardStep] = useState(0); // 0=select, 1=checklist, 2=running, 3=done
+  const [checks, setChecks] = useState<ClosingCheck[]>([]);
+  const [wizardOptions, setWizardOptions] = useState({ closePeriods: true, yearEndClose: true, carryForward: true });
+  const [wizardLog, setWizardLog] = useState<string[]>([]);
+
   useEffect(() => { fetchPeriods(); }, []);
 
   const fetchPeriods = async () => {
@@ -72,16 +77,10 @@ export default function FiscalPeriods() {
     try {
       const { data, error } = await supabase.rpc('gl_period_end_summary', { p_period_id: periodId });
       if (error) throw error;
-      if (data) {
-        toast.success(`Period-end summary created for ${periodName}`);
-      } else {
-        toast.info('No activity found for this period — no summary entry created.');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to run period-end summary');
-    } finally {
-      setRunningAction(null);
-    }
+      if (data) toast.success(`Period-end summary created for ${periodName}`);
+      else toast.info('No activity found for this period — no summary entry created.');
+    } catch (err: any) { toast.error(err.message || 'Failed to run period-end summary'); }
+    finally { setRunningAction(null); }
   };
 
   const handleYearEndClose = async () => {
@@ -90,40 +89,154 @@ export default function FiscalPeriods() {
     try {
       const { data, error } = await supabase.rpc('gl_year_end_close', { p_fiscal_year: parseInt(yeYear) });
       if (error) throw error;
-      if (data) {
-        toast.success(`Year-end close completed for FY${yeYear}. Revenue & Expense zeroed into Retained Earnings.`);
-      } else {
-        toast.info('No revenue/expense balances to close for this year.');
-      }
+      if (data) toast.success(`Year-end close completed for FY${yeYear}.`);
+      else toast.info('No revenue/expense balances to close.');
       setYeCloseOpen(false);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to run year-end close');
-    } finally {
-      setRunningAction(null);
-    }
+    } catch (err: any) { toast.error(err.message || 'Failed'); }
+    finally { setRunningAction(null); }
   };
 
   const handleCarryForward = async () => {
     if (!cfFromYear || !cfToYear) return;
     setRunningAction('cf');
     try {
-      const { data, error } = await supabase.rpc('gl_carry_forward_balances', {
-        p_from_year: parseInt(cfFromYear),
-        p_to_year: parseInt(cfToYear),
-      });
+      const { data, error } = await supabase.rpc('gl_carry_forward_balances', { p_from_year: parseInt(cfFromYear), p_to_year: parseInt(cfToYear) });
       if (error) throw error;
-      if (data) {
-        toast.success(`Opening balances created for FY${cfToYear} from FY${cfFromYear}.`);
-      } else {
-        toast.info('No balance sheet balances to carry forward.');
-      }
+      if (data) toast.success(`Opening balances created for FY${cfToYear}.`);
+      else toast.info('No balances to carry forward.');
       setCfOpen(false);
+    } catch (err: any) { toast.error(err.message || 'Failed'); }
+    finally { setRunningAction(null); }
+  };
+
+  // ===== Automated Period-End Wizard =====
+  const startWizard = () => {
+    setWizardOpen(true);
+    setWizardStep(0);
+    setWizardYear('');
+    setChecks([]);
+    setWizardLog([]);
+    setWizardOptions({ closePeriods: true, yearEndClose: true, carryForward: true });
+  };
+
+  const runChecklist = async () => {
+    if (!wizardYear) return;
+    setWizardStep(1);
+    const year = parseInt(wizardYear);
+    const yearPeriods = periods.filter(p => p.fiscal_year === year);
+    const openPeriods = yearPeriods.filter(p => p.status === 'open');
+
+    const newChecks: ClosingCheck[] = [];
+
+    // Check 1: All periods exist
+    newChecks.push({
+      label: 'Fiscal periods exist',
+      status: yearPeriods.length >= 12 ? 'pass' : 'fail',
+      detail: `${yearPeriods.length} periods found`,
+    });
+
+    // Check 2: Draft journal entries
+    const { count: draftCount } = await supabase.from('gl_journal_entries')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'draft')
+      .in('fiscal_period_id', yearPeriods.map(p => p.id));
+    newChecks.push({
+      label: 'No draft journal entries',
+      status: (draftCount || 0) === 0 ? 'pass' : 'warn',
+      detail: draftCount ? `${draftCount} draft entries remain unposted` : 'All entries posted',
+    });
+
+    // Check 3: Open periods to close
+    newChecks.push({
+      label: 'Open periods to close',
+      status: openPeriods.length > 0 ? 'pass' : 'warn',
+      detail: openPeriods.length > 0 ? `${openPeriods.length} open periods will be closed` : 'All periods already closed',
+    });
+
+    // Check 4: Unreconciled bank accounts
+    const { count: unreconCount } = await supabase.from('bank_reconciliations')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'in_progress');
+    newChecks.push({
+      label: 'Bank reconciliations complete',
+      status: (unreconCount || 0) === 0 ? 'pass' : 'warn',
+      detail: unreconCount ? `${unreconCount} reconciliations in progress` : 'All reconciliations complete',
+    });
+
+    // Check 5: Next year periods exist for carry forward
+    const nextYearPeriods = periods.filter(p => p.fiscal_year === year + 1);
+    newChecks.push({
+      label: `FY${year + 1} periods ready for carry-forward`,
+      status: nextYearPeriods.length >= 12 ? 'pass' : 'warn',
+      detail: nextYearPeriods.length >= 12 ? `${nextYearPeriods.length} periods found` : `Only ${nextYearPeriods.length} periods — generate FY${year + 1} periods first if you want carry-forward`,
+    });
+
+    setChecks(newChecks);
+  };
+
+  const runAutomatedClose = async () => {
+    setWizardStep(2);
+    const year = parseInt(wizardYear);
+    const yearPeriods = periods.filter(p => p.fiscal_year === year);
+    const log: string[] = [];
+
+    try {
+      // Step 1: Run period-end summaries for all open periods
+      if (wizardOptions.closePeriods) {
+        const openPeriods = yearPeriods.filter(p => p.status === 'open');
+        for (const period of openPeriods) {
+          log.push(`Running summary for ${period.period_name}...`);
+          setWizardLog([...log]);
+          await supabase.rpc('gl_period_end_summary', { p_period_id: period.id });
+          
+          await supabase.from('gl_fiscal_periods').update({ status: 'closed', closed_at: new Date().toISOString() }).eq('id', period.id);
+          log.push(`✓ ${period.period_name} closed`);
+          setWizardLog([...log]);
+        }
+        if (openPeriods.length === 0) {
+          log.push('ℹ All periods already closed');
+          setWizardLog([...log]);
+        }
+      }
+
+      // Step 2: Year-end close
+      if (wizardOptions.yearEndClose) {
+        log.push(`Running year-end close for FY${year}...`);
+        setWizardLog([...log]);
+        const { data, error } = await supabase.rpc('gl_year_end_close', { p_fiscal_year: year });
+        if (error) throw error;
+        log.push(data ? `✓ Year-end close completed — revenue/expense zeroed to Retained Earnings` : 'ℹ No balances to close');
+        setWizardLog([...log]);
+      }
+
+      // Step 3: Carry forward
+      if (wizardOptions.carryForward) {
+        const nextYearPeriods = periods.filter(p => p.fiscal_year === year + 1);
+        if (nextYearPeriods.length >= 12) {
+          log.push(`Carrying forward balances to FY${year + 1}...`);
+          setWizardLog([...log]);
+          const { data, error } = await supabase.rpc('gl_carry_forward_balances', { p_from_year: year, p_to_year: year + 1 });
+          if (error) throw error;
+          log.push(data ? `✓ Opening balances created for FY${year + 1}` : 'ℹ No balances to carry forward');
+        } else {
+          log.push(`⚠ Skipped carry-forward — FY${year + 1} periods not generated`);
+        }
+        setWizardLog([...log]);
+      }
+
+      log.push('');
+      log.push('🎉 Period-end closing completed successfully!');
+      setWizardLog([...log]);
+      setWizardStep(3);
+      fetchPeriods();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to carry forward balances');
-    } finally {
-      setRunningAction(null);
+      log.push(`✗ Error: ${err.message}`);
+      setWizardLog([...log]);
+      setWizardStep(3);
     }
   };
+
+  const hasFailedChecks = checks.some(c => c.status === 'fail');
 
   return (
     <AppLayout>
@@ -132,8 +245,11 @@ export default function FiscalPeriods() {
           title="Fiscal Periods"
           description="Manage accounting periods, year-end close, and opening balances"
           actions={isAdmin ? (
-            <div className="flex gap-2">
-              <Button onClick={() => setGenOpen(true)}>
+            <div className="flex gap-2 flex-wrap">
+              <Button onClick={startWizard} variant="default">
+                <Play className="h-4 w-4 mr-1" /> Automated Period-End
+              </Button>
+              <Button onClick={() => setGenOpen(true)} variant="outline">
                 <Plus className="h-4 w-4 mr-1" /> Generate Periods
               </Button>
               <Button variant="outline" onClick={() => setYeCloseOpen(true)}>
@@ -175,12 +291,7 @@ export default function FiscalPeriods() {
                           <div className="flex gap-2 justify-end">
                             {p.status === 'open' && (
                               <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  disabled={runningAction === p.id}
-                                  onClick={() => handlePeriodEndSummary(p.id, p.period_name)}
-                                >
+                                <Button variant="outline" size="sm" disabled={runningAction === p.id} onClick={() => handlePeriodEndSummary(p.id, p.period_name)}>
                                   <BookOpen className="h-3 w-3 mr-1" /> Summary
                                 </Button>
                                 <Button variant="outline" size="sm" onClick={() => handleStatusChange(p.id, 'closed')}>
@@ -210,6 +321,101 @@ export default function FiscalPeriods() {
         </Card>
       </div>
 
+      {/* Automated Period-End Wizard */}
+      <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Automated Period-End Closing</DialogTitle>
+            <DialogDescription>
+              {wizardStep === 0 && 'Select the fiscal year to close. The system will run pre-flight checks and execute all closing steps automatically.'}
+              {wizardStep === 1 && 'Review the pre-flight checklist before proceeding.'}
+              {wizardStep === 2 && 'Period-end close is running...'}
+              {wizardStep === 3 && 'Period-end close completed.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {wizardStep === 0 && (
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-sm font-medium text-foreground">Fiscal Year</label>
+                <Select value={wizardYear} onValueChange={setWizardYear}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select year" /></SelectTrigger>
+                  <SelectContent>
+                    {fiscalYears.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground">Steps to execute</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={wizardOptions.closePeriods} onCheckedChange={(v) => setWizardOptions(o => ({ ...o, closePeriods: !!v }))} />
+                    Close all open periods (summary + close)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={wizardOptions.yearEndClose} onCheckedChange={(v) => setWizardOptions(o => ({ ...o, yearEndClose: !!v }))} />
+                    Year-end close (zero revenue/expense → Retained Earnings)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={wizardOptions.carryForward} onCheckedChange={(v) => setWizardOptions(o => ({ ...o, carryForward: !!v }))} />
+                    Carry forward opening balances to next year
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {wizardStep === 1 && (
+            <div className="space-y-3 py-2">
+              {checks.map((check, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg border">
+                  {check.status === 'pass' && <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />}
+                  {check.status === 'warn' && <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 shrink-0" />}
+                  {check.status === 'fail' && <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />}
+                  {check.status === 'loading' && <Loader2 className="h-5 w-5 animate-spin mt-0.5 shrink-0" />}
+                  <div>
+                    <p className="text-sm font-medium">{check.label}</p>
+                    <p className="text-xs text-muted-foreground">{check.detail}</p>
+                  </div>
+                </div>
+              ))}
+              {hasFailedChecks && (
+                <p className="text-sm text-destructive">Some checks failed. Please resolve issues before proceeding.</p>
+              )}
+            </div>
+          )}
+
+          {(wizardStep === 2 || wizardStep === 3) && (
+            <div className="space-y-1 py-2 font-mono text-xs bg-muted/50 rounded-lg p-4 max-h-60 overflow-y-auto">
+              {wizardLog.map((line, i) => (
+                <p key={i} className={line.startsWith('✓') ? 'text-green-600' : line.startsWith('✗') ? 'text-destructive' : line.startsWith('⚠') ? 'text-yellow-600' : ''}>{line}</p>
+              ))}
+              {wizardStep === 2 && <Loader2 className="h-4 w-4 animate-spin mt-2" />}
+            </div>
+          )}
+
+          <DialogFooter>
+            {wizardStep === 0 && (
+              <>
+                <Button variant="outline" onClick={() => setWizardOpen(false)}>Cancel</Button>
+                <Button onClick={runChecklist} disabled={!wizardYear}>Run Pre-Flight Checks</Button>
+              </>
+            )}
+            {wizardStep === 1 && (
+              <>
+                <Button variant="outline" onClick={() => setWizardStep(0)}>Back</Button>
+                <Button onClick={runAutomatedClose} disabled={hasFailedChecks}>
+                  Execute Period-End Close
+                </Button>
+              </>
+            )}
+            {wizardStep === 3 && (
+              <Button onClick={() => setWizardOpen(false)}>Done</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Year-End Close Dialog */}
       <Dialog open={yeCloseOpen} onOpenChange={setYeCloseOpen}>
         <DialogContent>
@@ -222,14 +428,8 @@ export default function FiscalPeriods() {
           <div className="py-4">
             <label className="text-sm font-medium text-foreground">Fiscal Year</label>
             <Select value={yeYear} onValueChange={setYeYear}>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select fiscal year" />
-              </SelectTrigger>
-              <SelectContent>
-                {fiscalYears.map(y => (
-                  <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                ))}
-              </SelectContent>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Select fiscal year" /></SelectTrigger>
+              <SelectContent>{fiscalYears.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <DialogFooter>
@@ -246,35 +446,21 @@ export default function FiscalPeriods() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Carry Forward Opening Balances</DialogTitle>
-            <DialogDescription>
-              Creates opening balance journal entries for the new fiscal year using the closing balances of all Balance Sheet accounts (Assets, Liabilities, Equity) from the prior year. Year-end close must be completed first.
-            </DialogDescription>
+            <DialogDescription>Creates opening balance journal entries for the new fiscal year using the closing balances from the prior year.</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
               <label className="text-sm font-medium text-foreground">From Year</label>
               <Select value={cfFromYear} onValueChange={setCfFromYear}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Source year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fiscalYears.map(y => (
-                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Source year" /></SelectTrigger>
+                <SelectContent>{fiscalYears.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-sm font-medium text-foreground">To Year</label>
               <Select value={cfToYear} onValueChange={setCfToYear}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Target year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fiscalYears.map(y => (
-                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                  ))}
-                </SelectContent>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Target year" /></SelectTrigger>
+                <SelectContent>{fiscalYears.map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
@@ -286,13 +472,8 @@ export default function FiscalPeriods() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Generate Periods Dialog */}
-      <GeneratePeriodsDialog
-        open={genOpen}
-        onOpenChange={setGenOpen}
-        existingYears={fiscalYears}
-        onGenerated={fetchPeriods}
-      />
+
+      <GeneratePeriodsDialog open={genOpen} onOpenChange={setGenOpen} existingYears={fiscalYears} onGenerated={fetchPeriods} />
     </AppLayout>
   );
 }

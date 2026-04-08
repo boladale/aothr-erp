@@ -12,9 +12,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Trash2, Send, Pencil } from 'lucide-react';
+import { Plus, Trash2, Send, Pencil, CheckCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
+import { BulkActionBar } from '@/components/ui/bulk-action-bar';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface JournalLine { account_id: string; debit: number; credit: number; description: string; }
 
@@ -32,6 +34,8 @@ export default function JournalEntries() {
     { account_id: '', debit: 0, credit: 0, description: '' },
     { account_id: '', debit: 0, credit: 0, description: '' },
   ]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -115,11 +119,35 @@ export default function JournalEntries() {
     toast.success('Journal entry posted'); fetchData();
   };
 
+  const handleBulkPost = async () => {
+    const draftIds = selectedIds.filter(id => entries.find((e: any) => e.id === id)?.status === 'draft');
+    if (!draftIds.length) { toast.error('No draft entries selected'); return; }
+    if (!window.confirm(`Post ${draftIds.length} journal entries?`)) return;
+    setBulkProcessing(true);
+    const { error } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).in('id', draftIds);
+    if (error) toast.error(error.message); else { toast.success(`${draftIds.length} entries posted`); setSelectedIds([]); fetchData(); }
+    setBulkProcessing(false);
+  };
+
+  const draftEntries = entries.filter((e: any) => e.status === 'draft');
+  const allDraftSelected = draftEntries.length > 0 && draftEntries.every((e: any) => selectedIds.includes(e.id));
+  const someDraftSelected = draftEntries.some((e: any) => selectedIds.includes(e.id));
+
   return (
     <AppLayout>
       <div className="page-container">
         <PageHeader title="Journal Entries" description="Record and manage general ledger transactions"
           actions={canManage ? <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New Entry</Button> : undefined} />
+
+        {canManage && (
+          <BulkActionBar
+            selectedCount={selectedIds.length}
+            onClearSelection={() => setSelectedIds([])}
+            actions={[
+              { label: 'Post All', icon: <CheckCircle className="h-4 w-4 mr-1" />, onClick: handleBulkPost, disabled: bulkProcessing, variant: 'default' },
+            ]}
+          />
+        )}
 
         <Card>
           <CardContent className="p-0">
@@ -131,6 +159,17 @@ export default function JournalEntries() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
+                    {canManage && (
+                      <th className="px-4 py-3 w-10">
+                        <Checkbox
+                          checked={allDraftSelected ? true : someDraftSelected ? 'indeterminate' : false}
+                          onCheckedChange={() => {
+                            if (allDraftSelected) setSelectedIds(selectedIds.filter(id => !draftEntries.find((e: any) => e.id === id)));
+                            else setSelectedIds([...new Set([...selectedIds, ...draftEntries.map((e: any) => e.id)])]);
+                          }}
+                        />
+                      </th>
+                    )}
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Entry #</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Description</th>
@@ -143,7 +182,20 @@ export default function JournalEntries() {
                 </thead>
                 <tbody className="divide-y">
                   {entries.map((e: any) => (
-                    <tr key={e.id} className="hover:bg-muted/50">
+                    <tr key={e.id} className={`hover:bg-muted/50 ${selectedIds.includes(e.id) ? 'bg-primary/5' : ''}`}>
+                      {canManage && (
+                        <td className="px-4 py-3">
+                          {e.status === 'draft' && (
+                            <Checkbox
+                              checked={selectedIds.includes(e.id)}
+                              onCheckedChange={() => {
+                                if (selectedIds.includes(e.id)) setSelectedIds(selectedIds.filter(i => i !== e.id));
+                                else setSelectedIds([...selectedIds, e.id]);
+                              }}
+                            />
+                          )}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-sm font-mono">{e.entry_number}</td>
                       <td className="px-4 py-3 text-sm">{e.entry_date}</td>
                       <td className="px-4 py-3 text-sm">{e.description}</td>

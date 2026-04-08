@@ -10,14 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/currency';
 import { supabase } from '@/integrations/supabase/client';
 import { Landmark, ArrowRightLeft, Scale, TrendingUp, ArrowRight } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function CashDashboardPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({
-    totalAccounts: 0, totalBalance: 0,
-    pendingTransfers: 0, pendingReconciliations: 0,
-  });
+  const [metrics, setMetrics] = useState({ totalAccounts: 0, totalBalance: 0, pendingTransfers: 0, pendingReconciliations: 0 });
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [recentTransfers, setRecentTransfers] = useState<any[]>([]);
 
@@ -34,12 +32,7 @@ export default function CashDashboardPage() {
       ]);
       const accts = accounts.data || [];
       const totalBal = accts.reduce((sum: number, a: any) => sum + (a.current_balance || 0), 0);
-      setMetrics({
-        totalAccounts: accts.length,
-        totalBalance: totalBal,
-        pendingTransfers: pendingTransfers.count || 0,
-        pendingReconciliations: pendingRecon.count || 0,
-      });
+      setMetrics({ totalAccounts: accts.length, totalBalance: totalBal, pendingTransfers: pendingTransfers.count || 0, pendingReconciliations: pendingRecon.count || 0 });
       setBankAccounts(accts);
       setRecentTransfers(transfersRes.data || []);
     } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -55,11 +48,29 @@ export default function CashDashboardPage() {
         ) : (
           <>
             <div className="card-grid">
-              <MetricCard title="Bank Accounts" value={metrics.totalAccounts} icon={Landmark} />
+              <div className="cursor-pointer" onClick={() => navigate('/bank-accounts')}><MetricCard title="Bank Accounts" value={metrics.totalAccounts} icon={Landmark} /></div>
               <MetricCard title="Total Balance" value={formatCurrency(metrics.totalBalance)} icon={TrendingUp} />
-              <MetricCard title="Pending Transfers" value={metrics.pendingTransfers} icon={ArrowRightLeft} />
-              <MetricCard title="Open Reconciliations" value={metrics.pendingReconciliations} icon={Scale} />
+              <div className="cursor-pointer" onClick={() => navigate('/fund-transfers')}><MetricCard title="Pending Transfers" value={metrics.pendingTransfers} icon={ArrowRightLeft} /></div>
+              <div className="cursor-pointer" onClick={() => navigate('/bank-reconciliation')}><MetricCard title="Open Reconciliations" value={metrics.pendingReconciliations} icon={Scale} /></div>
             </div>
+
+            {/* Bank Account Balances Chart */}
+            {bankAccounts.length > 0 && (
+              <Card>
+                <CardHeader><CardTitle className="text-base">Account Balances</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={bankAccounts.map((a: any) => ({ name: a.account_name, balance: a.current_balance || 0 }))}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                      <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                      <Bar dataKey="balance" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
@@ -73,7 +84,7 @@ export default function CashDashboardPage() {
                   ) : (
                     <div className="space-y-3">
                       {bankAccounts.map((a: any) => (
-                        <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div key={a.id} className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50" onClick={() => navigate('/bank-accounts')}>
                           <div>
                             <p className="text-sm font-medium">{a.account_name}</p>
                             <p className="text-xs text-muted-foreground">{a.account_code}</p>
@@ -97,7 +108,7 @@ export default function CashDashboardPage() {
                   ) : (
                     <div className="space-y-3">
                       {recentTransfers.map((t: any) => (
-                        <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div key={t.id} className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted/50" onClick={() => navigate('/fund-transfers')}>
                           <div>
                             <p className="text-sm font-medium">{t.transfer_number}</p>
                             <p className="text-xs text-muted-foreground">{(t.from_bank as any)?.account_name} → {(t.to_bank as any)?.account_name}</p>
