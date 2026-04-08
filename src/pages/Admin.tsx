@@ -261,6 +261,7 @@ export default function Admin() {
               <TabsTrigger value="backups" className="gap-2">
                 <HardDrive className="h-4 w-4" /> Backups
               </TabsTrigger>
+            )}
             {isAdmin && (
               <TabsTrigger value="branding" className="gap-2">
                 <Palette className="h-4 w-4" /> Branding
