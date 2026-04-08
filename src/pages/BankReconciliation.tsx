@@ -265,6 +265,7 @@ export default function BankReconciliation() {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           ) : undefined}
         />
 
