@@ -65,7 +65,7 @@ export default function RecurringEntries() {
 
   const fetchData = async () => {
     const [entriesRes, accountsRes] = await Promise.all([
-      supabase.from('gl_recurring_entries').select('*').order('created_at', { ascending: false }),
+      supabase.from('gl_recurring_entries' as any).select('*').order('created_at', { ascending: false }),
       supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_active', true).eq('is_header', false).order('account_code'),
     ]);
     setEntries((entriesRes.data || []) as RecurringEntry[]);
@@ -113,7 +113,7 @@ export default function RecurringEntries() {
       return;
     }
 
-    const { data: entry, error } = await supabase.from('gl_recurring_entries').insert({
+    const { data: entry, error } = await (supabase.from('gl_recurring_entries' as any) as any).insert({
       name, description: description || null, frequency,
       next_run_date: nextRunDate, end_date: endDate || null,
     }).select().single();
@@ -129,7 +129,7 @@ export default function RecurringEntries() {
       description: l.description || null,
     }));
 
-    const { error: lineErr } = await supabase.from('gl_recurring_entry_lines').insert(lineInserts);
+    const { error: lineErr } = await (supabase.from('gl_recurring_entry_lines' as any) as any).insert(lineInserts);
     if (lineErr) { toast.error(lineErr.message); return; }
 
     toast.success('Recurring entry created');
@@ -140,7 +140,7 @@ export default function RecurringEntries() {
 
   const handleGenerate = async (id: string) => {
     setGenerating(id);
-    const { data, error } = await supabase.rpc('generate_recurring_entry', { p_recurring_id: id });
+    const { error } = await supabase.rpc('generate_recurring_entry' as any, { p_recurring_id: id });
     if (error) {
       toast.error(error.message);
     } else {
@@ -151,14 +151,14 @@ export default function RecurringEntries() {
   };
 
   const handleToggleActive = async (id: string, currentActive: boolean) => {
-    const { error } = await supabase.from('gl_recurring_entries').update({ is_active: !currentActive }).eq('id', id);
+    const { error } = await (supabase.from('gl_recurring_entries' as any) as any).update({ is_active: !currentActive }).eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success(currentActive ? 'Recurring entry paused' : 'Recurring entry activated');
     fetchData();
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from('gl_recurring_entries').delete().eq('id', id);
+    const { error } = await (supabase.from('gl_recurring_entries' as any) as any).delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success('Recurring entry deleted');
     fetchData();
@@ -166,13 +166,13 @@ export default function RecurringEntries() {
 
   return (
     <AppLayout>
-      <PageHeader title="Recurring Journal Entries" description="Automate monthly, quarterly, or yearly journal entries">
-        {isAdmin && (
+      <PageHeader title="Recurring Journal Entries" description="Automate monthly, quarterly, or yearly journal entries"
+        actions={isAdmin ? (
           <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" /> New Template
           </Button>
-        )}
-      </PageHeader>
+        ) : undefined}
+      />
 
       {loading ? (
         <div className="space-y-4">{[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full" />)}</div>
