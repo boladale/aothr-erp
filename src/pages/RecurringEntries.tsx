@@ -68,7 +68,7 @@ export default function RecurringEntries() {
       supabase.from('gl_recurring_entries' as any).select('*').order('created_at', { ascending: false }),
       supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_active', true).eq('is_header', false).order('account_code'),
     ]);
-    setEntries((entriesRes.data || []) as RecurringEntry[]);
+    setEntries((entriesRes.data || []) as unknown as RecurringEntry[]);
     setAccounts((accountsRes.data || []) as GLAccount[]);
     setLoading(false);
   };
