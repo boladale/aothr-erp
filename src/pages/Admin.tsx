@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive } from 'lucide-react';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
