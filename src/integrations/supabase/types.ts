@@ -80,7 +80,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
           due_date: string | null
+          exchange_rate: number
           id: string
           invoice_date: string
           invoice_number: string
@@ -99,7 +101,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           due_date?: string | null
+          exchange_rate?: number
           id?: string
           invoice_date?: string
           invoice_number: string
@@ -118,7 +122,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           due_date?: string | null
+          exchange_rate?: number
           id?: string
           invoice_date?: string
           invoice_number?: string
@@ -201,6 +207,8 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
+          exchange_rate: number
           id: string
           notes: string | null
           organization_id: string | null
@@ -218,6 +226,8 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
+          exchange_rate?: number
           id?: string
           notes?: string | null
           organization_id?: string | null
@@ -235,6 +245,8 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
+          exchange_rate?: number
           id?: string
           notes?: string | null
           organization_id?: string | null
@@ -539,7 +551,9 @@ export type Database = {
           created_by: string | null
           credit_date: string
           credit_note_number: string
+          currency: string
           customer_id: string
+          exchange_rate: number
           id: string
           invoice_id: string | null
           organization_id: string | null
@@ -557,7 +571,9 @@ export type Database = {
           created_by?: string | null
           credit_date?: string
           credit_note_number: string
+          currency?: string
           customer_id: string
+          exchange_rate?: number
           id?: string
           invoice_id?: string | null
           organization_id?: string | null
@@ -575,7 +591,9 @@ export type Database = {
           created_by?: string | null
           credit_date?: string
           credit_note_number?: string
+          currency?: string
           customer_id?: string
+          exchange_rate?: number
           id?: string
           invoice_id?: string | null
           organization_id?: string | null
@@ -671,8 +689,10 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
           customer_id: string
           due_date: string | null
+          exchange_rate: number
           id: string
           invoice_date: string
           invoice_number: string
@@ -690,8 +710,10 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id: string
           due_date?: string | null
+          exchange_rate?: number
           id?: string
           invoice_date?: string
           invoice_number: string
@@ -709,8 +731,10 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string
           due_date?: string | null
+          exchange_rate?: number
           id?: string
           invoice_date?: string
           invoice_number?: string
@@ -785,7 +809,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
           customer_id: string
+          exchange_rate: number
           id: string
           notes: string | null
           organization_id: string | null
@@ -802,7 +828,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id: string
+          exchange_rate?: number
           id?: string
           notes?: string | null
           organization_id?: string | null
@@ -819,7 +847,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string
+          exchange_rate?: number
           id?: string
           notes?: string | null
           organization_id?: string | null
@@ -1250,6 +1280,33 @@ export type Database = {
           },
         ]
       }
+      currencies: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          symbol: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          symbol: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          symbol?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -1485,11 +1542,54 @@ export type Database = {
           },
         ]
       }
+      exchange_rates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          from_currency: string
+          id: string
+          organization_id: string | null
+          rate: number
+          to_currency: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          from_currency: string
+          id?: string
+          organization_id?: string | null
+          rate: number
+          to_currency: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          from_currency?: string
+          id?: string
+          organization_id?: string | null
+          rate?: number
+          to_currency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_rates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_transfers: {
         Row: {
           amount: number
           created_at: string
           created_by: string | null
+          currency: string
+          exchange_rate: number
           from_bank_account_id: string
           gl_journal_entry_id: string | null
           id: string
@@ -1507,6 +1607,8 @@ export type Database = {
           amount: number
           created_at?: string
           created_by?: string | null
+          currency?: string
+          exchange_rate?: number
           from_bank_account_id: string
           gl_journal_entry_id?: string | null
           id?: string
@@ -1524,6 +1626,8 @@ export type Database = {
           amount?: number
           created_at?: string
           created_by?: string | null
+          currency?: string
+          exchange_rate?: number
           from_bank_account_id?: string
           gl_journal_entry_id?: string | null
           id?: string
@@ -1730,9 +1834,11 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
           description: string | null
           entry_date: string
           entry_number: string
+          exchange_rate: number
           fiscal_period_id: string | null
           id: string
           organization_id: string | null
@@ -1749,9 +1855,11 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           description?: string | null
           entry_date?: string
           entry_number: string
+          exchange_rate?: number
           fiscal_period_id?: string | null
           id?: string
           organization_id?: string | null
@@ -1768,9 +1876,11 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           description?: string | null
           entry_date?: string
           entry_number?: string
+          exchange_rate?: number
           fiscal_period_id?: string | null
           id?: string
           organization_id?: string | null
@@ -2820,6 +2930,7 @@ export type Database = {
         Row: {
           address: string | null
           app_name: string | null
+          base_currency: string
           city: string | null
           code: string
           country: string | null
@@ -2828,6 +2939,7 @@ export type Database = {
           email: string | null
           id: string
           is_active: boolean
+          is_multicurrency: boolean
           logo_url: string | null
           name: string
           phone: string | null
@@ -2836,6 +2948,7 @@ export type Database = {
         Insert: {
           address?: string | null
           app_name?: string | null
+          base_currency?: string
           city?: string | null
           code: string
           country?: string | null
@@ -2844,6 +2957,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_multicurrency?: boolean
           logo_url?: string | null
           name: string
           phone?: string | null
@@ -2852,6 +2966,7 @@ export type Database = {
         Update: {
           address?: string | null
           app_name?: string | null
+          base_currency?: string
           city?: string | null
           code?: string
           country?: string | null
@@ -2860,6 +2975,7 @@ export type Database = {
           email?: string | null
           id?: string
           is_active?: boolean
+          is_multicurrency?: boolean
           logo_url?: string | null
           name?: string
           phone?: string | null
@@ -3295,6 +3411,8 @@ export type Database = {
           closed_at: string | null
           created_at: string
           created_by: string | null
+          currency: string
+          exchange_rate: number
           expected_date: string | null
           id: string
           notes: string | null
@@ -3318,6 +3436,8 @@ export type Database = {
           closed_at?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
+          exchange_rate?: number
           expected_date?: string | null
           id?: string
           notes?: string | null
@@ -3341,6 +3461,8 @@ export type Database = {
           closed_at?: string | null
           created_at?: string
           created_by?: string | null
+          currency?: string
+          exchange_rate?: number
           expected_date?: string | null
           id?: string
           notes?: string | null
@@ -4221,7 +4343,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
           customer_id: string
+          exchange_rate: number
           expected_date: string | null
           id: string
           notes: string | null
@@ -4239,7 +4363,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id: string
+          exchange_rate?: number
           expected_date?: string | null
           id?: string
           notes?: string | null
@@ -4257,7 +4383,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string
+          exchange_rate?: number
           expected_date?: string | null
           id?: string
           notes?: string | null
@@ -4355,7 +4483,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          currency: string
           customer_id: string
+          exchange_rate: number
           id: string
           notes: string | null
           organization_id: string | null
@@ -4372,7 +4502,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id: string
+          exchange_rate?: number
           id?: string
           notes?: string | null
           organization_id?: string | null
@@ -4389,7 +4521,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          currency?: string
           customer_id?: string
+          exchange_rate?: number
           id?: string
           notes?: string | null
           organization_id?: string | null
