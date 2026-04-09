@@ -72,7 +72,7 @@ export default function Requisitions() {
   const handleApprove = async (req: RequisitionRow) => {
     if (req.status !== 'pending_approval') { toast.error('Only pending requisitions can be approved'); return; }
     try {
-      const { error } = await supabase.from('requisitions').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id }).eq('id', req.id);
+      const { error } = await supabase.from('requisitions').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id }).eq('id', req.id).eq('status', 'pending_approval');
       if (error) throw error;
       toast.success('Requisition approved');
       fetchRequisitions();
