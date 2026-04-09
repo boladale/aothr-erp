@@ -99,6 +99,7 @@ export default function Requisitions() {
   const handleEdit = (req: RequisitionRow) => { setEditReq(req); setDialogOpen(true); };
 
   const handleDelete = async (req: RequisitionRow) => {
+    if (req.status !== 'draft') { toast.error('Only draft requisitions can be deleted'); return; }
     if (!window.confirm(`Delete requisition ${req.req_number}? This cannot be undone.`)) return;
     try {
       await supabase.from('requisition_lines').delete().eq('requisition_id', req.id);
