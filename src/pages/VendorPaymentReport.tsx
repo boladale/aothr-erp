@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 interface PaymentRow {
-  req_number: string;
+  id: string;
   po_number: string;
   grn_number: string;
   item_name: string;
@@ -73,6 +73,7 @@ export default function VendorPaymentReport() {
           : 'not_invoiced';
 
         result.push({
+          id: pl.id || `${po.po_number}-${result.length}`,
           req_number: reqMap.get(pl.id) || '-',
           po_number: po.po_number,
           grn_number: grnMap.get(pl.id) || '-',

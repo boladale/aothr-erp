@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
 interface LifecycleRow {
+  id: string;
   req_number: string;
   req_date: string;
   approval_date: string;
@@ -106,6 +107,7 @@ export default function RequisitionToPaymentReport() {
         const po = reqToPO.get(req.id);
         if (!po) {
           result.push({
+            id: req.id,
             req_number: req.req_number, req_date: req.created_at, approval_date: req.approved_at || '-',
             po_number: '-', po_date: '-', grn_number: '-', grn_date: '-',
             invoice_number: '-', invoice_date: '-', payment_date: '-', vendor_name: '-', total_amount: 0,
@@ -119,6 +121,7 @@ export default function RequisitionToPaymentReport() {
         const payDate = inv ? invoiceToPayment.get(inv.id) : null;
 
         result.push({
+          id: req.id,
           req_number: req.req_number,
           req_date: req.created_at,
           approval_date: req.approved_at || '-',
