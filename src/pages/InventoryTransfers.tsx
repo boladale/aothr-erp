@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, ArrowRightLeft, Pencil } from 'lucide-react';
+import { Plus, Search, ArrowRightLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -53,7 +53,7 @@ export default function InventoryTransfers() {
   const fetchData = async () => {
     try {
       const [tRes, lRes, iRes] = await Promise.all([
-        supabase.from('inventory_transfers').select('*, from_location:locations!inventory_transfers_from_location_id_fkey(*), to_location:locations!inventory_transfers_to_location_id_fkey(*)').order('created_at', { ascending: false }),
+        supabase.from('inventory_transfers' as any).select('*, from_location:locations!inventory_transfers_from_location_id_fkey(*), to_location:locations!inventory_transfers_to_location_id_fkey(*)').order('created_at', { ascending: false }),
         supabase.from('locations').select('*').eq('is_active', true).order('name'),
         supabase.from('items').select('*').eq('is_active', true).order('name'),
       ]);
@@ -72,7 +72,7 @@ export default function InventoryTransfers() {
     setSaving(true);
     try {
       const num = await getNextTransactionNumber(organizationId!, 'TRF', 'TRF');
-      const { data: transfer, error } = await supabase.from('inventory_transfers').insert({
+      const { data: transfer, error } = await (supabase.from('inventory_transfers' as any) as any).insert({
         transfer_number: num, from_location_id: form.from_location_id, to_location_id: form.to_location_id,
         transfer_date: form.transfer_date, notes: form.notes || null, created_by: user?.id, organization_id: organizationId,
       }).select().single();
@@ -81,7 +81,7 @@ export default function InventoryTransfers() {
       const lineInserts = validLines.map((l, idx) => ({
         transfer_id: transfer.id, item_id: l.item_id, quantity: l.quantity, line_number: idx + 1,
       }));
-      const { error: lErr } = await supabase.from('inventory_transfer_lines').insert(lineInserts);
+      const { error: lErr } = await (supabase.from('inventory_transfer_lines' as any) as any).insert(lineInserts);
       if (lErr) throw lErr;
 
       toast.success('Transfer created. Post to move inventory.');
@@ -95,7 +95,7 @@ export default function InventoryTransfers() {
     if (postingId) return;
     setPostingId(t.id);
     try {
-      const { error } = await supabase.from('inventory_transfers').update({ status: 'posted' }).eq('id', t.id);
+      const { error } = await (supabase.from('inventory_transfers' as any) as any).update({ status: 'posted' }).eq('id', t.id);
       if (error) throw error;
       toast.success('Transfer posted. Inventory moved.');
       fetchData();
