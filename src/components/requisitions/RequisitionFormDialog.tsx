@@ -223,7 +223,17 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Type *</Label>
+              <Select value={form.requisition_type} onValueChange={(v: 'items' | 'service') => setForm({ ...form, requisition_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="items">Items</SelectItem>
+                  <SelectItem value="service">Service</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Department</Label>
               <Input
