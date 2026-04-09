@@ -392,6 +392,18 @@ export default function PurchaseOrders() {
                     </div>
                   ))}
                 </div>
+                {(() => {
+                  const sub = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+                  const disc = form.discount_type === 'percentage' ? sub * (form.discount_amount / 100) : form.discount_amount;
+                  const tot = Math.max(0, sub - disc);
+                  return (
+                    <div className="text-right space-y-1 text-sm">
+                      <div>Subtotal: ₦{sub.toFixed(2)}</div>
+                      {form.discount_amount > 0 && <div className="text-destructive">Discount: -₦{disc.toFixed(2)}</div>}
+                      <div className="font-semibold text-base">Total: ₦{tot.toFixed(2)}</div>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="space-y-2">
                 <Label>Notes</Label>
