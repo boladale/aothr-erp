@@ -44,7 +44,7 @@ export default function PurchaseOrderDetail() {
   const fetchPO = async () => {
     try {
       const [poRes, linesRes] = await Promise.all([
-        supabase.from('purchase_orders').select('*, vendors(*), locations(*)').eq('id', id).single(),
+        supabase.from('purchase_orders').select('*, vendors(*), locations(*), requisitions(req_number)').eq('id', id).single(),
         supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', id).order('line_number'),
       ]);
 
@@ -215,7 +215,10 @@ export default function PurchaseOrderDetail() {
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{po.vendors?.name}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {po.vendors?.name}
+              {(po as any).requisitions?.req_number && <span className="ml-2 text-xs">• PRN: {(po as any).requisitions.req_number}</span>}
+            </p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => setShowDocument(true)}>

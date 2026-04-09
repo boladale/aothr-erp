@@ -95,6 +95,10 @@ export const pathToProgram: Record<string, string> = {
   '/user-management': 'user_management',
   '/workflows': 'workflows',
   '/recurring-entries': 'recurring_entries',
+  '/inventory-transfers': 'inventory_transfers',
+  '/vendor-payment-report': 'vendor_payment_report',
+  '/req-to-payment-report': 'req_to_payment_report',
+  '/procurement-audit': 'procurement_audit',
   '/admin': 'admin',
 };
 
@@ -134,6 +138,7 @@ export const navSections = [
       { path: '/inventory', label: 'Inventory', icon: Boxes },
       { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
       { path: '/inventory-issues', label: 'Inventory Issues', icon: PackageMinus },
+      { path: '/inventory-transfers', label: 'Transfers', icon: ArrowRightLeft },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
     ],
   },
@@ -201,6 +206,9 @@ export const navSections = [
       { path: '/ar-reports', label: 'AR Reports', icon: BarChart3 },
       { path: '/cash-reports', label: 'Cash Reports', icon: BarChart3 },
       { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
+      { path: '/vendor-payment-report', label: 'Vendor Payment Report', icon: CreditCard },
+      { path: '/req-to-payment-report', label: 'PRN to Payment', icon: GitBranch },
+      { path: '/procurement-audit', label: 'Procurement Audit', icon: FileSearch },
     ],
   },
   {
