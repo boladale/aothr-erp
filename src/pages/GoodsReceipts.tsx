@@ -35,7 +35,7 @@ export default function GoodsReceipts() {
   const [postingId, setPostingId] = useState<string | null>(null);
   const [editingGRN, setEditingGRN] = useState<GRNWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
-  const [form, setForm] = useState({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '' });
+  const [form, setForm] = useState({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '' });
   const [lines, setLines] = useState<GRNLine[]>([]);
 
   useEffect(() => { fetchData(); }, []);
@@ -66,7 +66,7 @@ export default function GoodsReceipts() {
   const openEditDialog = async (grn: GRNWithDetails) => {
     setEditingGRN(grn);
     setSelectedPO(grn.po_id);
-    setForm({ location_id: grn.location_id, receipt_date: grn.receipt_date, notes: grn.notes || '' });
+    setForm({ location_id: grn.location_id, receipt_date: grn.receipt_date, notes: grn.notes || '', weigh_bill_number: (grn as any).weigh_bill_number || '' });
     // Load existing GRN lines
     const { data: grnLines } = await supabase.from('goods_receipt_lines').select('*, items(name)').eq('grn_id', grn.id);
     // Load PO lines for max info
@@ -85,6 +85,7 @@ export default function GoodsReceipts() {
 
   const handleSave = async () => {
     if (!selectedPO || !form.location_id) { toast.error('Please select a PO and location'); return; }
+    if (!form.weigh_bill_number.trim()) { toast.error('Weigh bill number is mandatory'); return; }
     const validLines = lines.filter(l => l.qty_received > 0);
     if (validLines.length === 0) { toast.error('Please enter at least one quantity'); return; }
     const overReceipt = validLines.find(l => l.qty_received > l.max_receivable);
@@ -94,7 +95,7 @@ export default function GoodsReceipts() {
     try {
       if (editingGRN) {
         const { error } = await supabase.from('goods_receipts').update({
-          location_id: form.location_id, receipt_date: form.receipt_date, notes: form.notes,
+          location_id: form.location_id, receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number,
         }).eq('id', editingGRN.id);
         if (error) throw error;
         await supabase.from('goods_receipt_lines').delete().eq('grn_id', editingGRN.id);
@@ -106,7 +107,7 @@ export default function GoodsReceipts() {
         const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
         const { data: grn, error } = await supabase.from('goods_receipts').insert({
           grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
-          receipt_date: form.receipt_date, notes: form.notes, created_by: user?.id, organization_id: organizationId,
+          receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, created_by: user?.id, organization_id: organizationId,
         }).select().single();
         if (error) throw error;
         await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
@@ -139,7 +140,7 @@ export default function GoodsReceipts() {
 
   const resetForm = () => {
     setEditingGRN(null); setSelectedPO(''); setLines([]);
-    setForm({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '' });
+    setForm({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '' });
   };
 
   const updateLineQty = (idx: number, qty: number) => {
@@ -235,9 +236,15 @@ export default function GoodsReceipts() {
                   </div>
                 </div>
               )}
-              <div className="space-y-2">
-                <Label>Notes</Label>
-                <Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Optional notes..." />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Weigh Bill Number *</Label>
+                  <Input value={form.weigh_bill_number} onChange={e => setForm({ ...form, weigh_bill_number: e.target.value })} placeholder="Enter weigh bill number" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  <Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Optional notes..." />
+                </div>
               </div>
             </div>
             <DialogFooter>
