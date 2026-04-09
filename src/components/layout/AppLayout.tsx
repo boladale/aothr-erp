@@ -1,6 +1,11 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { useUserPrograms } from '@/hooks/useUserPrograms';
