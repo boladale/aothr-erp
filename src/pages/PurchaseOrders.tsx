@@ -327,9 +327,25 @@ export default function PurchaseOrders() {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Expected Date</Label>
-                <Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Expected Date</Label>
+                  <Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Payment Terms Type</Label>
+                  <Select value={form.payment_terms_type} onValueChange={v => setForm({ ...form, payment_terms_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="value">Fixed Value (₦)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Payment Terms {form.payment_terms_type === 'percentage' ? '(%)' : '(₦)'}</Label>
+                  <Input type="number" min="0" step="0.01" value={form.payment_terms_amount} onChange={e => setForm({ ...form, payment_terms_amount: parseFloat(e.target.value) || 0 })} />
+                </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Line Items</Label><Button type="button" variant="outline" size="sm" onClick={addLine}>Add Line</Button></div>
