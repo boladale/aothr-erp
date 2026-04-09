@@ -10,6 +10,8 @@ import { Search } from 'lucide-react';
 
 interface PaymentRow {
   id: string;
+  id: string;
+  req_number: string;
   po_number: string;
   grn_number: string;
   item_name: string;
