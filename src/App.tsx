@@ -70,6 +70,10 @@ import AuditReport from "./pages/AuditReport";
 import AccountStatement from "./pages/AccountStatement";
 import Workflows from "./pages/Workflows";
 import RecurringEntries from "./pages/RecurringEntries";
+import InventoryTransfers from "./pages/InventoryTransfers";
+import VendorPaymentReport from "./pages/VendorPaymentReport";
+import RequisitionToPaymentReport from "./pages/RequisitionToPaymentReport";
+import ProcurementAudit from "./pages/ProcurementAudit";
 
 const queryClient = new QueryClient();
 
@@ -199,6 +203,10 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
             <Route path="/recurring-entries" element={<ProtectedRoute><RecurringEntries /></ProtectedRoute>} />
+            <Route path="/inventory-transfers" element={<ProtectedRoute><InventoryTransfers /></ProtectedRoute>} />
+            <Route path="/vendor-payment-report" element={<ProtectedRoute><VendorPaymentReport /></ProtectedRoute>} />
+            <Route path="/req-to-payment-report" element={<ProtectedRoute><RequisitionToPaymentReport /></ProtectedRoute>} />
+            <Route path="/procurement-audit" element={<ProtectedRoute><ProcurementAudit /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
