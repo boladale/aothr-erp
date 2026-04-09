@@ -55,6 +55,8 @@ export default function PurchaseOrders() {
     notes: '',
     payment_terms_type: 'percentage',
     payment_terms_amount: 0,
+    discount_type: 'percentage',
+    discount_amount: 0,
   });
   const [lines, setLines] = useState<POLine[]>([{ item_id: '', quantity: 1, unit_price: 0 }]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -91,6 +93,8 @@ export default function PurchaseOrders() {
       notes: po.notes || '',
       payment_terms_type: (po as any).payment_terms_type || 'percentage',
       payment_terms_amount: (po as any).payment_terms_amount || 0,
+      discount_type: (po as any).discount_type || 'percentage',
+      discount_amount: (po as any).discount_amount || 0,
     });
     const { data } = await supabase.from('purchase_order_lines').select('*').eq('po_id', po.id).order('line_number');
     setLines((data || []).map((l: any) => ({ item_id: l.item_id, quantity: l.quantity, unit_price: l.unit_price })));
@@ -105,6 +109,10 @@ export default function PurchaseOrders() {
     setSaving(true);
     try {
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
+      const discountVal = form.discount_type === 'percentage'
+        ? subtotal * (form.discount_amount / 100)
+        : form.discount_amount;
+      const totalAmount = Math.max(0, subtotal - discountVal);
 
       if (editingPO) {
         // Update existing draft PO
@@ -114,9 +122,11 @@ export default function PurchaseOrders() {
           expected_date: form.expected_date || null,
           notes: form.notes,
           subtotal,
-          total_amount: subtotal,
+          total_amount: totalAmount,
           payment_terms_type: form.payment_terms_type,
           payment_terms_amount: form.payment_terms_amount,
+          discount_type: form.discount_type,
+          discount_amount: form.discount_amount,
         }).eq('id', editingPO.id);
         if (poError) throw poError;
 
@@ -133,8 +143,9 @@ export default function PurchaseOrders() {
         const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
         const { data: po, error: poError } = await supabase.from('purchase_orders').insert({
           po_number: poNumber, vendor_id: form.vendor_id, ship_to_location_id: form.ship_to_location_id || null,
-          expected_date: form.expected_date || null, notes: form.notes, subtotal, total_amount: subtotal,
+          expected_date: form.expected_date || null, notes: form.notes, subtotal, total_amount: totalAmount,
           payment_terms_type: form.payment_terms_type, payment_terms_amount: form.payment_terms_amount,
+          discount_type: form.discount_type, discount_amount: form.discount_amount,
           created_by: user?.id, organization_id: organizationId,
         }).select().single();
         if (poError) throw poError;
@@ -158,7 +169,7 @@ export default function PurchaseOrders() {
 
   const resetForm = () => {
     setEditingPO(null);
-    setForm({ vendor_id: '', ship_to_location_id: '', expected_date: '', notes: '', payment_terms_type: 'percentage', payment_terms_amount: 0 });
+    setForm({ vendor_id: '', ship_to_location_id: '', expected_date: '', notes: '', payment_terms_type: 'percentage', payment_terms_amount: 0, discount_type: 'percentage', discount_amount: 0 });
     setLines([{ item_id: '', quantity: 1, unit_price: 0 }]);
   };
 
