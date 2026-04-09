@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Upload, FileText, Loader2 } from 'lucide-react';
+import { Upload, FileText, Loader2, Download } from 'lucide-react';
 
 interface ParsedRow {
   date: string;
@@ -159,8 +159,21 @@ export function BankStatementImport({ bankAccountId, bankAccountName, onImported
             <div className="flex flex-col items-center gap-4 py-8">
               <FileText className="h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground text-sm">Upload a CSV file with your bank statement</p>
-              <input ref={fileRef} type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={handleFile} />
-              <Button onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-2" /> Select CSV File</Button>
+              <div className="flex gap-2">
+                <input ref={fileRef} type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={handleFile} />
+                <Button onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-2" /> Select CSV File</Button>
+                <Button variant="outline" onClick={() => {
+                  const template = 'Date,Description,Amount,Reference\n2025-01-15,Salary Credit,250000.00,SAL-001\n2025-01-16,Office Supplies,-15000.00,PO-1234\n2025-01-17,Client Payment,500000.00,INV-0056\n2025-01-18,Utility Bill,-8500.50,UTIL-JAN\n';
+                  const blob = new Blob([template], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url; a.download = 'bank_statement_template.csv'; a.click();
+                  URL.revokeObjectURL(url);
+                }}>
+                  <Download className="h-4 w-4 mr-2" /> Download Template
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Required columns: Date, Description, Amount, Reference</p>
             </div>
           )}
 
