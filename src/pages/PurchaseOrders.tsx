@@ -55,6 +55,8 @@ export default function PurchaseOrders() {
     notes: '',
     payment_terms_type: 'percentage',
     payment_terms_amount: 0,
+    discount_type: 'percentage',
+    discount_amount: 0,
   });
   const [lines, setLines] = useState<POLine[]>([{ item_id: '', quantity: 1, unit_price: 0 }]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -91,6 +93,8 @@ export default function PurchaseOrders() {
       notes: po.notes || '',
       payment_terms_type: (po as any).payment_terms_type || 'percentage',
       payment_terms_amount: (po as any).payment_terms_amount || 0,
+      discount_type: (po as any).discount_type || 'percentage',
+      discount_amount: (po as any).discount_amount || 0,
     });
     const { data } = await supabase.from('purchase_order_lines').select('*').eq('po_id', po.id).order('line_number');
     setLines((data || []).map((l: any) => ({ item_id: l.item_id, quantity: l.quantity, unit_price: l.unit_price })));
@@ -105,6 +109,10 @@ export default function PurchaseOrders() {
     setSaving(true);
     try {
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
+      const discountVal = form.discount_type === 'percentage'
+        ? subtotal * (form.discount_amount / 100)
+        : form.discount_amount;
+      const totalAmount = Math.max(0, subtotal - discountVal);
 
       if (editingPO) {
         // Update existing draft PO
@@ -114,9 +122,11 @@ export default function PurchaseOrders() {
           expected_date: form.expected_date || null,
           notes: form.notes,
           subtotal,
-          total_amount: subtotal,
+          total_amount: totalAmount,
           payment_terms_type: form.payment_terms_type,
           payment_terms_amount: form.payment_terms_amount,
+          discount_type: form.discount_type,
+          discount_amount: form.discount_amount,
         }).eq('id', editingPO.id);
         if (poError) throw poError;
 
@@ -133,8 +143,9 @@ export default function PurchaseOrders() {
         const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
         const { data: po, error: poError } = await supabase.from('purchase_orders').insert({
           po_number: poNumber, vendor_id: form.vendor_id, ship_to_location_id: form.ship_to_location_id || null,
-          expected_date: form.expected_date || null, notes: form.notes, subtotal, total_amount: subtotal,
+          expected_date: form.expected_date || null, notes: form.notes, subtotal, total_amount: totalAmount,
           payment_terms_type: form.payment_terms_type, payment_terms_amount: form.payment_terms_amount,
+          discount_type: form.discount_type, discount_amount: form.discount_amount,
           created_by: user?.id, organization_id: organizationId,
         }).select().single();
         if (poError) throw poError;
@@ -158,7 +169,7 @@ export default function PurchaseOrders() {
 
   const resetForm = () => {
     setEditingPO(null);
-    setForm({ vendor_id: '', ship_to_location_id: '', expected_date: '', notes: '', payment_terms_type: 'percentage', payment_terms_amount: 0 });
+    setForm({ vendor_id: '', ship_to_location_id: '', expected_date: '', notes: '', payment_terms_type: 'percentage', payment_terms_amount: 0, discount_type: 'percentage', discount_amount: 0 });
     setLines([{ item_id: '', quantity: 1, unit_price: 0 }]);
   };
 
@@ -347,6 +358,22 @@ export default function PurchaseOrders() {
                   <Input type="number" min="0" step="0.01" value={form.payment_terms_amount} onChange={e => setForm({ ...form, payment_terms_amount: parseFloat(e.target.value) || 0 })} />
                 </div>
               </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Discount Type</Label>
+                  <Select value={form.discount_type} onValueChange={v => setForm({ ...form, discount_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="value">Fixed Value (₦)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Discount {form.discount_type === 'percentage' ? '(%)' : '(₦)'}</Label>
+                  <Input type="number" min="0" step="0.01" value={form.discount_amount} onChange={e => setForm({ ...form, discount_amount: parseFloat(e.target.value) || 0 })} />
+                </div>
+              </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Line Items</Label><Button type="button" variant="outline" size="sm" onClick={addLine}>Add Line</Button></div>
                 <div className="space-y-2">
@@ -365,6 +392,18 @@ export default function PurchaseOrders() {
                     </div>
                   ))}
                 </div>
+                {(() => {
+                  const sub = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+                  const disc = form.discount_type === 'percentage' ? sub * (form.discount_amount / 100) : form.discount_amount;
+                  const tot = Math.max(0, sub - disc);
+                  return (
+                    <div className="text-right space-y-1 text-sm">
+                      <div>Subtotal: ₦{sub.toFixed(2)}</div>
+                      {form.discount_amount > 0 && <div className="text-destructive">Discount: -₦{disc.toFixed(2)}</div>}
+                      <div className="font-semibold text-base">Total: ₦{tot.toFixed(2)}</div>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="space-y-2">
                 <Label>Notes</Label>
