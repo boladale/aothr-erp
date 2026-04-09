@@ -3412,6 +3412,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          discount_amount: number
+          discount_type: string
           exchange_rate: number
           expected_date: string | null
           id: string
@@ -3437,6 +3439,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_amount?: number
+          discount_type?: string
           exchange_rate?: number
           expected_date?: string | null
           id?: string
@@ -3462,6 +3466,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          discount_amount?: number
+          discount_type?: string
           exchange_rate?: number
           expected_date?: string | null
           id?: string
