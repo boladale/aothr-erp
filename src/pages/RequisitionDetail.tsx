@@ -43,7 +43,8 @@ interface Requisition {
 export default function RequisitionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const [requisition, setRequisition] = useState<Requisition | null>(null);
   const [lines, setLines] = useState<RequisitionLine[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,8 +131,10 @@ export default function RequisitionDetail() {
   if (!requisition) return null;
 
   const totalEstimate = lines.reduce((sum, l) => sum + (l.estimated_total || 0), 0);
-  const canConvert = ['approved', 'partially_converted'].includes(requisition.status);
   const unconvertedLines = lines.filter(l => l.qty_converted < l.quantity);
+  const isFullyConverted = lines.length > 0 && unconvertedLines.length === 0;
+  const canConvert = ['approved', 'partially_converted'].includes(requisition.status) && !isFullyConverted;
+  const isClosed = ['fully_converted', 'closed', 'cancelled'].includes(requisition.status);
 
   return (
     <AppLayout>
@@ -149,13 +152,13 @@ export default function RequisitionDetail() {
                 {requisition.status === 'draft' && requisition.requester_id === user?.id && (
                   <Button onClick={handleSubmit}><Send className="mr-2 h-4 w-4" /> Submit</Button>
                 )}
-                {requisition.status === 'pending_approval' && (
+                {requisition.status === 'pending_approval' && canApprove && (
                   <>
                     <Button onClick={handleApprove}><Check className="mr-2 h-4 w-4" /> Approve</Button>
                     <Button variant="outline" onClick={handleReject}><X className="mr-2 h-4 w-4" /> Reject</Button>
                   </>
                 )}
-                {canConvert && unconvertedLines.length > 0 && (
+                {canConvert && (
                   <Button variant="default" onClick={() => setConvertOpen(true)}>
                     <ShoppingCart className="mr-2 h-4 w-4" /> Convert to PO
                   </Button>

@@ -70,6 +70,7 @@ export default function Requisitions() {
   };
 
   const handleApprove = async (req: RequisitionRow) => {
+    if (req.status !== 'pending_approval') { toast.error('Only pending requisitions can be approved'); return; }
     try {
       const { error } = await supabase.from('requisitions').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id }).eq('id', req.id);
       if (error) throw error;
@@ -99,6 +100,7 @@ export default function Requisitions() {
   const handleEdit = (req: RequisitionRow) => { setEditReq(req); setDialogOpen(true); };
 
   const handleDelete = async (req: RequisitionRow) => {
+    if (req.status !== 'draft') { toast.error('Only draft requisitions can be deleted'); return; }
     if (!window.confirm(`Delete requisition ${req.req_number}? This cannot be undone.`)) return;
     try {
       await supabase.from('requisition_lines').delete().eq('requisition_id', req.id);
