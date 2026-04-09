@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive, Coins } from 'lucide-react';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
 import { BackupManagementPanel } from '@/components/admin/BackupManagementPanel';
+import { CurrencySettingsPanel } from '@/components/admin/CurrencySettingsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
@@ -267,6 +268,11 @@ export default function Admin() {
                 <Palette className="h-4 w-4" /> Branding
               </TabsTrigger>
             )}
+            {isAdmin && (
+              <TabsTrigger value="currency" className="gap-2">
+                <Coins className="h-4 w-4" /> Currency
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="users" className="space-y-4">
@@ -350,6 +356,11 @@ export default function Admin() {
           {isAdmin && (
             <TabsContent value="branding" className="space-y-4">
               <OrganizationBranding />
+            </TabsContent>
+          )}
+          {isAdmin && (
+            <TabsContent value="currency" className="space-y-4">
+              <CurrencySettingsPanel />
             </TabsContent>
           )}
         </Tabs>

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { OrgCurrencyProvider } from "./hooks/useOrgCurrency";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Vendors from "./pages/Vendors";
@@ -128,6 +129,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <OrgCurrencyProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -201,6 +203,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </OrgCurrencyProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
