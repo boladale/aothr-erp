@@ -368,7 +368,7 @@ export default function UserGuide() {
                   Every time money moves, you record it in a journal entry. It has at least two lines: one account gets a <strong>Debit</strong> (money in) and another gets a <strong>Credit</strong> (money out). They must always balance!
                 </p>
                 <Step number={1}>Click <strong>"New Entry"</strong>, add a description like "Bought office chairs".</Step>
-                <Step number={2}>Add lines: Debit "Office Furniture" $500, Credit "Cash" $500.</Step>
+                <Step number={2}>Add lines: Debit "Office Furniture" ₦500, Credit "Cash" ₦500.</Step>
                 <Step number={3}>Post the entry. Account balances update automatically.</Step>
               </div>
 
@@ -561,7 +561,7 @@ export default function UserGuide() {
                 </p>
                 <Step number={1}>Enter your bank statement's ending balance and date range.</Step>
                 <Step number={2}>Check off each transaction that appears on both the statement and in BizOps.</Step>
-                <Step number={3}>When the difference is $0, you're reconciled!</Step>
+                <Step number={3}>When the difference is ₦0, you're reconciled!</Step>
               </div>
 
               <Separator />
@@ -677,7 +677,7 @@ export default function UserGuide() {
                   <Shield className="h-4 w-4" /> Approval Rules
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Set up who needs to approve what. For example: <strong>"Any purchase over $5,000 needs the Finance Manager's approval."</strong> You can create multi-step approval chains.
+                  Set up who needs to approve what. For example: <strong>"Any purchase over ₦5,000 needs the Finance Manager's approval."</strong> You can create multi-step approval chains.
                 </p>
               </div>
 
@@ -837,7 +837,7 @@ export default function UserGuide() {
               <AccordionItem value="faq9">
                 <AccordionTrigger className="text-sm">What is FIFO and why does it matter for inventory?</AccordionTrigger>
                 <AccordionContent className="text-sm text-muted-foreground">
-                  FIFO stands for <strong>"First In, First Out"</strong>. It means the oldest items you bought are used (or valued) first. This is important for accurate costing — if you bought pens at $1 last month and $1.50 this month, the $1 pens are counted first.
+                  FIFO stands for <strong>"First In, First Out"</strong>. It means the oldest items you bought are used (or valued) first. This is important for accurate costing — if you bought pens at ₦1 last month and ₦1.50 this month, the ₦1 pens are counted first.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq10">
@@ -849,13 +849,13 @@ export default function UserGuide() {
               <AccordionItem value="faq11">
                 <AccordionTrigger className="text-sm">How does bank reconciliation work?</AccordionTrigger>
                 <AccordionContent className="text-sm text-muted-foreground">
-                  Enter your bank statement's ending balance and date range, then match each transaction in BizOps with your bank statement. When all items are checked off and the difference shows <strong>$0</strong>, you're reconciled! This ensures your books match what the bank says.
+                  Enter your bank statement's ending balance and date range, then match each transaction in BizOps with your bank statement. When all items are checked off and the difference shows <strong>₦0</strong>, you're reconciled! This ensures your books match what the bank says.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq12">
                 <AccordionTrigger className="text-sm">What are approval rules and how do I set them up?</AccordionTrigger>
                 <AccordionContent className="text-sm text-muted-foreground">
-                  Approval rules define who needs to approve transactions before they proceed. Go to <strong>Administration → Approval Rules</strong>, create a rule (e.g., "POs over $5,000"), set conditions, and add approval steps with the required approver role or specific user. You can create multi-step chains where multiple people approve in sequence.
+                  Approval rules define who needs to approve transactions before they proceed. Go to <strong>Administration → Approval Rules</strong>, create a rule (e.g., "POs over ₦5,000"), set conditions, and add approval steps with the required approver role or specific user. You can create multi-step chains where multiple people approve in sequence.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="faq13">
@@ -903,7 +903,7 @@ export default function UserGuide() {
               <AccordionItem value="faq20">
                 <AccordionTrigger className="text-sm">What is a Match Exception?</AccordionTrigger>
                 <AccordionContent className="text-sm text-muted-foreground">
-                  A Match Exception occurs when the Purchase Order, Goods Receipt, and Invoice don't agree — for example, the vendor charged $110 but the PO says $100, or you received 8 items but the invoice says 10. These are flagged for review so you can resolve the discrepancy before paying.
+                  A Match Exception occurs when the Purchase Order, Goods Receipt, and Invoice don't agree — for example, the vendor charged ₦110 but the PO says ₦100, or you received 8 items but the invoice says 10. These are flagged for review so you can resolve the discrepancy before paying.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
