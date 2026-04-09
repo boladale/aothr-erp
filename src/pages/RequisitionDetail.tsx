@@ -85,10 +85,15 @@ export default function RequisitionDetail() {
   };
 
   const handleApprove = async () => {
+    if (requisition?.status !== 'pending_approval') {
+      toast.error('This requisition is not pending approval');
+      return;
+    }
     try {
       const { error } = await supabase.from('requisitions')
         .update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id })
-        .eq('id', id!);
+        .eq('id', id!)
+        .eq('status', 'pending_approval');
       if (error) throw error;
       toast.success('Requisition approved');
       fetchData();
@@ -98,6 +103,10 @@ export default function RequisitionDetail() {
   };
 
   const handleReject = async () => {
+    if (requisition?.status !== 'pending_approval') {
+      toast.error('This requisition is not pending approval');
+      return;
+    }
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
     try {
@@ -109,7 +118,8 @@ export default function RequisitionDetail() {
           rejected_by: user?.id,
           submitted_at: null
         })
-        .eq('id', id!);
+        .eq('id', id!)
+        .eq('status', 'pending_approval');
       if (error) throw error;
       toast.success('Requisition returned to draft for corrections');
       fetchData();
