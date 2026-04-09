@@ -53,11 +53,18 @@ export default function InventoryTransfers() {
   const fetchData = async () => {
     try {
       const [tRes, lRes, iRes] = await Promise.all([
-        supabase.from('inventory_transfers' as any).select('*, from_location:locations!inventory_transfers_from_location_id_fkey(*), to_location:locations!inventory_transfers_to_location_id_fkey(*)').order('created_at', { ascending: false }),
+        supabase.from('inventory_transfers' as any).select('*').order('created_at', { ascending: false }),
         supabase.from('locations').select('*').eq('is_active', true).order('name'),
         supabase.from('items').select('*').eq('is_active', true).order('name'),
       ]);
-      setTransfers((tRes.data || []) as TransferRow[]);
+      // Enrich transfers with location names
+      const locMap = new Map((lRes.data || []).map((l: any) => [l.id, l]));
+      const enriched = ((tRes.data || []) as any[]).map(t => ({
+        ...t,
+        from_location: locMap.get(t.from_location_id) || null,
+        to_location: locMap.get(t.to_location_id) || null,
+      }));
+      setTransfers(enriched as TransferRow[]);
       setLocations((lRes.data || []) as Location[]);
       setItems((iRes.data || []) as Item[]);
     } catch { toast.error('Failed to load data'); } finally { setLoading(false); }
