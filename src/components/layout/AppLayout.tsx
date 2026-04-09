@@ -1,6 +1,11 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { useUserPrograms } from '@/hooks/useUserPrograms';
@@ -26,6 +31,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronRight,
   LogOut,
   Users,
   KeyRound,
@@ -40,16 +46,27 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { hasProgram } = useUserPrograms();
   const { appName, logoUrl } = useOrgBranding();
 
-  // Close mobile drawer on route change
+  // Auto-open the section containing the active route
   useEffect(() => {
     setMobileOpen(false);
+    const activeSection = navSections.find(s =>
+      s.items.some(i => i.path === location.pathname)
+    );
+    if (activeSection) {
+      setOpenSections(prev => ({ ...prev, [activeSection.label]: true }));
+    }
   }, [location.pathname]);
+
+  const toggleSection = (label: string) => {
+    setOpenSections(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   const canAccess = (path: string) => {
     const programCode = pathToProgram[path];
@@ -69,35 +86,72 @@ export function AppLayout({ children }: AppLayoutProps) {
   const sidebarContent = (
     <>
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
+      <nav className="flex-1 overflow-y-auto py-2 px-2">
         {navSections.map(section => {
           const visibleItems = section.items.filter(item => canAccess(item.path));
           if (visibleItems.length === 0) return null;
-          return (
-            <div key={section.label} className="mb-4">
-              {(isMobile || sidebarOpen) && (
-                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-                  {section.label}
-                </p>
-              )}
-              <ul className="space-y-0.5">
+          const isOpen = !!openSections[section.label];
+          const hasActiveChild = visibleItems.some(i => location.pathname === i.path);
+          const showExpanded = isMobile || sidebarOpen;
+
+          // When sidebar is collapsed, show only icons (no sections)
+          if (!showExpanded) {
+            return (
+              <div key={section.label} className="mb-1">
                 {visibleItems.map(item => {
                   const isActive = location.pathname === item.path;
                   return (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={cn("nav-item", isActive && "nav-item-active")}
-                        title={!sidebarOpen && !isMobile ? item.label : undefined}
-                      >
-                        <item.icon className="h-5 w-5 flex-shrink-0" />
-                        {(isMobile || sidebarOpen) && <span>{item.label}</span>}
-                      </Link>
-                    </li>
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={cn("nav-item justify-center", isActive && "nav-item-active")}
+                      title={item.label}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                    </Link>
                   );
                 })}
-              </ul>
-            </div>
+              </div>
+            );
+          }
+
+          return (
+            <Collapsible
+              key={section.label}
+              open={isOpen}
+              onOpenChange={() => toggleSection(section.label)}
+              className="mb-1"
+            >
+              <CollapsibleTrigger className={cn(
+                "flex w-full items-center justify-between rounded-md px-3 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50",
+                hasActiveChild && "text-sidebar-foreground"
+              )}>
+                <span>{section.label}</span>
+                {isOpen
+                  ? <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+                  : <ChevronRight className="h-3.5 w-3.5 transition-transform" />
+                }
+              </CollapsibleTrigger>
+              <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
+                <ul className="space-y-0.5 mt-0.5 ml-1">
+                  {visibleItems.map(item => {
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <li key={item.path}>
+                        <Link
+                          to={item.path}
+                          className={cn("nav-item", isActive && "nav-item-active")}
+                        >
+                          <item.icon className="h-4 w-4 flex-shrink-0" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </CollapsibleContent>
+            </Collapsible>
           );
         })}
       </nav>
