@@ -358,6 +358,22 @@ export default function PurchaseOrders() {
                   <Input type="number" min="0" step="0.01" value={form.payment_terms_amount} onChange={e => setForm({ ...form, payment_terms_amount: parseFloat(e.target.value) || 0 })} />
                 </div>
               </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Discount Type</Label>
+                  <Select value={form.discount_type} onValueChange={v => setForm({ ...form, discount_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="value">Fixed Value (₦)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Discount {form.discount_type === 'percentage' ? '(%)' : '(₦)'}</Label>
+                  <Input type="number" min="0" step="0.01" value={form.discount_amount} onChange={e => setForm({ ...form, discount_amount: parseFloat(e.target.value) || 0 })} />
+                </div>
+              </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between"><Label>Line Items</Label><Button type="button" variant="outline" size="sm" onClick={addLine}>Add Line</Button></div>
                 <div className="space-y-2">
