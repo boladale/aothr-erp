@@ -31,6 +31,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronRight,
   LogOut,
   Users,
   KeyRound,
