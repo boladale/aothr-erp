@@ -229,7 +229,7 @@ export default function MatchExceptions() {
     {
       key: 'amount',
       header: 'Amount',
-      render: (h: InvoiceHoldWithDetails) => `$${(h.ap_invoices?.total_amount || 0).toFixed(2)}`
+      render: (h: InvoiceHoldWithDetails) => `₦${(h.ap_invoices?.total_amount || 0).toFixed(2)}`
     },
     {
       key: 'created_at',
@@ -377,7 +377,7 @@ export default function MatchExceptions() {
                         </span>
                         <span className="text-right">{line.qty_invoice}</span>
                         <span className={`text-right ${line.variance_amt !== 0 ? 'text-destructive font-medium' : ''}`}>
-                          ${line.variance_amt.toFixed(2)}
+                          ₦{line.variance_amt.toFixed(2)}
                         </span>
                         <span>{getMatchStatusBadge(line.match_status)}</span>
                       </div>
