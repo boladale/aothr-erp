@@ -53,10 +53,20 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { hasProgram } = useUserPrograms();
   const { appName, logoUrl } = useOrgBranding();
 
-  // Close mobile drawer on route change
+  // Auto-open the section containing the active route
   useEffect(() => {
     setMobileOpen(false);
+    const activeSection = navSections.find(s =>
+      s.items.some(i => i.path === location.pathname)
+    );
+    if (activeSection) {
+      setOpenSections(prev => ({ ...prev, [activeSection.label]: true }));
+    }
   }, [location.pathname]);
+
+  const toggleSection = (label: string) => {
+    setOpenSections(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   const canAccess = (path: string) => {
     const programCode = pathToProgram[path];
