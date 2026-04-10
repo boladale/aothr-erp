@@ -64,6 +64,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
   const [form, setForm] = useState({
     code: '',
     name: '',
+    rc_number: '',
     email: '',
     phone: '',
     address: '',
@@ -85,6 +86,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
     setForm({
       code: editVendor.code,
       name: editVendor.name,
+      rc_number: (editVendor as any).rc_number || '',
       email: editVendor.email || '',
       phone: editVendor.phone || '',
       address: editVendor.address || '',
@@ -168,6 +170,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
       const payload = {
         code: form.code,
         name: form.name,
+        rc_number: form.rc_number || null,
         email: form.email || null,
         phone: form.phone || null,
         address: form.address || null,
@@ -223,6 +226,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
     setForm({
       code: '',
       name: '',
+      rc_number: '',
       email: '',
       phone: '',
       address: '',
@@ -267,6 +271,14 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
           </div>
 
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>RC Number</Label>
+              <Input
+                value={form.rc_number}
+                onChange={e => setForm({ ...form, rc_number: e.target.value })}
+                placeholder="RC123456"
+              />
+            </div>
             <div className="space-y-2">
               <Label>Email</Label>
               <Input

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
   contactName: z.string().min(2, 'Contact name is required'),
+  rcNumber: z.string().optional(),
   email: z.string().email('Invalid email address'),
   phone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -27,13 +28,37 @@ const registerSchema = z.object({
 
 export default function VendorPortalLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
   const { user, loading: authLoading, signIn, signUp, roles } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState('login');
+  const [tab, setTab] = useState(inviteToken ? 'register' : 'login');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [regForm, setRegForm] = useState({ companyName: '', contactName: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [regForm, setRegForm] = useState({ companyName: '', contactName: '', rcNumber: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [forgotMode, setForgotMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [inviteData, setInviteData] = useState<any>(null);
+
+  // Load invite token data
+  useEffect(() => {
+    if (inviteToken) {
+      supabase
+        .from('vendor_invite_tokens' as any)
+        .select('*, vendors(name)')
+        .eq('token', inviteToken)
+        .is('used_at', null)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setInviteData(data);
+            setRegForm(prev => ({ ...prev, email: (data as any).email || '', companyName: (data as any).vendors?.name || '' }));
+          } else {
+            toast.error('Invalid or expired invite link');
+          }
+        });
+    }
+  }, [inviteToken]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -99,13 +124,24 @@ export default function VendorPortalLogin() {
       return;
     }
 
-    // 3. Submit registration request
+    // 3. Handle invite-based or self-registration
     const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (currentUser) {
+    if (currentUser && inviteData) {
+      // Invite flow: auto-link to existing vendor
+      await supabase.from('vendor_users' as any).insert({ user_id: currentUser.id, vendor_id: inviteData.vendor_id, is_active: true } as any);
+      await supabase.from('user_roles').insert({ user_id: currentUser.id, role: 'vendor_user' as any } as any);
+      await (supabase.from('vendor_invite_tokens' as any) as any).update({ used_at: new Date().toISOString() }).eq('id', inviteData.id);
+      setLoading(false);
+      toast.success('Account created and linked to vendor! Redirecting...');
+      navigate('/vendor-portal');
+      return;
+    } else if (currentUser) {
+      // Self-registration: submit request for approval
       await (supabase.from('vendor_registration_requests' as any) as any).insert({
         user_id: currentUser.id,
         company_name: regForm.companyName,
         contact_name: regForm.contactName,
+        rc_number: regForm.rcNumber || null,
         email: regForm.email,
         phone: regForm.phone || null,
       });
@@ -190,6 +226,10 @@ export default function VendorPortalLogin() {
                 <div className="space-y-2">
                   <Label htmlFor="company">Company Name</Label>
                   <Input id="company" placeholder="Acme Supplies Ltd" value={regForm.companyName} onChange={e => setRegForm({ ...regForm, companyName: e.target.value })} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rc-number">RC Number (optional)</Label>
+                  <Input id="rc-number" placeholder="RC123456" value={regForm.rcNumber} onChange={e => setRegForm({ ...regForm, rcNumber: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contact">Contact Person</Label>

@@ -4910,6 +4910,47 @@ export type Database = {
           },
         ]
       }
+      vendor_invite_tokens: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_invite_tokens_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_ratings: {
         Row: {
           comments: string | null
@@ -4984,6 +5025,7 @@ export type Database = {
           organization_id: string | null
           phone: string | null
           project_size_capacity: string | null
+          rc_number: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
@@ -5005,6 +5047,7 @@ export type Database = {
           organization_id?: string | null
           phone?: string | null
           project_size_capacity?: string | null
+          rc_number?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -5026,6 +5069,7 @@ export type Database = {
           organization_id?: string | null
           phone?: string | null
           project_size_capacity?: string | null
+          rc_number?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
@@ -5104,6 +5148,7 @@ export type Database = {
           payment_terms: number | null
           phone: string | null
           project_size_capacity: string | null
+          rc_number: string | null
           rejection_reason: string | null
           service_categories: string[] | null
           status: Database["public"]["Enums"]["vendor_status"]
@@ -5125,6 +5170,7 @@ export type Database = {
           payment_terms?: number | null
           phone?: string | null
           project_size_capacity?: string | null
+          rc_number?: string | null
           rejection_reason?: string | null
           service_categories?: string[] | null
           status?: Database["public"]["Enums"]["vendor_status"]
@@ -5146,6 +5192,7 @@ export type Database = {
           payment_terms?: number | null
           phone?: string | null
           project_size_capacity?: string | null
+          rc_number?: string | null
           rejection_reason?: string | null
           service_categories?: string[] | null
           status?: Database["public"]["Enums"]["vendor_status"]
