@@ -84,8 +84,8 @@ export default function Admin() {
     try {
       const { error } = await supabase.from('user_roles').insert({
         user_id: selectedUser.user_id,
-        role: newRole,
-      });
+        role: newRole as any,
+      } as any);
 
       if (error) {
         if (error.code === '23505') {
@@ -124,7 +124,7 @@ export default function Admin() {
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', role);
+        .eq('role', role as any);
 
       if (error) throw error;
       toast.success('Role removed');
