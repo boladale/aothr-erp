@@ -24,19 +24,19 @@ export default function SelfServiceLeave() {
 
   const { data: employee } = useQuery({
     queryKey: ['my-employee', user?.id],
-    queryFn: async () => { const { data } = await supabase.from('employees' as any).select('id').eq('user_id', user!.id).maybeSingle(); return data; },
+    queryFn: async () => { const { data } = await (supabase.from('employees' as any) as any).select('id').eq('user_id', user!.id).maybeSingle(); return data as any; },
     enabled: !!user,
   });
 
   const { data: leaveTypes = [] } = useQuery({
     queryKey: ['leave-types'],
-    queryFn: async () => { const { data } = await supabase.from('leave_types' as any).select('*').eq('is_active', true).order('name'); return data || []; },
+    queryFn: async () => { const { data } = await (supabase.from('leave_types' as any) as any).select('*').eq('is_active', true).order('name'); return (data || []) as any[]; },
   });
 
   const { data: requests = [] } = useQuery({
     queryKey: ['my-leave-requests', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('leave_requests' as any).select('*, leave_types(name)').eq('employee_id', (employee as any).id).order('created_at', { ascending: false });
+      const { data } = await (supabase.from('leave_requests' as any) as any).select('*, leave_types(name)').eq('employee_id', (employee as any).id).order('created_at', { ascending: false });
       return data || [];
     },
     enabled: !!employee,
@@ -45,7 +45,7 @@ export default function SelfServiceLeave() {
   const submitMutation = useMutation({
     mutationFn: async () => {
       const days = differenceInBusinessDays(new Date(form.end_date), new Date(form.start_date)) + 1;
-      const { error } = await supabase.from('leave_requests' as any).insert({
+      const { error } = await (supabase.from('leave_requests' as any) as any).insert({
         employee_id: (employee as any).id,
         leave_type_id: form.leave_type_id,
         start_date: form.start_date,

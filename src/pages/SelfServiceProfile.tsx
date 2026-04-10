@@ -19,7 +19,7 @@ export default function SelfServiceProfile() {
   const { data: employee } = useQuery({
     queryKey: ['my-employee-full', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('employees' as any).select('*').eq('user_id', user!.id).maybeSingle();
+      const { data } = await (supabase.from('employees' as any) as any).select('*').eq('user_id', user!.id).maybeSingle();
       return data as any;
     },
     enabled: !!user,
@@ -46,7 +46,7 @@ export default function SelfServiceProfile() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('employees' as any).update(form).eq('id', (employee as any).id);
+      const { error } = await (supabase.from('employees' as any) as any).update(form).eq('id', (employee as any).id);
       if (error) throw error;
     },
     onSuccess: () => {

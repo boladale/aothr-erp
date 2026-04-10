@@ -15,7 +15,7 @@ export default function SelfServiceDashboard() {
   const { data: employee } = useQuery({
     queryKey: ['my-employee', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('employees' as any).select('*, departments(name), job_titles(title)').eq('user_id', user!.id).maybeSingle();
+      const { data } = await (supabase.from('employees' as any) as any).select('*, departments(name), job_titles(title)').eq('user_id', user!.id).maybeSingle();
       return data as any;
     },
     enabled: !!user,
@@ -24,8 +24,8 @@ export default function SelfServiceDashboard() {
   const { data: leaveBalances = [] } = useQuery({
     queryKey: ['my-leave-balances', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('leave_balances' as any).select('*, leave_types(name)').eq('employee_id', (employee as any).id).eq('year', new Date().getFullYear());
-      return data || [];
+      const { data } = await (supabase.from('leave_balances' as any) as any).select('*, leave_types(name)').eq('employee_id', (employee as any).id).eq('year', new Date().getFullYear());
+      return (data || []) as any[];
     },
     enabled: !!employee,
   });
@@ -33,7 +33,7 @@ export default function SelfServiceDashboard() {
   const { data: pendingLeave = 0 } = useQuery({
     queryKey: ['my-pending-leave', employee?.id],
     queryFn: async () => {
-      const { count } = await supabase.from('leave_requests' as any).select('*', { count: 'exact', head: true }).eq('employee_id', (employee as any).id).eq('status', 'pending');
+      const { count } = await (supabase.from('leave_requests' as any) as any).select('*', { count: 'exact', head: true }).eq('employee_id', (employee as any).id).eq('status', 'pending');
       return count || 0;
     },
     enabled: !!employee,
@@ -42,7 +42,7 @@ export default function SelfServiceDashboard() {
   const { data: pendingExpenses = 0 } = useQuery({
     queryKey: ['my-pending-expenses', employee?.id],
     queryFn: async () => {
-      const { count } = await supabase.from('expense_claims' as any).select('*', { count: 'exact', head: true }).eq('employee_id', (employee as any).id).in('status', ['draft', 'submitted']);
+      const { count } = await (supabase.from('expense_claims' as any) as any).select('*', { count: 'exact', head: true }).eq('employee_id', (employee as any).id).in('status', ['draft', 'submitted']);
       return count || 0;
     },
     enabled: !!employee,
