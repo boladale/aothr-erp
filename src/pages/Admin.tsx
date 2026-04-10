@@ -275,6 +275,11 @@ export default function Admin() {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="vendor-registrations" className="gap-2">
+                <Building2 className="h-4 w-4" /> Vendor Registrations
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="currency" className="gap-2">
                 <Coins className="h-4 w-4" /> Currency
               </TabsTrigger>
