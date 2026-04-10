@@ -20,32 +20,33 @@ export default function SelfServiceProfile() {
     queryKey: ['my-employee-full', user?.id],
     queryFn: async () => {
       const { data } = await supabase.from('employees' as any).select('*').eq('user_id', user!.id).maybeSingle();
-      return data;
+      return data as any;
     },
     enabled: !!user,
   });
 
   useEffect(() => {
     if (employee) {
+      const e = employee as any;
       setForm({
-        phone: employee.phone || '',
-        address: employee.address || '',
-        city: employee.city || '',
-        state: employee.state || '',
-        country: employee.country || '',
-        next_of_kin_name: employee.next_of_kin_name || '',
-        next_of_kin_phone: employee.next_of_kin_phone || '',
-        next_of_kin_relationship: employee.next_of_kin_relationship || '',
-        bank_name: employee.bank_name || '',
-        bank_account_number: employee.bank_account_number || '',
-        bank_account_name: employee.bank_account_name || '',
+        phone: e.phone || '',
+        address: e.address || '',
+        city: e.city || '',
+        state: e.state || '',
+        country: e.country || '',
+        next_of_kin_name: e.next_of_kin_name || '',
+        next_of_kin_phone: e.next_of_kin_phone || '',
+        next_of_kin_relationship: e.next_of_kin_relationship || '',
+        bank_name: e.bank_name || '',
+        bank_account_number: e.bank_account_number || '',
+        bank_account_name: e.bank_account_name || '',
       });
     }
   }, [employee]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('employees' as any).update(form).eq('id', employee!.id);
+      const { error } = await supabase.from('employees' as any).update(form).eq('id', (employee as any).id);
       if (error) throw error;
     },
     onSuccess: () => {

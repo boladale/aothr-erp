@@ -20,7 +20,7 @@ export default function SelfServicePayslips() {
   const { data: payslips = [] } = useQuery({
     queryKey: ['my-payslips', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('payslips' as any).select('*, payroll_lines(gross_salary, total_deductions, net_salary)').eq('employee_id', employee!.id).order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      const { data } = await supabase.from('payslips' as any).select('*, payroll_lines(gross_salary, total_deductions, net_salary)').eq('employee_id', (employee as any).id).order('period_year', { ascending: false }).order('period_month', { ascending: false });
       return data || [];
     },
     enabled: !!employee,

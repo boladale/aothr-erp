@@ -30,7 +30,7 @@ export default function SelfServiceExpenses() {
   const { data: claims = [] } = useQuery({
     queryKey: ['my-expense-claims', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('expense_claims' as any).select('*').eq('employee_id', employee!.id).order('created_at', { ascending: false });
+      const { data } = await supabase.from('expense_claims' as any).select('*').eq('employee_id', (employee as any).id).order('created_at', { ascending: false });
       return data || [];
     },
     enabled: !!employee,
@@ -41,7 +41,7 @@ export default function SelfServiceExpenses() {
       const totalAmount = form.lines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
       const claimNumber = `EXP-${Date.now().toString(36).toUpperCase()}`;
       const { data: claim, error: claimErr } = await supabase.from('expense_claims' as any).insert({
-        employee_id: employee!.id,
+        employee_id: (employee as any).id,
         claim_number: claimNumber,
         description: form.description,
         total_amount: totalAmount,
@@ -52,7 +52,7 @@ export default function SelfServiceExpenses() {
       if (claimErr) throw claimErr;
 
       const lines = form.lines.filter(l => l.description && l.amount).map(l => ({
-        claim_id: claim.id,
+        claim_id: (claim as any).id,
         description: l.description,
         amount: parseFloat(l.amount),
         category: l.category || null,
