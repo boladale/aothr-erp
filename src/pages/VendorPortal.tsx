@@ -3,11 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StatusBadge } from '@/components/ui/status-badge';
 import { MetricCard } from '@/components/ui/metric-card';
-import { FileText, DollarSign, ShoppingCart } from 'lucide-react';
+import { FileText, DollarSign, ShoppingCart, Send, ClipboardCheck } from 'lucide-react';
+import { VendorRFPBidding } from '@/components/vendor-portal/VendorRFPBidding';
+import { VendorPOAcceptance } from '@/components/vendor-portal/VendorPOAcceptance';
+import { VendorInvoiceSubmission } from '@/components/vendor-portal/VendorInvoiceSubmission';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { StatusBadge } from '@/components/ui/status-badge';
 import { format } from 'date-fns';
 
 export default function VendorPortal() {
@@ -78,65 +81,24 @@ export default function VendorPortal() {
           <MetricCard title="Payments Received" value={totalPaid.toLocaleString()} icon={DollarSign} />
         </div>
 
-        <Tabs defaultValue="pos">
-          <TabsList>
-            <TabsTrigger value="pos">Purchase Orders</TabsTrigger>
-            <TabsTrigger value="invoices">Invoices</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
+        <Tabs defaultValue="rfps">
+          <TabsList className="flex-wrap">
+            <TabsTrigger value="rfps" className="gap-1"><Send className="h-4 w-4" /> RFPs & Bidding</TabsTrigger>
+            <TabsTrigger value="pos" className="gap-1"><ClipboardCheck className="h-4 w-4" /> Purchase Orders</TabsTrigger>
+            <TabsTrigger value="invoices" className="gap-1"><FileText className="h-4 w-4" /> Invoices</TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1"><DollarSign className="h-4 w-4" /> Payments</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="rfps">
+            <VendorRFPBidding vendorId={vendorId} userId={user!.id} />
+          </TabsContent>
+
           <TabsContent value="pos">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>PO #</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchaseOrders.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No purchase orders</TableCell></TableRow>
-                  ) : purchaseOrders.map((po: any) => (
-                    <TableRow key={po.id}>
-                      <TableCell className="font-mono">{po.po_number}</TableCell>
-                      <TableCell>{format(new Date(po.created_at), 'dd MMM yyyy')}</TableCell>
-                      <TableCell>{Number(po.total_amount).toLocaleString()}</TableCell>
-                      <TableCell><StatusBadge status={po.status} /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <VendorPOAcceptance vendorId={vendorId} userId={user!.id} purchaseOrders={purchaseOrders} />
           </TabsContent>
 
           <TabsContent value="invoices">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice #</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No invoices</TableCell></TableRow>
-                  ) : invoices.map((inv: any) => (
-                    <TableRow key={inv.id}>
-                      <TableCell className="font-mono">{inv.invoice_number}</TableCell>
-                      <TableCell>{format(new Date(inv.invoice_date), 'dd MMM yyyy')}</TableCell>
-                      <TableCell>{Number(inv.total_amount).toLocaleString()}</TableCell>
-                      <TableCell><StatusBadge status={inv.payment_status} /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <VendorInvoiceSubmission vendorId={vendorId} userId={user!.id} invoices={invoices} purchaseOrders={purchaseOrders} />
           </TabsContent>
 
           <TabsContent value="payments">
