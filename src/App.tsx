@@ -74,6 +74,22 @@ import InventoryTransfers from "./pages/InventoryTransfers";
 import VendorPaymentReport from "./pages/VendorPaymentReport";
 import RequisitionToPaymentReport from "./pages/RequisitionToPaymentReport";
 import ProcurementAudit from "./pages/ProcurementAudit";
+import Departments from "./pages/Departments";
+import Employees from "./pages/Employees";
+import EmployeeDetail from "./pages/EmployeeDetail";
+import LeaveManagement from "./pages/LeaveManagement";
+import Attendance from "./pages/Attendance";
+import SalaryComponents from "./pages/SalaryComponents";
+import PayGrades from "./pages/PayGrades";
+import PayrollRuns from "./pages/PayrollRuns";
+import PayrollRunDetail from "./pages/PayrollRunDetail";
+import Payslips from "./pages/Payslips";
+import SelfServiceDashboard from "./pages/SelfServiceDashboard";
+import SelfServiceLeave from "./pages/SelfServiceLeave";
+import SelfServiceExpenses from "./pages/SelfServiceExpenses";
+import SelfServicePayslips from "./pages/SelfServicePayslips";
+import SelfServiceProfile from "./pages/SelfServiceProfile";
+import VendorPortal from "./pages/VendorPortal";
 
 const queryClient = new QueryClient();
 
@@ -207,6 +223,22 @@ const App = () => (
             <Route path="/vendor-payment-report" element={<ProtectedRoute><VendorPaymentReport /></ProtectedRoute>} />
             <Route path="/req-to-payment-report" element={<ProtectedRoute><RequisitionToPaymentReport /></ProtectedRoute>} />
             <Route path="/procurement-audit" element={<ProtectedRoute><ProcurementAudit /></ProtectedRoute>} />
+            <Route path="/departments" element={<ProtectedRoute><Departments /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+            <Route path="/employees/:id" element={<ProtectedRoute><EmployeeDetail /></ProtectedRoute>} />
+            <Route path="/leave-management" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
+            <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
+            <Route path="/salary-components" element={<ProtectedRoute><SalaryComponents /></ProtectedRoute>} />
+            <Route path="/pay-grades" element={<ProtectedRoute><PayGrades /></ProtectedRoute>} />
+            <Route path="/payroll-runs" element={<ProtectedRoute><PayrollRuns /></ProtectedRoute>} />
+            <Route path="/payroll-runs/:id" element={<ProtectedRoute><PayrollRunDetail /></ProtectedRoute>} />
+            <Route path="/payslips" element={<ProtectedRoute><Payslips /></ProtectedRoute>} />
+            <Route path="/self-service" element={<ProtectedRoute><SelfServiceDashboard /></ProtectedRoute>} />
+            <Route path="/self-service/leave" element={<ProtectedRoute><SelfServiceLeave /></ProtectedRoute>} />
+            <Route path="/self-service/expenses" element={<ProtectedRoute><SelfServiceExpenses /></ProtectedRoute>} />
+            <Route path="/self-service/payslips" element={<ProtectedRoute><SelfServicePayslips /></ProtectedRoute>} />
+            <Route path="/self-service/profile" element={<ProtectedRoute><SelfServiceProfile /></ProtectedRoute>} />
+            <Route path="/vendor-portal" element={<ProtectedRoute><VendorPortal /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
