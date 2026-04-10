@@ -71,12 +71,12 @@ export default function LeaveManagement() {
             .eq('leave_type_id', req.leave_type_id)
             .eq('year', new Date().getFullYear());
           // Increment used_days
-          const { data: balance } = await supabase.from('leave_balances' as any)
-            .select('id, used_days') as any
+          const { data: balance } = await (supabase.from('leave_balances' as any)
+            .select('id, used_days')
             .eq('employee_id', req.employee_id)
             .eq('leave_type_id', req.leave_type_id)
             .eq('year', new Date().getFullYear())
-            .maybeSingle();
+            .maybeSingle() as any);
           if (balance) {
             await supabase.from('leave_balances' as any).update({
               used_days: Number(balance.used_days) + Number(req.days_requested),
