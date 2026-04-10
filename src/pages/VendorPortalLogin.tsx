@@ -194,6 +194,10 @@ export default function VendorPortalLogin() {
                   <Input id="company" placeholder="Acme Supplies Ltd" value={regForm.companyName} onChange={e => setRegForm({ ...regForm, companyName: e.target.value })} required />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="rc-number">RC Number (optional)</Label>
+                  <Input id="rc-number" placeholder="RC123456" value={regForm.rcNumber} onChange={e => setRegForm({ ...regForm, rcNumber: e.target.value })} />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="contact">Contact Person</Label>
                   <Input id="contact" placeholder="John Doe" value={regForm.contactName} onChange={e => setRegForm({ ...regForm, contactName: e.target.value })} required />
                 </div>
