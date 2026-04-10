@@ -46,7 +46,7 @@ export default function EmployeeDetail() {
     queryKey: ['employee-salary', id],
     queryFn: async () => {
       const { data } = await supabase.from('employee_salary' as any).select('*, pay_grades(grade_name)').eq('employee_id', id!).eq('is_current', true).maybeSingle();
-      return data;
+      return data as any;
     },
     enabled: !!id,
   });

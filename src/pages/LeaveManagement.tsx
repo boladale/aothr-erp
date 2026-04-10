@@ -72,7 +72,7 @@ export default function LeaveManagement() {
             .eq('year', new Date().getFullYear());
           // Increment used_days
           const { data: balance } = await supabase.from('leave_balances' as any)
-            .select('id, used_days')
+            .select('id, used_days') as any
             .eq('employee_id', req.employee_id)
             .eq('leave_type_id', req.leave_type_id)
             .eq('year', new Date().getFullYear())

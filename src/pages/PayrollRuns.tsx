@@ -61,10 +61,11 @@ export default function PayrollRuns() {
         organization_id: organizationId,
       }).select().single();
       if (runErr) throw runErr;
+      const runData = run as any;
 
       // Create payroll lines for each employee
       const lines = activeEmps.map((es: any) => ({
-        payroll_run_id: run.id,
+        payroll_run_id: runData.id,
         employee_id: es.employee_id,
         gross_salary: es.gross_salary,
         total_earnings: es.gross_salary,
