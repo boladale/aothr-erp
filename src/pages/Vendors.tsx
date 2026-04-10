@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Power } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Power, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import type { Vendor, VendorStatus } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { VendorFormDialog } from '@/components/vendors/VendorFormDialog';
+import { VendorInviteDialog } from '@/components/vendors/VendorInviteDialog';
 
 const PROJECT_SIZE_LABELS: Record<string, string> = {
   small: 'Small',
@@ -29,6 +30,7 @@ export default function Vendors() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editVendor, setEditVendor] = useState<Vendor | null>(null);
+  const [inviteVendor, setInviteVendor] = useState<Vendor | null>(null);
 
   useEffect(() => {
     fetchVendors();
@@ -230,7 +232,12 @@ export default function Vendors() {
           )}
           {(v.status === 'active' || v.status === 'inactive') && (
             <Button size="sm" variant="ghost" title={v.status === 'active' ? 'Disable' : 'Enable'} onClick={(e) => { e.stopPropagation(); handleToggleActive(v); }}>
-              <Power className={`h-4 w-4 ${v.status === 'inactive' ? 'text-muted-foreground' : 'text-primary'}`} />
+              <Power className={`h-4 w-4 ${v.status === 'inactive' ? 'text-muted-foreground' : ''}`} />
+            </Button>
+          )}
+          {v.status === 'active' && v.email && (
+            <Button size="sm" variant="ghost" title="Invite to Portal" onClick={(e) => { e.stopPropagation(); setInviteVendor(v); }}>
+              <Link2 className="h-4 w-4" />
             </Button>
           )}
           {v.status === 'draft' && (
