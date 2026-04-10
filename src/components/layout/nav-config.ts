@@ -100,6 +100,20 @@ export const pathToProgram: Record<string, string> = {
   '/req-to-payment-report': 'req_to_payment_report',
   '/procurement-audit': 'procurement_audit',
   '/admin': 'admin',
+  '/departments': 'departments',
+  '/employees': 'employees',
+  '/leave-management': 'leave_management',
+  '/attendance': 'attendance',
+  '/salary-components': 'salary_components',
+  '/pay-grades': 'pay_grades',
+  '/payroll-runs': 'payroll_runs',
+  '/payslips': 'payslips',
+  '/self-service': 'self_service',
+  '/self-service/leave': 'self_service',
+  '/self-service/expenses': 'expense_claims',
+  '/self-service/payslips': 'self_service',
+  '/self-service/profile': 'self_service',
+  '/vendor-portal': 'vendor_portal',
 };
 
 export const navSections = [
