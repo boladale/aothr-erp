@@ -32,7 +32,7 @@ export default function VendorPortalLogin() {
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('login');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [regForm, setRegForm] = useState({ companyName: '', contactName: '', email: '', phone: '', password: '', confirmPassword: '' });
+  const [regForm, setRegForm] = useState({ companyName: '', contactName: '', rcNumber: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [forgotMode, setForgotMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
 
@@ -107,6 +107,7 @@ export default function VendorPortalLogin() {
         user_id: currentUser.id,
         company_name: regForm.companyName,
         contact_name: regForm.contactName,
+        rc_number: regForm.rcNumber || null,
         email: regForm.email,
         phone: regForm.phone || null,
       });
