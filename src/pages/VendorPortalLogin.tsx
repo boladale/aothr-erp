@@ -124,9 +124,19 @@ export default function VendorPortalLogin() {
       return;
     }
 
-    // 3. Submit registration request
+    // 3. Handle invite-based or self-registration
     const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (currentUser) {
+    if (currentUser && inviteData) {
+      // Invite flow: auto-link to existing vendor
+      await supabase.from('vendor_users' as any).insert({ user_id: currentUser.id, vendor_id: inviteData.vendor_id, is_active: true } as any);
+      await supabase.from('user_roles').insert({ user_id: currentUser.id, role: 'vendor_user' as any } as any);
+      await (supabase.from('vendor_invite_tokens' as any) as any).update({ used_at: new Date().toISOString() }).eq('id', inviteData.id);
+      setLoading(false);
+      toast.success('Account created and linked to vendor! Redirecting...');
+      navigate('/vendor-portal');
+      return;
+    } else if (currentUser) {
+      // Self-registration: submit request for approval
       await (supabase.from('vendor_registration_requests' as any) as any).insert({
         user_id: currentUser.id,
         company_name: regForm.companyName,
