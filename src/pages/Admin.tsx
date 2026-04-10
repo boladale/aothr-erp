@@ -370,6 +370,11 @@ export default function Admin() {
             </TabsContent>
           )}
           {isAdmin && (
+            <TabsContent value="vendor-registrations" className="space-y-4">
+              <VendorRegistrationsPanel />
+            </TabsContent>
+          )}
+          {isAdmin && (
             <TabsContent value="currency" className="space-y-4">
               <CurrencySettingsPanel />
             </TabsContent>
