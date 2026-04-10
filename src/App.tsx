@@ -74,6 +74,22 @@ import InventoryTransfers from "./pages/InventoryTransfers";
 import VendorPaymentReport from "./pages/VendorPaymentReport";
 import RequisitionToPaymentReport from "./pages/RequisitionToPaymentReport";
 import ProcurementAudit from "./pages/ProcurementAudit";
+import Departments from "./pages/Departments";
+import Employees from "./pages/Employees";
+import EmployeeDetail from "./pages/EmployeeDetail";
+import LeaveManagement from "./pages/LeaveManagement";
+import Attendance from "./pages/Attendance";
+import SalaryComponents from "./pages/SalaryComponents";
+import PayGrades from "./pages/PayGrades";
+import PayrollRuns from "./pages/PayrollRuns";
+import PayrollRunDetail from "./pages/PayrollRunDetail";
+import Payslips from "./pages/Payslips";
+import SelfServiceDashboard from "./pages/SelfServiceDashboard";
+import SelfServiceLeave from "./pages/SelfServiceLeave";
+import SelfServiceExpenses from "./pages/SelfServiceExpenses";
+import SelfServicePayslips from "./pages/SelfServicePayslips";
+import SelfServiceProfile from "./pages/SelfServiceProfile";
+import VendorPortal from "./pages/VendorPortal";
 
 const queryClient = new QueryClient();
 
