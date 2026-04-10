@@ -5371,6 +5371,7 @@ export type Database = {
       }
       gl_period_end_summary: { Args: { p_period_id: string }; Returns: string }
       gl_year_end_close: { Args: { p_fiscal_year: number }; Returns: string }
+      has_permission: { Args: { p_code: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
