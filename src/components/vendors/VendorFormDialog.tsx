@@ -225,6 +225,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
     setForm({
       code: '',
       name: '',
+      rc_number: '',
       email: '',
       phone: '',
       address: '',
