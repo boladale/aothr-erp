@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive, Coins, Building2 } from 'lucide-react';
-import { VendorRegistrationsPanel } from '@/components/admin/VendorRegistrationsPanel';
+import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive, Coins } from 'lucide-react';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -275,11 +274,6 @@ export default function Admin() {
               </TabsTrigger>
             )}
             {isAdmin && (
-              <TabsTrigger value="vendor-registrations" className="gap-2">
-                <Building2 className="h-4 w-4" /> Vendor Registrations
-              </TabsTrigger>
-            )}
-            {isAdmin && (
               <TabsTrigger value="currency" className="gap-2">
                 <Coins className="h-4 w-4" /> Currency
               </TabsTrigger>
@@ -367,11 +361,6 @@ export default function Admin() {
           {isAdmin && (
             <TabsContent value="branding" className="space-y-4">
               <OrganizationBranding />
-            </TabsContent>
-          )}
-          {isAdmin && (
-            <TabsContent value="vendor-registrations" className="space-y-4">
-              <VendorRegistrationsPanel />
             </TabsContent>
           )}
           {isAdmin && (
