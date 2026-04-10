@@ -114,6 +114,7 @@ export const pathToProgram: Record<string, string> = {
   '/self-service/payslips': 'self_service',
   '/self-service/profile': 'self_service',
   '/vendor-portal': 'vendor_portal',
+  '/vendor-registrations': 'vendor_registrations',
 };
 
 export const navSections = [
@@ -267,6 +268,7 @@ export const navSections = [
       { path: '/approval-rules', label: 'Approval Rules', icon: Shield },
       { path: '/workflows', label: 'Workflows', icon: GitBranch },
       { path: '/user-management', label: 'User Management', icon: Shield },
+      { path: '/vendor-registrations', label: 'Vendor Registrations', icon: Building2 },
       { path: '/admin', label: 'Admin', icon: Settings },
       { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },
     ],

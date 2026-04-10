@@ -90,6 +90,7 @@ import SelfServiceExpenses from "./pages/SelfServiceExpenses";
 import SelfServicePayslips from "./pages/SelfServicePayslips";
 import SelfServiceProfile from "./pages/SelfServiceProfile";
 import VendorPortal from "./pages/VendorPortal";
+import VendorRegistrations from "./pages/VendorRegistrations";
 import StaffPortalLogin from "./pages/StaffPortalLogin";
 import VendorPortalLogin from "./pages/VendorPortalLogin";
 import { StaffPortalGuard } from "./components/guards/StaffPortalGuard";
@@ -227,6 +228,7 @@ const App = () => (
             <Route path="/vendor-payment-report" element={<ProtectedRoute><VendorPaymentReport /></ProtectedRoute>} />
             <Route path="/req-to-payment-report" element={<ProtectedRoute><RequisitionToPaymentReport /></ProtectedRoute>} />
             <Route path="/procurement-audit" element={<ProtectedRoute><ProcurementAudit /></ProtectedRoute>} />
+            <Route path="/vendor-registrations" element={<ProtectedRoute><VendorRegistrations /></ProtectedRoute>} />
             <Route path="/departments" element={<ProtectedRoute><Departments /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
             <Route path="/employees/:id" element={<ProtectedRoute><EmployeeDetail /></ProtectedRoute>} />
