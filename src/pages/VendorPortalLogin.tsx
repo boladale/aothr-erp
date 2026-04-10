@@ -28,13 +28,37 @@ const registerSchema = z.object({
 
 export default function VendorPortalLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
   const { user, loading: authLoading, signIn, signUp, roles } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState('login');
+  const [tab, setTab] = useState(inviteToken ? 'register' : 'login');
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [regForm, setRegForm] = useState({ companyName: '', contactName: '', rcNumber: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [forgotMode, setForgotMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [inviteData, setInviteData] = useState<any>(null);
+
+  // Load invite token data
+  useEffect(() => {
+    if (inviteToken) {
+      supabase
+        .from('vendor_invite_tokens' as any)
+        .select('*, vendors(name)')
+        .eq('token', inviteToken)
+        .is('used_at', null)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setInviteData(data);
+            setRegForm(prev => ({ ...prev, email: (data as any).email || '', companyName: (data as any).vendors?.name || '' }));
+          } else {
+            toast.error('Invalid or expired invite link');
+          }
+        });
+    }
+  }, [inviteToken]);
 
   useEffect(() => {
     if (!authLoading && user) {
