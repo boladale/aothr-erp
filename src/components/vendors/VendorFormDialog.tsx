@@ -170,6 +170,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
       const payload = {
         code: form.code,
         name: form.name,
+        rc_number: form.rc_number || null,
         email: form.email || null,
         phone: form.phone || null,
         address: form.address || null,
@@ -265,6 +266,17 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
                 placeholder="Vendor Name"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>RC Number</Label>
+              <Input
+                value={form.rc_number}
+                onChange={e => setForm({ ...form, rc_number: e.target.value })}
+                placeholder="RC123456"
               />
             </div>
           </div>
