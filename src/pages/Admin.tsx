@@ -144,6 +144,11 @@ export default function Admin() {
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
+    hr_manager: 'bg-primary text-primary-foreground',
+    hr_officer: 'bg-primary/80 text-primary-foreground',
+    payroll_manager: 'bg-success text-success-foreground',
+    employee: 'bg-accent text-accent-foreground',
+    vendor_user: 'bg-muted text-muted-foreground',
   };
 
   const userColumns = [
