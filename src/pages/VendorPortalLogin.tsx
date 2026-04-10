@@ -19,6 +19,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   companyName: z.string().min(2, 'Company name is required'),
   contactName: z.string().min(2, 'Contact name is required'),
+  rcNumber: z.string().optional(),
   email: z.string().email('Invalid email address'),
   phone: z.string().optional(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
