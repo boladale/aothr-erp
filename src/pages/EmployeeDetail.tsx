@@ -18,7 +18,7 @@ export default function EmployeeDetail() {
   const { data: employee, isLoading } = useQuery({
     queryKey: ['employee', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('employees').select('*, departments(name), job_titles(title)').eq('id', id).single();
+      const { data, error } = await supabase.from('employees' as any).select('*, departments(name), job_titles(title)').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -27,7 +27,7 @@ export default function EmployeeDetail() {
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['leave-requests', id],
     queryFn: async () => {
-      const { data } = await supabase.from('leave_requests').select('*, leave_types(name)').eq('employee_id', id!).order('created_at', { ascending: false });
+      const { data } = await supabase.from('leave_requests' as any).select('*, leave_types(name)').eq('employee_id', id!).order('created_at', { ascending: false });
       return data || [];
     },
     enabled: !!id,
@@ -36,7 +36,7 @@ export default function EmployeeDetail() {
   const { data: leaveBalances = [] } = useQuery({
     queryKey: ['leave-balances', id],
     queryFn: async () => {
-      const { data } = await supabase.from('leave_balances').select('*, leave_types(name)').eq('employee_id', id!).eq('year', new Date().getFullYear());
+      const { data } = await supabase.from('leave_balances' as any).select('*, leave_types(name)').eq('employee_id', id!).eq('year', new Date().getFullYear());
       return data || [];
     },
     enabled: !!id,
@@ -45,7 +45,7 @@ export default function EmployeeDetail() {
   const { data: salary } = useQuery({
     queryKey: ['employee-salary', id],
     queryFn: async () => {
-      const { data } = await supabase.from('employee_salary').select('*, pay_grades(grade_name)').eq('employee_id', id!).eq('is_current', true).maybeSingle();
+      const { data } = await supabase.from('employee_salary' as any).select('*, pay_grades(grade_name)').eq('employee_id', id!).eq('is_current', true).maybeSingle();
       return data;
     },
     enabled: !!id,

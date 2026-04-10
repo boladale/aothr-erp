@@ -13,14 +13,14 @@ export default function SelfServicePayslips() {
 
   const { data: employee } = useQuery({
     queryKey: ['my-employee', user?.id],
-    queryFn: async () => { const { data } = await supabase.from('employees').select('id').eq('user_id', user!.id).maybeSingle(); return data; },
+    queryFn: async () => { const { data } = await supabase.from('employees' as any).select('id').eq('user_id', user!.id).maybeSingle(); return data; },
     enabled: !!user,
   });
 
   const { data: payslips = [] } = useQuery({
     queryKey: ['my-payslips', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('payslips').select('*, payroll_lines(gross_salary, total_deductions, net_salary)').eq('employee_id', employee!.id).order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      const { data } = await supabase.from('payslips' as any).select('*, payroll_lines(gross_salary, total_deductions, net_salary)').eq('employee_id', employee!.id).order('period_year', { ascending: false }).order('period_month', { ascending: false });
       return data || [];
     },
     enabled: !!employee,

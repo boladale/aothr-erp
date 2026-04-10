@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
-import { Plus, Edit, Building2 } from 'lucide-react';
+import { Plus, Edit } from 'lucide-react';
 
 export default function Departments() {
   const { organizationId } = useAuth();
@@ -23,7 +23,7 @@ export default function Departments() {
   const { data: departments = [], isLoading } = useQuery({
     queryKey: ['departments'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('departments').select('*').order('name');
+      const { data, error } = await supabase.from('departments' as any).select('*').order('name');
       if (error) throw error;
       return data;
     },
@@ -32,10 +32,10 @@ export default function Departments() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (editing) {
-        const { error } = await supabase.from('departments').update({ name: form.name, code: form.code }).eq('id', editing.id);
+        const { error } = await supabase.from('departments' as any).update({ name: form.name, code: form.code }).eq('id', editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('departments').insert({ name: form.name, code: form.code, organization_id: organizationId });
+        const { error } = await supabase.from('departments' as any).insert({ name: form.name, code: form.code, organization_id: organizationId });
         if (error) throw error;
       }
     },
@@ -58,11 +58,9 @@ export default function Departments() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Departments" description="Manage organizational departments">
-          <Button onClick={() => { setEditing(null); setForm({ name: '', code: '' }); setOpen(true); }}>
+        <PageHeader title="Departments" description="Manage organizational departments" actions={<><Button onClick={() => { setEditing(null); setForm({ name: '', code: '' }); setOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" /> Add Department
-          </Button>
-        </PageHeader>
+          </Button></>} />
 
         <div className="rounded-md border">
           <Table>

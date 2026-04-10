@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
-import { Plus, Play, Check, Eye } from 'lucide-react';
+import { Plus, Check, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -26,7 +26,7 @@ export default function PayrollRuns() {
 
   const { data: runs = [], isLoading } = useQuery({
     queryKey: ['payroll-runs'],
-    queryFn: async () => { const { data } = await supabase.from('payroll_runs').select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false }); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('payroll_runs' as any).select('*').order('period_year', { ascending: false }).order('period_month', { ascending: false }); return data || []; },
   });
 
   const createMutation = useMutation({
@@ -37,7 +37,7 @@ export default function PayrollRuns() {
 
       // Get all active employees with current salary
       const { data: empSalaries, error: empErr } = await supabase
-        .from('employee_salary')
+        .from('employee_salary' as any)
         .select('*, employees(id, first_name, last_name, status)')
         .eq('is_current', true);
       if (empErr) throw empErr;
@@ -49,7 +49,7 @@ export default function PayrollRuns() {
       const totalNet = activeEmps.reduce((sum: number, es: any) => sum + Number(es.net_salary), 0);
       const totalDeductions = totalGross - totalNet;
 
-      const { data: run, error: runErr } = await supabase.from('payroll_runs').insert({
+      const { data: run, error: runErr } = await supabase.from('payroll_runs' as any).insert({
         run_number: runNumber,
         period_month: month,
         period_year: year,
@@ -76,7 +76,7 @@ export default function PayrollRuns() {
       }));
 
       if (lines.length > 0) {
-        const { error: lineErr } = await supabase.from('payroll_lines').insert(lines);
+        const { error: lineErr } = await supabase.from('payroll_lines' as any).insert(lines);
         if (lineErr) throw lineErr;
       }
     },
@@ -90,7 +90,7 @@ export default function PayrollRuns() {
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('payroll_runs').update({
+      const { error } = await supabase.from('payroll_runs' as any).update({
         status: 'approved',
         approved_by: user?.id,
         approved_at: new Date().toISOString(),
@@ -107,9 +107,7 @@ export default function PayrollRuns() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Payroll Runs" description="Process monthly payroll">
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> New Payroll Run</Button>
-        </PageHeader>
+        <PageHeader title="Payroll Runs" description="Process monthly payroll" actions={<><Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> New Payroll Run</Button></>} />
 
         <div className="rounded-md border">
           <Table>

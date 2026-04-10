@@ -23,14 +23,14 @@ export default function SelfServiceExpenses() {
 
   const { data: employee } = useQuery({
     queryKey: ['my-employee', user?.id],
-    queryFn: async () => { const { data } = await supabase.from('employees').select('id').eq('user_id', user!.id).maybeSingle(); return data; },
+    queryFn: async () => { const { data } = await supabase.from('employees' as any).select('id').eq('user_id', user!.id).maybeSingle(); return data; },
     enabled: !!user,
   });
 
   const { data: claims = [] } = useQuery({
     queryKey: ['my-expense-claims', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('expense_claims').select('*').eq('employee_id', employee!.id).order('created_at', { ascending: false });
+      const { data } = await supabase.from('expense_claims' as any).select('*').eq('employee_id', employee!.id).order('created_at', { ascending: false });
       return data || [];
     },
     enabled: !!employee,
@@ -40,7 +40,7 @@ export default function SelfServiceExpenses() {
     mutationFn: async () => {
       const totalAmount = form.lines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0);
       const claimNumber = `EXP-${Date.now().toString(36).toUpperCase()}`;
-      const { data: claim, error: claimErr } = await supabase.from('expense_claims').insert({
+      const { data: claim, error: claimErr } = await supabase.from('expense_claims' as any).insert({
         employee_id: employee!.id,
         claim_number: claimNumber,
         description: form.description,
@@ -59,7 +59,7 @@ export default function SelfServiceExpenses() {
         expense_date: l.expense_date,
       }));
       if (lines.length > 0) {
-        const { error } = await supabase.from('expense_claim_lines').insert(lines);
+        const { error } = await supabase.from('expense_claim_lines' as any).insert(lines);
         if (error) throw error;
       }
     },
@@ -80,9 +80,7 @@ export default function SelfServiceExpenses() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="My Expense Claims" description="Submit and track expense reimbursements">
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> New Claim</Button>
-        </PageHeader>
+        <PageHeader title="My Expense Claims" description="Submit and track expense reimbursements" actions={<><Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> New Claim</Button></>} />
 
         <div className="rounded-md border">
           <Table>

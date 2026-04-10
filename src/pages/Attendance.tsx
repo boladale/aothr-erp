@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
@@ -24,14 +23,14 @@ export default function Attendance() {
   const { data: records = [], isLoading } = useQuery({
     queryKey: ['attendance', dateFilter],
     queryFn: async () => {
-      const { data } = await supabase.from('attendance_records').select('*, employees(first_name, last_name, employee_number)').eq('date', dateFilter).order('created_at', { ascending: false });
+      const { data } = await supabase.from('attendance_records' as any).select('*, employees(first_name, last_name, employee_number)').eq('date', dateFilter).order('created_at', { ascending: false });
       return data || [];
     },
   });
 
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-list'],
-    queryFn: async () => { const { data } = await supabase.from('employees').select('id, first_name, last_name, employee_number').eq('status', 'active').order('first_name'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('employees' as any).select('id, first_name, last_name, employee_number').eq('status', 'active').order('first_name'); return data || []; },
   });
 
   const saveMutation = useMutation({
@@ -39,7 +38,7 @@ export default function Attendance() {
       const clockIn = new Date(`${form.date}T${form.clock_in}:00`);
       const clockOut = new Date(`${form.date}T${form.clock_out}:00`);
       const totalHours = (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60);
-      const { error } = await supabase.from('attendance_records').insert({
+      const { error } = await supabase.from('attendance_records' as any).insert({
         employee_id: form.employee_id,
         date: form.date,
         clock_in: clockIn.toISOString(),
@@ -61,9 +60,7 @@ export default function Attendance() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Attendance" description="Track employee attendance">
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Record Attendance</Button>
-        </PageHeader>
+        <PageHeader title="Attendance" description="Track employee attendance" actions={<><Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Record Attendance</Button></>} />
 
         <div className="flex items-center gap-2">
           <Label>Date</Label>

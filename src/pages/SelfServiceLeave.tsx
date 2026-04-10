@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -24,19 +23,19 @@ export default function SelfServiceLeave() {
 
   const { data: employee } = useQuery({
     queryKey: ['my-employee', user?.id],
-    queryFn: async () => { const { data } = await supabase.from('employees').select('id').eq('user_id', user!.id).maybeSingle(); return data; },
+    queryFn: async () => { const { data } = await supabase.from('employees' as any).select('id').eq('user_id', user!.id).maybeSingle(); return data; },
     enabled: !!user,
   });
 
   const { data: leaveTypes = [] } = useQuery({
     queryKey: ['leave-types'],
-    queryFn: async () => { const { data } = await supabase.from('leave_types').select('*').eq('is_active', true).order('name'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('leave_types' as any).select('*').eq('is_active', true).order('name'); return data || []; },
   });
 
   const { data: requests = [] } = useQuery({
     queryKey: ['my-leave-requests', employee?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('leave_requests').select('*, leave_types(name)').eq('employee_id', employee!.id).order('created_at', { ascending: false });
+      const { data } = await supabase.from('leave_requests' as any).select('*, leave_types(name)').eq('employee_id', employee!.id).order('created_at', { ascending: false });
       return data || [];
     },
     enabled: !!employee,
@@ -45,7 +44,7 @@ export default function SelfServiceLeave() {
   const submitMutation = useMutation({
     mutationFn: async () => {
       const days = differenceInBusinessDays(new Date(form.end_date), new Date(form.start_date)) + 1;
-      const { error } = await supabase.from('leave_requests').insert({
+      const { error } = await supabase.from('leave_requests' as any).insert({
         employee_id: employee!.id,
         leave_type_id: form.leave_type_id,
         start_date: form.start_date,
@@ -70,9 +69,7 @@ export default function SelfServiceLeave() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="My Leave" description="Request and track leave">
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Request Leave</Button>
-        </PageHeader>
+        <PageHeader title="My Leave" description="Request and track leave" actions={<><Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Request Leave</Button></>} />
 
         <div className="rounded-md border">
           <Table>

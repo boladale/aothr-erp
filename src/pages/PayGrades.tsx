@@ -20,12 +20,12 @@ export default function PayGrades() {
 
   const { data: grades = [], isLoading } = useQuery({
     queryKey: ['pay-grades'],
-    queryFn: async () => { const { data } = await supabase.from('pay_grades').select('*').order('grade_name'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('pay_grades' as any).select('*').order('grade_name'); return data || []; },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('pay_grades').insert({
+      const { error } = await supabase.from('pay_grades' as any).insert({
         grade_name: form.grade_name,
         basic_salary: parseFloat(form.basic_salary) || 0,
         description: form.description || null,
@@ -45,9 +45,7 @@ export default function PayGrades() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Pay Grades" description="Define salary grades and structures">
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Pay Grade</Button>
-        </PageHeader>
+        <PageHeader title="Pay Grades" description="Define salary grades and structures" actions={<><Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Pay Grade</Button></>} />
 
         <div className="rounded-md border">
           <Table>

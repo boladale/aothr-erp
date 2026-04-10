@@ -11,7 +11,7 @@ export default function Payslips() {
   const { data: payslips = [], isLoading } = useQuery({
     queryKey: ['payslips'],
     queryFn: async () => {
-      const { data } = await supabase.from('payslips').select('*, employees(first_name, last_name, employee_number), payroll_lines(gross_salary, net_salary, total_deductions)').order('period_year', { ascending: false }).order('period_month', { ascending: false });
+      const { data } = await supabase.from('payslips' as any).select('*, employees(first_name, last_name, employee_number), payroll_lines(gross_salary, net_salary, total_deductions)').order('period_year', { ascending: false }).order('period_month', { ascending: false });
       return data || [];
     },
   });

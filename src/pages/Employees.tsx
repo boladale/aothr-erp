@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -37,7 +36,7 @@ export default function Employees() {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('employees').select('*, departments(name), job_titles(title)').order('first_name');
+      const { data, error } = await supabase.from('employees' as any).select('*, departments(name), job_titles(title)').order('first_name');
       if (error) throw error;
       return data;
     },
@@ -45,12 +44,12 @@ export default function Employees() {
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: async () => { const { data } = await supabase.from('departments').select('id, name').eq('is_active', true).order('name'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('departments' as any).select('id, name').eq('is_active', true).order('name'); return data || []; },
   });
 
   const { data: jobTitles = [] } = useQuery({
     queryKey: ['job_titles'],
-    queryFn: async () => { const { data } = await supabase.from('job_titles').select('id, title').eq('is_active', true).order('title'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('job_titles' as any).select('id, title').eq('is_active', true).order('title'); return data || []; },
   });
 
   const saveMutation = useMutation({
@@ -63,7 +62,7 @@ export default function Employees() {
         gender: form.gender || null,
         marital_status: form.marital_status || null,
       };
-      const { error } = await supabase.from('employees').insert(payload);
+      const { error } = await supabase.from('employees' as any).insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -84,11 +83,9 @@ export default function Employees() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Employees" description="Manage employee records">
-          <Button onClick={() => { setForm(defaultForm); setOpen(true); }}>
+        <PageHeader title="Employees" description="Manage employee records" actions={<><Button onClick={() => { setForm(defaultForm); setOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" /> Add Employee
-          </Button>
-        </PageHeader>
+          </Button></>} />
 
         <div className="flex items-center gap-2">
           <Search className="h-4 w-4 text-muted-foreground" />

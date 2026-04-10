@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -22,12 +21,12 @@ export default function SalaryComponents() {
 
   const { data: components = [], isLoading } = useQuery({
     queryKey: ['salary-components'],
-    queryFn: async () => { const { data } = await supabase.from('salary_components').select('*').order('component_type', { ascending: true }).order('name'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('salary_components' as any).select('*').order('component_type', { ascending: true }).order('name'); return data || []; },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('salary_components').insert({ ...form, organization_id: organizationId });
+      const { error } = await supabase.from('salary_components' as any).insert({ ...form, organization_id: organizationId });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -42,9 +41,7 @@ export default function SalaryComponents() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Salary Components" description="Configure earnings and deductions for payroll">
-          <Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Component</Button>
-        </PageHeader>
+        <PageHeader title="Salary Components" description="Configure earnings and deductions for payroll" actions={<><Button onClick={() => setOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Component</Button></>} />
 
         <div className="rounded-md border">
           <Table>

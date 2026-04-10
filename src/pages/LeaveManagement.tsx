@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -24,20 +23,20 @@ export default function LeaveManagement() {
 
   const { data: leaveTypes = [] } = useQuery({
     queryKey: ['leave-types'],
-    queryFn: async () => { const { data } = await supabase.from('leave_types').select('*').order('name'); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from('leave_types' as any).select('*').order('name'); return data || []; },
   });
 
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['all-leave-requests'],
     queryFn: async () => {
-      const { data } = await supabase.from('leave_requests').select('*, employees(first_name, last_name, employee_number), leave_types(name)').order('created_at', { ascending: false });
+      const { data } = await supabase.from('leave_requests' as any).select('*, employees(first_name, last_name, employee_number), leave_types(name)').order('created_at', { ascending: false });
       return data || [];
     },
   });
 
   const saveTypeMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('leave_types').insert({
+      const { error } = await supabase.from('leave_types' as any).insert({
         name: typeForm.name,
         default_days: parseInt(typeForm.default_days),
         is_paid: typeForm.is_paid,
@@ -56,7 +55,7 @@ export default function LeaveManagement() {
 
   const actionMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from('leave_requests').update({
+      const { error } = await supabase.from('leave_requests' as any).update({
         status,
         approved_by: user?.id,
         approved_at: new Date().toISOString(),
@@ -66,20 +65,20 @@ export default function LeaveManagement() {
       if (status === 'approved') {
         const req = leaveRequests.find((r: any) => r.id === id) as any;
         if (req) {
-          await supabase.from('leave_balances')
+          await supabase.from('leave_balances' as any)
             .update({ used_days: supabase.rpc ? undefined : 0 })
             .eq('employee_id', req.employee_id)
             .eq('leave_type_id', req.leave_type_id)
             .eq('year', new Date().getFullYear());
           // Increment used_days
-          const { data: balance } = await supabase.from('leave_balances')
+          const { data: balance } = await supabase.from('leave_balances' as any)
             .select('id, used_days')
             .eq('employee_id', req.employee_id)
             .eq('leave_type_id', req.leave_type_id)
             .eq('year', new Date().getFullYear())
             .maybeSingle();
           if (balance) {
-            await supabase.from('leave_balances').update({
+            await supabase.from('leave_balances' as any).update({
               used_days: Number(balance.used_days) + Number(req.days_requested),
             }).eq('id', balance.id);
           }
@@ -99,9 +98,7 @@ export default function LeaveManagement() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="Leave Management" description="Manage leave types and process leave requests">
-          <Button onClick={() => setTypeOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Leave Type</Button>
-        </PageHeader>
+        <PageHeader title="Leave Management" description="Manage leave types and process leave requests" actions={<><Button onClick={() => setTypeOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Leave Type</Button></>} />
 
         <Tabs defaultValue="pending">
           <TabsList>

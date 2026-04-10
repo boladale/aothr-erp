@@ -3,12 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { MetricCard } from '@/components/ui/metric-card';
-import { FileText, CreditCard, DollarSign, ShoppingCart } from 'lucide-react';
+import { FileText, DollarSign, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function VendorPortal() {
@@ -17,7 +16,7 @@ export default function VendorPortal() {
   const { data: vendorUser } = useQuery({
     queryKey: ['my-vendor-user', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('vendor_users').select('*, vendors(id, name, code, email, status)').eq('user_id', user!.id).eq('is_active', true).maybeSingle();
+      const { data } = await supabase.from('vendor_users' as any).select('*, vendors(id, name, code, email, status)').eq('user_id', user!.id).eq('is_active', true).maybeSingle();
       return data;
     },
     enabled: !!user,

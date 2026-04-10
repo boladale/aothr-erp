@@ -16,13 +16,13 @@ export default function PayrollRunDetail() {
 
   const { data: run } = useQuery({
     queryKey: ['payroll-run', id],
-    queryFn: async () => { const { data } = await supabase.from('payroll_runs').select('*').eq('id', id).single(); return data; },
+    queryFn: async () => { const { data } = await supabase.from('payroll_runs' as any).select('*').eq('id', id).single(); return data; },
   });
 
   const { data: lines = [] } = useQuery({
     queryKey: ['payroll-lines', id],
     queryFn: async () => {
-      const { data } = await supabase.from('payroll_lines').select('*, employees(first_name, last_name, employee_number)').eq('payroll_run_id', id!).order('created_at');
+      const { data } = await supabase.from('payroll_lines' as any).select('*, employees(first_name, last_name, employee_number)').eq('payroll_run_id', id!).order('created_at');
       return data || [];
     },
     enabled: !!id,

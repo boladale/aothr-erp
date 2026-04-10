@@ -19,7 +19,7 @@ export default function SelfServiceProfile() {
   const { data: employee } = useQuery({
     queryKey: ['my-employee-full', user?.id],
     queryFn: async () => {
-      const { data } = await supabase.from('employees').select('*').eq('user_id', user!.id).maybeSingle();
+      const { data } = await supabase.from('employees' as any).select('*').eq('user_id', user!.id).maybeSingle();
       return data;
     },
     enabled: !!user,
@@ -45,7 +45,7 @@ export default function SelfServiceProfile() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('employees').update(form).eq('id', employee!.id);
+      const { error } = await supabase.from('employees' as any).update(form).eq('id', employee!.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -62,9 +62,7 @@ export default function SelfServiceProfile() {
   return (
     <AppLayout>
       <div className="page-container space-y-6">
-        <PageHeader title="My Profile" description="Update your personal information">
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}><Save className="h-4 w-4 mr-2" /> Save Changes</Button>
-        </PageHeader>
+        <PageHeader title="My Profile" description="Update your personal information" actions={<><Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}><Save className="h-4 w-4 mr-2" /> Save Changes</Button></>} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
