@@ -64,6 +64,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
   const [form, setForm] = useState({
     code: '',
     name: '',
+    rc_number: '',
     email: '',
     phone: '',
     address: '',
@@ -85,6 +86,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
     setForm({
       code: editVendor.code,
       name: editVendor.name,
+      rc_number: (editVendor as any).rc_number || '',
       email: editVendor.email || '',
       phone: editVendor.phone || '',
       address: editVendor.address || '',
