@@ -289,6 +289,16 @@ export default function Vendors() {
           userId={user?.id}
           editVendor={editVendor}
         />
+
+        {inviteVendor && (
+          <VendorInviteDialog
+            open={!!inviteVendor}
+            onOpenChange={(open) => { if (!open) setInviteVendor(null); }}
+            vendorId={inviteVendor.id}
+            vendorName={inviteVendor.name}
+            vendorEmail={inviteVendor.email}
+          />
+        )}
       </div>
     </AppLayout>
   );
