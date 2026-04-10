@@ -90,6 +90,10 @@ import SelfServiceExpenses from "./pages/SelfServiceExpenses";
 import SelfServicePayslips from "./pages/SelfServicePayslips";
 import SelfServiceProfile from "./pages/SelfServiceProfile";
 import VendorPortal from "./pages/VendorPortal";
+import StaffPortalLogin from "./pages/StaffPortalLogin";
+import VendorPortalLogin from "./pages/VendorPortalLogin";
+import { StaffPortalGuard } from "./components/guards/StaffPortalGuard";
+import { VendorPortalGuard } from "./components/guards/VendorPortalGuard";
 
 const queryClient = new QueryClient();
 
@@ -238,7 +242,19 @@ const App = () => (
             <Route path="/self-service/expenses" element={<ProtectedRoute><SelfServiceExpenses /></ProtectedRoute>} />
             <Route path="/self-service/payslips" element={<ProtectedRoute><SelfServicePayslips /></ProtectedRoute>} />
             <Route path="/self-service/profile" element={<ProtectedRoute><SelfServiceProfile /></ProtectedRoute>} />
-            <Route path="/vendor-portal" element={<ProtectedRoute><VendorPortal /></ProtectedRoute>} />
+
+            {/* Staff Portal - separate login */}
+            <Route path="/staff-portal/login" element={<StaffPortalLogin />} />
+            <Route path="/staff-portal" element={<StaffPortalGuard><SelfServiceDashboard /></StaffPortalGuard>} />
+            <Route path="/staff-portal/leave" element={<StaffPortalGuard><SelfServiceLeave /></StaffPortalGuard>} />
+            <Route path="/staff-portal/expenses" element={<StaffPortalGuard><SelfServiceExpenses /></StaffPortalGuard>} />
+            <Route path="/staff-portal/payslips" element={<StaffPortalGuard><SelfServicePayslips /></StaffPortalGuard>} />
+            <Route path="/staff-portal/profile" element={<StaffPortalGuard><SelfServiceProfile /></StaffPortalGuard>} />
+
+            {/* Vendor Portal - separate login with self-registration */}
+            <Route path="/vendor-portal/login" element={<VendorPortalLogin />} />
+            <Route path="/vendor-portal" element={<VendorPortalGuard><VendorPortal /></VendorPortalGuard>} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

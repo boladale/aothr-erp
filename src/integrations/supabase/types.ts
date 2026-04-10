@@ -4971,6 +4971,122 @@ export type Database = {
           },
         ]
       }
+      vendor_registration_requests: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string
+          contact_name: string
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          organization_id: string | null
+          phone: string | null
+          project_size_capacity: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          service_categories: string[] | null
+          status: string
+          updated_at: string
+          user_id: string
+          vendor_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name: string
+          contact_name: string
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          organization_id?: string | null
+          phone?: string | null
+          project_size_capacity?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_categories?: string[] | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vendor_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string
+          contact_name?: string
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          organization_id?: string | null
+          phone?: string | null
+          project_size_capacity?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          service_categories?: string[] | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_registration_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_registration_requests_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_users: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_users_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendors: {
         Row: {
           address: string | null
@@ -5280,6 +5396,8 @@ export type Database = {
         | "warehouse_officer"
         | "ap_clerk"
         | "requisitioner"
+        | "vendor_user"
+        | "employee"
       approval_action_type: "approved" | "rejected" | "delegated" | "escalated"
       approval_instance_status:
         | "pending"
@@ -5505,6 +5623,8 @@ export const Constants = {
         "warehouse_officer",
         "ap_clerk",
         "requisitioner",
+        "vendor_user",
+        "employee",
       ],
       approval_action_type: ["approved", "rejected", "delegated", "escalated"],
       approval_instance_status: [

@@ -84,8 +84,8 @@ export default function Admin() {
     try {
       const { error } = await supabase.from('user_roles').insert({
         user_id: selectedUser.user_id,
-        role: newRole,
-      });
+        role: newRole as any,
+      } as any);
 
       if (error) {
         if (error.code === '23505') {
@@ -124,7 +124,7 @@ export default function Admin() {
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', role);
+        .eq('role', role as any);
 
       if (error) throw error;
       toast.success('Role removed');
@@ -144,6 +144,11 @@ export default function Admin() {
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
+    hr_manager: 'bg-primary text-primary-foreground',
+    hr_officer: 'bg-primary/80 text-primary-foreground',
+    payroll_manager: 'bg-success text-success-foreground',
+    employee: 'bg-accent text-accent-foreground',
+    vendor_user: 'bg-muted text-muted-foreground',
   };
 
   const userColumns = [

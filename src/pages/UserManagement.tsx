@@ -301,14 +301,14 @@ export default function UserManagement() {
     if (!selectedAppRole) return;
     try {
       // Remove existing
-      await supabase.from('app_role_permissions').delete().eq('app_role', selectedAppRole);
+      await supabase.from('app_role_permissions').delete().eq('app_role', selectedAppRole as any);
       // Insert new
       if (selectedAppRolePerms.length > 0) {
         const inserts = selectedAppRolePerms.map(pid => ({
           app_role: selectedAppRole,
           permission_id: pid,
         }));
-        const { error } = await supabase.from('app_role_permissions').insert(inserts);
+        const { error } = await supabase.from('app_role_permissions').insert(inserts as any);
         if (error) throw error;
       }
       toast.success(`Programs updated for ${selectedAppRole.replace(/_/g, ' ')}`);
@@ -336,8 +336,8 @@ export default function UserManagement() {
     try {
       const { error } = await supabase.from('user_roles').insert({
         user_id: selectedUser.user_id,
-        role: newAppRole,
-      });
+        role: newAppRole as any,
+      } as any);
       if (error) {
         if (error.code === '23505') {
           toast.error('User already has this role');
@@ -359,7 +359,7 @@ export default function UserManagement() {
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', role);
+        .eq('role', role as any);
       if (error) throw error;
       toast.success('Role removed');
       fetchData();
@@ -378,6 +378,11 @@ export default function UserManagement() {
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
+    hr_manager: 'bg-primary text-primary-foreground',
+    hr_officer: 'bg-primary/80 text-primary-foreground',
+    payroll_manager: 'bg-success text-success-foreground',
+    employee: 'bg-accent text-accent-foreground',
+    vendor_user: 'bg-muted text-muted-foreground',
   };
 
   const getAssignedPrograms = (roleId: string) => {
