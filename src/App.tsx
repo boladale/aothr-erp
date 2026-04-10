@@ -207,6 +207,22 @@ const App = () => (
             <Route path="/vendor-payment-report" element={<ProtectedRoute><VendorPaymentReport /></ProtectedRoute>} />
             <Route path="/req-to-payment-report" element={<ProtectedRoute><RequisitionToPaymentReport /></ProtectedRoute>} />
             <Route path="/procurement-audit" element={<ProtectedRoute><ProcurementAudit /></ProtectedRoute>} />
+            <Route path="/departments" element={<ProtectedRoute><Departments /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+            <Route path="/employees/:id" element={<ProtectedRoute><EmployeeDetail /></ProtectedRoute>} />
+            <Route path="/leave-management" element={<ProtectedRoute><LeaveManagement /></ProtectedRoute>} />
+            <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
+            <Route path="/salary-components" element={<ProtectedRoute><SalaryComponents /></ProtectedRoute>} />
+            <Route path="/pay-grades" element={<ProtectedRoute><PayGrades /></ProtectedRoute>} />
+            <Route path="/payroll-runs" element={<ProtectedRoute><PayrollRuns /></ProtectedRoute>} />
+            <Route path="/payroll-runs/:id" element={<ProtectedRoute><PayrollRunDetail /></ProtectedRoute>} />
+            <Route path="/payslips" element={<ProtectedRoute><Payslips /></ProtectedRoute>} />
+            <Route path="/self-service" element={<ProtectedRoute><SelfServiceDashboard /></ProtectedRoute>} />
+            <Route path="/self-service/leave" element={<ProtectedRoute><SelfServiceLeave /></ProtectedRoute>} />
+            <Route path="/self-service/expenses" element={<ProtectedRoute><SelfServiceExpenses /></ProtectedRoute>} />
+            <Route path="/self-service/payslips" element={<ProtectedRoute><SelfServicePayslips /></ProtectedRoute>} />
+            <Route path="/self-service/profile" element={<ProtectedRoute><SelfServiceProfile /></ProtectedRoute>} />
+            <Route path="/vendor-portal" element={<ProtectedRoute><VendorPortal /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

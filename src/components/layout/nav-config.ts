@@ -212,6 +212,40 @@ export const navSections = [
     ],
   },
   {
+    label: 'HR',
+    items: [
+      { path: '/departments', label: 'Departments', icon: Building2 },
+      { path: '/employees', label: 'Employees', icon: Users },
+      { path: '/leave-management', label: 'Leave Management', icon: Calendar },
+      { path: '/attendance', label: 'Attendance', icon: Clock },
+    ],
+  },
+  {
+    label: 'Payroll',
+    items: [
+      { path: '/salary-components', label: 'Salary Components', icon: DollarSign },
+      { path: '/pay-grades', label: 'Pay Grades', icon: BarChart3 },
+      { path: '/payroll-runs', label: 'Payroll Runs', icon: Calculator },
+      { path: '/payslips', label: 'Payslips', icon: FileText },
+    ],
+  },
+  {
+    label: 'Self Service',
+    items: [
+      { path: '/self-service', label: 'Dashboard', icon: LayoutDashboard },
+      { path: '/self-service/leave', label: 'My Leave', icon: Calendar },
+      { path: '/self-service/expenses', label: 'Expense Claims', icon: Receipt },
+      { path: '/self-service/payslips', label: 'My Payslips', icon: FileText },
+      { path: '/self-service/profile', label: 'My Profile', icon: Users },
+    ],
+  },
+  {
+    label: 'Vendor Portal',
+    items: [
+      { path: '/vendor-portal', label: 'Vendor Portal', icon: Building2 },
+    ],
+  },
+  {
     label: 'Administration',
     items: [
       { path: '/tax-configuration', label: 'Tax Configuration', icon: Percent },
