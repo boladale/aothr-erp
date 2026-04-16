@@ -31,6 +31,7 @@ interface KPIDef {
   icon: typeof Building2;
   toneClass: string; // gradient bg
   iconClass: string;
+  href: string;
 }
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
