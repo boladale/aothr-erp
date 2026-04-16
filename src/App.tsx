@@ -60,6 +60,8 @@ import UserGuide from "./pages/UserGuide";
 import UserProfile from "./pages/UserProfile";
 import VendorDashboard from "./pages/VendorDashboard";
 import ChairmanVendorDashboard from "./pages/ChairmanVendorDashboard";
+import ChairmanVendorDetail from "./pages/ChairmanVendorDetail";
+import ChairmanList from "./pages/ChairmanList";
 import ProcurementDashboardPage from "./pages/ProcurementDashboardPage";
 import WarehouseDashboardPage from "./pages/WarehouseDashboardPage";
 import FinanceDashboardPage from "./pages/FinanceDashboardPage";
