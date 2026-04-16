@@ -36,6 +36,7 @@ interface KPIDef {
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function ChairmanVendorDashboard() {
+  const navigate = useNavigate();
   const { baseCurrency } = useOrgCurrency();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
