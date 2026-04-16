@@ -42,6 +42,7 @@ import {
 // Map each nav path to a program code in the permissions table
 export const pathToProgram: Record<string, string> = {
   '/': 'dashboard',
+  '/chairman-dashboard': 'dashboard',
   '/vendor-dashboard': 'vendor_dashboard',
   '/procurement-dashboard': 'procurement_dashboard',
   '/warehouse-dashboard': 'warehouse_dashboard',
@@ -127,6 +128,7 @@ export const navSections = [
   {
     label: 'Dashboards',
     items: [
+      { path: '/chairman-dashboard', label: 'Chairman', icon: BarChart3 },
       { path: '/vendor-dashboard', label: 'Vendor Mgmt', icon: Building2 },
       { path: '/procurement-dashboard', label: 'Procurement', icon: FileText },
       { path: '/warehouse-dashboard', label: 'Warehouse', icon: Boxes },
