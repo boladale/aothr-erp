@@ -356,46 +356,36 @@ export default function ChairmanVendorDashboard() {
           </Card>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((v) => (
+            {filtered.map((v) => {
+              const goVendor = () => navigate(`/chairman-dashboard/vendor/${v.id}`);
+              return (
               <Card
                 key={v.id}
-                onClick={() => navigate(`/purchase-orders?vendor=${v.id}`)}
+                onClick={goVendor}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/purchase-orders?vendor=${v.id}`); } }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goVendor(); } }}
                 className="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-foreground leading-tight">{v.name}</h3>
                     {v.overdueCount > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="rounded-full text-xs px-2.5 py-0.5 shrink-0 cursor-pointer"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/ap-aging?vendor=${v.id}`); }}
-                      >
+                      <Badge variant="destructive" className="rounded-full text-xs px-2.5 py-0.5 shrink-0">
                         {v.overdueCount} Overdue
                       </Badge>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      className="text-left rounded-md hover:bg-muted/40 p-1 -m-1 transition-colors"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/purchase-orders?vendor=${v.id}`); }}
-                    >
+                    <div>
                       <p className="text-xs text-muted-foreground">Contracts</p>
                       <p className="text-lg font-semibold text-foreground">{v.contracts}</p>
-                    </button>
-                    <button
-                      type="button"
-                      className="text-left rounded-md hover:bg-muted/40 p-1 -m-1 transition-colors"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/purchase-orders?vendor=${v.id}`); }}
-                    >
+                    </div>
+                    <div>
                       <p className="text-xs text-muted-foreground">Total Value</p>
                       <p className="text-lg font-semibold text-foreground">{fmt(v.totalValue)}</p>
-                    </button>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -406,19 +396,16 @@ export default function ChairmanVendorDashboard() {
                     <Progress value={v.avgProgress} className="h-2" />
                   </div>
 
-                  <button
-                    type="button"
-                    className="w-full flex items-center justify-between border-t pt-3 hover:bg-muted/40 -mx-1 px-1 rounded-md transition-colors"
-                    onClick={(e) => { e.stopPropagation(); navigate(`/ap-aging?vendor=${v.id}`); }}
-                  >
+                  <div className="flex items-center justify-between border-t pt-3">
                     <span className="text-xs text-muted-foreground">Total Due</span>
                     <span className={cn('text-sm font-bold', v.totalDue > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground')}>
                       {fmt(v.totalDue)}
                     </span>
-                  </button>
+                  </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 
