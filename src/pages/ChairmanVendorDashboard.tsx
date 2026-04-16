@@ -290,7 +290,17 @@ export default function ChairmanVendorDashboard() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {kpiDefs.map((k) => (
-              <Card key={k.title} className={cn('border bg-gradient-to-br', k.toneClass)}>
+              <Card
+                key={k.title}
+                onClick={() => navigate(k.href)}
+                className={cn(
+                  'border bg-gradient-to-br cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  k.toneClass
+                )}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(k.href); } }}
+              >
                 <CardContent className="p-4 flex flex-col gap-3 h-full">
                   <div className="flex items-start justify-between">
                     <p className="text-xs font-medium text-muted-foreground leading-tight">{k.title}</p>
