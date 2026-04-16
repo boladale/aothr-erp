@@ -219,7 +219,7 @@ export default function ChairmanVendorDashboard() {
       toneClass: 'from-blue-50 to-blue-100/60 border-blue-200/60 dark:from-blue-950/40 dark:to-blue-900/20 dark:border-blue-800/40',
       iconClass: 'text-blue-600 dark:text-blue-400',
       trend: kpis.vendorsDeltaMonth > 0 ? { value: kpis.vendorsDeltaMonth, positive: true, label: 'this month' } : undefined,
-      href: '/vendors',
+      href: '/chairman-dashboard/list/vendors',
     },
     {
       title: 'Active Contracts',
@@ -228,7 +228,7 @@ export default function ChairmanVendorDashboard() {
       toneClass: 'from-emerald-50 to-emerald-100/60 border-emerald-200/60 dark:from-emerald-950/40 dark:to-emerald-900/20 dark:border-emerald-800/40',
       iconClass: 'text-emerald-600 dark:text-emerald-400',
       trend: kpis.contractsDeltaQuarter > 0 ? { value: kpis.contractsDeltaQuarter, positive: true, label: 'this quarter' } : undefined,
-      href: '/purchase-orders',
+      href: '/chairman-dashboard/list/contracts',
     },
     {
       title: 'Total Value',
@@ -237,7 +237,7 @@ export default function ChairmanVendorDashboard() {
       icon: DollarSign,
       toneClass: 'from-purple-50 to-purple-100/60 border-purple-200/60 dark:from-purple-950/40 dark:to-purple-900/20 dark:border-purple-800/40',
       iconClass: 'text-purple-600 dark:text-purple-400',
-      href: '/purchase-orders',
+      href: '/chairman-dashboard/list/contracts',
     },
     {
       title: 'Amount Due',
@@ -245,7 +245,7 @@ export default function ChairmanVendorDashboard() {
       icon: Clock,
       toneClass: 'from-amber-50 to-amber-100/60 border-amber-200/60 dark:from-amber-950/40 dark:to-amber-900/20 dark:border-amber-800/40',
       iconClass: 'text-amber-600 dark:text-amber-400',
-      href: '/ap-aging',
+      href: '/chairman-dashboard/list/amount-due',
     },
     {
       title: 'Overdue',
@@ -254,7 +254,7 @@ export default function ChairmanVendorDashboard() {
       icon: AlertCircle,
       toneClass: 'from-rose-50 to-rose-100/60 border-rose-200/60 dark:from-rose-950/40 dark:to-rose-900/20 dark:border-rose-800/40',
       iconClass: 'text-rose-600 dark:text-rose-400',
-      href: '/ap-aging',
+      href: '/chairman-dashboard/list/overdue',
     },
     {
       title: 'Avg Progress',
@@ -262,7 +262,7 @@ export default function ChairmanVendorDashboard() {
       icon: BarChart3,
       toneClass: 'from-teal-50 to-teal-100/60 border-teal-200/60 dark:from-teal-950/40 dark:to-teal-900/20 dark:border-teal-800/40',
       iconClass: 'text-teal-600 dark:text-teal-400',
-      href: '/po-closure-report',
+      href: '/chairman-dashboard/list/progress',
     },
   ];
 
