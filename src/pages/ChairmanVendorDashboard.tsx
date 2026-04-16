@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, TrendingUp, TrendingDown, Building2, FileText, DollarSign, AlertCircle, Clock, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -30,11 +31,13 @@ interface KPIDef {
   icon: typeof Building2;
   toneClass: string; // gradient bg
   iconClass: string;
+  href: string;
 }
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function ChairmanVendorDashboard() {
+  const navigate = useNavigate();
   const { baseCurrency } = useOrgCurrency();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -216,6 +219,7 @@ export default function ChairmanVendorDashboard() {
       toneClass: 'from-blue-50 to-blue-100/60 border-blue-200/60 dark:from-blue-950/40 dark:to-blue-900/20 dark:border-blue-800/40',
       iconClass: 'text-blue-600 dark:text-blue-400',
       trend: kpis.vendorsDeltaMonth > 0 ? { value: kpis.vendorsDeltaMonth, positive: true, label: 'this month' } : undefined,
+      href: '/vendors',
     },
     {
       title: 'Active Contracts',
@@ -224,6 +228,7 @@ export default function ChairmanVendorDashboard() {
       toneClass: 'from-emerald-50 to-emerald-100/60 border-emerald-200/60 dark:from-emerald-950/40 dark:to-emerald-900/20 dark:border-emerald-800/40',
       iconClass: 'text-emerald-600 dark:text-emerald-400',
       trend: kpis.contractsDeltaQuarter > 0 ? { value: kpis.contractsDeltaQuarter, positive: true, label: 'this quarter' } : undefined,
+      href: '/purchase-orders',
     },
     {
       title: 'Total Value',
@@ -232,6 +237,7 @@ export default function ChairmanVendorDashboard() {
       icon: DollarSign,
       toneClass: 'from-purple-50 to-purple-100/60 border-purple-200/60 dark:from-purple-950/40 dark:to-purple-900/20 dark:border-purple-800/40',
       iconClass: 'text-purple-600 dark:text-purple-400',
+      href: '/purchase-orders',
     },
     {
       title: 'Amount Due',
@@ -239,6 +245,7 @@ export default function ChairmanVendorDashboard() {
       icon: Clock,
       toneClass: 'from-amber-50 to-amber-100/60 border-amber-200/60 dark:from-amber-950/40 dark:to-amber-900/20 dark:border-amber-800/40',
       iconClass: 'text-amber-600 dark:text-amber-400',
+      href: '/ap-aging',
     },
     {
       title: 'Overdue',
@@ -247,6 +254,7 @@ export default function ChairmanVendorDashboard() {
       icon: AlertCircle,
       toneClass: 'from-rose-50 to-rose-100/60 border-rose-200/60 dark:from-rose-950/40 dark:to-rose-900/20 dark:border-rose-800/40',
       iconClass: 'text-rose-600 dark:text-rose-400',
+      href: '/ap-aging',
     },
     {
       title: 'Avg Progress',
@@ -254,6 +262,7 @@ export default function ChairmanVendorDashboard() {
       icon: BarChart3,
       toneClass: 'from-teal-50 to-teal-100/60 border-teal-200/60 dark:from-teal-950/40 dark:to-teal-900/20 dark:border-teal-800/40',
       iconClass: 'text-teal-600 dark:text-teal-400',
+      href: '/po-closure-report',
     },
   ];
 
@@ -281,7 +290,17 @@ export default function ChairmanVendorDashboard() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
             {kpiDefs.map((k) => (
-              <Card key={k.title} className={cn('border bg-gradient-to-br', k.toneClass)}>
+              <Card
+                key={k.title}
+                onClick={() => navigate(k.href)}
+                className={cn(
+                  'border bg-gradient-to-br cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  k.toneClass
+                )}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(k.href); } }}
+              >
                 <CardContent className="p-4 flex flex-col gap-3 h-full">
                   <div className="flex items-start justify-between">
                     <p className="text-xs font-medium text-muted-foreground leading-tight">{k.title}</p>
@@ -338,26 +357,45 @@ export default function ChairmanVendorDashboard() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((v) => (
-              <Card key={v.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={v.id}
+                onClick={() => navigate(`/purchase-orders?vendor=${v.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/purchase-orders?vendor=${v.id}`); } }}
+                className="cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-foreground leading-tight">{v.name}</h3>
                     {v.overdueCount > 0 && (
-                      <Badge variant="destructive" className="rounded-full text-xs px-2.5 py-0.5 shrink-0">
+                      <Badge
+                        variant="destructive"
+                        className="rounded-full text-xs px-2.5 py-0.5 shrink-0 cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/ap-aging?vendor=${v.id}`); }}
+                      >
                         {v.overdueCount} Overdue
                       </Badge>
                     )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
+                    <button
+                      type="button"
+                      className="text-left rounded-md hover:bg-muted/40 p-1 -m-1 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/purchase-orders?vendor=${v.id}`); }}
+                    >
                       <p className="text-xs text-muted-foreground">Contracts</p>
                       <p className="text-lg font-semibold text-foreground">{v.contracts}</p>
-                    </div>
-                    <div>
+                    </button>
+                    <button
+                      type="button"
+                      className="text-left rounded-md hover:bg-muted/40 p-1 -m-1 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/purchase-orders?vendor=${v.id}`); }}
+                    >
                       <p className="text-xs text-muted-foreground">Total Value</p>
                       <p className="text-lg font-semibold text-foreground">{fmt(v.totalValue)}</p>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="space-y-1.5">
@@ -368,12 +406,16 @@ export default function ChairmanVendorDashboard() {
                     <Progress value={v.avgProgress} className="h-2" />
                   </div>
 
-                  <div className="flex items-center justify-between border-t pt-3">
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between border-t pt-3 hover:bg-muted/40 -mx-1 px-1 rounded-md transition-colors"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/ap-aging?vendor=${v.id}`); }}
+                  >
                     <span className="text-xs text-muted-foreground">Total Due</span>
                     <span className={cn('text-sm font-bold', v.totalDue > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground')}>
                       {fmt(v.totalDue)}
                     </span>
-                  </div>
+                  </button>
                 </CardContent>
               </Card>
             ))}
