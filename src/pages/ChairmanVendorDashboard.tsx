@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOrgCurrency } from '@/hooks/useOrgCurrency';
-import { formatCurrency } from '@/lib/currency';
+import { formatCurrency, getCurrencySymbol } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 
 interface VendorRow {
@@ -35,7 +35,7 @@ interface KPIDef {
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export default function ChairmanVendorDashboard() {
-  const { currencyCode } = useOrgCurrency();
+  const { baseCurrency } = useOrgCurrency();
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [vendors, setVendors] = useState<VendorRow[]>([]);
@@ -200,13 +200,13 @@ export default function ChairmanVendorDashboard() {
     return vendors.filter(v => v.name.toLowerCase().includes(q) || v.code.toLowerCase().includes(q));
   }, [vendors, search]);
 
-  const fmt = (v: number) => formatCurrency(v, currencyCode);
+  const fmt = (v: number) => formatCurrency(v, baseCurrency);
   const fmtCompact = (v: number) => {
     if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
     if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
     return v.toFixed(0);
   };
-  const symbol = formatCurrency(0, currencyCode).replace(/[\d.,\s]/g, '') || '$';
+  const symbol = getCurrencySymbol(baseCurrency);
 
   const kpiDefs: KPIDef[] = [
     {
