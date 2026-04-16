@@ -59,6 +59,7 @@ import DeliveryNotes from "./pages/DeliveryNotes";
 import UserGuide from "./pages/UserGuide";
 import UserProfile from "./pages/UserProfile";
 import VendorDashboard from "./pages/VendorDashboard";
+import ChairmanVendorDashboard from "./pages/ChairmanVendorDashboard";
 import ProcurementDashboardPage from "./pages/ProcurementDashboardPage";
 import WarehouseDashboardPage from "./pages/WarehouseDashboardPage";
 import FinanceDashboardPage from "./pages/FinanceDashboardPage";
@@ -165,6 +166,7 @@ const App = () => (
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
+            <Route path="/chairman-dashboard" element={<ProtectedRoute><ChairmanVendorDashboard /></ProtectedRoute>} />
             <Route path="/procurement-dashboard" element={<ProtectedRoute><ProcurementDashboardPage /></ProtectedRoute>} />
             <Route path="/warehouse-dashboard" element={<ProtectedRoute><WarehouseDashboardPage /></ProtectedRoute>} />
             <Route path="/finance-dashboard" element={<ProtectedRoute><FinanceDashboardPage /></ProtectedRoute>} />
