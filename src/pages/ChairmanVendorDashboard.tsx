@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, TrendingUp, TrendingDown, Building2, FileText, DollarSign, AlertCircle, Clock, BarChart3, ChevronRight } from 'lucide-react';
+import { Search, TrendingUp, TrendingDown, Building2, FileText, DollarSign, AlertCircle, Clock, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent } from '@/components/ui/card';
