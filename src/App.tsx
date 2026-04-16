@@ -60,6 +60,8 @@ import UserGuide from "./pages/UserGuide";
 import UserProfile from "./pages/UserProfile";
 import VendorDashboard from "./pages/VendorDashboard";
 import ChairmanVendorDashboard from "./pages/ChairmanVendorDashboard";
+import ChairmanVendorDetail from "./pages/ChairmanVendorDetail";
+import ChairmanList from "./pages/ChairmanList";
 import ProcurementDashboardPage from "./pages/ProcurementDashboardPage";
 import WarehouseDashboardPage from "./pages/WarehouseDashboardPage";
 import FinanceDashboardPage from "./pages/FinanceDashboardPage";
@@ -167,6 +169,8 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
             <Route path="/chairman-dashboard" element={<ProtectedRoute><ChairmanVendorDashboard /></ProtectedRoute>} />
+            <Route path="/chairman-dashboard/list/:type" element={<ProtectedRoute><ChairmanList /></ProtectedRoute>} />
+            <Route path="/chairman-dashboard/vendor/:id" element={<ProtectedRoute><ChairmanVendorDetail /></ProtectedRoute>} />
             <Route path="/procurement-dashboard" element={<ProtectedRoute><ProcurementDashboardPage /></ProtectedRoute>} />
             <Route path="/warehouse-dashboard" element={<ProtectedRoute><WarehouseDashboardPage /></ProtectedRoute>} />
             <Route path="/finance-dashboard" element={<ProtectedRoute><FinanceDashboardPage /></ProtectedRoute>} />
