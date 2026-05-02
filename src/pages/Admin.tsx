@@ -360,6 +360,12 @@ export default function Admin() {
           )}
 
           {isAdmin && (
+            <TabsContent value="bulk" className="space-y-4">
+              <BulkUploadPanel />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
             <TabsContent value="backups" className="space-y-4">
               <BackupManagementPanel />
             </TabsContent>
