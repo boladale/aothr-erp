@@ -265,6 +265,11 @@ export default function Admin() {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="bulk" className="gap-2">
+                <Upload className="h-4 w-4" /> Bulk Upload
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="backups" className="gap-2">
                 <HardDrive className="h-4 w-4" /> Backups
               </TabsTrigger>
