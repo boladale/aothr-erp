@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive, Coins } from 'lucide-react';
+import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive, Coins, Upload } from 'lucide-react';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
+import { BulkUploadPanel } from '@/components/admin/BulkUploadPanel';
 import { BackupManagementPanel } from '@/components/admin/BackupManagementPanel';
 import { CurrencySettingsPanel } from '@/components/admin/CurrencySettingsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -264,6 +265,11 @@ export default function Admin() {
               </TabsTrigger>
             )}
             {isAdmin && (
+              <TabsTrigger value="bulk" className="gap-2">
+                <Upload className="h-4 w-4" /> Bulk Upload
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="backups" className="gap-2">
                 <HardDrive className="h-4 w-4" /> Backups
               </TabsTrigger>
@@ -350,6 +356,12 @@ export default function Admin() {
           {isAdmin && (
             <TabsContent value="data" className="space-y-4">
               <DataManagementPanel />
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="bulk" className="space-y-4">
+              <BulkUploadPanel />
             </TabsContent>
           )}
 
