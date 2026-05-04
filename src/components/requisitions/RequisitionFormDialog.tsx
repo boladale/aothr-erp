@@ -30,9 +30,17 @@ interface Item {
   unit_cost: number | null;
 }
 
+interface ServiceRow {
+  id: string;
+  code: string;
+  name: string;
+  estimated_cost: number | null;
+}
+
 interface ReqLine {
   id?: string;
   item_id: string;
+  service_id?: string;
   quantity: number;
   estimated_unit_cost: number;
   specifications: string;
@@ -56,6 +64,7 @@ interface Props {
 export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequisition }: Props) {
   const { user, organizationId } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -75,6 +84,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
     if (open) {
       supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true).order('name')
         .then(({ data }) => setItems((data || []) as Item[]));
+      (supabase.from('services' as any) as any).select('id, code, name, estimated_cost').eq('is_active', true).order('name')
+        .then(({ data }: any) => setServices((data || []) as ServiceRow[]));
       (supabase.from('departments' as any) as any).select('id, name').eq('is_active', true).order('name')
         .then(({ data }: any) => setDepartments((data || []) as { id: string; name: string }[]));
 
