@@ -20,7 +20,7 @@ export default function Services() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: '', code: '', description: '', estimated_cost: 0, is_active: true });
+  const [form, setForm] = useState<{ name: string; code: string; description: string; estimated_cost: string; is_active: boolean }>({ name: '', code: '', description: '', estimated_cost: '', is_active: true });
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['services'],
@@ -37,7 +37,7 @@ export default function Services() {
         name: form.name,
         code: form.code,
         description: form.description || null,
-        estimated_cost: form.estimated_cost || 0,
+        estimated_cost: form.estimated_cost === '' ? null : parseFloat(form.estimated_cost),
         is_active: form.is_active,
       };
       if (editing) {
@@ -52,7 +52,7 @@ export default function Services() {
       queryClient.invalidateQueries({ queryKey: ['services'] });
       setOpen(false);
       setEditing(null);
-      setForm({ name: '', code: '', description: '', estimated_cost: 0, is_active: true });
+      setForm({ name: '', code: '', description: '', estimated_cost: '', is_active: true });
       toast.success(editing ? 'Service updated' : 'Service created');
     },
     onError: (err: any) => toast.error(err.message),
@@ -76,7 +76,7 @@ export default function Services() {
       name: svc.name,
       code: svc.code,
       description: svc.description || '',
-      estimated_cost: Number(svc.estimated_cost) || 0,
+      estimated_cost: svc.estimated_cost == null ? '' : String(svc.estimated_cost),
       is_active: svc.is_active ?? true,
     });
     setOpen(true);
@@ -89,7 +89,7 @@ export default function Services() {
           title="Services"
           description="Manage services that can be requisitioned"
           actions={
-            <Button onClick={() => { setEditing(null); setForm({ name: '', code: '', description: '', estimated_cost: 0, is_active: true }); setOpen(true); }}>
+            <Button onClick={() => { setEditing(null); setForm({ name: '', code: '', description: '', estimated_cost: '', is_active: true }); setOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" /> Add Service
             </Button>
           }
@@ -139,8 +139,8 @@ export default function Services() {
               <div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Office Cleaning" /></div>
               <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional description" /></div>
               <div>
-                <Label>Estimated Cost</Label>
-                <Input type="number" step="0.01" value={form.estimated_cost} onChange={e => setForm(f => ({ ...f, estimated_cost: parseFloat(e.target.value) || 0 }))} />
+                <Label>Estimated Cost <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input type="number" step="0.01" value={form.estimated_cost} onChange={e => setForm(f => ({ ...f, estimated_cost: e.target.value }))} placeholder="Leave blank if not applicable" />
               </div>
               <div className="flex items-center justify-between rounded-md border p-3">
                 <div>
