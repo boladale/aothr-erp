@@ -549,6 +549,47 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Invite Vendors Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invite Vendors to Submit Quotes</DialogTitle>
+          </DialogHeader>
+          <div className="py-3 space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Selected vendors will be notified and can submit their quotes from the Vendor Portal.
+            </p>
+            <div className="border rounded-md divide-y max-h-[50vh] overflow-y-auto">
+              {availableVendors.filter(v => !invitations.some(i => i.vendor_id === v.id)).map(v => (
+                <label key={v.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    checked={inviteSelected.has(v.id)}
+                    onCheckedChange={(checked) => {
+                      const next = new Set(inviteSelected);
+                      if (checked) next.add(v.id); else next.delete(v.id);
+                      setInviteSelected(next);
+                    }}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{v.name}</div>
+                    <div className="text-xs text-muted-foreground">{v.code}</div>
+                  </div>
+                </label>
+              ))}
+              {availableVendors.filter(v => !invitations.some(i => i.vendor_id === v.id)).length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-6">No more vendors available to invite.</div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendInvites} disabled={inviting || inviteSelected.size === 0}>
+              <Send className="mr-1 h-4 w-4" /> {inviting ? 'Sending...' : `Invite ${inviteSelected.size || ''}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
