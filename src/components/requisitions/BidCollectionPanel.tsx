@@ -161,7 +161,67 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
     }
   };
 
-  const handleRecommend = async (vendorId: string) => {
+  const openInviteDialog = () => {
+    setInviteSelected(new Set());
+    setInviteDialogOpen(true);
+  };
+
+  const handleSendInvites = async () => {
+    if (!bidRequest || inviteSelected.size === 0) {
+      toast.error('Select at least one vendor');
+      return;
+    }
+    setInviting(true);
+    try {
+      // Get requisition for context
+      const { data: req } = await supabase
+        .from('requisitions')
+        .select('req_number, organization_id')
+        .eq('id', requisitionId)
+        .single();
+
+      const vendorIds = Array.from(inviteSelected);
+      const inviteRows = vendorIds.map(vid => ({
+        bid_request_id: bidRequest.id,
+        vendor_id: vid,
+        invited_by: user?.id,
+        status: 'invited',
+      }));
+
+      const { error: invErr } = await (supabase.from('bid_invitations' as any).insert(inviteRows as any) as any);
+      if (invErr) throw invErr;
+
+      // Notify vendor users (in-app)
+      const { data: vUsers } = await (supabase
+        .from('vendor_users' as any)
+        .select('user_id, vendor_id')
+        .in('vendor_id', vendorIds)
+        .eq('is_active', true) as any);
+
+      if (vUsers && vUsers.length > 0) {
+        const notifs = (vUsers as any[]).map(vu => ({
+          user_id: vu.user_id,
+          entity_type: 'bid_request',
+          entity_id: bidRequest.id,
+          notification_type: 'rfq_invitation',
+          title: 'New Quote Request',
+          message: `You've been invited to submit a quote for ${req?.req_number || 'a requisition'}.`,
+          organization_id: req?.organization_id,
+        }));
+        await supabase.from('notifications').upsert(notifs, {
+          onConflict: 'user_id,entity_type,entity_id,notification_type',
+        });
+      }
+
+      toast.success(`Invited ${vendorIds.length} vendor(s)`);
+      setInviteDialogOpen(false);
+      fetchData();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send invites');
+    } finally {
+      setInviting(false);
+    }
+  };
     if (!bidRequest) return;
     try {
       // Clear all recommendations first
