@@ -89,7 +89,7 @@ export default function Services() {
           title="Services"
           description="Manage services that can be requisitioned"
           actions={
-            <Button onClick={() => { setEditing(null); setForm({ name: '', code: '', description: '', estimated_cost: 0, is_active: true }); setOpen(true); }}>
+            <Button onClick={() => { setEditing(null); setForm({ name: '', code: '', description: '', estimated_cost: '', is_active: true }); setOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" /> Add Service
             </Button>
           }
