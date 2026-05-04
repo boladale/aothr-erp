@@ -153,7 +153,6 @@ export const navSections = [
     items: [
       { path: '/items', label: 'Items', icon: Package },
       { path: '/inventory', label: 'Inventory', icon: Boxes },
-      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
       { path: '/inventory-issues', label: 'Inventory Issues', icon: PackageMinus },
       { path: '/inventory-transfers', label: 'Transfers', icon: ArrowRightLeft },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
@@ -178,6 +177,7 @@ export const navSections = [
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
       { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
+      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
     ],
   },
   {
