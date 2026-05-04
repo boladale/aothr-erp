@@ -20,7 +20,7 @@ export default function Services() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ name: '', code: '', description: '', estimated_cost: 0, is_active: true });
+  const [form, setForm] = useState<{ name: string; code: string; description: string; estimated_cost: string; is_active: boolean }>({ name: '', code: '', description: '', estimated_cost: '', is_active: true });
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ['services'],
@@ -37,7 +37,7 @@ export default function Services() {
         name: form.name,
         code: form.code,
         description: form.description || null,
-        estimated_cost: form.estimated_cost || 0,
+        estimated_cost: form.estimated_cost === '' ? null : parseFloat(form.estimated_cost),
         is_active: form.is_active,
       };
       if (editing) {
@@ -52,7 +52,7 @@ export default function Services() {
       queryClient.invalidateQueries({ queryKey: ['services'] });
       setOpen(false);
       setEditing(null);
-      setForm({ name: '', code: '', description: '', estimated_cost: 0, is_active: true });
+      setForm({ name: '', code: '', description: '', estimated_cost: '', is_active: true });
       toast.success(editing ? 'Service updated' : 'Service created');
     },
     onError: (err: any) => toast.error(err.message),
@@ -76,7 +76,7 @@ export default function Services() {
       name: svc.name,
       code: svc.code,
       description: svc.description || '',
-      estimated_cost: Number(svc.estimated_cost) || 0,
+      estimated_cost: svc.estimated_cost == null ? '' : String(svc.estimated_cost),
       is_active: svc.is_active ?? true,
     });
     setOpen(true);
