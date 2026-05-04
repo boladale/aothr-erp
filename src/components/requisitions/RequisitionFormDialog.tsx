@@ -289,7 +289,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Line Items</Label>
+              <Label>{form.requisition_type === 'service' ? 'Services' : 'Line Items'}</Label>
               <Button type="button" variant="outline" size="sm" onClick={addLine}>
                 Add Line
               </Button>
@@ -298,18 +298,33 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
               {lines.map((line, idx) => (
                 <div key={idx} className="flex gap-2 items-end">
                   <div className="flex-1">
-                    <Select value={line.item_id} onValueChange={v => updateLine(idx, 'item_id', v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select item" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {items.map(item => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.code} - {item.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {form.requisition_type === 'service' ? (
+                      <Select value={line.service_id || ''} onValueChange={v => updateLine(idx, 'service_id', v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {services.map(svc => (
+                            <SelectItem key={svc.id} value={svc.id}>
+                              {svc.code} - {svc.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Select value={line.item_id} onValueChange={v => updateLine(idx, 'item_id', v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {items.map(item => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.code} - {item.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="w-24">
                     <Input
