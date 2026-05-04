@@ -1,0 +1,1 @@
+ALTER TABLE public.requisitions ADD COLUMN IF NOT EXISTS requisition_type text NOT NULL DEFAULT 'items';
