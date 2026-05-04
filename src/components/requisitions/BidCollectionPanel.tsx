@@ -222,6 +222,8 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       setInviting(false);
     }
   };
+
+  const handleRecommend = async (vendorId: string) => {
     if (!bidRequest) return;
     try {
       // Clear all recommendations first
