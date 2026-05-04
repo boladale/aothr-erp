@@ -64,8 +64,12 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
   const [bidRequest, setBidRequest] = useState<BidRequest | null>(null);
   const [entries, setEntries] = useState<BidEntry[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; vendor_id: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteSelected, setInviteSelected] = useState<Set<string>>(new Set());
+  const [inviting, setInviting] = useState(false);
 
   // Add vendor bid form state
   const [selectedVendorId, setSelectedVendorId] = useState('');
@@ -86,11 +90,12 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
 
       if (brRes.data) {
         setBidRequest(brRes.data as BidRequest);
-        const { data: entriesData } = await supabase
-          .from('requisition_bid_entries')
-          .select('*')
-          .eq('bid_request_id', brRes.data.id);
-        setEntries((entriesData || []) as BidEntry[]);
+        const [entriesData, invitesData] = await Promise.all([
+          supabase.from('requisition_bid_entries').select('*').eq('bid_request_id', brRes.data.id),
+          (supabase.from('bid_invitations' as any).select('id, vendor_id, status').eq('bid_request_id', brRes.data.id) as any),
+        ]);
+        setEntries((entriesData.data || []) as BidEntry[]);
+        setInvitations((invitesData.data || []) as any);
       }
     } catch (err) {
       console.error('Failed to load bid data:', err);
