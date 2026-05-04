@@ -3724,11 +3724,12 @@ export type Database = {
           estimated_total: number | null
           estimated_unit_cost: number | null
           id: string
-          item_id: string
+          item_id: string | null
           line_number: number
           qty_converted: number
           quantity: number
           requisition_id: string
+          service_id: string | null
           specifications: string | null
         }
         Insert: {
@@ -3736,11 +3737,12 @@ export type Database = {
           estimated_total?: number | null
           estimated_unit_cost?: number | null
           id?: string
-          item_id: string
+          item_id?: string | null
           line_number: number
           qty_converted?: number
           quantity: number
           requisition_id: string
+          service_id?: string | null
           specifications?: string | null
         }
         Update: {
@@ -3748,11 +3750,12 @@ export type Database = {
           estimated_total?: number | null
           estimated_unit_cost?: number | null
           id?: string
-          item_id?: string
+          item_id?: string | null
           line_number?: number
           qty_converted?: number
           quantity?: number
           requisition_id?: string
+          service_id?: string | null
           specifications?: string | null
         }
         Relationships: [
@@ -3768,6 +3771,13 @@ export type Database = {
             columns: ["requisition_id"]
             isOneToOne: false
             referencedRelation: "requisitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisition_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -4599,6 +4609,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      services: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          estimated_cost: number | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       tax_groups: {
         Row: {
