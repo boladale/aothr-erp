@@ -75,7 +75,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
     if (open) {
       supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true).order('name')
         .then(({ data }) => setItems((data || []) as Item[]));
-      (supabase.from('departments' as any) as any).select('id, name').order('name')
+      (supabase.from('departments' as any) as any).select('id, name').eq('is_active', true).order('name')
         .then(({ data }: any) => setDepartments((data || []) as { id: string; name: string }[]));
 
       if (editRequisition) {
