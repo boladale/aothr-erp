@@ -82,13 +82,18 @@ export default function VendorPortal() {
           <MetricCard title="Payments Received" value={totalPaid.toLocaleString()} icon={DollarSign} />
         </div>
 
-        <Tabs defaultValue="rfps">
+        <Tabs defaultValue="quotes">
           <TabsList className="flex-wrap">
+            <TabsTrigger value="quotes" className="gap-1"><ClipboardList className="h-4 w-4" /> Quote Requests</TabsTrigger>
             <TabsTrigger value="rfps" className="gap-1"><Send className="h-4 w-4" /> RFPs & Bidding</TabsTrigger>
             <TabsTrigger value="pos" className="gap-1"><ClipboardCheck className="h-4 w-4" /> Purchase Orders</TabsTrigger>
             <TabsTrigger value="invoices" className="gap-1"><FileText className="h-4 w-4" /> Invoices</TabsTrigger>
             <TabsTrigger value="payments" className="gap-1"><DollarSign className="h-4 w-4" /> Payments</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="quotes">
+            <VendorQuoteRequests vendorId={vendorId} />
+          </TabsContent>
 
           <TabsContent value="rfps">
             <VendorRFPBidding vendorId={vendorId} userId={user!.id} />
