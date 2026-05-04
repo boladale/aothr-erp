@@ -342,6 +342,9 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           <div className="flex gap-2">
             {bidRequest.status === 'open' && (
               <>
+                <Button size="sm" variant="outline" onClick={openInviteDialog}>
+                  <Send className="mr-1 h-3 w-3" /> Invite Vendors
+                </Button>
                 <Button size="sm" variant="outline" onClick={openAddVendorBid}>
                   <Plus className="mr-1 h-3 w-3" /> Add Vendor Bid
                 </Button>
