@@ -98,13 +98,14 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
           requisition_type: (editRequisition as any).requisition_type || 'items',
         });
         // Fetch existing lines
-        supabase.from('requisition_lines').select('id, item_id, quantity, estimated_unit_cost, specifications')
+        (supabase.from('requisition_lines') as any).select('id, item_id, service_id, quantity, estimated_unit_cost, specifications')
           .eq('requisition_id', editRequisition.id).order('line_number')
-          .then(({ data }) => {
+          .then(({ data }: any) => {
             if (data && data.length > 0) {
-              setLines(data.map(l => ({
+              setLines(data.map((l: any) => ({
                 id: l.id,
-                item_id: l.item_id,
+                item_id: l.item_id || '',
+                service_id: l.service_id || '',
                 quantity: l.quantity,
                 estimated_unit_cost: l.estimated_unit_cost || 0,
                 specifications: l.specifications || '',
@@ -129,6 +130,10 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       const item = items.find(i => i.id === value);
       if (item) newLines[idx].estimated_unit_cost = item.unit_cost || 0;
     }
+    if (field === 'service_id') {
+      const svc = services.find(s => s.id === value);
+      if (svc) newLines[idx].estimated_unit_cost = Number(svc.estimated_cost) || 0;
+    }
     setLines(newLines);
   };
 
@@ -137,9 +142,10 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
   };
 
   const handleSave = async () => {
-    const validLines = lines.filter(l => l.item_id && l.quantity > 0);
+    const isService = form.requisition_type === 'service';
+    const validLines = lines.filter(l => (isService ? l.service_id : l.item_id) && l.quantity > 0);
     if (validLines.length === 0) {
-      toast.error('Add at least one line item');
+      toast.error(isService ? 'Add at least one service' : 'Add at least one line item');
       return;
     }
 
@@ -169,7 +175,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
         const lineInserts = validLines.map((l, idx) => ({
           requisition_id: editRequisition.id,
           line_number: idx + 1,
-          item_id: l.item_id,
+          item_id: isService ? null : l.item_id,
+          service_id: isService ? l.service_id : null,
           quantity: l.quantity,
           estimated_unit_cost: l.estimated_unit_cost,
           specifications: l.specifications || null,
@@ -203,7 +210,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
         const lineInserts = validLines.map((l, idx) => ({
           requisition_id: req.id,
           line_number: idx + 1,
-          item_id: l.item_id,
+          item_id: isService ? null : l.item_id,
+          service_id: isService ? l.service_id : null,
           quantity: l.quantity,
           estimated_unit_cost: l.estimated_unit_cost,
           specifications: l.specifications || null,
