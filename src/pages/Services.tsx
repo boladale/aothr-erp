@@ -139,8 +139,8 @@ export default function Services() {
               <div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Office Cleaning" /></div>
               <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional description" /></div>
               <div>
-                <Label>Estimated Cost</Label>
-                <Input type="number" step="0.01" value={form.estimated_cost} onChange={e => setForm(f => ({ ...f, estimated_cost: parseFloat(e.target.value) || 0 }))} />
+                <Label>Estimated Cost <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input type="number" step="0.01" value={form.estimated_cost} onChange={e => setForm(f => ({ ...f, estimated_cost: e.target.value }))} placeholder="Leave blank if not applicable" />
               </div>
               <div className="flex items-center justify-between rounded-md border p-3">
                 <div>
