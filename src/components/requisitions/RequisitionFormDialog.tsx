@@ -56,6 +56,7 @@ interface Props {
 export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequisition }: Props) {
   const { user, organizationId } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     department: '',
@@ -74,6 +75,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
     if (open) {
       supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true).order('name')
         .then(({ data }) => setItems((data || []) as Item[]));
+      (supabase.from('departments' as any) as any).select('id, name').order('name')
+        .then(({ data }: any) => setDepartments((data || []) as { id: string; name: string }[]));
 
       if (editRequisition) {
         setForm({
@@ -236,11 +239,15 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
             </div>
             <div className="space-y-2">
               <Label>Department</Label>
-              <Input
-                value={form.department}
-                onChange={e => setForm({ ...form, department: e.target.value })}
-                placeholder="e.g. Engineering"
-              />
+              <Select value={form.department || 'none'} onValueChange={v => setForm({ ...form, department: v === 'none' ? '' : v })}>
+                <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— None —</SelectItem>
+                  {departments.map(d => (
+                    <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Needed By</Label>
