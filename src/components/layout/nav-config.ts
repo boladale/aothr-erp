@@ -102,6 +102,7 @@ export const pathToProgram: Record<string, string> = {
   '/procurement-audit': 'procurement_audit',
   '/admin': 'admin',
   '/departments': 'departments',
+  '/services': 'services',
   '/employees': 'employees',
   '/leave-management': 'leave_management',
   '/attendance': 'attendance',
@@ -151,6 +152,7 @@ export const navSections = [
     label: 'Warehouse',
     items: [
       { path: '/items', label: 'Items', icon: Package },
+      { path: '/services', label: 'Services', icon: ClipboardCheck },
       { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
       { path: '/inventory', label: 'Inventory', icon: Boxes },
       { path: '/inventory-issues', label: 'Inventory Issues', icon: PackageMinus },

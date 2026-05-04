@@ -30,9 +30,17 @@ interface Item {
   unit_cost: number | null;
 }
 
+interface ServiceRow {
+  id: string;
+  code: string;
+  name: string;
+  estimated_cost: number | null;
+}
+
 interface ReqLine {
   id?: string;
   item_id: string;
+  service_id?: string;
   quantity: number;
   estimated_unit_cost: number;
   specifications: string;
@@ -56,6 +64,7 @@ interface Props {
 export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequisition }: Props) {
   const { user, organizationId } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
+  const [services, setServices] = useState<ServiceRow[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -75,6 +84,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
     if (open) {
       supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true).order('name')
         .then(({ data }) => setItems((data || []) as Item[]));
+      (supabase.from('services' as any) as any).select('id, code, name, estimated_cost').eq('is_active', true).order('name')
+        .then(({ data }: any) => setServices((data || []) as ServiceRow[]));
       (supabase.from('departments' as any) as any).select('id, name').eq('is_active', true).order('name')
         .then(({ data }: any) => setDepartments((data || []) as { id: string; name: string }[]));
 
@@ -87,13 +98,14 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
           requisition_type: (editRequisition as any).requisition_type || 'items',
         });
         // Fetch existing lines
-        supabase.from('requisition_lines').select('id, item_id, quantity, estimated_unit_cost, specifications')
+        (supabase.from('requisition_lines') as any).select('id, item_id, service_id, quantity, estimated_unit_cost, specifications')
           .eq('requisition_id', editRequisition.id).order('line_number')
-          .then(({ data }) => {
+          .then(({ data }: any) => {
             if (data && data.length > 0) {
-              setLines(data.map(l => ({
+              setLines(data.map((l: any) => ({
                 id: l.id,
-                item_id: l.item_id,
+                item_id: l.item_id || '',
+                service_id: l.service_id || '',
                 quantity: l.quantity,
                 estimated_unit_cost: l.estimated_unit_cost || 0,
                 specifications: l.specifications || '',
@@ -118,6 +130,10 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       const item = items.find(i => i.id === value);
       if (item) newLines[idx].estimated_unit_cost = item.unit_cost || 0;
     }
+    if (field === 'service_id') {
+      const svc = services.find(s => s.id === value);
+      if (svc) newLines[idx].estimated_unit_cost = Number(svc.estimated_cost) || 0;
+    }
     setLines(newLines);
   };
 
@@ -126,9 +142,10 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
   };
 
   const handleSave = async () => {
-    const validLines = lines.filter(l => l.item_id && l.quantity > 0);
+    const isService = form.requisition_type === 'service';
+    const validLines = lines.filter(l => (isService ? l.service_id : l.item_id) && l.quantity > 0);
     if (validLines.length === 0) {
-      toast.error('Add at least one line item');
+      toast.error(isService ? 'Add at least one service' : 'Add at least one line item');
       return;
     }
 
@@ -158,7 +175,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
         const lineInserts = validLines.map((l, idx) => ({
           requisition_id: editRequisition.id,
           line_number: idx + 1,
-          item_id: l.item_id,
+          item_id: isService ? null : l.item_id,
+          service_id: isService ? l.service_id : null,
           quantity: l.quantity,
           estimated_unit_cost: l.estimated_unit_cost,
           specifications: l.specifications || null,
@@ -192,7 +210,8 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
         const lineInserts = validLines.map((l, idx) => ({
           requisition_id: req.id,
           line_number: idx + 1,
-          item_id: l.item_id,
+          item_id: isService ? null : l.item_id,
+          service_id: isService ? l.service_id : null,
           quantity: l.quantity,
           estimated_unit_cost: l.estimated_unit_cost,
           specifications: l.specifications || null,
@@ -270,7 +289,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Line Items</Label>
+              <Label>{form.requisition_type === 'service' ? 'Services' : 'Line Items'}</Label>
               <Button type="button" variant="outline" size="sm" onClick={addLine}>
                 Add Line
               </Button>
@@ -279,18 +298,33 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
               {lines.map((line, idx) => (
                 <div key={idx} className="flex gap-2 items-end">
                   <div className="flex-1">
-                    <Select value={line.item_id} onValueChange={v => updateLine(idx, 'item_id', v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select item" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {items.map(item => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.code} - {item.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {form.requisition_type === 'service' ? (
+                      <Select value={line.service_id || ''} onValueChange={v => updateLine(idx, 'service_id', v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {services.map(svc => (
+                            <SelectItem key={svc.id} value={svc.id}>
+                              {svc.code} - {svc.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Select value={line.item_id} onValueChange={v => updateLine(idx, 'item_id', v)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {items.map(item => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.code} - {item.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="w-24">
                     <Input
