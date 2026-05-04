@@ -1142,6 +1142,67 @@ export type Database = {
           },
         ]
       }
+      bid_invitations: {
+        Row: {
+          bid_request_id: string
+          created_at: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          organization_id: string | null
+          responded_at: string | null
+          status: string
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          bid_request_id: string
+          created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          organization_id?: string | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          bid_request_id?: string
+          created_at?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          organization_id?: string | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_invitations_bid_request_id_fkey"
+            columns: ["bid_request_id"]
+            isOneToOne: false
+            referencedRelation: "requisition_bid_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_invitations_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_consumption: {
         Row: {
           amount: number

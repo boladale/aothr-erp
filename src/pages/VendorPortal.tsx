@@ -5,10 +5,11 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MetricCard } from '@/components/ui/metric-card';
-import { FileText, DollarSign, ShoppingCart, Send, ClipboardCheck } from 'lucide-react';
+import { FileText, DollarSign, ShoppingCart, Send, ClipboardCheck, ClipboardList } from 'lucide-react';
 import { VendorRFPBidding } from '@/components/vendor-portal/VendorRFPBidding';
 import { VendorPOAcceptance } from '@/components/vendor-portal/VendorPOAcceptance';
 import { VendorInvoiceSubmission } from '@/components/vendor-portal/VendorInvoiceSubmission';
+import { VendorQuoteRequests } from '@/components/vendor-portal/VendorQuoteRequests';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { format } from 'date-fns';
@@ -81,13 +82,18 @@ export default function VendorPortal() {
           <MetricCard title="Payments Received" value={totalPaid.toLocaleString()} icon={DollarSign} />
         </div>
 
-        <Tabs defaultValue="rfps">
+        <Tabs defaultValue="quotes">
           <TabsList className="flex-wrap">
+            <TabsTrigger value="quotes" className="gap-1"><ClipboardList className="h-4 w-4" /> Quote Requests</TabsTrigger>
             <TabsTrigger value="rfps" className="gap-1"><Send className="h-4 w-4" /> RFPs & Bidding</TabsTrigger>
             <TabsTrigger value="pos" className="gap-1"><ClipboardCheck className="h-4 w-4" /> Purchase Orders</TabsTrigger>
             <TabsTrigger value="invoices" className="gap-1"><FileText className="h-4 w-4" /> Invoices</TabsTrigger>
             <TabsTrigger value="payments" className="gap-1"><DollarSign className="h-4 w-4" /> Payments</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="quotes">
+            <VendorQuoteRequests vendorId={vendorId} />
+          </TabsContent>
 
           <TabsContent value="rfps">
             <VendorRFPBidding vendorId={vendorId} userId={user!.id} />

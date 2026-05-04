@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Plus, Trash2, Star, StarOff, FileText } from 'lucide-react';
+import { Plus, Trash2, Star, StarOff, FileText, Send, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,8 +64,12 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
   const [bidRequest, setBidRequest] = useState<BidRequest | null>(null);
   const [entries, setEntries] = useState<BidEntry[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; vendor_id: string; status: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [inviteSelected, setInviteSelected] = useState<Set<string>>(new Set());
+  const [inviting, setInviting] = useState(false);
 
   // Add vendor bid form state
   const [selectedVendorId, setSelectedVendorId] = useState('');
@@ -85,11 +90,12 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
 
       if (brRes.data) {
         setBidRequest(brRes.data as BidRequest);
-        const { data: entriesData } = await supabase
-          .from('requisition_bid_entries')
-          .select('*')
-          .eq('bid_request_id', brRes.data.id);
-        setEntries((entriesData || []) as BidEntry[]);
+        const [entriesData, invitesData] = await Promise.all([
+          supabase.from('requisition_bid_entries').select('*').eq('bid_request_id', brRes.data.id),
+          (supabase.from('bid_invitations' as any).select('id, vendor_id, status').eq('bid_request_id', brRes.data.id) as any),
+        ]);
+        setEntries((entriesData.data || []) as BidEntry[]);
+        setInvitations((invitesData.data || []) as any);
       }
     } catch (err) {
       console.error('Failed to load bid data:', err);
@@ -152,6 +158,68 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       toast.error(err instanceof Error ? err.message : 'Failed to save bid');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openInviteDialog = () => {
+    setInviteSelected(new Set());
+    setInviteDialogOpen(true);
+  };
+
+  const handleSendInvites = async () => {
+    if (!bidRequest || inviteSelected.size === 0) {
+      toast.error('Select at least one vendor');
+      return;
+    }
+    setInviting(true);
+    try {
+      // Get requisition for context
+      const { data: req } = await supabase
+        .from('requisitions')
+        .select('req_number, organization_id')
+        .eq('id', requisitionId)
+        .single();
+
+      const vendorIds = Array.from(inviteSelected);
+      const inviteRows = vendorIds.map(vid => ({
+        bid_request_id: bidRequest.id,
+        vendor_id: vid,
+        invited_by: user?.id,
+        status: 'invited',
+      }));
+
+      const { error: invErr } = await (supabase.from('bid_invitations' as any).insert(inviteRows as any) as any);
+      if (invErr) throw invErr;
+
+      // Notify vendor users (in-app)
+      const { data: vUsers } = await (supabase
+        .from('vendor_users' as any)
+        .select('user_id, vendor_id')
+        .in('vendor_id', vendorIds)
+        .eq('is_active', true) as any);
+
+      if (vUsers && vUsers.length > 0) {
+        const notifs = (vUsers as any[]).map(vu => ({
+          user_id: vu.user_id,
+          entity_type: 'bid_request',
+          entity_id: bidRequest.id,
+          notification_type: 'rfq_invitation',
+          title: 'New Quote Request',
+          message: `You've been invited to submit a quote for ${req?.req_number || 'a requisition'}.`,
+          organization_id: req?.organization_id,
+        }));
+        await supabase.from('notifications').upsert(notifs, {
+          onConflict: 'user_id,entity_type,entity_id,notification_type',
+        });
+      }
+
+      toast.success(`Invited ${vendorIds.length} vendor(s)`);
+      setInviteDialogOpen(false);
+      fetchData();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send invites');
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -274,6 +342,9 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           <div className="flex gap-2">
             {bidRequest.status === 'open' && (
               <>
+                <Button size="sm" variant="outline" onClick={openInviteDialog}>
+                  <Send className="mr-1 h-3 w-3" /> Invite Vendors
+                </Button>
                 <Button size="sm" variant="outline" onClick={openAddVendorBid}>
                   <Plus className="mr-1 h-3 w-3" /> Add Vendor Bid
                 </Button>
@@ -287,6 +358,24 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </div>
         </CardHeader>
         <CardContent>
+          {invitations.length > 0 && (
+            <div className="mb-4 p-3 rounded-md bg-muted/40 border">
+              <div className="text-xs font-medium mb-2 flex items-center gap-1">
+                <Users className="h-3 w-3" /> Invited Vendors ({invitations.length})
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {invitations.map(inv => {
+                  const v = vendors.find(x => x.id === inv.vendor_id);
+                  const hasQuoted = entries.some(e => e.vendor_id === inv.vendor_id);
+                  return (
+                    <Badge key={inv.id} variant={hasQuoted ? 'default' : 'secondary'} className="text-xs">
+                      {v?.name || 'Vendor'} · {hasQuoted ? 'Quoted' : 'Awaiting'}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {vendorBids.size === 0 ? (
             <p className="text-sm text-muted-foreground">No vendor bids yet. Add vendor quotations to compare.</p>
           ) : (
@@ -456,6 +545,47 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSaveVendorBid} disabled={saving}>
               {saving ? 'Saving...' : 'Save Bid'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Vendors Dialog */}
+      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invite Vendors to Submit Quotes</DialogTitle>
+          </DialogHeader>
+          <div className="py-3 space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Selected vendors will be notified and can submit their quotes from the Vendor Portal.
+            </p>
+            <div className="border rounded-md divide-y max-h-[50vh] overflow-y-auto">
+              {availableVendors.filter(v => !invitations.some(i => i.vendor_id === v.id)).map(v => (
+                <label key={v.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    checked={inviteSelected.has(v.id)}
+                    onCheckedChange={(checked) => {
+                      const next = new Set(inviteSelected);
+                      if (checked) next.add(v.id); else next.delete(v.id);
+                      setInviteSelected(next);
+                    }}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{v.name}</div>
+                    <div className="text-xs text-muted-foreground">{v.code}</div>
+                  </div>
+                </label>
+              ))}
+              {availableVendors.filter(v => !invitations.some(i => i.vendor_id === v.id)).length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-6">No more vendors available to invite.</div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSendInvites} disabled={inviting || inviteSelected.size === 0}>
+              <Send className="mr-1 h-4 w-4" /> {inviting ? 'Sending...' : `Invite ${inviteSelected.size || ''}`}
             </Button>
           </DialogFooter>
         </DialogContent>
