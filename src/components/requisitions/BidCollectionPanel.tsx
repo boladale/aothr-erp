@@ -358,6 +358,24 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </div>
         </CardHeader>
         <CardContent>
+          {invitations.length > 0 && (
+            <div className="mb-4 p-3 rounded-md bg-muted/40 border">
+              <div className="text-xs font-medium mb-2 flex items-center gap-1">
+                <Users className="h-3 w-3" /> Invited Vendors ({invitations.length})
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {invitations.map(inv => {
+                  const v = vendors.find(x => x.id === inv.vendor_id);
+                  const hasQuoted = entries.some(e => e.vendor_id === inv.vendor_id);
+                  return (
+                    <Badge key={inv.id} variant={hasQuoted ? 'default' : 'secondary'} className="text-xs">
+                      {v?.name || 'Vendor'} · {hasQuoted ? 'Quoted' : 'Awaiting'}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {vendorBids.size === 0 ? (
             <p className="text-sm text-muted-foreground">No vendor bids yet. Add vendor quotations to compare.</p>
           ) : (
