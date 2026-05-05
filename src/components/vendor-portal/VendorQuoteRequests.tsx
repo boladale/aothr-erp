@@ -103,9 +103,21 @@ export function VendorQuoteRequests({ vendorId }: Props) {
         onConflict: 'bid_request_id,vendor_id,requisition_line_id',
       });
       if (error) throw error;
-      // mark invitation as quoted
+      // build payment terms text
+      let termsText = '';
+      let msJson: any = null;
+      if (paymentTermsType === 'full_on_delivery') termsText = '100% on delivery';
+      else if (paymentTermsType === 'upfront_balance') termsText = '50% upfront, 50% after delivery';
+      else if (paymentTermsType === 'net_terms') termsText = paymentTerms || 'Net 30';
+      else if (paymentTermsType === 'custom') termsText = paymentTerms;
+      else if (paymentTermsType === 'milestones') {
+        if (milestoneTotal !== 100) throw new Error('Milestone percentages must total 100%');
+        msJson = milestones;
+        termsText = milestones.map(m => `${m.percentage}% — ${m.description || 'milestone'}`).join('; ');
+      }
+      // mark invitation as quoted with payment terms
       await (supabase.from('bid_invitations' as any)
-        .update({ status: 'quoted', responded_at: new Date().toISOString() })
+        .update({ status: 'quoted', responded_at: new Date().toISOString(), payment_terms: termsText, payment_milestones: msJson })
         .eq('id', active.id) as any);
     },
     onSuccess: () => {
