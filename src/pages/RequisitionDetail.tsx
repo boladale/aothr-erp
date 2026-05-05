@@ -22,7 +22,9 @@ interface RequisitionLine {
   estimated_total: number;
   specifications: string | null;
   qty_converted: number;
+  service_id: string | null;
   items: { code: string; name: string; unit_of_measure: string } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface Requisition {
