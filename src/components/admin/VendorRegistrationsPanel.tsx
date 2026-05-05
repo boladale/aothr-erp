@@ -59,7 +59,7 @@ export function VendorRegistrationsPanel() {
       let finalVendorId = vendorId;
 
       if (!finalVendorId) {
-        // Create new vendor record
+        // Create new vendor record from comprehensive registration data
         const vendorCode = 'V-' + registration.company_name.substring(0, 3).toUpperCase() + '-' + Date.now().toString().slice(-4);
         const { data: vendor, error: vendorError } = await supabase.from('vendors').insert({
           name: registration.company_name,
@@ -67,12 +67,33 @@ export function VendorRegistrationsPanel() {
           email: registration.contact_email || registration.email,
           phone: registration.contact_phone || registration.phone,
           address: registration.address,
+          city: registration.city,
+          country: registration.country,
           rc_number: registration.rc_number,
+          service_categories: registration.service_categories || [],
+          project_size_capacity: registration.project_size_capacity || 'medium',
+          bank_name: registration.bank_name,
+          bank_account_number: registration.bank_account_number,
+          payment_terms: registration.payment_terms ?? 30,
           status: 'active',
           organization_id: organizationId,
         } as any).select().single();
         if (vendorError) throw vendorError;
         finalVendorId = vendor.id;
+
+        // Copy uploaded registration documents into vendor_documents
+        const docs = Array.isArray(registration.documents) ? registration.documents : [];
+        if (docs.length > 0) {
+          await supabase.from('vendor_documents').insert(
+            docs.map((d: any) => ({
+              vendor_id: finalVendorId,
+              document_type: d.type,
+              file_name: d.file_name,
+              file_url: d.file_url,
+              uploaded_by: registration.user_id,
+            }))
+          );
+        }
       }
 
       // Create vendor_users link
