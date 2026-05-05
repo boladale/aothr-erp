@@ -113,9 +113,16 @@ export function VendorQuoteRequests({ vendorId }: Props) {
       else if (paymentTermsType === 'net_terms') termsText = paymentTerms || 'Net 30';
       else if (paymentTermsType === 'custom') termsText = paymentTerms;
       else if (paymentTermsType === 'milestones') {
-        if (milestoneTotal !== 100) throw new Error('Milestone percentages must total 100%');
-        msJson = milestones;
-        termsText = milestones.map(m => `${m.percentage}% — ${m.description || 'milestone'}`).join('; ');
+        const totalCost = active.lines.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0);
+        if (milestoneMode === 'percentage') {
+          if (Math.round(milestonePctTotal) !== 100) throw new Error('Milestone percentages must total 100%');
+          msJson = milestones.map(m => ({ ...m, amount: +(totalCost * (m.percentage || 0) / 100).toFixed(2) }));
+          termsText = milestones.map(m => `${m.percentage}% — ${m.description || 'milestone'}`).join('; ');
+        } else {
+          if (Math.abs(milestoneAmtTotal - totalCost) > 0.01) throw new Error(`Milestone amounts must total ₦${totalCost.toLocaleString()}`);
+          msJson = milestones.map(m => ({ ...m, percentage: totalCost ? +((m.amount || 0) / totalCost * 100).toFixed(2) : 0 }));
+          termsText = milestones.map(m => `₦${(m.amount || 0).toLocaleString()} — ${m.description || 'milestone'}`).join('; ');
+        }
       }
       // mark invitation as quoted with payment terms
       await (supabase.from('bid_invitations' as any)
