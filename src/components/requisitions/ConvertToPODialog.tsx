@@ -196,7 +196,6 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
           subtotal,
           total_amount: subtotal,
           notes: `Converted from ${requisition.req_number}`,
-          requisition_id: requisition.id,
           created_by: user?.id, organization_id: organizationId,
         })
         .select()
@@ -227,7 +226,10 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         .insert(poLines)
         .select();
 
-      if (linesError) throw linesError;
+      if (linesError) {
+        await supabase.from('purchase_orders').delete().eq('id', po.id);
+        throw linesError;
+      }
 
       const traceLinks = (insertedLines || []).map((poLine, idx) => ({
         po_line_id: poLine.id,
@@ -239,7 +241,10 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         .from('po_line_requisition_lines')
         .insert(traceLinks);
 
-      if (traceError) throw traceError;
+      if (traceError) {
+        await supabase.from('purchase_orders').delete().eq('id', po.id);
+        throw traceError;
+      }
 
       toast.success(`PO ${poNumber} created from requisition`);
       onOpenChange(false);
