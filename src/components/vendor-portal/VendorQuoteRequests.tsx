@@ -41,7 +41,10 @@ export function VendorQuoteRequests({ vendorId }: Props) {
     const reqId = inv.requisition_bid_requests?.requisition_id;
     if (!reqId) return;
     const [linesRes, mineRes] = await Promise.all([
-      supabase.from('requisition_lines').select('*, items(code, name, unit_of_measure)').eq('requisition_id', reqId).order('line_number'),
+      (supabase.from('requisition_lines') as any)
+        .select('*, items(code, name, unit_of_measure), services:service_id(code, name, description)')
+        .eq('requisition_id', reqId)
+        .order('line_number'),
       supabase.from('requisition_bid_entries').select('*').eq('bid_request_id', inv.bid_request_id).eq('vendor_id', vendorId),
     ]);
     const lines = linesRes.data || [];
