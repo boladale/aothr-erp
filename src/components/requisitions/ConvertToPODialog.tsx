@@ -321,7 +321,16 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
                       <TableCell>
                         <Checkbox checked={sl.selected} onCheckedChange={() => toggleLine(idx)} />
                       </TableCell>
-                      <TableCell className="font-medium">{reqLine?.items?.code} - {reqLine?.items?.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {reqLine?.items
+                          ? `${reqLine.items.code} - ${reqLine.items.name}`
+                          : reqLine?.services
+                          ? `${reqLine.services.code} - ${reqLine.services.name}`
+                          : '-'}
+                        {reqLine?.specifications && (
+                          <div className="text-xs text-muted-foreground mt-1">{reqLine.specifications}</div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">{reqLine ? reqLine.quantity - reqLine.qty_converted : 0}</TableCell>
                       <TableCell className="text-right">
                         <Input
