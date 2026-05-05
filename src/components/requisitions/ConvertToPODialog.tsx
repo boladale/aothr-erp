@@ -28,11 +28,14 @@ import { Award } from 'lucide-react';
 interface ReqLine {
   id: string;
   line_number: number;
-  item_id: string;
+  item_id: string | null;
+  service_id: string | null;
   quantity: number;
   estimated_unit_cost: number;
   qty_converted: number;
+  specifications: string | null;
   items: { code: string; name: string; unit_of_measure: string } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface Vendor {
