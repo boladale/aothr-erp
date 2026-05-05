@@ -5167,14 +5167,18 @@ export type Database = {
       vendor_registration_requests: {
         Row: {
           address: string | null
+          bank_account_number: string | null
+          bank_name: string | null
           city: string | null
           company_name: string
           contact_name: string
           country: string | null
           created_at: string
+          documents: Json | null
           email: string
           id: string
           organization_id: string | null
+          payment_terms: number | null
           phone: string | null
           project_size_capacity: string | null
           rc_number: string | null
@@ -5186,17 +5190,22 @@ export type Database = {
           updated_at: string
           user_id: string
           vendor_id: string | null
+          website: string | null
         }
         Insert: {
           address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           city?: string | null
           company_name: string
           contact_name: string
           country?: string | null
           created_at?: string
+          documents?: Json | null
           email: string
           id?: string
           organization_id?: string | null
+          payment_terms?: number | null
           phone?: string | null
           project_size_capacity?: string | null
           rc_number?: string | null
@@ -5208,17 +5217,22 @@ export type Database = {
           updated_at?: string
           user_id: string
           vendor_id?: string | null
+          website?: string | null
         }
         Update: {
           address?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
           city?: string | null
           company_name?: string
           contact_name?: string
           country?: string | null
           created_at?: string
+          documents?: Json | null
           email?: string
           id?: string
           organization_id?: string | null
+          payment_terms?: number | null
           phone?: string | null
           project_size_capacity?: string | null
           rc_number?: string | null
@@ -5230,6 +5244,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vendor_id?: string | null
+          website?: string | null
         }
         Relationships: [
           {
