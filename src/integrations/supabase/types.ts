@@ -1150,6 +1150,8 @@ export type Database = {
           invited_at: string
           invited_by: string | null
           organization_id: string | null
+          payment_milestones: Json | null
+          payment_terms: string | null
           responded_at: string | null
           status: string
           updated_at: string
@@ -1162,6 +1164,8 @@ export type Database = {
           invited_at?: string
           invited_by?: string | null
           organization_id?: string | null
+          payment_milestones?: Json | null
+          payment_terms?: string | null
           responded_at?: string | null
           status?: string
           updated_at?: string
@@ -1174,6 +1178,8 @@ export type Database = {
           invited_at?: string
           invited_by?: string | null
           organization_id?: string | null
+          payment_milestones?: Json | null
+          payment_terms?: string | null
           responded_at?: string | null
           status?: string
           updated_at?: string

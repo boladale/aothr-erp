@@ -22,6 +22,18 @@ export function VendorQuoteRequests({ vendorId }: Props) {
   const [active, setActive] = useState<any | null>(null);
   const [linePrices, setLinePrices] = useState<Record<string, { unit_price: number; notes: string }>>({});
   const [headerNotes, setHeaderNotes] = useState('');
+  const [paymentTermsType, setPaymentTermsType] = useState<'full_on_delivery' | 'upfront_balance' | 'milestones' | 'net_terms' | 'custom'>('full_on_delivery');
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [milestones, setMilestones] = useState<Array<{ percentage: number; description: string }>>([
+    { percentage: 50, description: '' },
+    { percentage: 50, description: '' },
+  ]);
+
+  const addMilestone = () => setMilestones(m => [...m, { percentage: 0, description: '' }]);
+  const removeMilestone = (i: number) => setMilestones(m => m.filter((_, idx) => idx !== i));
+  const updateMilestone = (i: number, field: 'percentage' | 'description', val: any) =>
+    setMilestones(m => m.map((ms, idx) => idx === i ? { ...ms, [field]: field === 'percentage' ? (parseFloat(val) || 0) : val } : ms));
+  const milestoneTotal = milestones.reduce((s, m) => s + (m.percentage || 0), 0);
 
   const { data: invites = [], isLoading } = useQuery({
     queryKey: ['vendor-bid-invites', vendorId],
@@ -60,6 +72,19 @@ export function VendorQuoteRequests({ vendorId }: Props) {
     setActive({ ...inv, lines });
     setLinePrices(seed);
     setHeaderNotes('');
+    // seed payment terms from invitation if present
+    const existingMs = (inv as any).payment_milestones;
+    if (Array.isArray(existingMs) && existingMs.length > 0) {
+      setPaymentTermsType('milestones');
+      setMilestones(existingMs);
+    } else if ((inv as any).payment_terms) {
+      setPaymentTermsType('custom');
+      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+    } else {
+      setPaymentTermsType('full_on_delivery');
+      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+    }
+    setPaymentTerms((inv as any).payment_terms || '');
     setOpen(true);
   };
 
@@ -78,9 +103,21 @@ export function VendorQuoteRequests({ vendorId }: Props) {
         onConflict: 'bid_request_id,vendor_id,requisition_line_id',
       });
       if (error) throw error;
-      // mark invitation as quoted
+      // build payment terms text
+      let termsText = '';
+      let msJson: any = null;
+      if (paymentTermsType === 'full_on_delivery') termsText = '100% on delivery';
+      else if (paymentTermsType === 'upfront_balance') termsText = '50% upfront, 50% after delivery';
+      else if (paymentTermsType === 'net_terms') termsText = paymentTerms || 'Net 30';
+      else if (paymentTermsType === 'custom') termsText = paymentTerms;
+      else if (paymentTermsType === 'milestones') {
+        if (milestoneTotal !== 100) throw new Error('Milestone percentages must total 100%');
+        msJson = milestones;
+        termsText = milestones.map(m => `${m.percentage}% — ${m.description || 'milestone'}`).join('; ');
+      }
+      // mark invitation as quoted with payment terms
       await (supabase.from('bid_invitations' as any)
-        .update({ status: 'quoted', responded_at: new Date().toISOString() })
+        .update({ status: 'quoted', responded_at: new Date().toISOString(), payment_terms: termsText, payment_milestones: msJson })
         .eq('id', active.id) as any);
     },
     onSuccess: () => {
@@ -198,6 +235,62 @@ export function VendorQuoteRequests({ vendorId }: Props) {
             <div className="text-right font-semibold">
               Total: ₦{active?.lines?.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0).toLocaleString()}
             </div>
+            <div className="space-y-2 border-t pt-4">
+              <Label className="text-base font-semibold">Payment Terms</Label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={paymentTermsType}
+                onChange={e => setPaymentTermsType(e.target.value as any)}
+              >
+                <option value="full_on_delivery">100% on delivery</option>
+                <option value="upfront_balance">50% upfront, 50% after delivery</option>
+                <option value="milestones">Milestone payments</option>
+                <option value="net_terms">Net terms (Net 30, Net 60, etc.)</option>
+                <option value="custom">Custom</option>
+              </select>
+
+              {paymentTermsType === 'milestones' && (
+                <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                  {milestones.map((m, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        className="w-20"
+                        value={m.percentage}
+                        onChange={e => updateMilestone(i, 'percentage', e.target.value)}
+                        placeholder="%"
+                      />
+                      <span className="text-sm">%</span>
+                      <Input
+                        className="flex-1"
+                        value={m.description}
+                        onChange={e => updateMilestone(i, 'description', e.target.value)}
+                        placeholder="Milestone description (e.g. On signing, On delivery)"
+                      />
+                      {milestones.length > 1 && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeMilestone(i)}>×</Button>
+                      )}
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center">
+                    <Button type="button" variant="outline" size="sm" onClick={addMilestone}>+ Add milestone</Button>
+                    <span className={`text-sm font-medium ${milestoneTotal === 100 ? 'text-green-600' : 'text-destructive'}`}>
+                      Total: {milestoneTotal}% {milestoneTotal !== 100 && '(must equal 100%)'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {(paymentTermsType === 'net_terms' || paymentTermsType === 'custom') && (
+                <Textarea
+                  value={paymentTerms}
+                  onChange={e => setPaymentTerms(e.target.value)}
+                  rows={2}
+                  placeholder={paymentTermsType === 'net_terms' ? 'e.g. Net 30 days from invoice date' : 'Describe your payment terms'}
+                />
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label>Cover Notes (optional)</Label>
               <Textarea value={headerNotes} onChange={e => setHeaderNotes(e.target.value)} rows={2} placeholder="Delivery terms, validity, etc." />
