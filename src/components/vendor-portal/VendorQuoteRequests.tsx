@@ -235,6 +235,62 @@ export function VendorQuoteRequests({ vendorId }: Props) {
             <div className="text-right font-semibold">
               Total: ₦{active?.lines?.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0).toLocaleString()}
             </div>
+            <div className="space-y-2 border-t pt-4">
+              <Label className="text-base font-semibold">Payment Terms</Label>
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={paymentTermsType}
+                onChange={e => setPaymentTermsType(e.target.value as any)}
+              >
+                <option value="full_on_delivery">100% on delivery</option>
+                <option value="upfront_balance">50% upfront, 50% after delivery</option>
+                <option value="milestones">Milestone payments</option>
+                <option value="net_terms">Net terms (Net 30, Net 60, etc.)</option>
+                <option value="custom">Custom</option>
+              </select>
+
+              {paymentTermsType === 'milestones' && (
+                <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                  {milestones.map((m, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        className="w-20"
+                        value={m.percentage}
+                        onChange={e => updateMilestone(i, 'percentage', e.target.value)}
+                        placeholder="%"
+                      />
+                      <span className="text-sm">%</span>
+                      <Input
+                        className="flex-1"
+                        value={m.description}
+                        onChange={e => updateMilestone(i, 'description', e.target.value)}
+                        placeholder="Milestone description (e.g. On signing, On delivery)"
+                      />
+                      {milestones.length > 1 && (
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeMilestone(i)}>×</Button>
+                      )}
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center">
+                    <Button type="button" variant="outline" size="sm" onClick={addMilestone}>+ Add milestone</Button>
+                    <span className={`text-sm font-medium ${milestoneTotal === 100 ? 'text-green-600' : 'text-destructive'}`}>
+                      Total: {milestoneTotal}% {milestoneTotal !== 100 && '(must equal 100%)'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {(paymentTermsType === 'net_terms' || paymentTermsType === 'custom') && (
+                <Textarea
+                  value={paymentTerms}
+                  onChange={e => setPaymentTerms(e.target.value)}
+                  rows={2}
+                  placeholder={paymentTermsType === 'net_terms' ? 'e.g. Net 30 days from invoice date' : 'Describe your payment terms'}
+                />
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label>Cover Notes (optional)</Label>
               <Textarea value={headerNotes} onChange={e => setHeaderNotes(e.target.value)} rows={2} placeholder="Delivery terms, validity, etc." />
