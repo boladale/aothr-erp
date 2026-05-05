@@ -64,7 +64,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
   const [bidRequest, setBidRequest] = useState<BidRequest | null>(null);
   const [entries, setEntries] = useState<BidEntry[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [invitations, setInvitations] = useState<{ id: string; vendor_id: string; status: string }[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; vendor_id: string; status: string; payment_terms?: string | null; payment_milestones?: any }[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
