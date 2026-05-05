@@ -167,8 +167,10 @@ export function VendorQuoteRequests({ vendorId }: Props) {
               <TableBody>
                 {active?.lines?.map((l: any) => (
                   <TableRow key={l.id}>
-                    <TableCell className="text-sm">{l.items?.code} - {l.items?.name}</TableCell>
-                    <TableCell>{l.items?.unit_of_measure || '-'}</TableCell>
+                    <TableCell className="text-sm">
+                      {l.items ? `${l.items.code} - ${l.items.name}` : l.services ? `${l.services.code} - ${l.services.name}` : '-'}
+                    </TableCell>
+                    <TableCell>{l.items?.unit_of_measure || (l.services ? 'Service' : '-')}</TableCell>
                     <TableCell className="text-right">{l.quantity}</TableCell>
                     <TableCell className="text-right">
                       <Input
