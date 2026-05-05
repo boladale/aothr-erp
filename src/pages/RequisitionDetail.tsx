@@ -225,8 +225,10 @@ export default function RequisitionDetail() {
                 {lines.map(line => (
                   <TableRow key={line.id}>
                     <TableCell>{line.line_number}</TableCell>
-                    <TableCell className="font-medium">{line.items?.code} - {line.items?.name}</TableCell>
-                    <TableCell>{line.items?.unit_of_measure || '-'}</TableCell>
+                    <TableCell className="font-medium">
+                      {line.items ? `${line.items.code} - ${line.items.name}` : line.services ? `${line.services.code} - ${line.services.name}` : '-'}
+                    </TableCell>
+                    <TableCell>{line.items?.unit_of_measure || (line.services ? 'Service' : '-')}</TableCell>
                     <TableCell className="text-right">{line.quantity}</TableCell>
                     <TableCell className="text-right">₦{line.estimated_unit_cost.toFixed(2)}</TableCell>
                     <TableCell className="text-right">₦{(line.estimated_total || 0).toFixed(2)}</TableCell>
