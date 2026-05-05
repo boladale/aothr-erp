@@ -60,7 +60,7 @@ export default function RequisitionDetail() {
     try {
       const [reqRes, linesRes] = await Promise.all([
         supabase.from('requisitions').select('*').eq('id', id!).single(),
-        supabase.from('requisition_lines').select('*, items(code, name, unit_of_measure)').eq('requisition_id', id!).order('line_number'),
+        supabase.from('requisition_lines').select('*, items(code, name, unit_of_measure), services(code, name)').eq('requisition_id', id!).order('line_number'),
       ]);
       if (reqRes.error) throw reqRes.error;
       setRequisition(reqRes.data as Requisition);
