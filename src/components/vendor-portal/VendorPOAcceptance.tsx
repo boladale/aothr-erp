@@ -172,7 +172,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
               {poLines.map((line: any, i: number) => (
                 <TableRow key={line.id}>
                   <TableCell>{line.line_number || i + 1}</TableCell>
-                  <TableCell>{line.items?.description || line.description || '-'}</TableCell>
+                  <TableCell>{line.items ? `${line.items.code} - ${line.items.name}` : line.services ? `${line.services.code} - ${line.services.name}` : (line.description || '-')}</TableCell>
                   <TableCell>{line.quantity}</TableCell>
                   <TableCell>{Number(line.unit_price).toLocaleString()}</TableCell>
                   <TableCell>{Number(line.line_total).toLocaleString()}</TableCell>
