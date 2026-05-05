@@ -8,3 +8,5 @@ verify_jwt = false
 
 [functions.ai-reconcile]
 verify_jwt = false
+[functions.vendor-accept-invite]
+verify_jwt = false
