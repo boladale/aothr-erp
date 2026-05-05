@@ -3453,37 +3453,40 @@ export type Database = {
         Row: {
           description: string | null
           id: string
-          item_id: string
+          item_id: string | null
           line_number: number
           line_total: number | null
           po_id: string
           qty_invoiced: number | null
           qty_received: number | null
           quantity: number
+          service_id: string | null
           unit_price: number
         }
         Insert: {
           description?: string | null
           id?: string
-          item_id: string
+          item_id?: string | null
           line_number: number
           line_total?: number | null
           po_id: string
           qty_invoiced?: number | null
           qty_received?: number | null
           quantity: number
+          service_id?: string | null
           unit_price: number
         }
         Update: {
           description?: string | null
           id?: string
-          item_id?: string
+          item_id?: string | null
           line_number?: number
           line_total?: number | null
           po_id?: string
           qty_invoiced?: number | null
           qty_received?: number | null
           quantity?: number
+          service_id?: string | null
           unit_price?: number
         }
         Relationships: [
@@ -3499,6 +3502,13 @@ export type Database = {
             columns: ["po_id"]
             isOneToOne: false
             referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_lines_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
