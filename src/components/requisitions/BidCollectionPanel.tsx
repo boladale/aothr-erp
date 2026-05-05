@@ -64,7 +64,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
   const [bidRequest, setBidRequest] = useState<BidRequest | null>(null);
   const [entries, setEntries] = useState<BidEntry[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [invitations, setInvitations] = useState<{ id: string; vendor_id: string; status: string }[]>([]);
+  const [invitations, setInvitations] = useState<{ id: string; vendor_id: string; status: string; payment_terms?: string | null; payment_milestones?: any }[]>([]);
   const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -80,6 +80,24 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
     fetchData();
   }, [requisitionId]);
 
+  // Refetch when window regains focus (e.g. another vendor just submitted)
+  useEffect(() => {
+    const onFocus = () => fetchData();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [requisitionId]);
+
+  // Realtime updates for new bid entries / invitation status changes
+  useEffect(() => {
+    if (!bidRequest) return;
+    const channel = supabase
+      .channel(`bid-${bidRequest.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'requisition_bid_entries', filter: `bid_request_id=eq.${bidRequest.id}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bid_invitations', filter: `bid_request_id=eq.${bidRequest.id}` }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [bidRequest?.id]);
+
   const fetchData = async () => {
     try {
       const [brRes, vendorRes] = await Promise.all([
@@ -92,7 +110,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
         setBidRequest(brRes.data as BidRequest);
         const [entriesData, invitesData] = await Promise.all([
           supabase.from('requisition_bid_entries').select('*').eq('bid_request_id', brRes.data.id),
-          (supabase.from('bid_invitations' as any).select('id, vendor_id, status').eq('bid_request_id', brRes.data.id) as any),
+          (supabase.from('bid_invitations' as any).select('id, vendor_id, status, payment_terms, payment_milestones').eq('bid_request_id', brRes.data.id) as any),
         ]);
         setEntries((entriesData.data || []) as BidEntry[]);
         setInvitations((invitesData.data || []) as any);
