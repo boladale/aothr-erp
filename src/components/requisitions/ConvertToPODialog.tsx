@@ -28,11 +28,14 @@ import { Award } from 'lucide-react';
 interface ReqLine {
   id: string;
   line_number: number;
-  item_id: string;
+  item_id: string | null;
+  service_id: string | null;
   quantity: number;
   estimated_unit_cost: number;
   qty_converted: number;
+  specifications: string | null;
   items: { code: string; name: string; unit_of_measure: string } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface Vendor {
@@ -201,13 +204,22 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
 
       if (poError) throw poError;
 
-      const poLines = linesToConvert.map((l, idx) => ({
-        po_id: po.id,
-        line_number: idx + 1,
-        item_id: l.item_id,
-        quantity: l.quantity,
-        unit_price: l.unit_price,
-      }));
+      const poLines = linesToConvert.map((l, idx) => {
+        const reqLine = lines.find(rl => rl.id === l.requisition_line_id);
+        const description = reqLine?.items
+          ? reqLine.items.name
+          : reqLine?.services
+          ? reqLine.services.name
+          : null;
+        return {
+          po_id: po.id,
+          line_number: idx + 1,
+          item_id: l.item_id,
+          description,
+          quantity: l.quantity,
+          unit_price: l.unit_price,
+        };
+      });
 
       const { data: insertedLines, error: linesError } = await supabase
         .from('purchase_order_lines')
@@ -318,7 +330,16 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
                       <TableCell>
                         <Checkbox checked={sl.selected} onCheckedChange={() => toggleLine(idx)} />
                       </TableCell>
-                      <TableCell className="font-medium">{reqLine?.items?.code} - {reqLine?.items?.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {reqLine?.items
+                          ? `${reqLine.items.code} - ${reqLine.items.name}`
+                          : reqLine?.services
+                          ? `${reqLine.services.code} - ${reqLine.services.name}`
+                          : '-'}
+                        {reqLine?.specifications && (
+                          <div className="text-xs text-muted-foreground mt-1">{reqLine.specifications}</div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">{reqLine ? reqLine.quantity - reqLine.qty_converted : 0}</TableCell>
                       <TableCell className="text-right">
                         <Input
