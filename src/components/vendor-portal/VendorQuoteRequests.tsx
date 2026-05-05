@@ -72,6 +72,19 @@ export function VendorQuoteRequests({ vendorId }: Props) {
     setActive({ ...inv, lines });
     setLinePrices(seed);
     setHeaderNotes('');
+    // seed payment terms from invitation if present
+    const existingMs = (inv as any).payment_milestones;
+    if (Array.isArray(existingMs) && existingMs.length > 0) {
+      setPaymentTermsType('milestones');
+      setMilestones(existingMs);
+    } else if ((inv as any).payment_terms) {
+      setPaymentTermsType('custom');
+      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+    } else {
+      setPaymentTermsType('full_on_delivery');
+      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+    }
+    setPaymentTerms((inv as any).payment_terms || '');
     setOpen(true);
   };
 
