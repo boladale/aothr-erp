@@ -110,7 +110,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
         setBidRequest(brRes.data as BidRequest);
         const [entriesData, invitesData] = await Promise.all([
           supabase.from('requisition_bid_entries').select('*').eq('bid_request_id', brRes.data.id),
-          (supabase.from('bid_invitations' as any).select('id, vendor_id, status').eq('bid_request_id', brRes.data.id) as any),
+          (supabase.from('bid_invitations' as any).select('id, vendor_id, status, payment_terms, payment_milestones').eq('bid_request_id', brRes.data.id) as any),
         ]);
         setEntries((entriesData.data || []) as BidEntry[]);
         setInvitations((invitesData.data || []) as any);
