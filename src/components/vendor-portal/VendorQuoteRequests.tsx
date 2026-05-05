@@ -81,10 +81,10 @@ export function VendorQuoteRequests({ vendorId }: Props) {
       setMilestones(existingMs);
     } else if ((inv as any).payment_terms) {
       setPaymentTermsType('custom');
-      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+      setMilestones([{ percentage: 50, amount: 0, description: '' }, { percentage: 50, amount: 0, description: '' }]);
     } else {
       setPaymentTermsType('full_on_delivery');
-      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+      setMilestones([{ percentage: 50, amount: 0, description: '' }, { percentage: 50, amount: 0, description: '' }]);
     }
     setPaymentTerms((inv as any).payment_terms || '');
     setOpen(true);
