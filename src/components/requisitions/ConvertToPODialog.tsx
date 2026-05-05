@@ -204,13 +204,22 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
 
       if (poError) throw poError;
 
-      const poLines = linesToConvert.map((l, idx) => ({
-        po_id: po.id,
-        line_number: idx + 1,
-        item_id: l.item_id,
-        quantity: l.quantity,
-        unit_price: l.unit_price,
-      }));
+      const poLines = linesToConvert.map((l, idx) => {
+        const reqLine = lines.find(rl => rl.id === l.requisition_line_id);
+        const description = reqLine?.items
+          ? reqLine.items.name
+          : reqLine?.services
+          ? reqLine.services.name
+          : null;
+        return {
+          po_id: po.id,
+          line_number: idx + 1,
+          item_id: l.item_id,
+          description,
+          quantity: l.quantity,
+          unit_price: l.unit_price,
+        };
+      });
 
       const { data: insertedLines, error: linesError } = await supabase
         .from('purchase_order_lines')
