@@ -22,6 +22,18 @@ export function VendorQuoteRequests({ vendorId }: Props) {
   const [active, setActive] = useState<any | null>(null);
   const [linePrices, setLinePrices] = useState<Record<string, { unit_price: number; notes: string }>>({});
   const [headerNotes, setHeaderNotes] = useState('');
+  const [paymentTermsType, setPaymentTermsType] = useState<'full_on_delivery' | 'upfront_balance' | 'milestones' | 'net_terms' | 'custom'>('full_on_delivery');
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [milestones, setMilestones] = useState<Array<{ percentage: number; description: string }>>([
+    { percentage: 50, description: '' },
+    { percentage: 50, description: '' },
+  ]);
+
+  const addMilestone = () => setMilestones(m => [...m, { percentage: 0, description: '' }]);
+  const removeMilestone = (i: number) => setMilestones(m => m.filter((_, idx) => idx !== i));
+  const updateMilestone = (i: number, field: 'percentage' | 'description', val: any) =>
+    setMilestones(m => m.map((ms, idx) => idx === i ? { ...ms, [field]: field === 'percentage' ? (parseFloat(val) || 0) : val } : ms));
+  const milestoneTotal = milestones.reduce((s, m) => s + (m.percentage || 0), 0);
 
   const { data: invites = [], isLoading } = useQuery({
     queryKey: ['vendor-bid-invites', vendorId],
