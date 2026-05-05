@@ -214,11 +214,12 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         return {
           po_id: po.id,
           line_number: idx + 1,
-          item_id: l.item_id,
+          item_id: reqLine?.item_id || null,
+          service_id: reqLine?.service_id || null,
           description,
           quantity: l.quantity,
           unit_price: l.unit_price,
-        };
+        } as any;
       });
 
       const { data: insertedLines, error: linesError } = await supabase
