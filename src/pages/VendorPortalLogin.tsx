@@ -107,7 +107,36 @@ export default function VendorPortalLogin() {
     if (!result.success) { toast.error(result.error.errors[0].message); return; }
 
     setLoading(true);
-    // 1. Create account
+
+    // Invite flow: use edge function which handles existing/new auth users
+    if (inviteToken && inviteData) {
+      const { data, error } = await supabase.functions.invoke('vendor-accept-invite', {
+        body: {
+          token: inviteToken,
+          email: regForm.email,
+          password: regForm.password,
+          contact_name: regForm.contactName,
+        },
+      });
+      if (error || (data as any)?.error) {
+        setLoading(false);
+        toast.error((data as any)?.error || error?.message || 'Failed to accept invite');
+        return;
+      }
+      // Now sign in
+      const { error: signInError } = await signIn(regForm.email, regForm.password);
+      setLoading(false);
+      if (signInError) {
+        toast.success('Account ready! Please sign in.');
+        setTab('login');
+      } else {
+        toast.success('Welcome! Redirecting to vendor portal...');
+        navigate('/vendor-portal');
+      }
+      return;
+    }
+
+    // Self-registration flow
     const { error: signUpError } = await signUp(regForm.email, regForm.password, regForm.contactName);
     if (signUpError) {
       setLoading(false);
@@ -115,7 +144,6 @@ export default function VendorPortalLogin() {
       return;
     }
 
-    // 2. Sign in to get user id
     const { error: signInError } = await signIn(regForm.email, regForm.password);
     if (signInError) {
       setLoading(false);
@@ -124,19 +152,8 @@ export default function VendorPortalLogin() {
       return;
     }
 
-    // 3. Handle invite-based or self-registration
     const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (currentUser && inviteData) {
-      // Invite flow: auto-link to existing vendor
-      await supabase.from('vendor_users' as any).insert({ user_id: currentUser.id, vendor_id: inviteData.vendor_id, is_active: true } as any);
-      await supabase.from('user_roles').insert({ user_id: currentUser.id, role: 'vendor_user' as any } as any);
-      await (supabase.from('vendor_invite_tokens' as any) as any).update({ used_at: new Date().toISOString() }).eq('id', inviteData.id);
-      setLoading(false);
-      toast.success('Account created and linked to vendor! Redirecting...');
-      navigate('/vendor-portal');
-      return;
-    } else if (currentUser) {
-      // Self-registration: submit request for approval
+    if (currentUser) {
       await (supabase.from('vendor_registration_requests' as any) as any).insert({
         user_id: currentUser.id,
         company_name: regForm.companyName,
