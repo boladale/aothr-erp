@@ -258,24 +258,42 @@ export function VendorQuoteRequests({ vendorId }: Props) {
                 <option value="custom">Custom</option>
               </select>
 
-              {paymentTermsType === 'milestones' && (
+              {paymentTermsType === 'milestones' && (() => {
+                const totalCost = active?.lines?.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0) || 0;
+                const valid = milestoneMode === 'percentage'
+                  ? Math.round(milestonePctTotal) === 100
+                  : Math.abs(milestoneAmtTotal - totalCost) < 0.01;
+                return (
                 <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                  <div className="flex gap-2 items-center">
+                    <Label className="text-sm">Specify by:</Label>
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                      value={milestoneMode}
+                      onChange={e => setMilestoneMode(e.target.value as any)}
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="amount">Amount (₦)</option>
+                    </select>
+                  </div>
                   {milestones.map((m, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <Input
-                        type="number"
-                        className="w-20"
-                        value={m.percentage}
-                        onChange={e => updateMilestone(i, 'percentage', e.target.value)}
-                        placeholder="%"
-                      />
-                      <span className="text-sm">%</span>
-                      <Input
-                        className="flex-1"
-                        value={m.description}
+                      {milestoneMode === 'percentage' ? (
+                        <>
+                          <Input type="number" className="w-24" value={m.percentage}
+                            onChange={e => updateMilestone(i, 'percentage', e.target.value)} placeholder="%" />
+                          <span className="text-sm">%</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm">₦</span>
+                          <Input type="number" step="0.01" className="w-32" value={m.amount}
+                            onChange={e => updateMilestone(i, 'amount', e.target.value)} placeholder="Amount" />
+                        </>
+                      )}
+                      <Input className="flex-1" value={m.description}
                         onChange={e => updateMilestone(i, 'description', e.target.value)}
-                        placeholder="Milestone description (e.g. On signing, On delivery)"
-                      />
+                        placeholder="Milestone description (e.g. On signing, On delivery)" />
                       {milestones.length > 1 && (
                         <Button type="button" variant="ghost" size="sm" onClick={() => removeMilestone(i)}>×</Button>
                       )}
@@ -283,12 +301,15 @@ export function VendorQuoteRequests({ vendorId }: Props) {
                   ))}
                   <div className="flex justify-between items-center">
                     <Button type="button" variant="outline" size="sm" onClick={addMilestone}>+ Add milestone</Button>
-                    <span className={`text-sm font-medium ${milestoneTotal === 100 ? 'text-green-600' : 'text-destructive'}`}>
-                      Total: {milestoneTotal}% {milestoneTotal !== 100 && '(must equal 100%)'}
+                    <span className={`text-sm font-medium ${valid ? 'text-green-600' : 'text-destructive'}`}>
+                      {milestoneMode === 'percentage'
+                        ? <>Total: {milestonePctTotal}% {!valid && '(must equal 100%)'}</>
+                        : <>Total: ₦{milestoneAmtTotal.toLocaleString()} {!valid && `(must equal ₦${totalCost.toLocaleString()})`}</>}
                     </span>
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               {(paymentTermsType === 'net_terms' || paymentTermsType === 'custom') && (
                 <Textarea
