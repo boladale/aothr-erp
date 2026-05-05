@@ -147,12 +147,6 @@ export function VendorQuoteRequests({ vendorId }: Props) {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {active?.requisition_bid_requests?.requisitions?.justification && (
-              <div className="text-sm p-3 bg-muted/40 rounded">
-                <span className="font-medium">Justification: </span>
-                {active.requisition_bid_requests.requisitions.justification}
-              </div>
-            )}
             <Table>
               <TableHeader>
                 <TableRow>
