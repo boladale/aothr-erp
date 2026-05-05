@@ -24,16 +24,18 @@ export function VendorQuoteRequests({ vendorId }: Props) {
   const [headerNotes, setHeaderNotes] = useState('');
   const [paymentTermsType, setPaymentTermsType] = useState<'full_on_delivery' | 'upfront_balance' | 'milestones' | 'net_terms' | 'custom'>('full_on_delivery');
   const [paymentTerms, setPaymentTerms] = useState('');
-  const [milestones, setMilestones] = useState<Array<{ percentage: number; description: string }>>([
-    { percentage: 50, description: '' },
-    { percentage: 50, description: '' },
+  const [milestoneMode, setMilestoneMode] = useState<'percentage' | 'amount'>('percentage');
+  const [milestones, setMilestones] = useState<Array<{ percentage: number; amount: number; description: string }>>([
+    { percentage: 50, amount: 0, description: '' },
+    { percentage: 50, amount: 0, description: '' },
   ]);
 
-  const addMilestone = () => setMilestones(m => [...m, { percentage: 0, description: '' }]);
+  const addMilestone = () => setMilestones(m => [...m, { percentage: 0, amount: 0, description: '' }]);
   const removeMilestone = (i: number) => setMilestones(m => m.filter((_, idx) => idx !== i));
-  const updateMilestone = (i: number, field: 'percentage' | 'description', val: any) =>
-    setMilestones(m => m.map((ms, idx) => idx === i ? { ...ms, [field]: field === 'percentage' ? (parseFloat(val) || 0) : val } : ms));
-  const milestoneTotal = milestones.reduce((s, m) => s + (m.percentage || 0), 0);
+  const updateMilestone = (i: number, field: 'percentage' | 'amount' | 'description', val: any) =>
+    setMilestones(m => m.map((ms, idx) => idx === i ? { ...ms, [field]: field === 'description' ? val : (parseFloat(val) || 0) } : ms));
+  const milestonePctTotal = milestones.reduce((s, m) => s + (m.percentage || 0), 0);
+  const milestoneAmtTotal = milestones.reduce((s, m) => s + (m.amount || 0), 0);
 
   const { data: invites = [], isLoading } = useQuery({
     queryKey: ['vendor-bid-invites', vendorId],
@@ -79,10 +81,10 @@ export function VendorQuoteRequests({ vendorId }: Props) {
       setMilestones(existingMs);
     } else if ((inv as any).payment_terms) {
       setPaymentTermsType('custom');
-      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+      setMilestones([{ percentage: 50, amount: 0, description: '' }, { percentage: 50, amount: 0, description: '' }]);
     } else {
       setPaymentTermsType('full_on_delivery');
-      setMilestones([{ percentage: 50, description: '' }, { percentage: 50, description: '' }]);
+      setMilestones([{ percentage: 50, amount: 0, description: '' }, { percentage: 50, amount: 0, description: '' }]);
     }
     setPaymentTerms((inv as any).payment_terms || '');
     setOpen(true);
@@ -111,9 +113,16 @@ export function VendorQuoteRequests({ vendorId }: Props) {
       else if (paymentTermsType === 'net_terms') termsText = paymentTerms || 'Net 30';
       else if (paymentTermsType === 'custom') termsText = paymentTerms;
       else if (paymentTermsType === 'milestones') {
-        if (milestoneTotal !== 100) throw new Error('Milestone percentages must total 100%');
-        msJson = milestones;
-        termsText = milestones.map(m => `${m.percentage}% — ${m.description || 'milestone'}`).join('; ');
+        const totalCost = active.lines.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0);
+        if (milestoneMode === 'percentage') {
+          if (Math.round(milestonePctTotal) !== 100) throw new Error('Milestone percentages must total 100%');
+          msJson = milestones.map(m => ({ ...m, amount: +(totalCost * (m.percentage || 0) / 100).toFixed(2) }));
+          termsText = milestones.map(m => `${m.percentage}% — ${m.description || 'milestone'}`).join('; ');
+        } else {
+          if (Math.abs(milestoneAmtTotal - totalCost) > 0.01) throw new Error(`Milestone amounts must total ₦${totalCost.toLocaleString()}`);
+          msJson = milestones.map(m => ({ ...m, percentage: totalCost ? +((m.amount || 0) / totalCost * 100).toFixed(2) : 0 }));
+          termsText = milestones.map(m => `₦${(m.amount || 0).toLocaleString()} — ${m.description || 'milestone'}`).join('; ');
+        }
       }
       // mark invitation as quoted with payment terms
       await (supabase.from('bid_invitations' as any)
@@ -249,24 +258,42 @@ export function VendorQuoteRequests({ vendorId }: Props) {
                 <option value="custom">Custom</option>
               </select>
 
-              {paymentTermsType === 'milestones' && (
+              {paymentTermsType === 'milestones' && (() => {
+                const totalCost = active?.lines?.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0) || 0;
+                const valid = milestoneMode === 'percentage'
+                  ? Math.round(milestonePctTotal) === 100
+                  : Math.abs(milestoneAmtTotal - totalCost) < 0.01;
+                return (
                 <div className="space-y-2 rounded-md border p-3 bg-muted/30">
+                  <div className="flex gap-2 items-center">
+                    <Label className="text-sm">Specify by:</Label>
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                      value={milestoneMode}
+                      onChange={e => setMilestoneMode(e.target.value as any)}
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="amount">Amount (₦)</option>
+                    </select>
+                  </div>
                   {milestones.map((m, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <Input
-                        type="number"
-                        className="w-20"
-                        value={m.percentage}
-                        onChange={e => updateMilestone(i, 'percentage', e.target.value)}
-                        placeholder="%"
-                      />
-                      <span className="text-sm">%</span>
-                      <Input
-                        className="flex-1"
-                        value={m.description}
+                      {milestoneMode === 'percentage' ? (
+                        <>
+                          <Input type="number" className="w-24" value={m.percentage}
+                            onChange={e => updateMilestone(i, 'percentage', e.target.value)} placeholder="%" />
+                          <span className="text-sm">%</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm">₦</span>
+                          <Input type="number" step="0.01" className="w-32" value={m.amount}
+                            onChange={e => updateMilestone(i, 'amount', e.target.value)} placeholder="Amount" />
+                        </>
+                      )}
+                      <Input className="flex-1" value={m.description}
                         onChange={e => updateMilestone(i, 'description', e.target.value)}
-                        placeholder="Milestone description (e.g. On signing, On delivery)"
-                      />
+                        placeholder="Milestone description (e.g. On signing, On delivery)" />
                       {milestones.length > 1 && (
                         <Button type="button" variant="ghost" size="sm" onClick={() => removeMilestone(i)}>×</Button>
                       )}
@@ -274,12 +301,15 @@ export function VendorQuoteRequests({ vendorId }: Props) {
                   ))}
                   <div className="flex justify-between items-center">
                     <Button type="button" variant="outline" size="sm" onClick={addMilestone}>+ Add milestone</Button>
-                    <span className={`text-sm font-medium ${milestoneTotal === 100 ? 'text-green-600' : 'text-destructive'}`}>
-                      Total: {milestoneTotal}% {milestoneTotal !== 100 && '(must equal 100%)'}
+                    <span className={`text-sm font-medium ${valid ? 'text-green-600' : 'text-destructive'}`}>
+                      {milestoneMode === 'percentage'
+                        ? <>Total: {milestonePctTotal}% {!valid && '(must equal 100%)'}</>
+                        : <>Total: ₦{milestoneAmtTotal.toLocaleString()} {!valid && `(must equal ₦${totalCost.toLocaleString()})`}</>}
                     </span>
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               {(paymentTermsType === 'net_terms' || paymentTermsType === 'custom') && (
                 <Textarea
