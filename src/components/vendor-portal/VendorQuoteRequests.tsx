@@ -41,7 +41,10 @@ export function VendorQuoteRequests({ vendorId }: Props) {
     const reqId = inv.requisition_bid_requests?.requisition_id;
     if (!reqId) return;
     const [linesRes, mineRes] = await Promise.all([
-      supabase.from('requisition_lines').select('*, items(code, name, unit_of_measure)').eq('requisition_id', reqId).order('line_number'),
+      (supabase.from('requisition_lines') as any)
+        .select('*, items(code, name, unit_of_measure), services:service_id(code, name, description)')
+        .eq('requisition_id', reqId)
+        .order('line_number'),
       supabase.from('requisition_bid_entries').select('*').eq('bid_request_id', inv.bid_request_id).eq('vendor_id', vendorId),
     ]);
     const lines = linesRes.data || [];
@@ -164,8 +167,10 @@ export function VendorQuoteRequests({ vendorId }: Props) {
               <TableBody>
                 {active?.lines?.map((l: any) => (
                   <TableRow key={l.id}>
-                    <TableCell className="text-sm">{l.items?.code} - {l.items?.name}</TableCell>
-                    <TableCell>{l.items?.unit_of_measure || '-'}</TableCell>
+                    <TableCell className="text-sm">
+                      {l.items ? `${l.items.code} - ${l.items.name}` : l.services ? `${l.services.code} - ${l.services.name}` : '-'}
+                    </TableCell>
+                    <TableCell>{l.items?.unit_of_measure || (l.services ? 'Service' : '-')}</TableCell>
                     <TableCell className="text-right">{l.quantity}</TableCell>
                     <TableCell className="text-right">
                       <Input
