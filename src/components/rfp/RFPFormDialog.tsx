@@ -145,6 +145,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .insert({
           rfp_number: rfpNumber, title,
           description: description || null,
+          payment_terms: paymentTerms || null,
           deadline: deadline || null,
           created_by: userId,
           organization_id: organizationId,
