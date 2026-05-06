@@ -15,6 +15,7 @@ import { Plus, Trash2 } from 'lucide-react';
 
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
+interface ApprovedRequisition { id: string; req_number: string; department: string | null; }
 
 interface PrefillLine {
   kind: 'item' | 'service';
