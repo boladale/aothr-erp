@@ -1,0 +1,1 @@
+ALTER TABLE public.rfp_proposals ADD COLUMN IF NOT EXISTS payment_milestones JSONB NOT NULL DEFAULT '[]'::jsonb;
