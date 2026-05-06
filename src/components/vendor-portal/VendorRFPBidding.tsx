@@ -11,7 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Send } from 'lucide-react';
+import { Send, Plus, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type Milestone = { description: string; type: 'percent' | 'amount'; value: number };
 
 interface Props {
   vendorId: string;
@@ -24,6 +27,15 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
   const [coverLetter, setCoverLetter] = useState('');
   const [deliveryDays, setDeliveryDays] = useState(30);
   const [lineItems, setLineItems] = useState<{ rfp_item_id: string; unit_price: number; quantity: number }[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+
+  const totalQuote = lineItems.reduce((s, l) => s + (l.unit_price * l.quantity), 0);
+  const milestonesTotal = milestones.reduce((s, m) => {
+    const v = Number(m.value) || 0;
+    return s + (m.type === 'percent' ? (totalQuote * v) / 100 : v);
+  }, 0);
+  const milestonesPercent = totalQuote > 0 ? (milestonesTotal / totalQuote) * 100 : 0;
+  const milestonesOver = milestonesTotal > totalQuote + 0.001;
 
   // Only RFPs the vendor was invited to (i.e. has a proposal row).
   const { data: rfps = [], isLoading } = useQuery({
@@ -63,24 +75,56 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
     })));
     setCoverLetter('');
     setDeliveryDays(30);
+    setMilestones([]);
+  };
+
+  const addMilestone = () => setMilestones([...milestones, { description: '', type: 'percent', value: 0 }]);
+  const removeMilestone = (idx: number) => setMilestones(milestones.filter((_, i) => i !== idx));
+  const updateMilestone = (idx: number, patch: Partial<Milestone>) => {
+    const n = [...milestones]; n[idx] = { ...n[idx], ...patch }; setMilestones(n);
   };
 
   const submitBid = useMutation({
     mutationFn: async () => {
       const totalAmount = lineItems.reduce((s, l) => s + (l.unit_price * l.quantity), 0);
 
+      // Validate milestones
+      if (milestones.length > 0) {
+        for (const m of milestones) {
+          const v = Number(m.value) || 0;
+          if (v <= 0) throw new Error('Each milestone value must be greater than zero');
+          if (m.type === 'percent' && v > 100) throw new Error('A milestone percentage cannot exceed 100%');
+          if (m.type === 'amount' && totalAmount > 0 && v > totalAmount) {
+            throw new Error('A milestone amount cannot exceed the quote total');
+          }
+        }
+        const sum = milestones.reduce((s, m) => {
+          const v = Number(m.value) || 0;
+          return s + (m.type === 'percent' ? (totalAmount * v) / 100 : v);
+        }, 0);
+        if (sum > totalAmount + 0.001) {
+          throw new Error('Milestones total cannot exceed the quote total (100%)');
+        }
+      }
+
+      const milestonesPayload = milestones.map((m) => ({
+        description: m.description,
+        type: m.type,
+        value: Number(m.value) || 0,
+        amount: m.type === 'percent' ? (totalAmount * (Number(m.value) || 0)) / 100 : (Number(m.value) || 0),
+      }));
+
       let proposalId = bidDialog.proposalId;
       if (proposalId) {
-        // Update existing invited proposal
         const { error } = await supabase.from('rfp_proposals').update({
           cover_letter: coverLetter,
           delivery_timeline_days: deliveryDays,
           total_amount: totalAmount,
+          payment_milestones: milestonesPayload,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
         } as any).eq('id', proposalId);
         if (error) throw error;
-        // Wipe any prior lines just in case
         await supabase.from('rfp_proposal_lines').delete().eq('proposal_id', proposalId);
       } else {
         const { data: proposal, error } = await supabase.from('rfp_proposals').insert({
@@ -89,6 +133,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
           cover_letter: coverLetter,
           delivery_timeline_days: deliveryDays,
           total_amount: totalAmount,
+          payment_milestones: milestonesPayload,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
         } as any).select().single();
@@ -237,10 +282,73 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                 </div>
               </div>
             )}
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <Label className="text-base">Payment Milestones</Label>
+                  <p className="text-xs text-muted-foreground">Break the quote into milestone payments by % or amount.</p>
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={addMilestone}>
+                  <Plus className="h-3 w-3 mr-1" /> Add Milestone
+                </Button>
+              </div>
+              {milestones.length > 0 && (
+                <div className="space-y-2">
+                  {milestones.map((m, idx) => {
+                    const v = Number(m.value) || 0;
+                    const computed = m.type === 'percent' ? (totalQuote * v) / 100 : v;
+                    const invalid = (m.type === 'percent' && v > 100) || (m.type === 'amount' && totalQuote > 0 && v > totalQuote);
+                    return (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
+                        <div className="col-span-5">
+                          <Label className="text-xs">Description</Label>
+                          <Input value={m.description} onChange={(e) => updateMilestone(idx, { description: e.target.value })} placeholder="e.g. On delivery" />
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Type</Label>
+                          <Select value={m.type} onValueChange={(v: 'percent' | 'amount') => updateMilestone(idx, { type: v })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percent">%</SelectItem>
+                              <SelectItem value="amount">Amount</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Value</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={m.type === 'percent' ? 100 : totalQuote || undefined}
+                            step={0.01}
+                            value={m.value}
+                            onChange={(e) => updateMilestone(idx, { value: Number(e.target.value) })}
+                            className={invalid ? 'border-destructive' : ''}
+                          />
+                        </div>
+                        <div className="col-span-2 text-sm font-mono">
+                          ₦{computed.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </div>
+                        <div className="col-span-1">
+                          <Button type="button" size="icon" variant="ghost" onClick={() => removeMilestone(idx)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className={`text-right text-sm ${milestonesOver ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                    Milestones total: ₦{milestonesTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({milestonesPercent.toFixed(2)}%)
+                    {milestonesOver && ' — exceeds quote total'}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBidDialog({ open: false, rfp: null, proposalId: null })}>Cancel</Button>
-            <Button onClick={() => submitBid.mutate()} disabled={submitBid.isPending}>Submit Proposal</Button>
+            <Button onClick={() => submitBid.mutate()} disabled={submitBid.isPending || milestonesOver}>Submit Proposal</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

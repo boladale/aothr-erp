@@ -4220,6 +4220,7 @@ export type Database = {
           created_at: string
           delivery_timeline_days: number | null
           id: string
+          payment_milestones: Json
           rfp_id: string
           status: Database["public"]["Enums"]["proposal_status"]
           submitted_at: string | null
@@ -4233,6 +4234,7 @@ export type Database = {
           created_at?: string
           delivery_timeline_days?: number | null
           id?: string
+          payment_milestones?: Json
           rfp_id: string
           status?: Database["public"]["Enums"]["proposal_status"]
           submitted_at?: string | null
@@ -4246,6 +4248,7 @@ export type Database = {
           created_at?: string
           delivery_timeline_days?: number | null
           id?: string
+          payment_milestones?: Json
           rfp_id?: string
           status?: Database["public"]["Enums"]["proposal_status"]
           submitted_at?: string | null
