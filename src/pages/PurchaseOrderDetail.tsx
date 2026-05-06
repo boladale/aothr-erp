@@ -280,6 +280,16 @@ export default function PurchaseOrderDetail() {
                 Mark as Sent
               </Button>
             )}
+            {(po as any).acceptance_status === 'vendor_accepted' && canApprove && (
+              <Button onClick={() => setSignDialog(true)} disabled={actionLoading}>
+                <PenTool className="h-4 w-4 mr-1" /> Counter-sign & Finalize
+              </Button>
+            )}
+            {(po as any).acceptance_status === 'finalized' && (
+              <Badge variant="outline" className="border-success text-success">
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Finalized
+              </Badge>
+            )}
             {po.close_ready && po.status !== 'closed' && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
