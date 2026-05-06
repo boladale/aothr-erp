@@ -287,17 +287,31 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
           {/* Signature Blocks */}
           <div className="signatures" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, marginTop: 60 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #1a1a1a', marginTop: 60, paddingTop: 8 }}>
+              {po.manager_signature_url ? (
+                <img src={po.manager_signature_url} alt="Manager signature" style={{ height: 60, maxWidth: 200, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+              ) : (
+                <div style={{ height: 60 }} />
+              )}
+              <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 8 }}>
                 <div style={{ fontSize: 12, color: '#555' }}>Authorized Signature</div>
                 <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4 }}>For: {org?.name || 'Buyer'}</div>
-                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Date: _______________</div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                  Date: {po.manager_signed_at ? format(new Date(po.manager_signed_at), 'MMM dd, yyyy') : '_______________'}
+                </div>
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #1a1a1a', marginTop: 60, paddingTop: 8 }}>
+              {po.vendor_signature_url ? (
+                <img src={po.vendor_signature_url} alt="Vendor signature" style={{ height: 60, maxWidth: 200, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+              ) : (
+                <div style={{ height: 60 }} />
+              )}
+              <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 8 }}>
                 <div style={{ fontSize: 12, color: '#555' }}>Authorized Signature</div>
                 <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4 }}>For: {po.vendors?.name || 'Vendor'}</div>
-                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Date: _______________</div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                  Date: {po.vendor_signed_at ? format(new Date(po.vendor_signed_at), 'MMM dd, yyyy') : '_______________'}
+                </div>
               </div>
             </div>
           </div>
