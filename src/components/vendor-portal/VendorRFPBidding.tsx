@@ -88,18 +88,43 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
     mutationFn: async () => {
       const totalAmount = lineItems.reduce((s, l) => s + (l.unit_price * l.quantity), 0);
 
+      // Validate milestones
+      if (milestones.length > 0) {
+        for (const m of milestones) {
+          const v = Number(m.value) || 0;
+          if (v <= 0) throw new Error('Each milestone value must be greater than zero');
+          if (m.type === 'percent' && v > 100) throw new Error('A milestone percentage cannot exceed 100%');
+          if (m.type === 'amount' && totalAmount > 0 && v > totalAmount) {
+            throw new Error('A milestone amount cannot exceed the quote total');
+          }
+        }
+        const sum = milestones.reduce((s, m) => {
+          const v = Number(m.value) || 0;
+          return s + (m.type === 'percent' ? (totalAmount * v) / 100 : v);
+        }, 0);
+        if (sum > totalAmount + 0.001) {
+          throw new Error('Milestones total cannot exceed the quote total (100%)');
+        }
+      }
+
+      const milestonesPayload = milestones.map((m) => ({
+        description: m.description,
+        type: m.type,
+        value: Number(m.value) || 0,
+        amount: m.type === 'percent' ? (totalAmount * (Number(m.value) || 0)) / 100 : (Number(m.value) || 0),
+      }));
+
       let proposalId = bidDialog.proposalId;
       if (proposalId) {
-        // Update existing invited proposal
         const { error } = await supabase.from('rfp_proposals').update({
           cover_letter: coverLetter,
           delivery_timeline_days: deliveryDays,
           total_amount: totalAmount,
+          payment_milestones: milestonesPayload,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
         } as any).eq('id', proposalId);
         if (error) throw error;
-        // Wipe any prior lines just in case
         await supabase.from('rfp_proposal_lines').delete().eq('proposal_id', proposalId);
       } else {
         const { data: proposal, error } = await supabase.from('rfp_proposals').insert({
@@ -108,6 +133,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
           cover_letter: coverLetter,
           delivery_timeline_days: deliveryDays,
           total_amount: totalAmount,
+          payment_milestones: milestonesPayload,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
         } as any).select().single();
