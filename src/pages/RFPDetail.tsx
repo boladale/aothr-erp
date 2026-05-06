@@ -802,9 +802,11 @@ export default function RFPDetail() {
               rfpItems={rfpItems.map(i => ({
                 id: i.id,
                 item_id: i.item_id,
+                service_id: i.service_id,
                 quantity: i.quantity,
                 specifications: i.specifications,
                 items: i.items ? { code: i.items.code, name: i.items.name, unit_of_measure: '' } : null,
+                services: i.services ? { code: i.services.code, name: i.services.name } : null,
               }))}
               onSuccess={fetchData}
             />
