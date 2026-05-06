@@ -5169,6 +5169,51 @@ export type Database = {
           },
         ]
       }
+      vendor_po_acknowledgments: {
+        Row: {
+          acknowledged_by: string
+          action: string
+          created_at: string
+          id: string
+          notes: string | null
+          po_id: string
+          vendor_id: string
+        }
+        Insert: {
+          acknowledged_by: string
+          action: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          po_id: string
+          vendor_id: string
+        }
+        Update: {
+          acknowledged_by?: string
+          action?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          po_id?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_po_acknowledgments_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_po_acknowledgments_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_ratings: {
         Row: {
           comments: string | null
@@ -5670,6 +5715,7 @@ export type Database = {
         Args: { _vendor_id: string }
         Returns: boolean
       }
+      is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
       next_transaction_number: {
         Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
         Returns: string
