@@ -14,7 +14,9 @@ interface POLine {
   quantity: number;
   unit_price: number;
   line_total: number;
+  description: string | null;
   items: { code: string; name: string; unit_of_measure: string } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface POData {
@@ -26,6 +28,7 @@ interface POData {
   tax_amount: number | null;
   total_amount: number | null;
   notes: string | null;
+  payment_terms: string | null;
   vendor_signature_url?: string | null;
   vendor_signed_at?: string | null;
   manager_signature_url?: string | null;
@@ -67,8 +70,8 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
 
     const fetchAll = async () => {
       const [poRes, linesRes, orgRes] = await Promise.all([
-        supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, vendor_signature_url, vendor_signed_at, manager_signature_url, manager_signed_at, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
-        supabase.from('purchase_order_lines').select('line_number, quantity, unit_price, line_total, items(code, name, unit_of_measure)').eq('po_id', poId).order('line_number'),
+        supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, payment_terms, vendor_signature_url, vendor_signed_at, manager_signature_url, manager_signed_at, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
+        supabase.from('purchase_order_lines').select('line_number, quantity, unit_price, line_total, description, items(code, name, unit_of_measure), services(code, name)').eq('po_id', poId).order('line_number'),
         organizationId
           ? supabase.from('organizations').select('name, address, city, country, phone, email, logo_url, app_name').eq('id', organizationId).single()
           : Promise.resolve({ data: null }),
@@ -235,17 +238,19 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
               </tr>
             </thead>
             <tbody>
-              {lines.map((line, idx) => (
+              {lines.map((line, idx) => {
+                const ref = line.items || line.services;
+                return (
                 <tr key={idx} style={{ background: idx % 2 === 1 ? '#f9f9f9' : 'transparent' }}>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.line_number}</td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.code || '—'}</td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.name || '—'}</td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.unit_of_measure || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{ref?.code || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{ref?.name || line.description || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.unit_of_measure || (line.services ? 'Service' : '—')}</td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{line.quantity}</td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{formatCurrency(line.unit_price)}</td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(line.line_total || line.quantity * line.unit_price)}</td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
 
@@ -264,6 +269,13 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
               <span>{formatCurrency(po.total_amount || po.subtotal || 0)}</span>
             </div>
           </div>
+
+          {po.payment_terms && (
+            <div style={{ marginBottom: 20, padding: 14, background: '#eef4ff', border: '1px solid #c8d8f5', borderRadius: 6, fontSize: 12 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Payment Terms</h3>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{po.payment_terms}</div>
+            </div>
+          )}
 
           {/* Terms & Conditions */}
           <div className="terms" style={{ marginBottom: 40, padding: 16, background: '#f5f5f5', borderRadius: 6, fontSize: 12 }}>
