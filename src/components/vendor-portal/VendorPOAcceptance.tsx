@@ -178,37 +178,14 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
         </DialogContent>
       </Dialog>
 
-      {/* PO Detail Dialog */}
-      <Dialog open={detailDialog.open} onOpenChange={(o) => { if (!o) setDetailDialog({ open: false, po: null }); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Purchase Order: {detailDialog.po?.po_number}</DialogTitle>
-          </DialogHeader>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Unit Price</TableHead>
-                <TableHead>Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {poLines.map((line: any, i: number) => (
-                <TableRow key={line.id}>
-                  <TableCell>{line.line_number || i + 1}</TableCell>
-                  <TableCell>{line.items ? `${line.items.code} - ${line.items.name}` : line.services ? `${line.services.code} - ${line.services.name}` : (line.description || '-')}</TableCell>
-                  <TableCell>{line.quantity}</TableCell>
-                  <TableCell>{Number(line.unit_price).toLocaleString()}</TableCell>
-                  <TableCell>{Number(line.line_total).toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="text-right font-semibold">Total: {Number(detailDialog.po?.total_amount || 0).toLocaleString()}</div>
-        </DialogContent>
-      </Dialog>
+      {/* PO Document Dialog - full PO copy */}
+      {viewPOId && (
+        <PODocumentDialog
+          open={!!viewPOId}
+          onOpenChange={(o) => { if (!o) setViewPOId(null); }}
+          poId={viewPOId}
+        />
+      )}
     </>
   );
 }
