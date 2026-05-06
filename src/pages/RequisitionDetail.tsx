@@ -172,9 +172,14 @@ export default function RequisitionDetail() {
                   </>
                 )}
                 {canConvert && (
-                  <Button variant="default" onClick={() => setConvertOpen(true)}>
-                    <ShoppingCart className="mr-2 h-4 w-4" /> Convert to PO
-                  </Button>
+                  <>
+                    <Button variant="outline" onClick={() => setRfpOpen(true)}>
+                      <FileText className="mr-2 h-4 w-4" /> Create RFP
+                    </Button>
+                    <Button variant="default" onClick={() => setConvertOpen(true)}>
+                      <ShoppingCart className="mr-2 h-4 w-4" /> Convert to PO
+                    </Button>
+                  </>
                 )}
               </div>
             }
