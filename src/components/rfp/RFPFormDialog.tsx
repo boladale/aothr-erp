@@ -107,6 +107,9 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .order('line_number'),
     ]);
     if (req && !title) setTitle(`RFP for ${(req as any).req_number}`);
+    if (req?.justification) {
+      setDescription(prev => prev ? prev : `Based on Requisition ${(req as any).req_number}:\n${(req as any).justification}`);
+    }
     const remaining = (reqLines || []).filter((l: any) => Number(l.quantity) - Number(l.qty_converted || 0) > 0);
     if (remaining.length === 0) {
       toast.error('This requisition has no remaining quantity to source');
