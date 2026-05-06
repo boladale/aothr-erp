@@ -388,26 +388,34 @@ export default function RFPDetail() {
 
           <TabsContent value="items">
             <Card>
-              <CardHeader><CardTitle>Required Items</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Required Items / Services</CardTitle></CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Item / Service</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Specifications</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rfpItems.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.items?.code} - {item.items?.name}</TableCell>
-                        <TableCell>{item.items?.category || '-'}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.specifications || '-'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {rfpItems.map(item => {
+                      const isService = !!item.service_id;
+                      const ref = isService ? item.services : item.items;
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <Badge variant={isService ? 'secondary' : 'outline'}>{isService ? 'Service' : 'Item'}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{ref?.code} - {ref?.name}</TableCell>
+                          <TableCell>{ref?.category || '-'}</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>{item.specifications || '-'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
