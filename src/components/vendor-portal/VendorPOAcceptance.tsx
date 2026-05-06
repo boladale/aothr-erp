@@ -25,8 +25,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
   const [actionDialog, setActionDialog] = useState<{ open: boolean; po: any; action: 'accepted' | 'rejected' }>({ open: false, po: null, action: 'accepted' });
   const [notes, setNotes] = useState('');
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
-  const [detailDialog, setDetailDialog] = useState<{ open: boolean; po: any }>({ open: false, po: null });
-  const [poLines, setPOLines] = useState<any[]>([]);
+  const [viewPOId, setViewPOId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
