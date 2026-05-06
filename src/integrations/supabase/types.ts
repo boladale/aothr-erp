@@ -5653,6 +5653,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_current_vendor_invited_to_rfp: {
+        Args: { _rfp_id: string }
+        Returns: boolean
+      }
+      is_current_vendor_user_for_vendor: {
+        Args: { _vendor_id: string }
+        Returns: boolean
+      }
       next_transaction_number: {
         Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
         Returns: string
