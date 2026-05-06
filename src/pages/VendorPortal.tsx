@@ -137,6 +137,10 @@ export default function VendorPortal() {
               </Table>
             </div>
           </TabsContent>
+
+          <TabsContent value="profile">
+            <VendorProfilePanel userId={user!.id} vendorUser={vendorUser} />
+          </TabsContent>
         </Tabs>
       </div>
     </AppLayout>
