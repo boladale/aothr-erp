@@ -43,7 +43,7 @@ export default function PurchaseOrderDetail() {
 
   useEffect(() => {
     if (!user?.id) return;
-    supabase.from('profiles').select('signature_url').eq('id', user.id).maybeSingle()
+    supabase.from('profiles').select('signature_url').eq('user_id', user.id).maybeSingle()
       .then(({ data }: any) => { if (data?.signature_url) setManagerSig(data.signature_url); });
   }, [user?.id]);
 
