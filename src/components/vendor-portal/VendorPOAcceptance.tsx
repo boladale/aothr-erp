@@ -49,19 +49,27 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
       if (action === 'accepted' && !signatureUrl) {
         throw new Error('Please upload your signature before accepting the PO.');
       }
+      if (action === 'rejected' && (!notes || notes.trim().length < 10)) {
+        throw new Error('A rejection reason of at least 10 characters is required.');
+      }
       const { error } = await supabase.from('vendor_po_acknowledgments' as any).insert({
         po_id: poId, vendor_id: vendorId, action, acknowledged_by: userId, notes,
       } as any);
       if (error) throw error;
 
-      const update: any = action === 'accepted'
-        ? { acceptance_status: 'vendor_accepted', vendor_signature_url: signatureUrl, vendor_signed_at: new Date().toISOString(), vendor_signed_by: userId }
-        : { acceptance_status: 'vendor_rejected', vendor_rejection_reason: notes || null };
-      const { error: poErr } = await supabase.from('purchase_orders').update(update).eq('id', poId);
-      if (poErr) throw poErr;
-
-      if (action === 'accepted' && signatureUrl) {
-        await supabase.from('vendor_users' as any).update({ signature_url: signatureUrl }).eq('user_id', userId);
+      // Acceptance updates the PO directly. Rejection is handled by a DB trigger
+      // that cancels the PO, notifies procurement, and opens a re-award request.
+      if (action === 'accepted') {
+        const { error: poErr } = await supabase.from('purchase_orders').update({
+          acceptance_status: 'vendor_accepted',
+          vendor_signature_url: signatureUrl,
+          vendor_signed_at: new Date().toISOString(),
+          vendor_signed_by: userId,
+        } as any).eq('id', poId);
+        if (poErr) throw poErr;
+        if (signatureUrl) {
+          await supabase.from('vendor_users' as any).update({ signature_url: signatureUrl }).eq('user_id', userId);
+        }
       }
     },
     onSuccess: () => {
@@ -161,8 +169,21 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
               />
             )}
             <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any comments..." />
+              <Label>
+                {actionDialog.action === 'rejected'
+                  ? 'Reason for Rejection (required, min 10 characters)'
+                  : 'Notes (optional)'}
+              </Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={actionDialog.action === 'rejected' ? 'Explain why you are rejecting this PO...' : 'Any comments...'}
+              />
+              {actionDialog.action === 'rejected' && (
+                <p className="text-xs text-muted-foreground">
+                  Rejecting will cancel this PO and notify the procurement team. If this PO came from an RFP, the runner-up bidder will be proposed for re-award.
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -170,7 +191,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
             <Button
               variant={actionDialog.action === 'accepted' ? 'default' : 'destructive'}
               onClick={() => submitAck.mutate({ poId: actionDialog.po.id, action: actionDialog.action, notes })}
-              disabled={submitAck.isPending}
+              disabled={submitAck.isPending || (actionDialog.action === 'rejected' && notes.trim().length < 10)}
             >
               {actionDialog.action === 'accepted' ? 'Accept PO' : 'Reject PO'}
             </Button>

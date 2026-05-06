@@ -3191,6 +3191,106 @@ export type Database = {
           },
         ]
       }
+      po_reaward_requests: {
+        Row: {
+          approval_notes: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          new_po_id: string | null
+          organization_id: string
+          original_po_id: string
+          proposed_payment_terms: string | null
+          proposed_total: number | null
+          rejection_reason: string | null
+          requested_by: string | null
+          rfp_id: string | null
+          runner_up_proposal_id: string | null
+          runner_up_vendor_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approval_notes?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          new_po_id?: string | null
+          organization_id: string
+          original_po_id: string
+          proposed_payment_terms?: string | null
+          proposed_total?: number | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          rfp_id?: string | null
+          runner_up_proposal_id?: string | null
+          runner_up_vendor_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_notes?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          new_po_id?: string | null
+          organization_id?: string
+          original_po_id?: string
+          proposed_payment_terms?: string | null
+          proposed_total?: number | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          rfp_id?: string | null
+          runner_up_proposal_id?: string | null
+          runner_up_vendor_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_reaward_requests_new_po_id_fkey"
+            columns: ["new_po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_reaward_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_reaward_requests_original_po_id_fkey"
+            columns: ["original_po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_reaward_requests_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_reaward_requests_runner_up_proposal_id_fkey"
+            columns: ["runner_up_proposal_id"]
+            isOneToOne: false
+            referencedRelation: "rfp_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "po_reaward_requests_runner_up_vendor_id_fkey"
+            columns: ["runner_up_vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -3540,6 +3640,7 @@ export type Database = {
           payment_terms: string | null
           po_number: string
           rejection_reason: string | null
+          rfp_id: string | null
           sent_at: string | null
           ship_to_location_id: string | null
           status: Database["public"]["Enums"]["po_status"]
@@ -3576,6 +3677,7 @@ export type Database = {
           payment_terms?: string | null
           po_number: string
           rejection_reason?: string | null
+          rfp_id?: string | null
           sent_at?: string | null
           ship_to_location_id?: string | null
           status?: Database["public"]["Enums"]["po_status"]
@@ -3612,6 +3714,7 @@ export type Database = {
           payment_terms?: string | null
           po_number?: string
           rejection_reason?: string | null
+          rfp_id?: string | null
           sent_at?: string | null
           ship_to_location_id?: string | null
           status?: Database["public"]["Enums"]["po_status"]
@@ -3631,6 +3734,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
             referencedColumns: ["id"]
           },
           {
@@ -5672,6 +5782,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_po_reaward: {
+        Args: { p_notes?: string; p_request_id: string }
+        Returns: string
+      }
       cleanup_transactional_data: { Args: never; Returns: undefined }
       consume_fifo_layers: {
         Args: {
@@ -5720,7 +5834,12 @@ export type Database = {
         Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
         Returns: string
       }
+      reject_po_reaward: {
+        Args: { p_notes: string; p_request_id: string }
+        Returns: undefined
+      }
       run_three_way_match: { Args: { p_invoice_id: string }; Returns: string }
+      select_rfp_runner_up: { Args: { p_rfp_id: string }; Returns: string }
     }
     Enums: {
       adjustment_type: "increase" | "decrease"
@@ -5784,6 +5903,7 @@ export type Database = {
         | "partially_received"
         | "fully_received"
         | "closed"
+        | "cancelled"
       project_cost_type:
         | "labor"
         | "material"
@@ -6016,6 +6136,7 @@ export const Constants = {
         "partially_received",
         "fully_received",
         "closed",
+        "cancelled",
       ],
       project_cost_type: [
         "labor",
