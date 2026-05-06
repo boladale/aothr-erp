@@ -153,9 +153,19 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
               PO: {actionDialog.po?.po_number} — Amount: {Number(actionDialog.po?.total_amount || 0).toLocaleString()}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label>Notes (optional)</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any comments..." />
+          <div className="space-y-4">
+            {actionDialog.action === 'accepted' && (
+              <SignatureUploader
+                userId={userId}
+                currentUrl={signatureUrl}
+                onUploaded={(url) => setSignatureUrl(url)}
+                label="Your Signature (required to accept)"
+              />
+            )}
+            <div className="space-y-2">
+              <Label>Notes (optional)</Label>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any comments..." />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog({ ...actionDialog, open: false })}>Cancel</Button>
