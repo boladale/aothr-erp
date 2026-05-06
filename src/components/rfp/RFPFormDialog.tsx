@@ -83,10 +83,43 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .then(({ data }) => setItems((data || []) as Item[]));
       supabase.from('services').select('id, code, name').eq('is_active', true).order('name')
         .then(({ data }) => setServices((data || []) as Service[]));
+      // Load approved requisitions (not yet fully converted) for selection
+      supabase.from('requisitions')
+        .select('id, req_number, department')
+        .in('status', ['approved', 'partially_converted'])
+        .order('created_at', { ascending: false })
+        .then(({ data }) => setApprovedReqs((data || []) as ApprovedRequisition[]));
       if (prefillTitle) setTitle(prefillTitle);
       if (prefillLines && prefillLines.length > 0) setRfpItems(prefillLines);
+      if (requisitionId) setSelectedReqId(requisitionId);
     }
-  }, [open, prefillTitle, prefillLines]);
+  }, [open, prefillTitle, prefillLines, requisitionId]);
+
+  // When user picks a requisition from the dropdown, load its lines
+  const handleRequisitionSelect = async (reqId: string) => {
+    setSelectedReqId(reqId);
+    if (!reqId) return;
+    const [{ data: req }, { data: reqLines }] = await Promise.all([
+      supabase.from('requisitions').select('req_number, justification').eq('id', reqId).single(),
+      supabase.from('requisition_lines')
+        .select('item_id, service_id, quantity, qty_converted, specifications, items(name), services(name)')
+        .eq('requisition_id', reqId)
+        .order('line_number'),
+    ]);
+    if (req && !title) setTitle(`RFP for ${(req as any).req_number}`);
+    const remaining = (reqLines || []).filter((l: any) => Number(l.quantity) - Number(l.qty_converted || 0) > 0);
+    if (remaining.length === 0) {
+      toast.error('This requisition has no remaining quantity to source');
+      return;
+    }
+    setRfpItems(remaining.map((l: any) => ({
+      kind: l.item_id ? 'item' : 'service',
+      item_id: l.item_id || '',
+      service_id: l.service_id || '',
+      quantity: Number(l.quantity) - Number(l.qty_converted || 0),
+      specifications: l.specifications || '',
+    })));
+  };
 
   const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
 
