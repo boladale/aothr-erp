@@ -198,6 +198,25 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
 
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
+            {!requisitionId && (
+              <div className="col-span-2">
+                <Label>Source Requisition *</Label>
+                <Select value={selectedReqId || 'none'} onValueChange={v => handleRequisitionSelect(v === 'none' ? '' : v)}>
+                  <SelectTrigger><SelectValue placeholder="Select an approved requisition" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None (manual entry) —</SelectItem>
+                    {approvedReqs.map(r => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.req_number}{r.department ? ` · ${r.department}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pick an approved requisition to auto-fill the lines below.
+                </p>
+              </div>
+            )}
             <div className="col-span-2">
               <Label>Title *</Label>
               <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Office Equipment Supply" />
