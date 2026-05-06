@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,37 +20,42 @@ interface Props {
 
 export function VendorRFPBidding({ vendorId, userId }: Props) {
   const queryClient = useQueryClient();
-  const [bidDialog, setBidDialog] = useState<{ open: boolean; rfp: any | null }>({ open: false, rfp: null });
+  const [bidDialog, setBidDialog] = useState<{ open: boolean; rfp: any | null; proposalId: string | null }>({ open: false, rfp: null, proposalId: null });
   const [coverLetter, setCoverLetter] = useState('');
   const [deliveryDays, setDeliveryDays] = useState(30);
   const [lineItems, setLineItems] = useState<{ rfp_item_id: string; unit_price: number; quantity: number }[]>([]);
 
-  // Get RFPs where vendor has proposals OR RFP is published
+  // Only RFPs the vendor was invited to (i.e. has a proposal row).
   const { data: rfps = [], isLoading } = useQuery({
-    queryKey: ['vendor-rfps', vendorId],
+    queryKey: ['vendor-invited-rfps', vendorId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: myProposals, error: pErr } = await supabase
+        .from('rfp_proposals')
+        .select('id, status, total_amount, rfp_id')
+        .eq('vendor_id', vendorId);
+      if (pErr) throw pErr;
+      const rfpIds = (myProposals || []).map((p: any) => p.rfp_id);
+      if (rfpIds.length === 0) return [];
+
+      const { data: rfpRows, error: rErr } = await supabase
         .from('rfps')
-        .select('*, rfp_proposals(id, status, total_amount, vendor_id)')
-        .in('status', ['published', 'evaluating', 'awarded'])
+        .select('*')
+        .in('id', rfpIds)
         .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []).map((rfp: any) => ({
-        ...rfp,
-        my_proposal: rfp.rfp_proposals?.find((p: any) => p.vendor_id === vendorId),
-      }));
+      if (rErr) throw rErr;
+
+      const proposalByRfp = new Map((myProposals as any[]).map((p) => [p.rfp_id, p]));
+      return (rfpRows || []).map((r: any) => ({ ...r, my_proposal: proposalByRfp.get(r.id) }));
     },
     enabled: !!vendorId,
   });
 
   const openBidDialog = async (rfp: any) => {
-    // Load RFP items
     const { data: items } = await supabase
       .from('rfp_items')
-      .select('*, items(item_code, description)')
+      .select('*, items(code, name), services(code, name)')
       .eq('rfp_id', rfp.id);
-    
-    setBidDialog({ open: true, rfp: { ...rfp, rfp_items: items || [] } });
+    setBidDialog({ open: true, rfp: { ...rfp, rfp_items: items || [] }, proposalId: rfp.my_proposal?.id || null });
     setLineItems((items || []).map((item: any) => ({
       rfp_item_id: item.id,
       unit_price: 0,
@@ -62,21 +68,36 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
   const submitBid = useMutation({
     mutationFn: async () => {
       const totalAmount = lineItems.reduce((s, l) => s + (l.unit_price * l.quantity), 0);
-      
-      const { data: proposal, error } = await supabase.from('rfp_proposals').insert({
-        rfp_id: bidDialog.rfp.id,
-        vendor_id: vendorId,
-        cover_letter: coverLetter,
-        delivery_timeline_days: deliveryDays,
-        total_amount: totalAmount,
-        status: 'submitted',
-        submitted_at: new Date().toISOString(),
-      } as any).select().single();
-      if (error) throw error;
 
-      // Insert proposal lines
+      let proposalId = bidDialog.proposalId;
+      if (proposalId) {
+        // Update existing invited proposal
+        const { error } = await supabase.from('rfp_proposals').update({
+          cover_letter: coverLetter,
+          delivery_timeline_days: deliveryDays,
+          total_amount: totalAmount,
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+        } as any).eq('id', proposalId);
+        if (error) throw error;
+        // Wipe any prior lines just in case
+        await supabase.from('rfp_proposal_lines').delete().eq('proposal_id', proposalId);
+      } else {
+        const { data: proposal, error } = await supabase.from('rfp_proposals').insert({
+          rfp_id: bidDialog.rfp.id,
+          vendor_id: vendorId,
+          cover_letter: coverLetter,
+          delivery_timeline_days: deliveryDays,
+          total_amount: totalAmount,
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+        } as any).select().single();
+        if (error) throw error;
+        proposalId = proposal.id;
+      }
+
       const lines = lineItems.map((l) => ({
-        proposal_id: proposal.id,
+        proposal_id: proposalId!,
         rfp_item_id: l.rfp_item_id,
         unit_price: l.unit_price,
         quantity: l.quantity,
@@ -88,11 +109,17 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
     },
     onSuccess: () => {
       toast.success('Proposal submitted successfully!');
-      setBidDialog({ open: false, rfp: null });
-      queryClient.invalidateQueries({ queryKey: ['vendor-rfps'] });
+      setBidDialog({ open: false, rfp: null, proposalId: null });
+      queryClient.invalidateQueries({ queryKey: ['vendor-invited-rfps'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to submit proposal'),
   });
+
+  const labelFor = (item: any) => {
+    if (item.services) return `${item.services.code} - ${item.services.name}`;
+    if (item.items) return `${item.items.code} - ${item.items.name}`;
+    return 'Unknown';
+  };
 
   return (
     <>
@@ -112,34 +139,33 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
             {isLoading ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : rfps.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No RFPs available</TableCell></TableRow>
-            ) : rfps.map((rfp: any) => (
-              <TableRow key={rfp.id}>
-                <TableCell className="font-mono">{rfp.rfp_number}</TableCell>
-                <TableCell>{rfp.title}</TableCell>
-                <TableCell>{rfp.deadline ? format(new Date(rfp.deadline), 'dd MMM yyyy') : '-'}</TableCell>
-                <TableCell><StatusBadge status={rfp.status} /></TableCell>
-                <TableCell>
-                  {rfp.my_proposal ? (
-                    <StatusBadge status={rfp.my_proposal.status} />
-                  ) : (
-                    <span className="text-muted-foreground text-sm">Not submitted</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {rfp.status === 'published' && !rfp.my_proposal && (
-                    <Button size="sm" onClick={() => openBidDialog(rfp)}>
-                      <Send className="h-4 w-4 mr-1" /> Submit Bid
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">You have not been invited to any RFPs yet.</TableCell></TableRow>
+            ) : rfps.map((rfp: any) => {
+              const canBid = ['published', 'evaluating'].includes(rfp.status) && rfp.my_proposal?.status === 'invited';
+              return (
+                <TableRow key={rfp.id}>
+                  <TableCell className="font-mono">{rfp.rfp_number}</TableCell>
+                  <TableCell>{rfp.title}</TableCell>
+                  <TableCell>{rfp.deadline ? format(new Date(rfp.deadline), 'dd MMM yyyy') : '-'}</TableCell>
+                  <TableCell><StatusBadge status={rfp.status} /></TableCell>
+                  <TableCell>
+                    {rfp.my_proposal ? <StatusBadge status={rfp.my_proposal.status} /> : <Badge variant="outline">Invited</Badge>}
+                  </TableCell>
+                  <TableCell>
+                    {canBid && (
+                      <Button size="sm" onClick={() => openBidDialog(rfp)}>
+                        <Send className="h-4 w-4 mr-1" /> Submit Bid
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
-      <Dialog open={bidDialog.open} onOpenChange={(o) => { if (!o) setBidDialog({ open: false, rfp: null }); }}>
+      <Dialog open={bidDialog.open} onOpenChange={(o) => { if (!o) setBidDialog({ open: false, rfp: null, proposalId: null }); }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Submit Proposal - {bidDialog.rfp?.title}</DialogTitle>
@@ -147,7 +173,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
           <div className="space-y-4">
             <div>
               <Label>Cover Letter / Notes</Label>
-              <Textarea value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} placeholder="Describe your proposal..." rows={3} />
+              <Textarea value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} rows={3} />
             </div>
             <div>
               <Label>Delivery Timeline (days)</Label>
@@ -160,7 +186,8 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Item / Service</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Total</TableHead>
@@ -169,7 +196,8 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                   <TableBody>
                     {bidDialog.rfp.rfp_items.map((item: any, idx: number) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.items?.description || item.items?.item_code || 'Item'}</TableCell>
+                        <TableCell><Badge variant={item.services ? 'secondary' : 'outline'}>{item.services ? 'Service' : 'Item'}</Badge></TableCell>
+                        <TableCell>{labelFor(item)}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
                         <TableCell>
                           <Input
@@ -199,7 +227,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBidDialog({ open: false, rfp: null })}>Cancel</Button>
+            <Button variant="outline" onClick={() => setBidDialog({ open: false, rfp: null, proposalId: null })}>Cancel</Button>
             <Button onClick={() => submitBid.mutate()} disabled={submitBid.isPending}>Submit Proposal</Button>
           </DialogFooter>
         </DialogContent>
