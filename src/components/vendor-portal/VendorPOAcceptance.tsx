@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
+import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
@@ -24,8 +25,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
   const [actionDialog, setActionDialog] = useState<{ open: boolean; po: any; action: 'accepted' | 'rejected' }>({ open: false, po: null, action: 'accepted' });
   const [notes, setNotes] = useState('');
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
-  const [detailDialog, setDetailDialog] = useState<{ open: boolean; po: any }>({ open: false, po: null });
-  const [poLines, setPOLines] = useState<any[]>([]);
+  const [viewPOId, setViewPOId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -74,10 +74,8 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
     onError: (err: any) => toast.error(err.message || 'Failed to respond'),
   });
 
-  const viewPODetails = async (po: any) => {
-    const { data } = await supabase.from('purchase_order_lines').select('*, items(code, name), services(code, name)').eq('po_id', po.id);
-    setPOLines(data || []);
-    setDetailDialog({ open: true, po });
+  const viewPODetails = (po: any) => {
+    setViewPOId(po.id);
   };
 
   // Only show POs in sent/approved status for acceptance
@@ -180,37 +178,14 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
         </DialogContent>
       </Dialog>
 
-      {/* PO Detail Dialog */}
-      <Dialog open={detailDialog.open} onOpenChange={(o) => { if (!o) setDetailDialog({ open: false, po: null }); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Purchase Order: {detailDialog.po?.po_number}</DialogTitle>
-          </DialogHeader>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Unit Price</TableHead>
-                <TableHead>Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {poLines.map((line: any, i: number) => (
-                <TableRow key={line.id}>
-                  <TableCell>{line.line_number || i + 1}</TableCell>
-                  <TableCell>{line.items ? `${line.items.code} - ${line.items.name}` : line.services ? `${line.services.code} - ${line.services.name}` : (line.description || '-')}</TableCell>
-                  <TableCell>{line.quantity}</TableCell>
-                  <TableCell>{Number(line.unit_price).toLocaleString()}</TableCell>
-                  <TableCell>{Number(line.line_total).toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="text-right font-semibold">Total: {Number(detailDialog.po?.total_amount || 0).toLocaleString()}</div>
-        </DialogContent>
-      </Dialog>
+      {/* PO Document Dialog - full PO copy */}
+      {viewPOId && (
+        <PODocumentDialog
+          open={!!viewPOId}
+          onOpenChange={(o) => { if (!o) setViewPOId(null); }}
+          poId={viewPOId}
+        />
+      )}
     </>
   );
 }
