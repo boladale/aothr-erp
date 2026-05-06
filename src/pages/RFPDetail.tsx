@@ -35,10 +35,12 @@ interface RFPData {
 
 interface RFPItem {
   id: string;
-  item_id: string;
+  item_id: string | null;
+  service_id: string | null;
   quantity: number;
   specifications: string | null;
   items: { code: string; name: string; category: string | null } | null;
+  services: { code: string; name: string; category: string | null } | null;
 }
 
 interface Criterion {
@@ -113,7 +115,7 @@ export default function RFPDetail() {
     try {
       const [rfpRes, itemsRes, criteriaRes, proposalsRes, scoresRes] = await Promise.all([
         supabase.from('rfps').select('*').eq('id', id).single(),
-        supabase.from('rfp_items').select('*, items(code, name, category)').eq('rfp_id', id),
+        supabase.from('rfp_items').select('*, items(code, name, category), services(code, name, category)').eq('rfp_id', id),
         supabase.from('rfp_criteria').select('*').eq('rfp_id', id),
         supabase.from('rfp_proposals').select('*, vendors(code, name, service_categories, project_size_capacity)').eq('rfp_id', id),
         supabase.from('rfp_scores').select('*'),
@@ -216,6 +218,31 @@ export default function RFPDetail() {
       status: 'invited',
     });
     if (error) { toast.error(error.message); return; }
+
+    // Notify vendor portal users for this vendor
+    try {
+      const { data: vendorUsers } = await supabase
+        .from('vendor_users' as any)
+        .select('user_id')
+        .eq('vendor_id', vendorId)
+        .eq('is_active', true);
+      const recipients = (vendorUsers as any[] | null) || [];
+      if (recipients.length > 0) {
+        await supabase.from('notifications').insert(
+          recipients.map((u: any) => ({
+            user_id: u.user_id,
+            entity_type: 'rfps',
+            entity_id: rfp.id,
+            notification_type: 'rfp_invitation',
+            title: 'New RFP Invitation',
+            message: `You have been invited to bid on ${rfp.rfp_number} — ${rfp.title}.`,
+          }))
+        );
+      }
+    } catch (e) {
+      console.error('Failed to send invite notification', e);
+    }
+
     toast.success('Vendor invited');
     setInviteOpen(false);
     fetchData();
@@ -386,26 +413,34 @@ export default function RFPDetail() {
 
           <TabsContent value="items">
             <Card>
-              <CardHeader><CardTitle>Required Items</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Required Items / Services</CardTitle></CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Item / Service</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Specifications</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rfpItems.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.items?.code} - {item.items?.name}</TableCell>
-                        <TableCell>{item.items?.category || '-'}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>{item.specifications || '-'}</TableCell>
-                      </TableRow>
-                    ))}
+                    {rfpItems.map(item => {
+                      const isService = !!item.service_id;
+                      const ref = isService ? item.services : item.items;
+                      return (
+                        <TableRow key={item.id}>
+                          <TableCell>
+                            <Badge variant={isService ? 'secondary' : 'outline'}>{isService ? 'Service' : 'Item'}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{ref?.code} - {ref?.name}</TableCell>
+                          <TableCell>{ref?.category || '-'}</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>{item.specifications || '-'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -767,9 +802,11 @@ export default function RFPDetail() {
               rfpItems={rfpItems.map(i => ({
                 id: i.id,
                 item_id: i.item_id,
+                service_id: i.service_id,
                 quantity: i.quantity,
                 specifications: i.specifications,
                 items: i.items ? { code: i.items.code, name: i.items.name, unit_of_measure: '' } : null,
+                services: i.services ? { code: i.services.code, name: i.services.name } : null,
               }))}
               onSuccess={fetchData}
             />

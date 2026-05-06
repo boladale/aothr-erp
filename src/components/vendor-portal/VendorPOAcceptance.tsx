@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { SignatureUploader } from '@/components/signatures/SignatureUploader';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
@@ -22,8 +23,15 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
   const queryClient = useQueryClient();
   const [actionDialog, setActionDialog] = useState<{ open: boolean; po: any; action: 'accepted' | 'rejected' }>({ open: false, po: null, action: 'accepted' });
   const [notes, setNotes] = useState('');
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [detailDialog, setDetailDialog] = useState<{ open: boolean; po: any }>({ open: false, po: null });
   const [poLines, setPOLines] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from('vendor_users' as any).select('signature_url').eq('user_id', userId).maybeSingle()
+      .then(({ data }: any) => { if (data?.signature_url) setSignatureUrl(data.signature_url); });
+  }, [userId]);
 
   const { data: acknowledgments = [] } = useQuery({
     queryKey: ['vendor-po-acks', vendorId],
@@ -37,21 +45,31 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
   const ackMap = new Map((acknowledgments as any[]).map((a: any) => [a.po_id, a]));
 
   const submitAck = useMutation({
-    mutationFn: async ({ poId, action, notes }: { poId: string; action: string; notes: string }) => {
+    mutationFn: async ({ poId, action, notes }: { poId: string; action: 'accepted' | 'rejected'; notes: string }) => {
+      if (action === 'accepted' && !signatureUrl) {
+        throw new Error('Please upload your signature before accepting the PO.');
+      }
       const { error } = await supabase.from('vendor_po_acknowledgments' as any).insert({
-        po_id: poId,
-        vendor_id: vendorId,
-        action,
-        acknowledged_by: userId,
-        notes,
+        po_id: poId, vendor_id: vendorId, action, acknowledged_by: userId, notes,
       } as any);
       if (error) throw error;
+
+      const update: any = action === 'accepted'
+        ? { acceptance_status: 'vendor_accepted', vendor_signature_url: signatureUrl, vendor_signed_at: new Date().toISOString(), vendor_signed_by: userId }
+        : { acceptance_status: 'vendor_rejected', vendor_rejection_reason: notes || null };
+      const { error: poErr } = await supabase.from('purchase_orders').update(update).eq('id', poId);
+      if (poErr) throw poErr;
+
+      if (action === 'accepted' && signatureUrl) {
+        await supabase.from('vendor_users' as any).update({ signature_url: signatureUrl }).eq('user_id', userId);
+      }
     },
     onSuccess: () => {
       toast.success('Purchase order response recorded.');
       setActionDialog({ open: false, po: null, action: 'accepted' });
       setNotes('');
       queryClient.invalidateQueries({ queryKey: ['vendor-po-acks'] });
+      queryClient.invalidateQueries({ queryKey: ['vendor-pos'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to respond'),
   });

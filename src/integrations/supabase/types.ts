@@ -3200,6 +3200,7 @@ export type Database = {
           id: string
           is_active: boolean
           organization_id: string | null
+          signature_url: string | null
           updated_at: string
           user_id: string
         }
@@ -3211,6 +3212,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           organization_id?: string | null
+          signature_url?: string | null
           updated_at?: string
           user_id: string
         }
@@ -3222,6 +3224,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           organization_id?: string | null
+          signature_url?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -3515,6 +3518,7 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          acceptance_status: string
           approved_at: string | null
           approved_by: string | null
           close_ready: boolean | null
@@ -3527,6 +3531,9 @@ export type Database = {
           exchange_rate: number
           expected_date: string | null
           id: string
+          manager_signature_url: string | null
+          manager_signed_at: string | null
+          manager_signed_by: string | null
           notes: string | null
           order_date: string
           organization_id: string | null
@@ -3540,8 +3547,13 @@ export type Database = {
           total_amount: number | null
           updated_at: string
           vendor_id: string
+          vendor_rejection_reason: string | null
+          vendor_signature_url: string | null
+          vendor_signed_at: string | null
+          vendor_signed_by: string | null
         }
         Insert: {
+          acceptance_status?: string
           approved_at?: string | null
           approved_by?: string | null
           close_ready?: boolean | null
@@ -3554,6 +3566,9 @@ export type Database = {
           exchange_rate?: number
           expected_date?: string | null
           id?: string
+          manager_signature_url?: string | null
+          manager_signed_at?: string | null
+          manager_signed_by?: string | null
           notes?: string | null
           order_date?: string
           organization_id?: string | null
@@ -3567,8 +3582,13 @@ export type Database = {
           total_amount?: number | null
           updated_at?: string
           vendor_id: string
+          vendor_rejection_reason?: string | null
+          vendor_signature_url?: string | null
+          vendor_signed_at?: string | null
+          vendor_signed_by?: string | null
         }
         Update: {
+          acceptance_status?: string
           approved_at?: string | null
           approved_by?: string | null
           close_ready?: boolean | null
@@ -3581,6 +3601,9 @@ export type Database = {
           exchange_rate?: number
           expected_date?: string | null
           id?: string
+          manager_signature_url?: string | null
+          manager_signed_at?: string | null
+          manager_signed_by?: string | null
           notes?: string | null
           order_date?: string
           organization_id?: string | null
@@ -3594,6 +3617,10 @@ export type Database = {
           total_amount?: number | null
           updated_at?: string
           vendor_id?: string
+          vendor_rejection_reason?: string | null
+          vendor_signature_url?: string | null
+          vendor_signed_at?: string | null
+          vendor_signed_by?: string | null
         }
         Relationships: [
           {
@@ -4091,25 +4118,28 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          item_id: string
+          item_id: string | null
           quantity: number
           rfp_id: string
+          service_id: string | null
           specifications: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          item_id: string
+          item_id?: string | null
           quantity: number
           rfp_id: string
+          service_id?: string | null
           specifications?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          item_id?: string
+          item_id?: string | null
           quantity?: number
           rfp_id?: string
+          service_id?: string | null
           specifications?: string | null
         }
         Relationships: [
@@ -4125,6 +4155,13 @@ export type Database = {
             columns: ["rfp_id"]
             isOneToOne: false
             referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfp_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -5278,6 +5315,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          signature_url: string | null
           updated_at: string
           user_id: string
           vendor_id: string
@@ -5286,6 +5324,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          signature_url?: string | null
           updated_at?: string
           user_id: string
           vendor_id: string
@@ -5294,6 +5333,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          signature_url?: string | null
           updated_at?: string
           user_id?: string
           vendor_id?: string

@@ -29,10 +29,12 @@ import { formatCurrency } from '@/lib/currency';
 
 interface RFPItem {
   id: string;
-  item_id: string;
+  item_id: string | null;
+  service_id: string | null;
   quantity: number;
   specifications: string | null;
   items: { code: string; name: string; unit_of_measure: string } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface AwardedProposal {
@@ -61,11 +63,13 @@ interface Props {
 }
 
 interface POLine {
-  item_id: string;
+  item_id: string | null;
+  service_id: string | null;
   quantity: number;
   unit_price: number;
   itemCode: string;
   itemName: string;
+  kind: 'item' | 'service';
 }
 
 export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rfpTitle, awardedProposal, rfpItems, onSuccess }: Props) {
@@ -85,17 +89,22 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
     supabase.from('locations').select('id, code, name').eq('is_active', true).order('name')
       .then(({ data }) => setLocations((data || []) as Location[]));
 
-    // Build PO lines from RFP items, distributing the total quoted amount proportionally
     const totalQty = rfpItems.reduce((s, i) => s + i.quantity, 0);
     const totalAmount = awardedProposal.total_amount || 0;
 
-    const lines: POLine[] = rfpItems.map(item => ({
-      item_id: item.item_id,
-      quantity: item.quantity,
-      unit_price: totalQty > 0 ? Math.round((totalAmount / totalQty) * 100) / 100 : 0,
-      itemCode: item.items?.code || '',
-      itemName: item.items?.name || '',
-    }));
+    const lines: POLine[] = rfpItems.map(item => {
+      const isService = !!item.service_id;
+      const ref = isService ? item.services : item.items;
+      return {
+        item_id: isService ? null : item.item_id,
+        service_id: isService ? item.service_id : null,
+        kind: isService ? 'service' : 'item',
+        quantity: item.quantity,
+        unit_price: totalQty > 0 ? Math.round((totalAmount / totalQty) * 100) / 100 : 0,
+        itemCode: ref?.code || '',
+        itemName: ref?.name || '',
+      };
+    });
     setPOLines(lines);
 
     // Pre-fill expected date from delivery timeline
@@ -150,9 +159,10 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         po_id: po.id,
         line_number: idx + 1,
         item_id: l.item_id,
+        service_id: l.service_id,
         quantity: l.quantity,
         unit_price: l.unit_price,
-      }));
+      })) as any;
 
       const { error: linesError } = await supabase
         .from('purchase_order_lines')
