@@ -1,0 +1,2 @@
+ALTER TABLE public.rfps ADD COLUMN IF NOT EXISTS requisition_id uuid REFERENCES public.requisitions(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_rfps_requisition_id ON public.rfps(requisition_id);
