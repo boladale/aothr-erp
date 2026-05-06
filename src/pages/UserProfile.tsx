@@ -30,7 +30,21 @@ export default function UserProfile() {
   const { user, profile, roles, refreshProfile } = useAuth();
   const { appName } = useOrgBranding();
   const [fullName, setFullName] = useState(profile?.full_name || '');
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('signature_url').eq('user_id', user.id).maybeSingle()
+      .then(({ data }: any) => { if (data?.signature_url) setSignatureUrl(data.signature_url); });
+  }, [user?.id]);
+
+  const saveSignature = async (url: string) => {
+    setSignatureUrl(url);
+    if (!user?.id) return;
+    const { error } = await supabase.from('profiles').update({ signature_url: url } as any).eq('user_id', user.id);
+    if (error) toast.error('Failed to save signature');
+  };
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()
