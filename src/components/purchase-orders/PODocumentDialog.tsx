@@ -28,6 +28,7 @@ interface POData {
   tax_amount: number | null;
   total_amount: number | null;
   notes: string | null;
+  payment_terms: string | null;
   vendor_signature_url?: string | null;
   vendor_signed_at?: string | null;
   manager_signature_url?: string | null;
