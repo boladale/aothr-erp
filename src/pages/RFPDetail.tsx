@@ -40,7 +40,7 @@ interface RFPItem {
   quantity: number;
   specifications: string | null;
   items: { code: string; name: string; category: string | null } | null;
-  services: { code: string; name: string; category: string | null } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface Criterion {
@@ -115,7 +115,7 @@ export default function RFPDetail() {
     try {
       const [rfpRes, itemsRes, criteriaRes, proposalsRes, scoresRes] = await Promise.all([
         supabase.from('rfps').select('*').eq('id', id).single(),
-        supabase.from('rfp_items').select('*, items(code, name, category), services(code, name, category)').eq('rfp_id', id),
+        supabase.from('rfp_items').select('*, items(code, name, category), services(code, name)').eq('rfp_id', id),
         supabase.from('rfp_criteria').select('*').eq('rfp_id', id),
         supabase.from('rfp_proposals').select('*, vendors(code, name, service_categories, project_size_capacity)').eq('rfp_id', id),
         supabase.from('rfp_scores').select('*'),
@@ -435,7 +435,7 @@ export default function RFPDetail() {
                             <Badge variant={isService ? 'secondary' : 'outline'}>{isService ? 'Service' : 'Item'}</Badge>
                           </TableCell>
                           <TableCell className="font-medium">{ref?.code} - {ref?.name}</TableCell>
-                          <TableCell>{ref?.category || '-'}</TableCell>
+                          <TableCell>{(ref as any)?.category || '-'}</TableCell>
                           <TableCell>{item.quantity}</TableCell>
                           <TableCell>{item.specifications || '-'}</TableCell>
                         </TableRow>
