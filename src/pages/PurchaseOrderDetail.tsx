@@ -434,6 +434,31 @@ export default function PurchaseOrderDetail() {
             onStatusChange={fetchPO}
           />
         )}
+
+        <Dialog open={signDialog} onOpenChange={setSignDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Counter-sign &amp; Finalize PO</DialogTitle>
+              <DialogDescription>
+                Vendor has accepted and signed. Upload your signature to finalize this Purchase Order.
+              </DialogDescription>
+            </DialogHeader>
+            {user?.id && (
+              <SignatureUploader
+                userId={user.id}
+                currentUrl={managerSig}
+                onUploaded={(url) => setManagerSig(url)}
+                label="Procurement Manager Signature"
+              />
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSignDialog(false)}>Cancel</Button>
+              <Button onClick={handleCounterSign} disabled={actionLoading || !managerSig}>
+                Finalize PO
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
