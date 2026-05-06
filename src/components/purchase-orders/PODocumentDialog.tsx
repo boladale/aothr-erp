@@ -26,6 +26,10 @@ interface POData {
   tax_amount: number | null;
   total_amount: number | null;
   notes: string | null;
+  vendor_signature_url?: string | null;
+  vendor_signed_at?: string | null;
+  manager_signature_url?: string | null;
+  manager_signed_at?: string | null;
   vendors: { code: string; name: string; address: string | null; city: string | null; country: string | null; phone: string | null; email: string | null } | null;
   locations: { name: string; address: string | null } | null;
 }
