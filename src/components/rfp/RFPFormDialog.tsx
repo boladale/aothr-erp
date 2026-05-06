@@ -15,6 +15,7 @@ import { Plus, Trash2 } from 'lucide-react';
 
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
+interface ApprovedRequisition { id: string; req_number: string; department: string | null; }
 
 interface PrefillLine {
   kind: 'item' | 'service';
@@ -55,6 +56,8 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   const [deadline, setDeadline] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [approvedReqs, setApprovedReqs] = useState<ApprovedRequisition[]>([]);
+  const [selectedReqId, setSelectedReqId] = useState<string>('');
   const [rfpItems, setRfpItems] = useState<RFPItemLine[]>([{ kind: 'item', item_id: '', service_id: '', quantity: 1, specifications: '' }]);
   const [criteria, setCriteria] = useState<CriterionLine[]>([
     { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
@@ -80,10 +83,43 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .then(({ data }) => setItems((data || []) as Item[]));
       supabase.from('services').select('id, code, name').eq('is_active', true).order('name')
         .then(({ data }) => setServices((data || []) as Service[]));
+      // Load approved requisitions (not yet fully converted) for selection
+      supabase.from('requisitions')
+        .select('id, req_number, department')
+        .in('status', ['approved', 'partially_converted'])
+        .order('created_at', { ascending: false })
+        .then(({ data }) => setApprovedReqs((data || []) as ApprovedRequisition[]));
       if (prefillTitle) setTitle(prefillTitle);
       if (prefillLines && prefillLines.length > 0) setRfpItems(prefillLines);
+      if (requisitionId) setSelectedReqId(requisitionId);
     }
-  }, [open, prefillTitle, prefillLines]);
+  }, [open, prefillTitle, prefillLines, requisitionId]);
+
+  // When user picks a requisition from the dropdown, load its lines
+  const handleRequisitionSelect = async (reqId: string) => {
+    setSelectedReqId(reqId);
+    if (!reqId) return;
+    const [{ data: req }, { data: reqLines }] = await Promise.all([
+      supabase.from('requisitions').select('req_number, justification').eq('id', reqId).single(),
+      supabase.from('requisition_lines')
+        .select('item_id, service_id, quantity, qty_converted, specifications, items(name), services(name)')
+        .eq('requisition_id', reqId)
+        .order('line_number'),
+    ]);
+    if (req && !title) setTitle(`RFP for ${(req as any).req_number}`);
+    const remaining = (reqLines || []).filter((l: any) => Number(l.quantity) - Number(l.qty_converted || 0) > 0);
+    if (remaining.length === 0) {
+      toast.error('This requisition has no remaining quantity to source');
+      return;
+    }
+    setRfpItems(remaining.map((l: any) => ({
+      kind: l.item_id ? 'item' : 'service',
+      item_id: l.item_id || '',
+      service_id: l.service_id || '',
+      quantity: Number(l.quantity) - Number(l.qty_converted || 0),
+      specifications: l.specifications || '',
+    })));
+  };
 
   const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
 
@@ -108,7 +144,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
           deadline: deadline || null,
           created_by: userId,
           organization_id: organizationId,
-          requisition_id: requisitionId || null,
+          requisition_id: selectedReqId || requisitionId || null,
         } as any)
         .select().single();
       if (rfpError) throw rfpError;
@@ -141,7 +177,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   };
 
   const resetForm = () => {
-    setTitle(''); setDescription(''); setDeadline('');
+    setTitle(''); setDescription(''); setDeadline(''); setSelectedReqId('');
     setRfpItems([{ kind: 'item', item_id: '', service_id: '', quantity: 1, specifications: '' }]);
     setCriteria([
       { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
@@ -162,6 +198,25 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
 
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
+            {!requisitionId && (
+              <div className="col-span-2">
+                <Label>Source Requisition *</Label>
+                <Select value={selectedReqId || 'none'} onValueChange={v => handleRequisitionSelect(v === 'none' ? '' : v)}>
+                  <SelectTrigger><SelectValue placeholder="Select an approved requisition" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None (manual entry) —</SelectItem>
+                    {approvedReqs.map(r => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.req_number}{r.department ? ` · ${r.department}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pick an approved requisition to auto-fill the lines below.
+                </p>
+              </div>
+            )}
             <div className="col-span-2">
               <Label>Title *</Label>
               <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Office Equipment Supply" />
