@@ -218,6 +218,31 @@ export default function RFPDetail() {
       status: 'invited',
     });
     if (error) { toast.error(error.message); return; }
+
+    // Notify vendor portal users for this vendor
+    try {
+      const { data: vendorUsers } = await supabase
+        .from('vendor_users' as any)
+        .select('user_id')
+        .eq('vendor_id', vendorId)
+        .eq('is_active', true);
+      const recipients = (vendorUsers as any[] | null) || [];
+      if (recipients.length > 0) {
+        await supabase.from('notifications').insert(
+          recipients.map((u: any) => ({
+            user_id: u.user_id,
+            entity_type: 'rfps',
+            entity_id: rfp.id,
+            notification_type: 'rfp_invitation',
+            title: 'New RFP Invitation',
+            message: `You have been invited to bid on ${rfp.rfp_number} — ${rfp.title}.`,
+          }))
+        );
+      }
+    } catch (e) {
+      console.error('Failed to send invite notification', e);
+    }
+
     toast.success('Vendor invited');
     setInviteOpen(false);
     fetchData();
