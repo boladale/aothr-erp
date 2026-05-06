@@ -74,10 +74,8 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
     onError: (err: any) => toast.error(err.message || 'Failed to respond'),
   });
 
-  const viewPODetails = async (po: any) => {
-    const { data } = await supabase.from('purchase_order_lines').select('*, items(code, name), services(code, name)').eq('po_id', po.id);
-    setPOLines(data || []);
-    setDetailDialog({ open: true, po });
+  const viewPODetails = (po: any) => {
+    setViewPOId(po.id);
   };
 
   // Only show POs in sent/approved status for acceptance
