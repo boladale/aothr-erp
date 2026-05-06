@@ -169,8 +169,21 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
               />
             )}
             <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any comments..." />
+              <Label>
+                {actionDialog.action === 'rejected'
+                  ? 'Reason for Rejection (required, min 10 characters)'
+                  : 'Notes (optional)'}
+              </Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={actionDialog.action === 'rejected' ? 'Explain why you are rejecting this PO...' : 'Any comments...'}
+              />
+              {actionDialog.action === 'rejected' && (
+                <p className="text-xs text-muted-foreground">
+                  Rejecting will cancel this PO and notify the procurement team. If this PO came from an RFP, the runner-up bidder will be proposed for re-award.
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -178,7 +191,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
             <Button
               variant={actionDialog.action === 'accepted' ? 'default' : 'destructive'}
               onClick={() => submitAck.mutate({ poId: actionDialog.po.id, action: actionDialog.action, notes })}
-              disabled={submitAck.isPending}
+              disabled={submitAck.isPending || (actionDialog.action === 'rejected' && notes.trim().length < 10)}
             >
               {actionDialog.action === 'accepted' ? 'Accept PO' : 'Reject PO'}
             </Button>
