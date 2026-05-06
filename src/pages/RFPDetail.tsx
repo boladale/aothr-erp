@@ -115,7 +115,7 @@ export default function RFPDetail() {
     try {
       const [rfpRes, itemsRes, criteriaRes, proposalsRes, scoresRes] = await Promise.all([
         supabase.from('rfps').select('*').eq('id', id).single(),
-        supabase.from('rfp_items').select('*, items(code, name, category)').eq('rfp_id', id),
+        supabase.from('rfp_items').select('*, items(code, name, category), services(code, name, category)').eq('rfp_id', id),
         supabase.from('rfp_criteria').select('*').eq('rfp_id', id),
         supabase.from('rfp_proposals').select('*, vendors(code, name, service_categories, project_size_capacity)').eq('rfp_id', id),
         supabase.from('rfp_scores').select('*'),
