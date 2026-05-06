@@ -3540,6 +3540,7 @@ export type Database = {
           payment_terms: string | null
           po_number: string
           rejection_reason: string | null
+          rfp_id: string | null
           sent_at: string | null
           ship_to_location_id: string | null
           status: Database["public"]["Enums"]["po_status"]
@@ -3576,6 +3577,7 @@ export type Database = {
           payment_terms?: string | null
           po_number: string
           rejection_reason?: string | null
+          rfp_id?: string | null
           sent_at?: string | null
           ship_to_location_id?: string | null
           status?: Database["public"]["Enums"]["po_status"]
@@ -3612,6 +3614,7 @@ export type Database = {
           payment_terms?: string | null
           po_number?: string
           rejection_reason?: string | null
+          rfp_id?: string | null
           sent_at?: string | null
           ship_to_location_id?: string | null
           status?: Database["public"]["Enums"]["po_status"]
@@ -3631,6 +3634,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
             referencedColumns: ["id"]
           },
           {
@@ -5784,6 +5794,7 @@ export type Database = {
         | "partially_received"
         | "fully_received"
         | "closed"
+        | "cancelled"
       project_cost_type:
         | "labor"
         | "material"
@@ -6016,6 +6027,7 @@ export const Constants = {
         "partially_received",
         "fully_received",
         "closed",
+        "cancelled",
       ],
       project_cost_type: [
         "labor",
