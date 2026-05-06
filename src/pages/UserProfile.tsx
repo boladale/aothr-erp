@@ -176,6 +176,28 @@ export default function UserProfile() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="md:col-span-3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PenTool className="h-5 w-5" />
+              Signature
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-3">
+              Upload your signature image. It will be applied automatically when you counter-sign Purchase Orders or other approvals.
+            </p>
+            {user?.id && (
+              <SignatureUploader
+                userId={user.id}
+                currentUrl={signatureUrl}
+                onUploaded={saveSignature}
+                label="My Signature"
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
