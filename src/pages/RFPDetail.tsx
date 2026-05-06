@@ -35,10 +35,12 @@ interface RFPData {
 
 interface RFPItem {
   id: string;
-  item_id: string;
+  item_id: string | null;
+  service_id: string | null;
   quantity: number;
   specifications: string | null;
   items: { code: string; name: string; category: string | null } | null;
+  services: { code: string; name: string; category: string | null } | null;
 }
 
 interface Criterion {
