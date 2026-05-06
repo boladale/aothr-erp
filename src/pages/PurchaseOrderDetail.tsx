@@ -209,6 +209,8 @@ export default function PurchaseOrderDetail() {
       setActionLoading(false);
     }
   };
+
+  if (loading) {
     return (
       <AppLayout>
         <div className="page-container">
