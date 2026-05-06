@@ -45,12 +45,13 @@ interface Requisition {
 export default function RequisitionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, organizationId } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const [requisition, setRequisition] = useState<Requisition | null>(null);
   const [lines, setLines] = useState<RequisitionLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [convertOpen, setConvertOpen] = useState(false);
+  const [rfpOpen, setRfpOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchData();
