@@ -282,10 +282,73 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                 </div>
               </div>
             )}
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <Label className="text-base">Payment Milestones</Label>
+                  <p className="text-xs text-muted-foreground">Break the quote into milestone payments by % or amount.</p>
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={addMilestone}>
+                  <Plus className="h-3 w-3 mr-1" /> Add Milestone
+                </Button>
+              </div>
+              {milestones.length > 0 && (
+                <div className="space-y-2">
+                  {milestones.map((m, idx) => {
+                    const v = Number(m.value) || 0;
+                    const computed = m.type === 'percent' ? (totalQuote * v) / 100 : v;
+                    const invalid = (m.type === 'percent' && v > 100) || (m.type === 'amount' && totalQuote > 0 && v > totalQuote);
+                    return (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-end p-2 border rounded-md">
+                        <div className="col-span-5">
+                          <Label className="text-xs">Description</Label>
+                          <Input value={m.description} onChange={(e) => updateMilestone(idx, { description: e.target.value })} placeholder="e.g. On delivery" />
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Type</Label>
+                          <Select value={m.type} onValueChange={(v: 'percent' | 'amount') => updateMilestone(idx, { type: v })}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percent">%</SelectItem>
+                              <SelectItem value="amount">Amount</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Value</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={m.type === 'percent' ? 100 : totalQuote || undefined}
+                            step={0.01}
+                            value={m.value}
+                            onChange={(e) => updateMilestone(idx, { value: Number(e.target.value) })}
+                            className={invalid ? 'border-destructive' : ''}
+                          />
+                        </div>
+                        <div className="col-span-2 text-sm font-mono">
+                          ₦{computed.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                        </div>
+                        <div className="col-span-1">
+                          <Button type="button" size="icon" variant="ghost" onClick={() => removeMilestone(idx)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className={`text-right text-sm ${milestonesOver ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                    Milestones total: ₦{milestonesTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({milestonesPercent.toFixed(2)}%)
+                    {milestonesOver && ' — exceeds quote total'}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBidDialog({ open: false, rfp: null, proposalId: null })}>Cancel</Button>
-            <Button onClick={() => submitBid.mutate()} disabled={submitBid.isPending}>Submit Proposal</Button>
+            <Button onClick={() => submitBid.mutate()} disabled={submitBid.isPending || milestonesOver}>Submit Proposal</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
