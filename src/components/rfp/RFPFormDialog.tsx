@@ -144,7 +144,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
           deadline: deadline || null,
           created_by: userId,
           organization_id: organizationId,
-          requisition_id: requisitionId || null,
+          requisition_id: selectedReqId || requisitionId || null,
         } as any)
         .select().single();
       if (rfpError) throw rfpError;
