@@ -4326,6 +4326,7 @@ export type Database = {
           description: string | null
           id: string
           organization_id: string | null
+          payment_terms: string | null
           requisition_id: string | null
           rfp_number: string
           status: Database["public"]["Enums"]["rfp_status"]
@@ -4341,6 +4342,7 @@ export type Database = {
           description?: string | null
           id?: string
           organization_id?: string | null
+          payment_terms?: string | null
           requisition_id?: string | null
           rfp_number: string
           status?: Database["public"]["Enums"]["rfp_status"]
@@ -4356,6 +4358,7 @@ export type Database = {
           description?: string | null
           id?: string
           organization_id?: string | null
+          payment_terms?: string | null
           requisition_id?: string | null
           rfp_number?: string
           status?: Database["public"]["Enums"]["rfp_status"]

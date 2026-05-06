@@ -1,0 +1,1 @@
+ALTER TABLE public.rfps ADD COLUMN IF NOT EXISTS payment_terms TEXT;

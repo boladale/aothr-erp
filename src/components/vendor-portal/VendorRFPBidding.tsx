@@ -171,6 +171,18 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
             <DialogTitle>Submit Proposal - {bidDialog.rfp?.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {bidDialog.rfp?.description && (
+              <div className="rounded-md border bg-muted/40 p-3">
+                <Label className="text-xs uppercase text-muted-foreground">RFP Description</Label>
+                <p className="text-sm whitespace-pre-wrap mt-1">{bidDialog.rfp.description}</p>
+              </div>
+            )}
+            {bidDialog.rfp?.payment_terms && (
+              <div className="rounded-md border bg-muted/40 p-3">
+                <Label className="text-xs uppercase text-muted-foreground">Expected Payment Terms</Label>
+                <p className="text-sm whitespace-pre-wrap mt-1">{bidDialog.rfp.payment_terms}</p>
+              </div>
+            )}
             <div>
               <Label>Cover Letter / Notes</Label>
               <Textarea value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} rows={3} />

@@ -53,6 +53,7 @@ interface CriterionLine {
 export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizationId, prefillTitle, prefillLines, requisitionId }: RFPFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
   const [deadline, setDeadline] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -144,6 +145,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .insert({
           rfp_number: rfpNumber, title,
           description: description || null,
+          payment_terms: paymentTerms || null,
           deadline: deadline || null,
           created_by: userId,
           organization_id: organizationId,
@@ -180,7 +182,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   };
 
   const resetForm = () => {
-    setTitle(''); setDescription(''); setDeadline(''); setSelectedReqId('');
+    setTitle(''); setDescription(''); setPaymentTerms(''); setDeadline(''); setSelectedReqId('');
     setRfpItems([{ kind: 'item', item_id: '', service_id: '', quantity: 1, specifications: '' }]);
     setCriteria([
       { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
@@ -231,6 +233,10 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
             <div>
               <Label>Deadline</Label>
               <Input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} />
+            </div>
+            <div>
+              <Label>Expected Payment Terms</Label>
+              <Input value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} placeholder="e.g. Net 30 days after delivery" />
             </div>
           </div>
 
