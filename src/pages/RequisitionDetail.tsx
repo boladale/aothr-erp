@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle } from 'lucide-react';
-import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
+import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -12,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { ConvertToPODialog } from '@/components/requisitions/ConvertToPODialog';
+import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
 
 interface RequisitionLine {
   id: string;
@@ -45,12 +45,13 @@ interface Requisition {
 export default function RequisitionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, hasRole } = useAuth();
+  const { user, hasRole, organizationId } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const [requisition, setRequisition] = useState<Requisition | null>(null);
   const [lines, setLines] = useState<RequisitionLine[]>([]);
   const [loading, setLoading] = useState(true);
   const [convertOpen, setConvertOpen] = useState(false);
+  const [rfpOpen, setRfpOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchData();
@@ -171,9 +172,14 @@ export default function RequisitionDetail() {
                   </>
                 )}
                 {canConvert && (
-                  <Button variant="default" onClick={() => setConvertOpen(true)}>
-                    <ShoppingCart className="mr-2 h-4 w-4" /> Convert to PO
-                  </Button>
+                  <>
+                    <Button variant="outline" onClick={() => setRfpOpen(true)}>
+                      <FileText className="mr-2 h-4 w-4" /> Create RFP
+                    </Button>
+                    <Button variant="default" onClick={() => setConvertOpen(true)}>
+                      <ShoppingCart className="mr-2 h-4 w-4" /> Convert to PO
+                    </Button>
+                  </>
                 )}
               </div>
             }
@@ -243,13 +249,6 @@ export default function RequisitionDetail() {
           </CardContent>
         </Card>
 
-        {/* Bid Collection - show for approved/partially_converted requisitions */}
-        {['approved', 'partially_converted'].includes(requisition.status) && (
-          <BidCollectionPanel
-            requisitionId={requisition.id}
-            lines={lines}
-          />
-        )}
 
         {canConvert && (
           <ConvertToPODialog
@@ -258,6 +257,25 @@ export default function RequisitionDetail() {
             requisition={requisition}
             lines={unconvertedLines}
             onSuccess={fetchData}
+          />
+        )}
+
+        {canConvert && (
+          <RFPFormDialog
+            open={rfpOpen}
+            onOpenChange={setRfpOpen}
+            onSuccess={() => { setRfpOpen(false); navigate('/rfps'); }}
+            userId={user?.id}
+            organizationId={organizationId}
+            requisitionId={requisition.id}
+            prefillTitle={`RFP for ${requisition.req_number}`}
+            prefillLines={unconvertedLines.map(l => ({
+              kind: l.service_id ? 'service' : 'item',
+              item_id: l.item_id || '',
+              service_id: l.service_id || '',
+              quantity: l.quantity - (l.qty_converted || 0),
+              specifications: l.specifications || '',
+            }))}
           />
         )}
       </div>

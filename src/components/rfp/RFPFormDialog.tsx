@@ -16,12 +16,23 @@ import { Plus, Trash2 } from 'lucide-react';
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
 
+interface PrefillLine {
+  kind: 'item' | 'service';
+  item_id: string;
+  service_id: string;
+  quantity: number;
+  specifications: string;
+}
+
 interface RFPFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userId?: string;
   organizationId?: string | null;
+  prefillTitle?: string;
+  prefillLines?: PrefillLine[];
+  requisitionId?: string;
 }
 
 interface RFPItemLine {
@@ -38,7 +49,7 @@ interface CriterionLine {
   description: string;
 }
 
-export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizationId }: RFPFormDialogProps) {
+export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizationId, prefillTitle, prefillLines, requisitionId }: RFPFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -69,8 +80,10 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .then(({ data }) => setItems((data || []) as Item[]));
       supabase.from('services').select('id, code, name').eq('is_active', true).order('name')
         .then(({ data }) => setServices((data || []) as Service[]));
+      if (prefillTitle) setTitle(prefillTitle);
+      if (prefillLines && prefillLines.length > 0) setRfpItems(prefillLines);
     }
-  }, [open]);
+  }, [open, prefillTitle, prefillLines]);
 
   const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
 
@@ -95,7 +108,8 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
           deadline: deadline || null,
           created_by: userId,
           organization_id: organizationId,
-        })
+          requisition_id: requisitionId || null,
+        } as any)
         .select().single();
       if (rfpError) throw rfpError;
 
