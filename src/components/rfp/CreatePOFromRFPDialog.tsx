@@ -159,9 +159,10 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         po_id: po.id,
         line_number: idx + 1,
         item_id: l.item_id,
+        service_id: l.service_id,
         quantity: l.quantity,
         unit_price: l.unit_price,
-      }));
+      })) as any;
 
       const { error: linesError } = await supabase
         .from('purchase_order_lines')
