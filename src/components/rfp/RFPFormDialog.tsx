@@ -234,6 +234,10 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
               <Label>Deadline</Label>
               <Input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} />
             </div>
+            <div>
+              <Label>Expected Payment Terms</Label>
+              <Input value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} placeholder="e.g. Net 30 days after delivery" />
+            </div>
           </div>
 
           <div>
