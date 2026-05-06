@@ -270,6 +270,13 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
             </div>
           </div>
 
+          {po.payment_terms && (
+            <div style={{ marginBottom: 20, padding: 14, background: '#eef4ff', border: '1px solid #c8d8f5', borderRadius: 6, fontSize: 12 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Payment Terms</h3>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{po.payment_terms}</div>
+            </div>
+          )}
+
           {/* Terms & Conditions */}
           <div className="terms" style={{ marginBottom: 40, padding: 16, background: '#f5f5f5', borderRadius: 6, fontSize: 12 }}>
             <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Terms &amp; Conditions</h3>
