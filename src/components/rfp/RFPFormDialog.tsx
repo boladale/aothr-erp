@@ -177,7 +177,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   };
 
   const resetForm = () => {
-    setTitle(''); setDescription(''); setDeadline('');
+    setTitle(''); setDescription(''); setDeadline(''); setSelectedReqId('');
     setRfpItems([{ kind: 'item', item_id: '', service_id: '', quantity: 1, specifications: '' }]);
     setCriteria([
       { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
