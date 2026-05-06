@@ -3537,6 +3537,7 @@ export type Database = {
           notes: string | null
           order_date: string
           organization_id: string | null
+          payment_terms: string | null
           po_number: string
           rejection_reason: string | null
           sent_at: string | null
@@ -3572,6 +3573,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           organization_id?: string | null
+          payment_terms?: string | null
           po_number: string
           rejection_reason?: string | null
           sent_at?: string | null
@@ -3607,6 +3609,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           organization_id?: string | null
+          payment_terms?: string | null
           po_number?: string
           rejection_reason?: string | null
           sent_at?: string | null
