@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { ConvertToPODialog } from '@/components/requisitions/ConvertToPODialog';
+import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
 
 interface RequisitionLine {
   id: string;
