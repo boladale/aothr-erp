@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle } from 'lucide-react';
-import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
+import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
