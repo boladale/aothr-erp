@@ -82,6 +82,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
   const removeMilestone = (idx: number) => setMilestones(milestones.filter((_, i) => i !== idx));
   const updateMilestone = (idx: number, patch: Partial<Milestone>) => {
     const n = [...milestones]; n[idx] = { ...n[idx], ...patch }; setMilestones(n);
+  };
 
   const submitBid = useMutation({
     mutationFn: async () => {
