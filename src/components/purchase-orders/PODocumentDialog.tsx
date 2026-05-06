@@ -26,6 +26,10 @@ interface POData {
   tax_amount: number | null;
   total_amount: number | null;
   notes: string | null;
+  vendor_signature_url?: string | null;
+  vendor_signed_at?: string | null;
+  manager_signature_url?: string | null;
+  manager_signed_at?: string | null;
   vendors: { code: string; name: string; address: string | null; city: string | null; country: string | null; phone: string | null; email: string | null } | null;
   locations: { name: string; address: string | null } | null;
 }
@@ -63,7 +67,7 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
 
     const fetchAll = async () => {
       const [poRes, linesRes, orgRes] = await Promise.all([
-        supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
+        supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, vendor_signature_url, vendor_signed_at, manager_signature_url, manager_signed_at, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
         supabase.from('purchase_order_lines').select('line_number, quantity, unit_price, line_total, items(code, name, unit_of_measure)').eq('po_id', poId).order('line_number'),
         organizationId
           ? supabase.from('organizations').select('name, address, city, country, phone, email, logo_url, app_name').eq('id', organizationId).single()
@@ -283,17 +287,31 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
           {/* Signature Blocks */}
           <div className="signatures" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, marginTop: 60 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #1a1a1a', marginTop: 60, paddingTop: 8 }}>
+              {po.manager_signature_url ? (
+                <img src={po.manager_signature_url} alt="Manager signature" style={{ height: 60, maxWidth: 200, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+              ) : (
+                <div style={{ height: 60 }} />
+              )}
+              <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 8 }}>
                 <div style={{ fontSize: 12, color: '#555' }}>Authorized Signature</div>
                 <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4 }}>For: {org?.name || 'Buyer'}</div>
-                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Date: _______________</div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                  Date: {po.manager_signed_at ? format(new Date(po.manager_signed_at), 'MMM dd, yyyy') : '_______________'}
+                </div>
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ borderTop: '1px solid #1a1a1a', marginTop: 60, paddingTop: 8 }}>
+              {po.vendor_signature_url ? (
+                <img src={po.vendor_signature_url} alt="Vendor signature" style={{ height: 60, maxWidth: 200, objectFit: 'contain', margin: '0 auto', display: 'block' }} />
+              ) : (
+                <div style={{ height: 60 }} />
+              )}
+              <div style={{ borderTop: '1px solid #1a1a1a', paddingTop: 8 }}>
                 <div style={{ fontSize: 12, color: '#555' }}>Authorized Signature</div>
                 <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4 }}>For: {po.vendors?.name || 'Vendor'}</div>
-                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Date: _______________</div>
+                <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                  Date: {po.vendor_signed_at ? format(new Date(po.vendor_signed_at), 'MMM dd, yyyy') : '_______________'}
+                </div>
               </div>
             </div>
           </div>

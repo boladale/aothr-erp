@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, AlertTriangle, FileText } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
+import { SignatureUploader } from '@/components/signatures/SignatureUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, PurchaseOrderLine, Vendor, Location, Item, POStatus } from '@/lib/supabase';
@@ -36,6 +38,14 @@ export default function PurchaseOrderDetail() {
   const [loading, setLoading] = useState(true);
   const [showDocument, setShowDocument] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [signDialog, setSignDialog] = useState(false);
+  const [managerSig, setManagerSig] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('signature_url').eq('user_id', user.id).maybeSingle()
+      .then(({ data }: any) => { if (data?.signature_url) setManagerSig(data.signature_url); });
+  }, [user?.id]);
 
   useEffect(() => {
     if (id) fetchPO();
@@ -174,6 +184,32 @@ export default function PurchaseOrderDetail() {
     }
   };
 
+  const handleCounterSign = async () => {
+    if (!po) return;
+    if (!managerSig) { toast.error('Please upload your signature first'); return; }
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({
+          acceptance_status: 'finalized',
+          manager_signature_url: managerSig,
+          manager_signed_at: new Date().toISOString(),
+          manager_signed_by: user?.id,
+        } as any)
+        .eq('id', po.id);
+      if (error) throw error;
+      await supabase.from('profiles').update({ signature_url: managerSig } as any).eq('user_id', user?.id);
+      toast.success('PO counter-signed and finalized');
+      setSignDialog(false);
+      fetchPO();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to finalize');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -243,6 +279,16 @@ export default function PurchaseOrderDetail() {
               <Button onClick={handleSend} disabled={actionLoading}>
                 Mark as Sent
               </Button>
+            )}
+            {(po as any).acceptance_status === 'vendor_accepted' && canApprove && (
+              <Button onClick={() => setSignDialog(true)} disabled={actionLoading}>
+                <PenTool className="h-4 w-4 mr-1" /> Counter-sign & Finalize
+              </Button>
+            )}
+            {(po as any).acceptance_status === 'finalized' && (
+              <Badge variant="outline" className="border-success text-success">
+                <CheckCircle2 className="h-3 w-3 mr-1" /> Finalized
+              </Badge>
             )}
             {po.close_ready && po.status !== 'closed' && (
               <Button onClick={handleClose}>Close PO</Button>
@@ -388,6 +434,31 @@ export default function PurchaseOrderDetail() {
             onStatusChange={fetchPO}
           />
         )}
+
+        <Dialog open={signDialog} onOpenChange={setSignDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Counter-sign &amp; Finalize PO</DialogTitle>
+              <DialogDescription>
+                Vendor has accepted and signed. Upload your signature to finalize this Purchase Order.
+              </DialogDescription>
+            </DialogHeader>
+            {user?.id && (
+              <SignatureUploader
+                userId={user.id}
+                currentUrl={managerSig}
+                onUploaded={(url) => setManagerSig(url)}
+                label="Procurement Manager Signature"
+              />
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSignDialog(false)}>Cancel</Button>
+              <Button onClick={handleCounterSign} disabled={actionLoading || !managerSig}>
+                Finalize PO
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
