@@ -14,7 +14,9 @@ interface POLine {
   quantity: number;
   unit_price: number;
   line_total: number;
+  description: string | null;
   items: { code: string; name: string; unit_of_measure: string } | null;
+  services: { code: string; name: string } | null;
 }
 
 interface POData {
