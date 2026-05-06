@@ -80,8 +80,10 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .then(({ data }) => setItems((data || []) as Item[]));
       supabase.from('services').select('id, code, name').eq('is_active', true).order('name')
         .then(({ data }) => setServices((data || []) as Service[]));
+      if (prefillTitle) setTitle(prefillTitle);
+      if (prefillLines && prefillLines.length > 0) setRfpItems(prefillLines);
     }
-  }, [open]);
+  }, [open, prefillTitle, prefillLines]);
 
   const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
 
