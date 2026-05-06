@@ -53,6 +53,7 @@ interface CriterionLine {
 export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizationId, prefillTitle, prefillLines, requisitionId }: RFPFormDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
   const [deadline, setDeadline] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [services, setServices] = useState<Service[]>([]);
