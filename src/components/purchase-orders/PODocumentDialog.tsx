@@ -238,17 +238,19 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
               </tr>
             </thead>
             <tbody>
-              {lines.map((line, idx) => (
+              {lines.map((line, idx) => {
+                const ref = line.items || line.services;
+                return (
                 <tr key={idx} style={{ background: idx % 2 === 1 ? '#f9f9f9' : 'transparent' }}>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.line_number}</td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.code || '—'}</td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.name || '—'}</td>
-                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.unit_of_measure || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{ref?.code || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{ref?.name || line.description || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee' }}>{line.items?.unit_of_measure || (line.services ? 'Service' : '—')}</td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{line.quantity}</td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee', textAlign: 'right' }}>{formatCurrency(line.unit_price)}</td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(line.line_total || line.quantity * line.unit_price)}</td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
 
