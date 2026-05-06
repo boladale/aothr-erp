@@ -16,12 +16,23 @@ import { Plus, Trash2 } from 'lucide-react';
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
 
+interface PrefillLine {
+  kind: 'item' | 'service';
+  item_id: string;
+  service_id: string;
+  quantity: number;
+  specifications: string;
+}
+
 interface RFPFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   userId?: string;
   organizationId?: string | null;
+  prefillTitle?: string;
+  prefillLines?: PrefillLine[];
+  requisitionId?: string;
 }
 
 interface RFPItemLine {
