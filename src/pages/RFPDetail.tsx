@@ -766,9 +766,10 @@ export default function RFPDetail() {
               description: rfp.description,
               deadline: rfp.deadline,
             }}
-            initialItems={rfpItems.map(i => ({
+            initialItems={rfpItems.map((i: any) => ({
               id: i.id,
               item_id: i.item_id,
+              service_id: i.service_id,
               quantity: i.quantity,
               specifications: i.specifications,
             }))}
