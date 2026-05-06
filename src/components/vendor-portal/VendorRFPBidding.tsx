@@ -27,6 +27,15 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
   const [coverLetter, setCoverLetter] = useState('');
   const [deliveryDays, setDeliveryDays] = useState(30);
   const [lineItems, setLineItems] = useState<{ rfp_item_id: string; unit_price: number; quantity: number }[]>([]);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+
+  const totalQuote = lineItems.reduce((s, l) => s + (l.unit_price * l.quantity), 0);
+  const milestonesTotal = milestones.reduce((s, m) => {
+    const v = Number(m.value) || 0;
+    return s + (m.type === 'percent' ? (totalQuote * v) / 100 : v);
+  }, 0);
+  const milestonesPercent = totalQuote > 0 ? (milestonesTotal / totalQuote) * 100 : 0;
+  const milestonesOver = milestonesTotal > totalQuote + 0.001;
 
   // Only RFPs the vendor was invited to (i.e. has a proposal row).
   const { data: rfps = [], isLoading } = useQuery({
