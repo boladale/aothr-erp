@@ -5,8 +5,9 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MetricCard } from '@/components/ui/metric-card';
-import { FileText, DollarSign, ShoppingCart, Send, ClipboardCheck, ClipboardList } from 'lucide-react';
+import { FileText, DollarSign, ShoppingCart, Send, ClipboardCheck, ClipboardList, User } from 'lucide-react';
 import { VendorRFPBidding } from '@/components/vendor-portal/VendorRFPBidding';
+import { VendorProfilePanel } from '@/components/vendor-portal/VendorProfilePanel';
 import { VendorPOAcceptance } from '@/components/vendor-portal/VendorPOAcceptance';
 import { VendorInvoiceSubmission } from '@/components/vendor-portal/VendorInvoiceSubmission';
 import { VendorQuoteRequests } from '@/components/vendor-portal/VendorQuoteRequests';
@@ -89,6 +90,7 @@ export default function VendorPortal() {
             <TabsTrigger value="pos" className="gap-1"><ClipboardCheck className="h-4 w-4" /> Purchase Orders</TabsTrigger>
             <TabsTrigger value="invoices" className="gap-1"><FileText className="h-4 w-4" /> Invoices</TabsTrigger>
             <TabsTrigger value="payments" className="gap-1"><DollarSign className="h-4 w-4" /> Payments</TabsTrigger>
+            <TabsTrigger value="profile" className="gap-1"><User className="h-4 w-4" /> Profile</TabsTrigger>
           </TabsList>
 
           <TabsContent value="quotes">
@@ -134,6 +136,10 @@ export default function VendorPortal() {
                 </TableBody>
               </Table>
             </div>
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <VendorProfilePanel userId={user!.id} vendorUser={vendorUser} />
           </TabsContent>
         </Tabs>
       </div>
