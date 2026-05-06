@@ -56,6 +56,8 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   const [deadline, setDeadline] = useState('');
   const [items, setItems] = useState<Item[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [approvedReqs, setApprovedReqs] = useState<ApprovedRequisition[]>([]);
+  const [selectedReqId, setSelectedReqId] = useState<string>('');
   const [rfpItems, setRfpItems] = useState<RFPItemLine[]>([{ kind: 'item', item_id: '', service_id: '', quantity: 1, specifications: '' }]);
   const [criteria, setCriteria] = useState<CriterionLine[]>([
     { criterion_name: 'Price', weight: 25, description: 'Total cost competitiveness' },
