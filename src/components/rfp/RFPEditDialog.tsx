@@ -68,31 +68,43 @@ export function RFPEditDialog({
   const removeCriterion = (idx: number) => setCriteria(distributeWeights(criteria.filter((_, i) => i !== idx)));
 
   useEffect(() => {
-    if (open) {
-      setTitle(initialData.title);
-      setDescription(initialData.description || '');
-      setDeadline(initialData.deadline ? initialData.deadline.slice(0, 16) : '');
-      setRfpItems(initialItems.map(i => ({
+    if (!open) return;
+    setTitle(initialData.title);
+    setDescription(initialData.description || '');
+    setDeadline(initialData.deadline ? initialData.deadline.slice(0, 16) : '');
+
+    // Load lookups
+    supabase.from('items').select('id, code, name').eq('is_active', true).order('name')
+      .then(({ data }) => setItems((data || []) as Item[]));
+    supabase.from('services').select('id, code, name').eq('is_active', true).order('name')
+      .then(({ data }) => setServices((data || []) as Service[]));
+
+    // Always reload current lines & criteria from DB to guarantee freshness
+    (async () => {
+      const [{ data: itemsData }, { data: criteriaData }] = await Promise.all([
+        supabase.from('rfp_items').select('id, item_id, service_id, quantity, specifications').eq('rfp_id', rfpId),
+        supabase.from('rfp_criteria').select('id, criterion_name, weight, description').eq('rfp_id', rfpId),
+      ]);
+      const lines = (itemsData && itemsData.length > 0)
+        ? itemsData
+        : initialItems;
+      setRfpItems((lines || []).map((i: any) => ({
         id: i.id,
         kind: i.service_id ? 'service' : 'item',
         item_id: i.item_id || '',
         service_id: i.service_id || '',
-        quantity: i.quantity,
+        quantity: Number(i.quantity) || 1,
         specifications: i.specifications || '',
       })));
-      setCriteria(initialCriteria.map(c => ({
+      const crit = (criteriaData && criteriaData.length > 0) ? criteriaData : initialCriteria;
+      setCriteria((crit || []).map((c: any) => ({
         id: c.id,
         criterion_name: c.criterion_name,
-        weight: c.weight,
+        weight: Number(c.weight) || 0,
         description: c.description || '',
       })));
-
-      supabase.from('items').select('id, code, name').eq('is_active', true).order('name')
-        .then(({ data }) => setItems((data || []) as Item[]));
-      supabase.from('services').select('id, code, name').eq('is_active', true).order('name')
-        .then(({ data }) => setServices((data || []) as Service[]));
-    }
-  }, [open, initialData, initialItems, initialCriteria]);
+    })();
+  }, [open, rfpId]);
 
   const totalWeight = criteria.reduce((sum, c) => sum + c.weight, 0);
 
