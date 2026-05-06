@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
@@ -10,8 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { SignatureUploader } from '@/components/signatures/SignatureUploader';
 import { toast } from 'sonner';
-import { User, Mail, Shield, Building2, Save } from 'lucide-react';
+import { User, Mail, Shield, Building2, Save, PenTool } from 'lucide-react';
 
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
