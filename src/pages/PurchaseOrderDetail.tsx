@@ -38,6 +38,14 @@ export default function PurchaseOrderDetail() {
   const [loading, setLoading] = useState(true);
   const [showDocument, setShowDocument] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [signDialog, setSignDialog] = useState(false);
+  const [managerSig, setManagerSig] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('signature_url').eq('id', user.id).maybeSingle()
+      .then(({ data }: any) => { if (data?.signature_url) setManagerSig(data.signature_url); });
+  }, [user?.id]);
 
   useEffect(() => {
     if (id) fetchPO();
