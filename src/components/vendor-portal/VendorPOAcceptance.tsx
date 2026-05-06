@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
+import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
