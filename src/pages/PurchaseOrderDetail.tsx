@@ -184,7 +184,31 @@ export default function PurchaseOrderDetail() {
     }
   };
 
-  if (loading) {
+  const handleCounterSign = async () => {
+    if (!po) return;
+    if (!managerSig) { toast.error('Please upload your signature first'); return; }
+    setActionLoading(true);
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .update({
+          acceptance_status: 'finalized',
+          manager_signature_url: managerSig,
+          manager_signed_at: new Date().toISOString(),
+          manager_signed_by: user?.id,
+        } as any)
+        .eq('id', po.id);
+      if (error) throw error;
+      await supabase.from('profiles').update({ signature_url: managerSig } as any).eq('user_id', user?.id);
+      toast.success('PO counter-signed and finalized');
+      setSignDialog(false);
+      fetchPO();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to finalize');
+    } finally {
+      setActionLoading(false);
+    }
+  };
     return (
       <AppLayout>
         <div className="page-container">
