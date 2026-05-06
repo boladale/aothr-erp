@@ -75,7 +75,13 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
     })));
     setCoverLetter('');
     setDeliveryDays(30);
+    setMilestones([]);
   };
+
+  const addMilestone = () => setMilestones([...milestones, { description: '', type: 'percent', value: 0 }]);
+  const removeMilestone = (idx: number) => setMilestones(milestones.filter((_, i) => i !== idx));
+  const updateMilestone = (idx: number, patch: Partial<Milestone>) => {
+    const n = [...milestones]; n[idx] = { ...n[idx], ...patch }; setMilestones(n);
 
   const submitBid = useMutation({
     mutationFn: async () => {
