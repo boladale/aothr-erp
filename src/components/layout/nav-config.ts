@@ -143,6 +143,7 @@ export const navSections = [
     items: [
       { path: '/vendors', label: 'Vendors', icon: Building2 },
       { path: '/vendor-performance', label: 'Vendor Performance', icon: BarChart3 },
+      { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
       { path: '/rfps', label: 'Requests for Proposal', icon: FileSearch },
       { path: '/locations', label: 'Locations', icon: MapPin },
       { path: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
@@ -153,7 +154,6 @@ export const navSections = [
     items: [
       { path: '/items', label: 'Items', icon: Package },
       { path: '/services', label: 'Services', icon: ClipboardCheck },
-      { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
       { path: '/inventory', label: 'Inventory', icon: Boxes },
       { path: '/inventory-issues', label: 'Inventory Issues', icon: PackageMinus },
       { path: '/inventory-transfers', label: 'Transfers', icon: ArrowRightLeft },
