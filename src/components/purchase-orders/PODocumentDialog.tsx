@@ -67,7 +67,7 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
 
     const fetchAll = async () => {
       const [poRes, linesRes, orgRes] = await Promise.all([
-        supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
+        supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, vendor_signature_url, vendor_signed_at, manager_signature_url, manager_signed_at, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
         supabase.from('purchase_order_lines').select('line_number, quantity, unit_price, line_total, items(code, name, unit_of_measure)').eq('po_id', poId).order('line_number'),
         organizationId
           ? supabase.from('organizations').select('name, address, city, country, phone, email, logo_url, app_name').eq('id', organizationId).single()
