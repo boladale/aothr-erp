@@ -259,6 +259,25 @@ export default function RequisitionDetail() {
             onSuccess={fetchData}
           />
         )}
+
+        {canConvert && (
+          <RFPFormDialog
+            open={rfpOpen}
+            onOpenChange={setRfpOpen}
+            onSuccess={() => { setRfpOpen(false); navigate('/rfps'); }}
+            userId={user?.id}
+            organizationId={organizationId}
+            requisitionId={requisition.id}
+            prefillTitle={`RFP for ${requisition.req_number}`}
+            prefillLines={unconvertedLines.map(l => ({
+              kind: l.service_id ? 'service' : 'item',
+              item_id: l.item_id || '',
+              service_id: l.service_id || '',
+              quantity: l.quantity - (l.qty_converted || 0),
+              specifications: l.specifications || '',
+            }))}
+          />
+        )}
       </div>
     </AppLayout>
   );
