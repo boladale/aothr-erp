@@ -279,6 +279,7 @@ export default function PurchaseOrders() {
           title="Purchase Orders" description="Create and manage purchase orders"
           actions={<Button onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Create PO</Button>}
         />
+        <POReawardPanel />
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
