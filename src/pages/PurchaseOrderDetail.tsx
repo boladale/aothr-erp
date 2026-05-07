@@ -363,6 +363,7 @@ export default function PurchaseOrderDetail() {
                   <TableHead>Item</TableHead>
                   <TableHead className="text-right">Ordered</TableHead>
                   <TableHead className="text-right">Received</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
                   <TableHead className="text-right">Invoiced</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Line Total</TableHead>
