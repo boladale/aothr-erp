@@ -18,7 +18,7 @@ import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
 
 const defaultForm = {
   employee_number: '', first_name: '', last_name: '', email: '', phone: '',
-  department_id: '', job_role_id: '', employment_type: 'full_time' as string,
+  department_id: '', job_role_id: '', pay_grade_id: '', employment_type: 'full_time' as string,
   employment_date: new Date().toISOString().split('T')[0],
   gender: '', marital_status: '',
   bank_name: '', bank_account_number: '', bank_account_name: '',
