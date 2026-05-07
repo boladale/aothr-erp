@@ -160,6 +160,14 @@ export default function Employees() {
                 </Select>
               </div>
               <div>
+                <Label>Pay Grade</Label>
+                <Select value={form.pay_grade_id} onValueChange={v => set('pay_grade_id', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
+                  <SelectContent>{payGrades.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.grade_name} — ₦{Number(g.basic_salary).toLocaleString()}</SelectItem>)}</SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Salary breakdown auto-generated from grade components.</p>
+              </div>
+              <div>
                 <Label>Employment Type</Label>
                 <Select value={form.employment_type} onValueChange={v => set('employment_type', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
