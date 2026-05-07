@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus, Eye, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
 
 const defaultForm = {
   employee_number: '', first_name: '', last_name: '', email: '', phone: '',
