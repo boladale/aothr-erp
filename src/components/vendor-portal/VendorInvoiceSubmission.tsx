@@ -56,7 +56,8 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
 
       const validLines = lineItems.filter((l: any) => l.quantity > 0);
       if (validLines.length === 0) throw new Error('At least one line item is required');
-      if (!certificateFile) throw new Error('Please attach the Work Completion Certificate / supporting document');
+      if (!certificateFile) throw new Error('Please attach the Work Completion Certificate');
+      if (!invoiceFile) throw new Error('Please attach the Invoice document');
 
       const subtotal = validLines.reduce((s, l) => s + (l.quantity * l.unit_price), 0);
 
@@ -86,26 +87,33 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
       const { error: lineError } = await supabase.from('ap_invoice_lines').insert(invoiceLines);
       if (lineError) throw lineError;
 
-      // Upload certificate as transaction attachment
-      const filePath = `ap_invoice/${invoice.id}/${Date.now()}-${certificateFile.name}`;
-      const { error: uploadError } = await supabase.storage.from('transaction-attachments').upload(filePath, certificateFile);
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('transaction-attachments').getPublicUrl(filePath);
-      await supabase.from('transaction_attachments').insert({
-        entity_type: 'ap_invoice',
-        entity_id: invoice.id,
-        file_name: certificateFile.name,
-        file_url: urlData.publicUrl,
-        file_size: certificateFile.size,
-        content_type: certificateFile.type,
-        uploaded_by: userId,
-      });
+      // Upload both attachments (Invoice + Work Completion Certificate)
+      const uploads = [
+        { file: invoiceFile, label: 'Invoice' },
+        { file: certificateFile, label: 'Work Completion Certificate' },
+      ];
+      for (const u of uploads) {
+        const filePath = `ap_invoice/${invoice.id}/${Date.now()}-${u.label.replace(/\s+/g, '_')}-${u.file.name}`;
+        const { error: uploadError } = await supabase.storage.from('transaction-attachments').upload(filePath, u.file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('transaction-attachments').getPublicUrl(filePath);
+        await supabase.from('transaction_attachments').insert({
+          entity_type: 'ap_invoice',
+          entity_id: invoice.id,
+          file_name: `${u.label} - ${u.file.name}`,
+          file_url: urlData.publicUrl,
+          file_size: u.file.size,
+          content_type: u.file.type,
+          uploaded_by: userId,
+        });
+      }
       setCreatedInvoiceId(invoice.id);
     },
     onSuccess: () => {
       toast.success('Invoice submitted to the client invoice desk for review.');
       setCreateDialog(false);
       setCertificateFile(null);
+      setInvoiceFile(null);
       queryClient.invalidateQueries({ queryKey: ['vendor-invoices'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to submit invoice'),
