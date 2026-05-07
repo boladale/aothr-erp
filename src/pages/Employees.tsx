@@ -190,7 +190,13 @@ export default function Employees() {
               </div>
               <div className="col-span-2"><Label>Address</Label><Input value={form.address} onChange={e => set('address', e.target.value)} /></div>
               <div><Label>City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} /></div>
-              <div><Label>State</Label><Input value={form.state} onChange={e => set('state', e.target.value)} /></div>
+              <div>
+                <Label>State</Label>
+                <Select value={form.state} onValueChange={v => set('state', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                  <SelectContent>{NIGERIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Country</Label><Input value={form.country} onChange={e => set('country', e.target.value)} /></div>
               <div className="col-span-2 border-t pt-4"><h4 className="font-semibold text-sm">Bank Details</h4></div>
               <div><Label>Bank Name</Label><Input value={form.bank_name} onChange={e => set('bank_name', e.target.value)} /></div>
