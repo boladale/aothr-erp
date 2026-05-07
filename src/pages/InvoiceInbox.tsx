@@ -36,10 +36,10 @@ export default function InvoiceInbox() {
 
   const fetchData = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('ap_invoices')
+    const { data } = await (supabase
+      .from('ap_invoices' as any) as any)
       .select('*, vendors(name), purchase_orders(po_number)')
-      .eq('source' as any, 'vendor')
+      .eq('source', 'vendor')
       .order('created_at', { ascending: false });
     setRows((data || []) as any);
     setLoading(false);
