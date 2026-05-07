@@ -1,0 +1,1 @@
+ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS description TEXT;
