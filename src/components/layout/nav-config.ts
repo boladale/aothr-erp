@@ -67,6 +67,7 @@ export const pathToProgram: Record<string, string> = {
   '/audit-report': 'financial_reports',
   '/account-statement': 'financial_reports',
   '/invoices': 'invoices',
+  '/invoice-inbox': 'invoices',
   '/ap-payments': 'ap_payments',
   '/ap-aging': 'ap_aging',
   '/match-exceptions': 'match_exceptions',
