@@ -66,6 +66,7 @@ export default function Employees() {
         organization_id: organizationId,
         department_id: form.department_id || null,
         job_role_id: form.job_role_id || null,
+        pay_grade_id: form.pay_grade_id || null,
         gender: form.gender || null,
         marital_status: form.marital_status || null,
       };
