@@ -27,13 +27,23 @@ export default function SalaryComponents() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('salary_components' as any).insert({ ...form, organization_id: organizationId });
+      const payload: any = {
+        name: form.name,
+        component_type: form.component_type,
+        calculation_type: form.calculation_type,
+        default_rate: parseFloat(form.default_rate) || 0,
+        is_taxable: form.is_taxable,
+        is_statutory: form.is_statutory,
+        description: form.description || null,
+        organization_id: organizationId,
+      };
+      const { error } = await supabase.from('salary_components' as any).insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salary-components'] });
       setOpen(false);
-      setForm({ name: '', component_type: 'earning', is_taxable: false, is_statutory: false, description: '' });
+      setForm({ name: '', component_type: 'earning', calculation_type: 'percentage', default_rate: '', is_taxable: false, is_statutory: false, description: '' });
       toast.success('Salary component created');
     },
     onError: (err: any) => toast.error(err.message),
