@@ -1743,6 +1743,48 @@ export type Database = {
           },
         ]
       }
+      employee_salary_lines: {
+        Row: {
+          amount: number
+          created_at: string
+          employee_salary_id: string
+          id: string
+          organization_id: string
+          salary_component_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          employee_salary_id: string
+          id?: string
+          organization_id: string
+          salary_component_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          employee_salary_id?: string
+          id?: string
+          organization_id?: string
+          salary_component_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_salary_lines_employee_salary_id_fkey"
+            columns: ["employee_salary_id"]
+            isOneToOne: false
+            referencedRelation: "employee_salary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_salary_lines_salary_component_id_fkey"
+            columns: ["salary_component_id"]
+            isOneToOne: false
+            referencedRelation: "salary_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null
@@ -1768,6 +1810,7 @@ export type Database = {
           next_of_kin_phone: string | null
           next_of_kin_relationship: string | null
           organization_id: string
+          pay_grade_id: string | null
           pension_id: string | null
           phone: string | null
           state: string | null
@@ -1801,6 +1844,7 @@ export type Database = {
           next_of_kin_phone?: string | null
           next_of_kin_relationship?: string | null
           organization_id: string
+          pay_grade_id?: string | null
           pension_id?: string | null
           phone?: string | null
           state?: string | null
@@ -1834,6 +1878,7 @@ export type Database = {
           next_of_kin_phone?: string | null
           next_of_kin_relationship?: string | null
           organization_id?: string
+          pay_grade_id?: string | null
           pension_id?: string | null
           phone?: string | null
           state?: string | null
@@ -1856,6 +1901,13 @@ export type Database = {
             columns: ["job_role_id"]
             isOneToOne: false
             referencedRelation: "job_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_pay_grade_id_fkey"
+            columns: ["pay_grade_id"]
+            isOneToOne: false
+            referencedRelation: "pay_grades"
             referencedColumns: ["id"]
           },
         ]
@@ -3710,6 +3762,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pay_grade_components: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          pay_grade_id: string
+          rate: number
+          salary_component_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          pay_grade_id: string
+          rate?: number
+          salary_component_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          pay_grade_id?: string
+          rate?: number
+          salary_component_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_grade_components_pay_grade_id_fkey"
+            columns: ["pay_grade_id"]
+            isOneToOne: false
+            referencedRelation: "pay_grades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pay_grade_components_salary_component_id_fkey"
+            columns: ["salary_component_id"]
+            isOneToOne: false
+            referencedRelation: "salary_components"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pay_grades: {
         Row: {
           basic_salary: number
@@ -5404,8 +5501,11 @@ export type Database = {
       }
       salary_components: {
         Row: {
+          calculation_basis: string
+          calculation_type: string
           component_type: string
           created_at: string
+          default_rate: number
           description: string | null
           id: string
           is_active: boolean
@@ -5416,8 +5516,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          calculation_basis?: string
+          calculation_type?: string
           component_type?: string
           created_at?: string
+          default_rate?: number
           description?: string | null
           id?: string
           is_active?: boolean
@@ -5428,8 +5531,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          calculation_basis?: string
+          calculation_type?: string
           component_type?: string
           created_at?: string
+          default_rate?: number
           description?: string | null
           id?: string
           is_active?: boolean
@@ -6657,6 +6763,10 @@ export type Database = {
         }
         Returns: number
       }
+      generate_employee_salary_from_grade: {
+        Args: { p_employee_id: string }
+        Returns: undefined
+      }
       get_user_org_id: { Args: never; Returns: string }
       get_user_programs: { Args: { p_user_id: string }; Returns: string[] }
       get_user_roles: {
@@ -6689,6 +6799,7 @@ export type Database = {
         Args: { _vendor_id: string }
         Returns: boolean
       }
+      is_hr_or_admin: { Args: never; Returns: boolean }
       is_hr_user: { Args: { _user_id: string }; Returns: boolean }
       is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
       next_transaction_number: {
