@@ -52,12 +52,13 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
   const submitInvoice = useMutation({
     mutationFn: async () => {
       if (!selectedPOId || !invoiceNumber) throw new Error('PO and invoice number are required');
-      
+
       const validLines = lineItems.filter((l: any) => l.quantity > 0);
       if (validLines.length === 0) throw new Error('At least one line item is required');
+      if (!certificateFile) throw new Error('Please attach the Work Completion Certificate / supporting document');
 
       const subtotal = validLines.reduce((s, l) => s + (l.quantity * l.unit_price), 0);
-      
+
       const { data: invoice, error } = await supabase.from('ap_invoices').insert({
         invoice_number: invoiceNumber,
         invoice_date: invoiceDate,
@@ -66,10 +67,11 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
         po_id: selectedPOId,
         subtotal,
         total_amount: subtotal,
-        status: 'draft',
+        status: 'pending_approval',
         payment_status: 'unpaid',
+        source: 'vendor',
         created_by: userId,
-      }).select().single();
+      } as any).select().single();
       if (error) throw error;
 
       const invoiceLines = validLines.map((l) => ({
@@ -82,10 +84,27 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
       }));
       const { error: lineError } = await supabase.from('ap_invoice_lines').insert(invoiceLines);
       if (lineError) throw lineError;
+
+      // Upload certificate as transaction attachment
+      const filePath = `ap_invoice/${invoice.id}/${Date.now()}-${certificateFile.name}`;
+      const { error: uploadError } = await supabase.storage.from('transaction-attachments').upload(filePath, certificateFile);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('transaction-attachments').getPublicUrl(filePath);
+      await supabase.from('transaction_attachments').insert({
+        entity_type: 'ap_invoice',
+        entity_id: invoice.id,
+        file_name: certificateFile.name,
+        file_url: urlData.publicUrl,
+        file_size: certificateFile.size,
+        content_type: certificateFile.type,
+        uploaded_by: userId,
+      });
+      setCreatedInvoiceId(invoice.id);
     },
     onSuccess: () => {
-      toast.success('Invoice submitted successfully! It will be reviewed by the accounts team.');
+      toast.success('Invoice submitted to the client invoice desk for review.');
       setCreateDialog(false);
+      setCertificateFile(null);
       queryClient.invalidateQueries({ queryKey: ['vendor-invoices'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to submit invoice'),
