@@ -27,6 +27,8 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
   const [lineItems, setLineItems] = useState<{ po_line_id: string; item_id: string; quantity: number; unit_price: number }[]>([]);
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
 
   // POs that can be invoiced (sent, received, approved)
   const invoiceablePOs = purchaseOrders.filter((po: any) => ['sent', 'approved', 'received'].includes(po.status));
