@@ -36,7 +36,9 @@ interface TransferLine {
 }
 
 export default function InventoryTransfers() {
-  const { user, organizationId } = useAuth();
+  const { user, organizationId, hasRole } = useAuth();
+  const canApproveSource = hasRole('admin') || hasRole('warehouse_manager');
+  const canApproveDest = hasRole('admin') || hasRole('warehouse_manager');
   const [transfers, setTransfers] = useState<TransferRow[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [items, setItems] = useState<Item[]>([]);
@@ -45,9 +47,6 @@ export default function InventoryTransfers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState<string | null>(null);
-  const { hasRole } = useAuth();
-  const canApproveSource = hasRole('admin') || hasRole('warehouse_manager');
-  const canApproveDest = hasRole('admin') || hasRole('warehouse_manager');
   const [form, setForm] = useState({ from_location_id: '', to_location_id: '', transfer_date: new Date().toISOString().split('T')[0], notes: '' });
   const [lines, setLines] = useState<TransferLine[]>([{ item_id: '', quantity: 1 }]);
 
