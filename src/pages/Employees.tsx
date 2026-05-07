@@ -54,6 +54,11 @@ export default function Employees() {
     queryFn: async () => { const { data } = await supabase.from('job_roles' as any).select('id, name').eq('is_active', true).order('name'); return (data || []) as any[]; },
   });
 
+  const { data: payGrades = [] } = useQuery({
+    queryKey: ['pay_grades_active'],
+    queryFn: async () => { const { data } = await supabase.from('pay_grades' as any).select('id, grade_name, basic_salary').eq('is_active', true).order('grade_name'); return (data || []) as any[]; },
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload: any = {
