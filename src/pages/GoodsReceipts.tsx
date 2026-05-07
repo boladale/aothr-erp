@@ -68,7 +68,7 @@ export default function GoodsReceipts() {
   const openEditDialog = async (grn: GRNWithDetails) => {
     setEditingGRN(grn);
     setSelectedPO(grn.po_id);
-    setForm({ location_id: grn.location_id, receipt_date: grn.receipt_date, notes: grn.notes || '', weigh_bill_number: (grn as any).weigh_bill_number || '' });
+    setForm({ location_id: grn.location_id, receipt_date: grn.receipt_date, notes: grn.notes || '', weigh_bill_number: (grn as any).weigh_bill_number || '', description: (grn as any).description || '' });
     // Load existing GRN lines
     const { data: grnLines } = await supabase.from('goods_receipt_lines').select('*, items(name)').eq('grn_id', grn.id);
     // Load PO lines for max info
@@ -97,7 +97,7 @@ export default function GoodsReceipts() {
     try {
       if (editingGRN) {
         const { error } = await supabase.from('goods_receipts').update({
-          location_id: form.location_id, receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number,
+          location_id: form.location_id, receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description,
         }).eq('id', editingGRN.id);
         if (error) throw error;
         await supabase.from('goods_receipt_lines').delete().eq('grn_id', editingGRN.id);
@@ -109,7 +109,7 @@ export default function GoodsReceipts() {
         const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
         const { data: grn, error } = await supabase.from('goods_receipts').insert({
           grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
-          receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, created_by: user?.id, organization_id: organizationId,
+          receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description, created_by: user?.id, organization_id: organizationId,
         }).select().single();
         if (error) throw error;
         await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
@@ -142,7 +142,7 @@ export default function GoodsReceipts() {
 
   const resetForm = () => {
     setEditingGRN(null); setSelectedPO(''); setLines([]);
-    setForm({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '' });
+    setForm({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '', description: '' });
   };
 
   const updateLineQty = (idx: number, qty: number) => {
