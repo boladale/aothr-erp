@@ -28,6 +28,7 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
   const [dueDate, setDueDate] = useState('');
   const [lineItems, setLineItems] = useState<{ po_line_id: string; item_id: string; quantity: number; unit_price: number }[]>([]);
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
 
   // POs that can be invoiced (sent, received, approved)
@@ -55,7 +56,8 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
 
       const validLines = lineItems.filter((l: any) => l.quantity > 0);
       if (validLines.length === 0) throw new Error('At least one line item is required');
-      if (!certificateFile) throw new Error('Please attach the Work Completion Certificate / supporting document');
+      if (!certificateFile) throw new Error('Please attach the Work Completion Certificate');
+      if (!invoiceFile) throw new Error('Please attach the Invoice document');
 
       const subtotal = validLines.reduce((s, l) => s + (l.quantity * l.unit_price), 0);
 
@@ -85,26 +87,33 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
       const { error: lineError } = await supabase.from('ap_invoice_lines').insert(invoiceLines);
       if (lineError) throw lineError;
 
-      // Upload certificate as transaction attachment
-      const filePath = `ap_invoice/${invoice.id}/${Date.now()}-${certificateFile.name}`;
-      const { error: uploadError } = await supabase.storage.from('transaction-attachments').upload(filePath, certificateFile);
-      if (uploadError) throw uploadError;
-      const { data: urlData } = supabase.storage.from('transaction-attachments').getPublicUrl(filePath);
-      await supabase.from('transaction_attachments').insert({
-        entity_type: 'ap_invoice',
-        entity_id: invoice.id,
-        file_name: certificateFile.name,
-        file_url: urlData.publicUrl,
-        file_size: certificateFile.size,
-        content_type: certificateFile.type,
-        uploaded_by: userId,
-      });
+      // Upload both attachments (Invoice + Work Completion Certificate)
+      const uploads = [
+        { file: invoiceFile, label: 'Invoice' },
+        { file: certificateFile, label: 'Work Completion Certificate' },
+      ];
+      for (const u of uploads) {
+        const filePath = `ap_invoice/${invoice.id}/${Date.now()}-${u.label.replace(/\s+/g, '_')}-${u.file.name}`;
+        const { error: uploadError } = await supabase.storage.from('transaction-attachments').upload(filePath, u.file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('transaction-attachments').getPublicUrl(filePath);
+        await supabase.from('transaction_attachments').insert({
+          entity_type: 'ap_invoice',
+          entity_id: invoice.id,
+          file_name: `${u.label} - ${u.file.name}`,
+          file_url: urlData.publicUrl,
+          file_size: u.file.size,
+          content_type: u.file.type,
+          uploaded_by: userId,
+        });
+      }
       setCreatedInvoiceId(invoice.id);
     },
     onSuccess: () => {
       toast.success('Invoice submitted to the client invoice desk for review.');
       setCreateDialog(false);
       setCertificateFile(null);
+      setInvoiceFile(null);
       queryClient.invalidateQueries({ queryKey: ['vendor-invoices'] });
     },
     onError: (err: any) => toast.error(err.message || 'Failed to submit invoice'),
@@ -224,17 +233,24 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
             )}
 
             <div className="border rounded-md p-3 bg-muted/30 space-y-2">
+              <Label>Invoice Document <span className="text-destructive">*</span></Label>
+              <Input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)} />
+              <p className="text-xs text-muted-foreground">Attach the actual invoice document (PDF/scan). Max 10MB.</p>
+              {invoiceFile && <p className="text-xs">Selected: <span className="font-medium">{invoiceFile.name}</span></p>}
+            </div>
+
+            <div className="border rounded-md p-3 bg-muted/30 space-y-2">
               <Label>Work Completion Certificate / Supporting Document <span className="text-destructive">*</span></Label>
               <Input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setCertificateFile(e.target.files?.[0] || null)} />
               <p className="text-xs text-muted-foreground">
-                Attach the signed work completion certificate (or proof of service delivery) to send with this invoice. Max 10MB.
+                Attach the signed work completion certificate (or proof of service delivery). Max 10MB.
               </p>
               {certificateFile && <p className="text-xs">Selected: <span className="font-medium">{certificateFile.name}</span></p>}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialog(false)}>Cancel</Button>
-            <Button onClick={() => submitInvoice.mutate()} disabled={submitInvoice.isPending || !selectedPOId || !invoiceNumber || !certificateFile}>
+            <Button onClick={() => submitInvoice.mutate()} disabled={submitInvoice.isPending || !selectedPOId || !invoiceNumber || !certificateFile || !invoiceFile}>
               Submit Invoice
             </Button>
           </DialogFooter>
