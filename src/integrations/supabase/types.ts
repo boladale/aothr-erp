@@ -2477,6 +2477,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          description: string | null
           grn_number: string
           id: string
           location_id: string
@@ -2492,6 +2493,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          description?: string | null
           grn_number: string
           id?: string
           location_id: string
@@ -2507,6 +2509,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          description?: string | null
           grn_number?: string
           id?: string
           location_id?: string
