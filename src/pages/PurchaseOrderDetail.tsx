@@ -373,8 +373,8 @@ export default function PurchaseOrderDetail() {
                     <TableCell>{line.line_number}</TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{line.items?.name}</p>
-                        <p className="text-xs text-muted-foreground">{line.items?.code}</p>
+                        <p className="font-medium">{line.items?.name || (line as any).description || '—'}</p>
+                        {line.items?.code && <p className="text-xs text-muted-foreground">{line.items.code}</p>}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">{line.quantity}</TableCell>
