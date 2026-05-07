@@ -102,6 +102,7 @@ export const pathToProgram: Record<string, string> = {
   '/procurement-audit': 'procurement_audit',
   '/admin': 'admin',
   '/departments': 'departments',
+  '/job-roles': 'employees',
   '/services': 'services',
   '/employees': 'employees',
   '/leave-management': 'leave_management',
@@ -234,6 +235,7 @@ export const navSections = [
     label: 'HR',
     items: [
       { path: '/departments', label: 'Departments', icon: Building2 },
+      { path: '/job-roles', label: 'Job Roles', icon: Shield },
       { path: '/employees', label: 'Employees', icon: Users },
       { path: '/leave-management', label: 'Leave Management', icon: Calendar },
       { path: '/attendance', label: 'Attendance', icon: Clock },
