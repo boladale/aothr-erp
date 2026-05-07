@@ -98,6 +98,19 @@ export default function SalaryComponents() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Calculation Type</Label>
+                  <Select value={form.calculation_type} onValueChange={v => setForm(f => ({ ...f, calculation_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">% of Basic</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Default Rate</Label><Input type="number" value={form.default_rate} onChange={e => setForm(f => ({ ...f, default_rate: e.target.value }))} placeholder={form.calculation_type === 'percentage' ? 'e.g. 30' : 'e.g. 50000'} /></div>
+              </div>
               <div><Label>Description</Label><Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="flex gap-4">
                 <label className="flex items-center gap-2"><input type="checkbox" checked={form.is_taxable} onChange={e => setForm(f => ({ ...f, is_taxable: e.target.checked }))} className="rounded" /> Taxable</label>
