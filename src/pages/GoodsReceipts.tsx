@@ -248,6 +248,16 @@ export default function GoodsReceipts() {
                   <Input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Optional notes..." />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>Description of Goods</Label>
+                <Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Describe the goods being received..." rows={3} />
+              </div>
+              {editingGRN && (
+                <AttachmentPanel entityType="goods_receipt" entityId={editingGRN.id} />
+              )}
+              {!editingGRN && (
+                <p className="text-xs text-muted-foreground">Save the GRN first to attach the scanned weigh bill.</p>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
