@@ -75,7 +75,13 @@ export default function SelfServiceProfile() {
               <div><Label>Address</Label><Input value={form.address} onChange={e => set('address', e.target.value)} /></div>
               <div className="grid grid-cols-3 gap-2">
                 <div><Label>City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} /></div>
-                <div><Label>State</Label><Input value={form.state} onChange={e => set('state', e.target.value)} /></div>
+                <div>
+                  <Label>State</Label>
+                  <Select value={form.state} onValueChange={v => set('state', v)}>
+                    <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                    <SelectContent>{NIGERIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Country</Label><Input value={form.country} onChange={e => set('country', e.target.value)} /></div>
               </div>
             </CardContent>
