@@ -233,17 +233,24 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
             )}
 
             <div className="border rounded-md p-3 bg-muted/30 space-y-2">
+              <Label>Invoice Document <span className="text-destructive">*</span></Label>
+              <Input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)} />
+              <p className="text-xs text-muted-foreground">Attach the actual invoice document (PDF/scan). Max 10MB.</p>
+              {invoiceFile && <p className="text-xs">Selected: <span className="font-medium">{invoiceFile.name}</span></p>}
+            </div>
+
+            <div className="border rounded-md p-3 bg-muted/30 space-y-2">
               <Label>Work Completion Certificate / Supporting Document <span className="text-destructive">*</span></Label>
               <Input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setCertificateFile(e.target.files?.[0] || null)} />
               <p className="text-xs text-muted-foreground">
-                Attach the signed work completion certificate (or proof of service delivery) to send with this invoice. Max 10MB.
+                Attach the signed work completion certificate (or proof of service delivery). Max 10MB.
               </p>
               {certificateFile && <p className="text-xs">Selected: <span className="font-medium">{certificateFile.name}</span></p>}
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialog(false)}>Cancel</Button>
-            <Button onClick={() => submitInvoice.mutate()} disabled={submitInvoice.isPending || !selectedPOId || !invoiceNumber || !certificateFile}>
+            <Button onClick={() => submitInvoice.mutate()} disabled={submitInvoice.isPending || !selectedPOId || !invoiceNumber || !certificateFile || !invoiceFile}>
               Submit Invoice
             </Button>
           </DialogFooter>
