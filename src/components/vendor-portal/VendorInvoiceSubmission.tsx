@@ -40,14 +40,17 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
       .select('*, items(item_code, description)')
       .eq('po_id', poId);
     
-    setLineItems((data || []).map((line: any) => ({
-      po_line_id: line.id,
-      item_id: line.item_id,
-      quantity: Math.max(0, line.quantity - (line.qty_invoiced || 0)),
-      unit_price: line.unit_price,
-      description: line.items?.description || line.description,
-      max_qty: line.quantity - (line.qty_invoiced || 0),
-    })));
+    setLineItems((data || []).map((line: any) => {
+      const remaining = Math.max(0, line.quantity - (line.qty_invoiced || 0));
+      return {
+        po_line_id: line.id,
+        item_id: line.item_id,
+        quantity: remaining > 0 ? remaining : line.quantity,
+        unit_price: line.unit_price,
+        description: line.items?.description || line.description,
+        max_qty: line.quantity,
+      };
+    }));
   };
 
   const submitInvoice = useMutation({
@@ -213,14 +216,26 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
                             value={line.quantity}
                             onChange={(e) => {
                               const updated = [...lineItems];
-                              updated[idx] = { ...updated[idx], quantity: Math.min(Number(e.target.value), line.max_qty) };
+                              updated[idx] = { ...updated[idx], quantity: Number(e.target.value) };
                               setLineItems(updated);
                             }}
                             min={0}
-                            max={line.max_qty}
                           />
                         </TableCell>
-                        <TableCell>{Number(line.unit_price).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            className="w-28"
+                            value={line.unit_price}
+                            onChange={(e) => {
+                              const updated = [...lineItems];
+                              updated[idx] = { ...updated[idx], unit_price: Number(e.target.value) };
+                              setLineItems(updated);
+                            }}
+                            min={0}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono">{(line.quantity * line.unit_price).toLocaleString()}</TableCell>
                         <TableCell className="font-mono">{(line.quantity * line.unit_price).toLocaleString()}</TableCell>
                       </TableRow>
                     ))}
