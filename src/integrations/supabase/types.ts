@@ -92,6 +92,7 @@ export type Database = {
           posted_at: string | null
           posted_by: string | null
           rejection_reason: string | null
+          source: string
           status: string
           subtotal: number | null
           tax_amount: number | null
@@ -113,6 +114,7 @@ export type Database = {
           posted_at?: string | null
           posted_by?: string | null
           rejection_reason?: string | null
+          source?: string
           status?: string
           subtotal?: number | null
           tax_amount?: number | null
@@ -134,6 +136,7 @@ export type Database = {
           posted_at?: string | null
           posted_by?: string | null
           rejection_reason?: string | null
+          source?: string
           status?: string
           subtotal?: number | null
           tax_amount?: number | null
