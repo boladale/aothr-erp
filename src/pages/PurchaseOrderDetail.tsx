@@ -407,6 +407,17 @@ export default function PurchaseOrderDetail() {
           </div>
         )}
 
+        {(po as any).payment_terms && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Terms</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-wrap">{(po as any).payment_terms}</p>
+            </CardContent>
+          </Card>
+        )}
+
         {po.notes && (
           <Card>
             <CardHeader>
