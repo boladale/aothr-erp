@@ -18,7 +18,7 @@ export default function SalaryComponents() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', component_type: 'earning' as string, is_taxable: false, is_statutory: false, description: '' });
+  const [form, setForm] = useState({ name: '', component_type: 'earning' as string, calculation_type: 'percentage' as string, default_rate: '', is_taxable: false, is_statutory: false, description: '' });
 
   const { data: components = [], isLoading } = useQuery({
     queryKey: ['salary-components'],
