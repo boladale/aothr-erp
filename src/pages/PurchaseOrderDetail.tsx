@@ -386,6 +386,11 @@ export default function PurchaseOrderDetail() {
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
+                      <span className={(line.quantity - line.qty_received) > 0 ? 'text-warning font-medium' : 'text-muted-foreground'}>
+                        {Math.max(0, line.quantity - line.qty_received)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
                       <span className={line.qty_invoiced >= line.quantity ? 'text-success' : ''}>
                         {line.qty_invoiced}
                       </span>
