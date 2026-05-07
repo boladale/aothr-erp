@@ -102,6 +102,7 @@ export const pathToProgram: Record<string, string> = {
   '/procurement-audit': 'procurement_audit',
   '/admin': 'admin',
   '/departments': 'departments',
+  '/job-roles': 'employees',
   '/services': 'services',
   '/employees': 'employees',
   '/leave-management': 'leave_management',
