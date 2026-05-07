@@ -253,7 +253,6 @@ export default function PurchaseOrderDetail() {
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {po.vendors?.name}
-              {(po as any).requisitions?.req_number && <span className="ml-2 text-xs">• PRN: {(po as any).requisitions.req_number}</span>}
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
