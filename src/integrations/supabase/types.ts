@@ -6022,6 +6022,9 @@ export type Database = {
         | "requisitioner"
         | "vendor_user"
         | "employee"
+        | "hr_manager"
+        | "hr_officer"
+        | "payroll_manager"
       approval_action_type: "approved" | "rejected" | "delegated" | "escalated"
       approval_instance_status:
         | "pending"
@@ -6251,6 +6254,9 @@ export const Constants = {
         "requisitioner",
         "vendor_user",
         "employee",
+        "hr_manager",
+        "hr_officer",
+        "payroll_manager",
       ],
       approval_action_type: ["approved", "rejected", "delegated", "escalated"],
       approval_instance_status: [
