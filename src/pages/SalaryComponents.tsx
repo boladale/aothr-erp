@@ -60,21 +60,23 @@ export default function SalaryComponents() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Calc</TableHead>
+                <TableHead>Default Rate</TableHead>
                 <TableHead>Taxable</TableHead>
                 <TableHead>Statutory</TableHead>
-                <TableHead>Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : components.map((c: any) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell><Badge variant={c.component_type === 'earning' ? 'default' : 'destructive'}>{c.component_type}</Badge></TableCell>
+                  <TableCell>{c.calculation_type}</TableCell>
+                  <TableCell>{c.default_rate}{c.calculation_type === 'percentage' ? '%' : ''}</TableCell>
                   <TableCell>{c.is_taxable ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{c.is_statutory ? 'Yes' : 'No'}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.description || '—'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
