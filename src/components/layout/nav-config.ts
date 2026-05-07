@@ -176,6 +176,7 @@ export const navSections = [
   {
     label: 'Finance - AP',
     items: [
+      { path: '/invoice-inbox', label: 'Invoice Inbox', icon: Receipt },
       { path: '/invoices', label: 'AP Invoices', icon: Receipt },
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
