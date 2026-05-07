@@ -67,6 +67,7 @@ export const pathToProgram: Record<string, string> = {
   '/audit-report': 'financial_reports',
   '/account-statement': 'financial_reports',
   '/invoices': 'invoices',
+  '/invoice-inbox': 'invoices',
   '/ap-payments': 'ap_payments',
   '/ap-aging': 'ap_aging',
   '/match-exceptions': 'match_exceptions',
@@ -176,6 +177,7 @@ export const navSections = [
   {
     label: 'Finance - AP',
     items: [
+      { path: '/invoice-inbox', label: 'Invoice Inbox', icon: Receipt },
       { path: '/invoices', label: 'AP Invoices', icon: Receipt },
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
