@@ -2126,6 +2126,7 @@ export type Database = {
           posted_by: string | null
           receipt_date: string
           status: string
+          weigh_bill_number: string
         }
         Insert: {
           created_at?: string
@@ -2140,6 +2141,7 @@ export type Database = {
           posted_by?: string | null
           receipt_date?: string
           status?: string
+          weigh_bill_number: string
         }
         Update: {
           created_at?: string
@@ -2154,6 +2156,7 @@ export type Database = {
           posted_by?: string | null
           receipt_date?: string
           status?: string
+          weigh_bill_number?: string
         }
         Relationships: [
           {
@@ -2604,6 +2607,130 @@ export type Database = {
             columns: ["po_line_id"]
             isOneToOne: false
             referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transfer_lines: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          line_number: number
+          quantity: number
+          transfer_id: string
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          line_number: number
+          quantity: number
+          transfer_id: string
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          line_number?: number
+          quantity?: number
+          transfer_id?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transfer_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfer_lines_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_transfers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transfers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          destination_approved_at: string | null
+          destination_approved_by: string | null
+          from_location_id: string
+          id: string
+          notes: string | null
+          organization_id: string | null
+          rejection_reason: string | null
+          source_approved_at: string | null
+          source_approved_by: string | null
+          status: string
+          to_location_id: string
+          transfer_date: string
+          transfer_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          destination_approved_at?: string | null
+          destination_approved_by?: string | null
+          from_location_id: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          rejection_reason?: string | null
+          source_approved_at?: string | null
+          source_approved_by?: string | null
+          status?: string
+          to_location_id: string
+          transfer_date?: string
+          transfer_number: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          destination_approved_at?: string | null
+          destination_approved_by?: string | null
+          from_location_id?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string | null
+          rejection_reason?: string | null
+          source_approved_at?: string | null
+          source_approved_by?: string | null
+          status?: string
+          to_location_id?: string
+          transfer_date?: string
+          transfer_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transfers_from_location_id_fkey"
+            columns: ["from_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
