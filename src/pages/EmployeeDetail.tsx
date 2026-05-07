@@ -18,7 +18,7 @@ export default function EmployeeDetail() {
   const { data: employee, isLoading } = useQuery({
     queryKey: ['employee', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('employees' as any).select('*, departments(name), job_titles(title)').eq('id', id).single();
+      const { data, error } = await supabase.from('employees' as any).select('*, departments(name), job_roles(name)').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -101,7 +101,7 @@ export default function EmployeeDetail() {
             <Card>
               <CardContent className="pt-6 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Department</span><span>{e.departments?.name || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Job Title</span><span>{e.job_titles?.title || '—'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Job Role</span><span>{e.job_roles?.name || '—'}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="capitalize">{e.employment_type?.replace('_', ' ')}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Employment Date</span><span>{format(new Date(e.employment_date), 'dd MMM yyyy')}</span></div>
                 {e.termination_date && <div className="flex justify-between"><span className="text-muted-foreground">Termination Date</span><span>{format(new Date(e.termination_date), 'dd MMM yyyy')}</span></div>}

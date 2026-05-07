@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 
 const defaultForm = {
   employee_number: '', first_name: '', last_name: '', email: '', phone: '',
-  department_id: '', job_title_id: '', employment_type: 'full_time' as string,
+  department_id: '', job_role_id: '', employment_type: 'full_time' as string,
   employment_date: new Date().toISOString().split('T')[0],
   gender: '', marital_status: '',
   bank_name: '', bank_account_number: '', bank_account_name: '',
@@ -37,7 +37,7 @@ export default function Employees() {
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('employees' as any).select('*, departments(name), job_titles(title)').order('first_name');
+      const { data, error } = await supabase.from('employees' as any).select('*, departments(name), job_roles(name)').order('first_name');
       if (error) throw error;
       return data;
     },
@@ -48,9 +48,9 @@ export default function Employees() {
     queryFn: async () => { const { data } = await supabase.from('departments' as any).select('id, name').eq('is_active', true).order('name'); return data || []; },
   });
 
-  const { data: jobTitles = [] } = useQuery({
-    queryKey: ['job_titles'],
-    queryFn: async () => { const { data } = await supabase.from('job_titles' as any).select('id, title').eq('is_active', true).order('title'); return data || []; },
+  const { data: jobRoles = [] } = useQuery({
+    queryKey: ['job_roles_active'],
+    queryFn: async () => { const { data } = await supabase.from('job_roles' as any).select('id, name').eq('is_active', true).order('name'); return (data || []) as any[]; },
   });
 
   const saveMutation = useMutation({
@@ -59,7 +59,7 @@ export default function Employees() {
         ...form,
         organization_id: organizationId,
         department_id: form.department_id || null,
-        job_title_id: form.job_title_id || null,
+        job_role_id: form.job_role_id || null,
         gender: form.gender || null,
         marital_status: form.marital_status || null,
       };
@@ -100,7 +100,7 @@ export default function Employees() {
                 <TableHead>Emp #</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Department</TableHead>
-                <TableHead>Job Title</TableHead>
+                <TableHead>Job Role</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[80px]">View</TableHead>
@@ -116,7 +116,7 @@ export default function Employees() {
                   <TableCell className="font-mono">{e.employee_number}</TableCell>
                   <TableCell className="font-medium">{e.first_name} {e.last_name}</TableCell>
                   <TableCell>{e.departments?.name || '—'}</TableCell>
-                  <TableCell>{e.job_titles?.title || '—'}</TableCell>
+                  <TableCell>{e.job_roles?.name || '—'}</TableCell>
                   <TableCell className="capitalize">{e.employment_type?.replace('_', ' ')}</TableCell>
                   <TableCell><StatusBadge status={e.status} /></TableCell>
                   <TableCell>
@@ -146,10 +146,10 @@ export default function Employees() {
                 </Select>
               </div>
               <div>
-                <Label>Job Title</Label>
-                <Select value={form.job_title_id} onValueChange={v => set('job_title_id', v)}>
+                <Label>Job Role</Label>
+                <Select value={form.job_role_id} onValueChange={v => set('job_role_id', v)}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{jobTitles.map((j: any) => <SelectItem key={j.id} value={j.id}>{j.title}</SelectItem>)}</SelectContent>
+                  <SelectContent>{jobRoles.map((j: any) => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
