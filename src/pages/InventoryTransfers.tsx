@@ -93,22 +93,31 @@ export default function InventoryTransfers() {
       const { error: lErr } = await (supabase.from('inventory_transfer_lines' as any) as any).insert(lineInserts);
       if (lErr) throw lErr;
 
-      toast.success('Transfer created. Post to move inventory.');
+      toast.success('Transfer created. Submit for source-warehouse approval.');
       setDialogOpen(false);
       resetForm();
       fetchData();
     } catch (e: any) { toast.error(e.message || 'Failed to create transfer'); } finally { setSaving(false); }
   };
 
-  const handlePost = async (t: TransferRow) => {
+  const updateStatus = async (t: TransferRow, patch: Record<string, any>, success: string) => {
     if (postingId) return;
     setPostingId(t.id);
     try {
-      const { error } = await (supabase.from('inventory_transfers' as any) as any).update({ status: 'posted' }).eq('id', t.id);
+      const { error } = await (supabase.from('inventory_transfers' as any) as any).update(patch).eq('id', t.id);
       if (error) throw error;
-      toast.success('Transfer posted. Inventory moved.');
+      toast.success(success);
       fetchData();
-    } catch (e: any) { toast.error(e.message || 'Failed to post'); } finally { setPostingId(null); }
+    } catch (e: any) { toast.error(e.message || 'Action failed'); } finally { setPostingId(null); }
+  };
+
+  const handleSubmit = (t: TransferRow) => updateStatus(t, { status: 'pending_source_approval' }, 'Submitted for source approval');
+  const handleApproveSource = (t: TransferRow) => updateStatus(t, { status: 'in_transit', source_approved_by: user?.id, source_approved_at: new Date().toISOString() }, 'Approved at source. Stock dispatched.');
+  const handleApproveDest = (t: TransferRow) => updateStatus(t, { status: 'received', destination_approved_by: user?.id, destination_approved_at: new Date().toISOString() }, 'Received at destination. Stock added.');
+  const handleReject = (t: TransferRow) => {
+    const reason = prompt('Reason for rejection?');
+    if (!reason) return;
+    updateStatus(t, { status: 'rejected', rejection_reason: reason }, 'Transfer rejected');
   };
 
   const resetForm = () => {
