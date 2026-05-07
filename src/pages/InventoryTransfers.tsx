@@ -137,11 +137,28 @@ export default function InventoryTransfers() {
     { key: 'status', header: 'Status', render: (r: TransferRow) => <StatusBadge status={r.status} /> },
     {
       key: 'actions', header: '',
-      render: (r: TransferRow) => r.status === 'draft' ? (
-        <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
-          {postingId === r.id ? 'Posting...' : 'Post'}
-        </Button>
-      ) : null
+      render: (r: TransferRow) => {
+        const busy = postingId === r.id;
+        const stop = (e: React.MouseEvent) => e.stopPropagation();
+        if (r.status === 'draft') return (
+          <div className="flex gap-1" onClick={stop}>
+            <Button size="sm" disabled={busy} onClick={() => handleSubmit(r)}>{busy ? '...' : 'Submit'}</Button>
+          </div>
+        );
+        if (r.status === 'pending_source_approval' && canApproveSource) return (
+          <div className="flex gap-1" onClick={stop}>
+            <Button size="sm" disabled={busy} onClick={() => handleApproveSource(r)}>Approve (Source)</Button>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => handleReject(r)}>Reject</Button>
+          </div>
+        );
+        if (r.status === 'in_transit' && canApproveDest) return (
+          <div className="flex gap-1" onClick={stop}>
+            <Button size="sm" disabled={busy} onClick={() => handleApproveDest(r)}>Approve (Destination)</Button>
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => handleReject(r)}>Reject</Button>
+          </div>
+        );
+        return null;
+      }
     }
   ];
 
