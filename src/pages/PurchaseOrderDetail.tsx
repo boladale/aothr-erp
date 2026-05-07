@@ -290,7 +290,7 @@ export default function PurchaseOrderDetail() {
                 <CheckCircle2 className="h-3 w-3 mr-1" /> Finalized
               </Badge>
             )}
-            {po.close_ready && po.status !== 'closed' && (
+            {po.close_ready && po.status !== 'closed' && canClose && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
           </div>
