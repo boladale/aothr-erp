@@ -5782,10 +5782,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      approve_po_reaward: {
-        Args: { p_notes?: string; p_request_id: string }
-        Returns: string
-      }
+      approve_po_reaward:
+        | { Args: { p_request_id: string }; Returns: string }
+        | { Args: { p_notes?: string; p_request_id: string }; Returns: string }
       cleanup_transactional_data: { Args: never; Returns: undefined }
       consume_fifo_layers: {
         Args: {
