@@ -33,6 +33,7 @@ export default function PurchaseOrderDetail() {
   const { user, hasRole } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canSend = canApprove || hasRole('procurement_officer');
+  const canClose = canApprove || hasRole('warehouse_manager') || hasRole('warehouse_officer');
   const [po, setPO] = useState<POWithDetails | null>(null);
   const [lines, setLines] = useState<POLineWithItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -289,7 +290,7 @@ export default function PurchaseOrderDetail() {
                 <CheckCircle2 className="h-3 w-3 mr-1" /> Finalized
               </Badge>
             )}
-            {po.close_ready && po.status !== 'closed' && (
+            {po.close_ready && po.status !== 'closed' && canClose && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
           </div>
@@ -362,6 +363,7 @@ export default function PurchaseOrderDetail() {
                   <TableHead>Item</TableHead>
                   <TableHead className="text-right">Ordered</TableHead>
                   <TableHead className="text-right">Received</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
                   <TableHead className="text-right">Invoiced</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Line Total</TableHead>
@@ -381,6 +383,11 @@ export default function PurchaseOrderDetail() {
                     <TableCell className="text-right">
                       <span className={line.qty_received >= line.quantity ? 'text-success' : ''}>
                         {line.qty_received}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={(line.quantity - line.qty_received) > 0 ? 'text-warning font-medium' : 'text-muted-foreground'}>
+                        {Math.max(0, line.quantity - line.qty_received)}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
