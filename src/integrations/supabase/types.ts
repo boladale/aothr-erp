@@ -5904,6 +5904,7 @@ export type Database = {
         | "fully_received"
         | "closed"
         | "cancelled"
+        | "rejected"
       project_cost_type:
         | "labor"
         | "material"
@@ -6137,6 +6138,7 @@ export const Constants = {
         "fully_received",
         "closed",
         "cancelled",
+        "rejected",
       ],
       project_cost_type: [
         "labor",
