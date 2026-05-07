@@ -40,14 +40,17 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
       .select('*, items(item_code, description)')
       .eq('po_id', poId);
     
-    setLineItems((data || []).map((line: any) => ({
-      po_line_id: line.id,
-      item_id: line.item_id,
-      quantity: Math.max(0, line.quantity - (line.qty_invoiced || 0)),
-      unit_price: line.unit_price,
-      description: line.items?.description || line.description,
-      max_qty: line.quantity - (line.qty_invoiced || 0),
-    })));
+    setLineItems((data || []).map((line: any) => {
+      const remaining = Math.max(0, line.quantity - (line.qty_invoiced || 0));
+      return {
+        po_line_id: line.id,
+        item_id: line.item_id,
+        quantity: remaining > 0 ? remaining : line.quantity,
+        unit_price: line.unit_price,
+        description: line.items?.description || line.description,
+        max_qty: line.quantity,
+      };
+    }));
   };
 
   const submitInvoice = useMutation({
