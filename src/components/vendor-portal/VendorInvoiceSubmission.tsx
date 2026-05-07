@@ -222,10 +222,19 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
                 </div>
               </div>
             )}
+
+            <div className="border rounded-md p-3 bg-muted/30 space-y-2">
+              <Label>Work Completion Certificate / Supporting Document <span className="text-destructive">*</span></Label>
+              <Input type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={(e) => setCertificateFile(e.target.files?.[0] || null)} />
+              <p className="text-xs text-muted-foreground">
+                Attach the signed work completion certificate (or proof of service delivery) to send with this invoice. Max 10MB.
+              </p>
+              {certificateFile && <p className="text-xs">Selected: <span className="font-medium">{certificateFile.name}</span></p>}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateDialog(false)}>Cancel</Button>
-            <Button onClick={() => submitInvoice.mutate()} disabled={submitInvoice.isPending || !selectedPOId || !invoiceNumber}>
+            <Button onClick={() => submitInvoice.mutate()} disabled={submitInvoice.isPending || !selectedPOId || !invoiceNumber || !certificateFile}>
               Submit Invoice
             </Button>
           </DialogFooter>
