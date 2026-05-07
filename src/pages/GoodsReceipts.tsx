@@ -37,7 +37,7 @@ export default function GoodsReceipts() {
   const [postingId, setPostingId] = useState<string | null>(null);
   const [editingGRN, setEditingGRN] = useState<GRNWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
-  const [form, setForm] = useState({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '' });
+  const [form, setForm] = useState({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '', description: '' });
   const [lines, setLines] = useState<GRNLine[]>([]);
 
   useEffect(() => { fetchData(); }, []);
