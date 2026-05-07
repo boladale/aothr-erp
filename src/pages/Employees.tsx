@@ -18,7 +18,7 @@ import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
 
 const defaultForm = {
   employee_number: '', first_name: '', last_name: '', email: '', phone: '',
-  department_id: '', job_role_id: '', employment_type: 'full_time' as string,
+  department_id: '', job_role_id: '', pay_grade_id: '', employment_type: 'full_time' as string,
   employment_date: new Date().toISOString().split('T')[0],
   gender: '', marital_status: '',
   bank_name: '', bank_account_number: '', bank_account_name: '',
@@ -54,6 +54,11 @@ export default function Employees() {
     queryFn: async () => { const { data } = await supabase.from('job_roles' as any).select('id, name').eq('is_active', true).order('name'); return (data || []) as any[]; },
   });
 
+  const { data: payGrades = [] } = useQuery({
+    queryKey: ['pay_grades_active'],
+    queryFn: async () => { const { data } = await supabase.from('pay_grades' as any).select('id, grade_name, basic_salary').eq('is_active', true).order('grade_name'); return (data || []) as any[]; },
+  });
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload: any = {
@@ -61,6 +66,7 @@ export default function Employees() {
         organization_id: organizationId,
         department_id: form.department_id || null,
         job_role_id: form.job_role_id || null,
+        pay_grade_id: form.pay_grade_id || null,
         gender: form.gender || null,
         marital_status: form.marital_status || null,
       };
@@ -152,6 +158,14 @@ export default function Employees() {
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>{jobRoles.map((j: any) => <SelectItem key={j.id} value={j.id}>{j.name}</SelectItem>)}</SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label>Pay Grade</Label>
+                <Select value={form.pay_grade_id} onValueChange={v => set('pay_grade_id', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
+                  <SelectContent>{payGrades.map((g: any) => <SelectItem key={g.id} value={g.id}>{g.grade_name} — ₦{Number(g.basic_salary).toLocaleString()}</SelectItem>)}</SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Salary breakdown auto-generated from grade components.</p>
               </div>
               <div>
                 <Label>Employment Type</Label>

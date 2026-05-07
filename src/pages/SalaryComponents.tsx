@@ -18,7 +18,7 @@ export default function SalaryComponents() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', component_type: 'earning' as string, is_taxable: false, is_statutory: false, description: '' });
+  const [form, setForm] = useState({ name: '', component_type: 'earning' as string, calculation_type: 'percentage' as string, default_rate: '', is_taxable: false, is_statutory: false, description: '' });
 
   const { data: components = [], isLoading } = useQuery({
     queryKey: ['salary-components'],
@@ -27,13 +27,23 @@ export default function SalaryComponents() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('salary_components' as any).insert({ ...form, organization_id: organizationId });
+      const payload: any = {
+        name: form.name,
+        component_type: form.component_type,
+        calculation_type: form.calculation_type,
+        default_rate: parseFloat(form.default_rate) || 0,
+        is_taxable: form.is_taxable,
+        is_statutory: form.is_statutory,
+        description: form.description || null,
+        organization_id: organizationId,
+      };
+      const { error } = await supabase.from('salary_components' as any).insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salary-components'] });
       setOpen(false);
-      setForm({ name: '', component_type: 'earning', is_taxable: false, is_statutory: false, description: '' });
+      setForm({ name: '', component_type: 'earning', calculation_type: 'percentage', default_rate: '', is_taxable: false, is_statutory: false, description: '' });
       toast.success('Salary component created');
     },
     onError: (err: any) => toast.error(err.message),
@@ -50,21 +60,23 @@ export default function SalaryComponents() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Calc</TableHead>
+                <TableHead>Default Rate</TableHead>
                 <TableHead>Taxable</TableHead>
                 <TableHead>Statutory</TableHead>
-                <TableHead>Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : components.map((c: any) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell><Badge variant={c.component_type === 'earning' ? 'default' : 'destructive'}>{c.component_type}</Badge></TableCell>
+                  <TableCell>{c.calculation_type}</TableCell>
+                  <TableCell>{c.default_rate}{c.calculation_type === 'percentage' ? '%' : ''}</TableCell>
                   <TableCell>{c.is_taxable ? 'Yes' : 'No'}</TableCell>
                   <TableCell>{c.is_statutory ? 'Yes' : 'No'}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.description || '—'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -85,6 +97,19 @@ export default function SalaryComponents() {
                     <SelectItem value="deduction">Deduction</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Calculation Type</Label>
+                  <Select value={form.calculation_type} onValueChange={v => setForm(f => ({ ...f, calculation_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">% of Basic</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Default Rate</Label><Input type="number" value={form.default_rate} onChange={e => setForm(f => ({ ...f, default_rate: e.target.value }))} placeholder={form.calculation_type === 'percentage' ? 'e.g. 30' : 'e.g. 50000'} /></div>
               </div>
               <div><Label>Description</Label><Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="flex gap-4">
