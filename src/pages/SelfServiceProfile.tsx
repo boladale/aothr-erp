@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Save } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
 
 export default function SelfServiceProfile() {
   const { user } = useAuth();
@@ -73,7 +75,13 @@ export default function SelfServiceProfile() {
               <div><Label>Address</Label><Input value={form.address} onChange={e => set('address', e.target.value)} /></div>
               <div className="grid grid-cols-3 gap-2">
                 <div><Label>City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} /></div>
-                <div><Label>State</Label><Input value={form.state} onChange={e => set('state', e.target.value)} /></div>
+                <div>
+                  <Label>State</Label>
+                  <Select value={form.state} onValueChange={v => set('state', v)}>
+                    <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                    <SelectContent>{NIGERIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
                 <div><Label>Country</Label><Input value={form.country} onChange={e => set('country', e.target.value)} /></div>
               </div>
             </CardContent>
@@ -84,7 +92,13 @@ export default function SelfServiceProfile() {
             <CardContent className="space-y-4">
               <div><Label>Name</Label><Input value={form.next_of_kin_name} onChange={e => set('next_of_kin_name', e.target.value)} /></div>
               <div><Label>Phone</Label><Input value={form.next_of_kin_phone} onChange={e => set('next_of_kin_phone', e.target.value)} /></div>
-              <div><Label>Relationship</Label><Input value={form.next_of_kin_relationship} onChange={e => set('next_of_kin_relationship', e.target.value)} /></div>
+              <div>
+                <Label>Relationship</Label>
+                <Select value={form.next_of_kin_relationship} onValueChange={v => set('next_of_kin_relationship', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{KIN_RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </CardContent>
           </Card>
 

@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus, Eye, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
 
 const defaultForm = {
   employee_number: '', first_name: '', last_name: '', email: '', phone: '',
@@ -189,7 +190,13 @@ export default function Employees() {
               </div>
               <div className="col-span-2"><Label>Address</Label><Input value={form.address} onChange={e => set('address', e.target.value)} /></div>
               <div><Label>City</Label><Input value={form.city} onChange={e => set('city', e.target.value)} /></div>
-              <div><Label>State</Label><Input value={form.state} onChange={e => set('state', e.target.value)} /></div>
+              <div>
+                <Label>State</Label>
+                <Select value={form.state} onValueChange={v => set('state', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                  <SelectContent>{NIGERIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>Country</Label><Input value={form.country} onChange={e => set('country', e.target.value)} /></div>
               <div className="col-span-2 border-t pt-4"><h4 className="font-semibold text-sm">Bank Details</h4></div>
               <div><Label>Bank Name</Label><Input value={form.bank_name} onChange={e => set('bank_name', e.target.value)} /></div>
@@ -200,7 +207,13 @@ export default function Employees() {
               <div className="col-span-2 border-t pt-4"><h4 className="font-semibold text-sm">Next of Kin</h4></div>
               <div><Label>Name</Label><Input value={form.next_of_kin_name} onChange={e => set('next_of_kin_name', e.target.value)} /></div>
               <div><Label>Phone</Label><Input value={form.next_of_kin_phone} onChange={e => set('next_of_kin_phone', e.target.value)} /></div>
-              <div><Label>Relationship</Label><Input value={form.next_of_kin_relationship} onChange={e => set('next_of_kin_relationship', e.target.value)} /></div>
+              <div>
+                <Label>Relationship</Label>
+                <Select value={form.next_of_kin_relationship} onValueChange={v => set('next_of_kin_relationship', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{KIN_RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
