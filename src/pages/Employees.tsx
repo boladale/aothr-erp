@@ -207,7 +207,13 @@ export default function Employees() {
               <div className="col-span-2 border-t pt-4"><h4 className="font-semibold text-sm">Next of Kin</h4></div>
               <div><Label>Name</Label><Input value={form.next_of_kin_name} onChange={e => set('next_of_kin_name', e.target.value)} /></div>
               <div><Label>Phone</Label><Input value={form.next_of_kin_phone} onChange={e => set('next_of_kin_phone', e.target.value)} /></div>
-              <div><Label>Relationship</Label><Input value={form.next_of_kin_relationship} onChange={e => set('next_of_kin_relationship', e.target.value)} /></div>
+              <div>
+                <Label>Relationship</Label>
+                <Select value={form.next_of_kin_relationship} onValueChange={v => set('next_of_kin_relationship', v)}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{KIN_RELATIONSHIPS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
