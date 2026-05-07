@@ -33,6 +33,7 @@ export default function PurchaseOrderDetail() {
   const { user, hasRole } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canSend = canApprove || hasRole('procurement_officer');
+  const canClose = canApprove || hasRole('warehouse_manager') || hasRole('warehouse_officer');
   const [po, setPO] = useState<POWithDetails | null>(null);
   const [lines, setLines] = useState<POLineWithItem[]>([]);
   const [loading, setLoading] = useState(true);
