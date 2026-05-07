@@ -54,7 +54,7 @@ export default function PurchaseOrderDetail() {
   const fetchPO = async () => {
     try {
       const [poRes, linesRes] = await Promise.all([
-        supabase.from('purchase_orders').select('*, vendors(*), locations(*), requisitions(req_number)').eq('id', id).single(),
+        supabase.from('purchase_orders').select('*, vendors(*), locations(*)').eq('id', id).single(),
         supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', id).order('line_number'),
       ]);
 
