@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Save } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
 
 export default function SelfServiceProfile() {
   const { user } = useAuth();
