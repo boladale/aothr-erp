@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { email, full_name, role } = await req.json();
+    const { email, full_name, role, custom_role_id } = await req.json();
     console.log("Creating user:", email);
 
     if (!email) {
@@ -103,6 +103,12 @@ Deno.serve(async (req) => {
       await adminClient.from("user_roles").insert({
         user_id: inviteData.user.id,
         role,
+      });
+    }
+    if (custom_role_id) {
+      await adminClient.from("user_custom_roles").insert({
+        user_id: inviteData.user.id,
+        role_id: custom_role_id,
       });
     }
 
