@@ -68,6 +68,7 @@ interface AppRolePermission {
 
 interface UserWithRoles extends Profile {
   user_roles: { role: AppRole }[];
+  custom_roles: { id: string; role_id: string; name: string }[];
 }
 
 // Default system programs/modules
@@ -123,7 +124,7 @@ export default function UserManagement() {
   // User role assignment
   const [userRoleDialogOpen, setUserRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
-  const [newAppRole, setNewAppRole] = useState<AppRole>('viewer');
+  const [roleSelection, setRoleSelection] = useState<string>('viewer');
   const [resendingEmail, setResendingEmail] = useState<string | null>(null);
 
   const handleResendInvite = async (email: string) => {
@@ -148,24 +149,30 @@ export default function UserManagement() {
 
   const fetchData = async () => {
     try {
-      const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes] = await Promise.all([
+      const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes, ucrRes] = await Promise.all([
         supabase.from('roles').select('*').order('name'),
         supabase.from('permissions').select('*').order('code'),
         supabase.from('role_permissions').select('*'),
         supabase.from('app_role_permissions').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('user_roles').select('*'),
+        (supabase.from('user_custom_roles' as any).select('id, user_id, role_id') as any),
       ]);
 
-      setRoles((rolesRes.data || []) as Role[]);
+      const rolesData = (rolesRes.data || []) as Role[];
+      setRoles(rolesData);
       setPermissions((permsRes.data || []) as Permission[]);
       setRolePermissions((rpRes.data || []) as RolePermission[]);
       setAppRolePermissions((arpRes.data || []) as AppRolePermission[]);
       const profiles = (profilesRes.data || []) as Profile[];
       const uRoles = userRolesRes.data || [];
+      const uCustom = (ucrRes.data || []) as { id: string; user_id: string; role_id: string }[];
       const usersWithRoles: UserWithRoles[] = profiles.map(p => ({
         ...p,
         user_roles: uRoles.filter(r => r.user_id === p.user_id).map(r => ({ role: r.role as AppRole })),
+        custom_roles: uCustom
+          .filter(c => c.user_id === p.user_id)
+          .map(c => ({ id: c.id, role_id: c.role_id, name: rolesData.find(r => r.id === c.role_id)?.name || 'Unknown' })),
       }));
       setUsers(usersWithRoles);
     } catch (error) {
@@ -330,26 +337,53 @@ export default function UserManagement() {
     );
   };
 
-  // User role management
+  // User role management. roleSelection format: "app:<role>" or "custom:<role_id>"
   const handleAddUserRole = async () => {
-    if (!selectedUser || !newAppRole) return;
+    if (!selectedUser || !roleSelection) return;
     try {
-      const { error } = await supabase.from('user_roles').insert({
-        user_id: selectedUser.user_id,
-        role: newAppRole as any,
-      } as any);
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('User already has this role');
-          return;
+      if (roleSelection.startsWith('custom:')) {
+        const roleId = roleSelection.slice(7);
+        const { error } = await (supabase.from('user_custom_roles' as any).insert({
+          user_id: selectedUser.user_id,
+          role_id: roleId,
+        } as any) as any);
+        if (error) {
+          if (error.code === '23505') {
+            toast.error('User already has this custom role');
+            return;
+          }
+          throw error;
         }
-        throw error;
+      } else {
+        const appRole = roleSelection.startsWith('app:') ? roleSelection.slice(4) : roleSelection;
+        const { error } = await supabase.from('user_roles').insert({
+          user_id: selectedUser.user_id,
+          role: appRole as any,
+        } as any);
+        if (error) {
+          if (error.code === '23505') {
+            toast.error('User already has this role');
+            return;
+          }
+          throw error;
+        }
       }
       toast.success('Role assigned');
       setUserRoleDialogOpen(false);
       fetchData();
-    } catch (error) {
-      toast.error('Failed to assign role');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to assign role');
+    }
+  };
+
+  const handleRemoveCustomRole = async (assignmentId: string) => {
+    try {
+      const { error } = await (supabase.from('user_custom_roles' as any).delete().eq('id', assignmentId) as any);
+      if (error) throw error;
+      toast.success('Custom role removed');
+      fetchData();
+    } catch {
+      toast.error('Failed to remove custom role');
     }
   };
 
@@ -484,6 +518,19 @@ export default function UserManagement() {
                 <button
                   className="ml-1 hover:text-destructive"
                   onClick={(e) => { e.stopPropagation(); handleRemoveUserRole(u.user_id, r.role); }}
+                >
+                  ×
+                </button>
+              )}
+            </Badge>
+          ))}
+          {u.custom_roles.map(c => (
+            <Badge key={c.id} variant="outline" className="border-primary">
+              {c.name}
+              {isAdmin && (
+                <button
+                  className="ml-1 hover:text-destructive"
+                  onClick={(e) => { e.stopPropagation(); handleRemoveCustomRole(c.id); }}
                 >
                   ×
                 </button>
@@ -787,21 +834,30 @@ export default function UserManagement() {
               <DialogTitle>Add Role to {selectedUser?.full_name || selectedUser?.email}</DialogTitle>
             </DialogHeader>
             <div className="py-4">
-              <Label>Select System Role</Label>
-              <Select value={newAppRole} onValueChange={v => setNewAppRole(v as AppRole)}>
+              <Label>Select Role</Label>
+              <Select value={roleSelection} onValueChange={v => setRoleSelection(v)}>
                 <SelectTrigger className="mt-2">
-                  <SelectValue />
+                  <SelectValue placeholder="Choose a role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="procurement_manager">Procurement Manager (Approver)</SelectItem>
-                  <SelectItem value="procurement_officer">Procurement Officer (Initiator)</SelectItem>
-                  <SelectItem value="warehouse_manager">Warehouse Manager (Approver)</SelectItem>
-                  <SelectItem value="warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
-                  <SelectItem value="accounts_payable">Accounts Payable (Approver)</SelectItem>
-                  <SelectItem value="ap_clerk">AP Clerk (Initiator)</SelectItem>
-                  <SelectItem value="requisitioner">Requisitioner</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">System Roles</div>
+                  <SelectItem value="app:admin">Admin</SelectItem>
+                  <SelectItem value="app:procurement_manager">Procurement Manager (Approver)</SelectItem>
+                  <SelectItem value="app:procurement_officer">Procurement Officer (Initiator)</SelectItem>
+                  <SelectItem value="app:warehouse_manager">Warehouse Manager (Approver)</SelectItem>
+                  <SelectItem value="app:warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
+                  <SelectItem value="app:accounts_payable">Accounts Payable (Approver)</SelectItem>
+                  <SelectItem value="app:ap_clerk">AP Clerk (Initiator)</SelectItem>
+                  <SelectItem value="app:requisitioner">Requisitioner</SelectItem>
+                  <SelectItem value="app:viewer">Viewer</SelectItem>
+                  {roles.length > 0 && (
+                    <>
+                      <div className="px-2 py-1 mt-2 text-xs font-semibold text-muted-foreground">Custom Roles</div>
+                      {roles.map(r => (
+                        <SelectItem key={r.id} value={`custom:${r.id}`}>{r.name}</SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
