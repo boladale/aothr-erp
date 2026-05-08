@@ -1,13 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
-import type { AppRole } from '@/lib/supabase';
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -15,11 +14,33 @@ interface CreateUserDialogProps {
   onCreated: () => void;
 }
 
+const SYSTEM_ROLES = [
+  'admin',
+  'procurement_manager',
+  'procurement_officer',
+  'warehouse_manager',
+  'warehouse_officer',
+  'accounts_payable',
+  'ap_clerk',
+  'requisitioner',
+  'viewer',
+];
+
 export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDialogProps) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<AppRole | ''>('');
+  // Format: "app:<role>" or "custom:<roleId>"
+  const [roleSelection, setRoleSelection] = useState<string>('none');
+  const [customRoles, setCustomRoles] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data } = await supabase.from('roles').select('id, name').order('name');
+      setCustomRoles((data || []) as any);
+    })();
+  }, [open]);
 
   const handleCreate = async () => {
     if (!email) {
@@ -29,17 +50,22 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
 
     setLoading(true);
     try {
+      const isCustom = roleSelection.startsWith('custom:');
+      const isApp = roleSelection.startsWith('app:');
+      const appRole = isApp ? roleSelection.slice(4) : undefined;
+      const customRoleId = isCustom ? roleSelection.slice(7) : undefined;
+
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
-        body: { email, full_name: fullName, role: role || undefined },
+        body: { email, full_name: fullName, role: appRole, custom_role_id: customRoleId },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`Invite sent to ${email}. They will receive an email to set their password.`);
+      toast.success(`Invite sent to ${email}.`);
       setEmail('');
       setFullName('');
-      setRole('');
+      setRoleSelection('none');
       onOpenChange(false);
       onCreated();
     } catch (err: any) {
@@ -65,24 +91,32 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
             <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" />
           </div>
           <p className="text-sm text-muted-foreground">
-            An invite email will be sent to the user with a link to set their password.
+            An invite email will be sent with a link to set their password.
           </p>
           <div className="space-y-2">
             <Label>Initial Role (optional)</Label>
-            <Select value={role} onValueChange={v => setRole(v as AppRole)}>
+            <Select value={roleSelection} onValueChange={setRoleSelection}>
               <SelectTrigger>
                 <SelectValue placeholder="No role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="procurement_manager">Procurement Manager</SelectItem>
-                <SelectItem value="procurement_officer">Procurement Officer</SelectItem>
-                <SelectItem value="warehouse_manager">Warehouse Manager</SelectItem>
-                <SelectItem value="warehouse_officer">Warehouse Officer</SelectItem>
-                <SelectItem value="accounts_payable">Accounts Payable</SelectItem>
-                <SelectItem value="ap_clerk">AP Clerk</SelectItem>
-                <SelectItem value="requisitioner">Requisitioner</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
+                <SelectItem value="none">No role</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>System Roles</SelectLabel>
+                  {SYSTEM_ROLES.map(r => (
+                    <SelectItem key={r} value={`app:${r}`}>
+                      {r.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {customRoles.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Custom Roles</SelectLabel>
+                    {customRoles.map(r => (
+                      <SelectItem key={r.id} value={`custom:${r.id}`}>{r.name}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
               </SelectContent>
             </Select>
           </div>
