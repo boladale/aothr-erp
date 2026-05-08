@@ -149,24 +149,30 @@ export default function UserManagement() {
 
   const fetchData = async () => {
     try {
-      const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes] = await Promise.all([
+      const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes, ucrRes] = await Promise.all([
         supabase.from('roles').select('*').order('name'),
         supabase.from('permissions').select('*').order('code'),
         supabase.from('role_permissions').select('*'),
         supabase.from('app_role_permissions').select('*'),
         supabase.from('profiles').select('*'),
         supabase.from('user_roles').select('*'),
+        (supabase.from('user_custom_roles' as any).select('id, user_id, role_id') as any),
       ]);
 
-      setRoles((rolesRes.data || []) as Role[]);
+      const rolesData = (rolesRes.data || []) as Role[];
+      setRoles(rolesData);
       setPermissions((permsRes.data || []) as Permission[]);
       setRolePermissions((rpRes.data || []) as RolePermission[]);
       setAppRolePermissions((arpRes.data || []) as AppRolePermission[]);
       const profiles = (profilesRes.data || []) as Profile[];
       const uRoles = userRolesRes.data || [];
+      const uCustom = (ucrRes.data || []) as { id: string; user_id: string; role_id: string }[];
       const usersWithRoles: UserWithRoles[] = profiles.map(p => ({
         ...p,
         user_roles: uRoles.filter(r => r.user_id === p.user_id).map(r => ({ role: r.role as AppRole })),
+        custom_roles: uCustom
+          .filter(c => c.user_id === p.user_id)
+          .map(c => ({ id: c.id, role_id: c.role_id, name: rolesData.find(r => r.id === c.role_id)?.name || 'Unknown' })),
       }));
       setUsers(usersWithRoles);
     } catch (error) {
