@@ -337,26 +337,53 @@ export default function UserManagement() {
     );
   };
 
-  // User role management
+  // User role management. roleSelection format: "app:<role>" or "custom:<role_id>"
   const handleAddUserRole = async () => {
-    if (!selectedUser || !newAppRole) return;
+    if (!selectedUser || !roleSelection) return;
     try {
-      const { error } = await supabase.from('user_roles').insert({
-        user_id: selectedUser.user_id,
-        role: newAppRole as any,
-      } as any);
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('User already has this role');
-          return;
+      if (roleSelection.startsWith('custom:')) {
+        const roleId = roleSelection.slice(7);
+        const { error } = await (supabase.from('user_custom_roles' as any).insert({
+          user_id: selectedUser.user_id,
+          role_id: roleId,
+        } as any) as any);
+        if (error) {
+          if (error.code === '23505') {
+            toast.error('User already has this custom role');
+            return;
+          }
+          throw error;
         }
-        throw error;
+      } else {
+        const appRole = roleSelection.startsWith('app:') ? roleSelection.slice(4) : roleSelection;
+        const { error } = await supabase.from('user_roles').insert({
+          user_id: selectedUser.user_id,
+          role: appRole as any,
+        } as any);
+        if (error) {
+          if (error.code === '23505') {
+            toast.error('User already has this role');
+            return;
+          }
+          throw error;
+        }
       }
       toast.success('Role assigned');
       setUserRoleDialogOpen(false);
       fetchData();
-    } catch (error) {
-      toast.error('Failed to assign role');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to assign role');
+    }
+  };
+
+  const handleRemoveCustomRole = async (assignmentId: string) => {
+    try {
+      const { error } = await (supabase.from('user_custom_roles' as any).delete().eq('id', assignmentId) as any);
+      if (error) throw error;
+      toast.success('Custom role removed');
+      fetchData();
+    } catch {
+      toast.error('Failed to remove custom role');
     }
   };
 
