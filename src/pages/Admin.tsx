@@ -46,7 +46,8 @@ export default function Admin() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
-  const [newRole, setNewRole] = useState<AppRole>('viewer');
+  const [newRole, setNewRole] = useState<string>('app:viewer');
+  const [customRoles, setCustomRoles] = useState<{ id: string; name: string }[]>([]);
   const [userToDelete, setUserToDelete] = useState<UserWithRoles | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
