@@ -821,21 +821,30 @@ export default function UserManagement() {
               <DialogTitle>Add Role to {selectedUser?.full_name || selectedUser?.email}</DialogTitle>
             </DialogHeader>
             <div className="py-4">
-              <Label>Select System Role</Label>
-              <Select value={newAppRole} onValueChange={v => setNewAppRole(v as AppRole)}>
+              <Label>Select Role</Label>
+              <Select value={roleSelection} onValueChange={v => setRoleSelection(v)}>
                 <SelectTrigger className="mt-2">
-                  <SelectValue />
+                  <SelectValue placeholder="Choose a role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="procurement_manager">Procurement Manager (Approver)</SelectItem>
-                  <SelectItem value="procurement_officer">Procurement Officer (Initiator)</SelectItem>
-                  <SelectItem value="warehouse_manager">Warehouse Manager (Approver)</SelectItem>
-                  <SelectItem value="warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
-                  <SelectItem value="accounts_payable">Accounts Payable (Approver)</SelectItem>
-                  <SelectItem value="ap_clerk">AP Clerk (Initiator)</SelectItem>
-                  <SelectItem value="requisitioner">Requisitioner</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">System Roles</div>
+                  <SelectItem value="app:admin">Admin</SelectItem>
+                  <SelectItem value="app:procurement_manager">Procurement Manager (Approver)</SelectItem>
+                  <SelectItem value="app:procurement_officer">Procurement Officer (Initiator)</SelectItem>
+                  <SelectItem value="app:warehouse_manager">Warehouse Manager (Approver)</SelectItem>
+                  <SelectItem value="app:warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
+                  <SelectItem value="app:accounts_payable">Accounts Payable (Approver)</SelectItem>
+                  <SelectItem value="app:ap_clerk">AP Clerk (Initiator)</SelectItem>
+                  <SelectItem value="app:requisitioner">Requisitioner</SelectItem>
+                  <SelectItem value="app:viewer">Viewer</SelectItem>
+                  {roles.length > 0 && (
+                    <>
+                      <div className="px-2 py-1 mt-2 text-xs font-semibold text-muted-foreground">Custom Roles</div>
+                      {roles.map(r => (
+                        <SelectItem key={r.id} value={`custom:${r.id}`}>{r.name}</SelectItem>
+                      ))}
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
