@@ -124,7 +124,7 @@ export default function UserManagement() {
   // User role assignment
   const [userRoleDialogOpen, setUserRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
-  const [newAppRole, setNewAppRole] = useState<AppRole>('viewer');
+  const [roleSelection, setRoleSelection] = useState<string>('viewer');
   const [resendingEmail, setResendingEmail] = useState<string | null>(null);
 
   const handleResendInvite = async (email: string) => {
