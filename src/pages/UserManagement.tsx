@@ -524,6 +524,19 @@ export default function UserManagement() {
               )}
             </Badge>
           ))}
+          {u.custom_roles.map(c => (
+            <Badge key={c.id} variant="outline" className="border-primary">
+              {c.name}
+              {isAdmin && (
+                <button
+                  className="ml-1 hover:text-destructive"
+                  onClick={(e) => { e.stopPropagation(); handleRemoveCustomRole(c.id); }}
+                >
+                  ×
+                </button>
+              )}
+            </Badge>
+          ))}
         </div>
       ),
     },
