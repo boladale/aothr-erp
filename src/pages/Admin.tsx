@@ -410,20 +410,31 @@ export default function Admin() {
             </DialogHeader>
             <div className="py-4">
               <Label>Select Role</Label>
-              <Select value={newRole} onValueChange={v => setNewRole(v as AppRole)}>
+              <Select value={newRole} onValueChange={v => setNewRole(v)}>
                 <SelectTrigger className="mt-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="procurement_manager">Procurement Manager (Approver)</SelectItem>
-                  <SelectItem value="procurement_officer">Procurement Officer (Initiator)</SelectItem>
-                  <SelectItem value="warehouse_manager">Warehouse Manager (Approver)</SelectItem>
-                  <SelectItem value="warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
-                  <SelectItem value="accounts_payable">Accounts Payable (Approver)</SelectItem>
-                  <SelectItem value="ap_clerk">AP Clerk (Initiator)</SelectItem>
-                  <SelectItem value="requisitioner">Requisitioner</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectGroup>
+                    <SelectLabel>System Roles</SelectLabel>
+                    <SelectItem value="app:admin">Admin</SelectItem>
+                    <SelectItem value="app:procurement_manager">Procurement Manager (Approver)</SelectItem>
+                    <SelectItem value="app:procurement_officer">Procurement Officer (Initiator)</SelectItem>
+                    <SelectItem value="app:warehouse_manager">Warehouse Manager (Approver)</SelectItem>
+                    <SelectItem value="app:warehouse_officer">Warehouse Officer (Initiator)</SelectItem>
+                    <SelectItem value="app:accounts_payable">Accounts Payable (Approver)</SelectItem>
+                    <SelectItem value="app:ap_clerk">AP Clerk (Initiator)</SelectItem>
+                    <SelectItem value="app:requisitioner">Requisitioner</SelectItem>
+                    <SelectItem value="app:viewer">Viewer</SelectItem>
+                  </SelectGroup>
+                  {customRoles.length > 0 && (
+                    <SelectGroup>
+                      <SelectLabel>Custom Roles</SelectLabel>
+                      {customRoles.map(r => (
+                        <SelectItem key={r.id} value={`custom:${r.id}`}>{r.name}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )}
                 </SelectContent>
               </Select>
             </div>
