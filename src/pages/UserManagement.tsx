@@ -68,6 +68,7 @@ interface AppRolePermission {
 
 interface UserWithRoles extends Profile {
   user_roles: { role: AppRole }[];
+  custom_roles: { id: string; role_id: string; name: string }[];
 }
 
 // Default system programs/modules
