@@ -53,6 +53,10 @@ export default function Admin() {
 
   useEffect(() => {
     fetchData();
+    (async () => {
+      const { data } = await supabase.from('roles').select('id, name').order('name');
+      setCustomRoles((data || []) as any);
+    })();
   }, []);
 
   const fetchData = async () => {
