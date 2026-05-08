@@ -88,10 +88,22 @@ export default function Admin() {
     if (!selectedUser || !newRole) return;
 
     try {
-      const { error } = await supabase.from('user_roles').insert({
-        user_id: selectedUser.user_id,
-        role: newRole as any,
-      } as any);
+      const isCustom = newRole.startsWith('custom:');
+      const isApp = newRole.startsWith('app:');
+      let error: any = null;
+      if (isCustom) {
+        const roleId = newRole.slice(7);
+        ({ error } = await (supabase.from('user_custom_roles' as any).insert({
+          user_id: selectedUser.user_id,
+          role_id: roleId,
+        } as any) as any));
+      } else if (isApp) {
+        const appRole = newRole.slice(4);
+        ({ error } = await supabase.from('user_roles').insert({
+          user_id: selectedUser.user_id,
+          role: appRole as any,
+        } as any));
+      }
 
       if (error) {
         if (error.code === '23505') {
