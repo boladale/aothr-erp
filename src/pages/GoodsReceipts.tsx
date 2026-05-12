@@ -129,10 +129,11 @@ export default function GoodsReceipts() {
     if (postingId) return;
     setPostingId(grn.id);
     try {
-      const { error } = await supabase.from('goods_receipts').update({
-        status: 'posted', posted_at: new Date().toISOString(), posted_by: user?.id,
-      }).eq('id', grn.id);
+      const { data, error } = await supabase.functions.invoke('secure-action', {
+        body: { action: 'grn_post', payload: { id: grn.id } },
+      });
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       toast.success('GRN posted and inventory updated');
       fetchData();
     } catch (error: unknown) {
