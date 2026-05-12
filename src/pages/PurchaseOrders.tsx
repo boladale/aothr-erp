@@ -185,14 +185,14 @@ export default function PurchaseOrders() {
 
   const handleApprove = async (po: POWithDetails) => {
     try {
-      const { error: poError } = await supabase.from('purchase_orders').update({
-        status: 'approved' as POStatus, approved_by: user?.id, approved_at: new Date().toISOString(),
-      }).eq('id', po.id);
-      if (poError) throw poError;
-      await supabase.from('po_approvals').insert({ po_id: po.id, approved_by: user?.id, approved_at: new Date().toISOString() });
+      const { data, error } = await supabase.functions.invoke('secure-action', {
+        body: { action: 'po_approve', payload: { id: po.id } },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
       toast.success('PO approved');
       fetchData();
-    } catch { toast.error('Failed to approve'); }
+    } catch (e: any) { toast.error(e?.message || 'Failed to approve'); }
   };
 
   const handleRejectPO = async (po: POWithDetails) => {
