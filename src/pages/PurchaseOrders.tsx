@@ -296,7 +296,8 @@ export default function PurchaseOrders() {
                 if (!ids.length) { toast.error('No pending POs selected'); return; }
                 if (!window.confirm(`Approve ${ids.length} POs?`)) return;
                 setBulkProcessing(true);
-                const { error } = await supabase.from('purchase_orders').update({ status: 'approved' as POStatus, approved_by: user?.id, approved_at: new Date().toISOString() }).in('id', ids);
+                const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
+                const errMsg = error?.message || (data as any)?.error;
                 if (error) toast.error(error.message); else { toast.success(`${ids.length} POs approved`); setSelectedIds([]); fetchData(); }
                 setBulkProcessing(false);
               }, disabled: bulkProcessing, variant: 'default' },
