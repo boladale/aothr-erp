@@ -1,108 +1,118 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { OrgCurrencyProvider } from "./hooks/useOrgCurrency";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Vendors from "./pages/Vendors";
-import Items from "./pages/Items";
-import Locations from "./pages/Locations";
-import Inventory from "./pages/Inventory";
-import PurchaseOrders from "./pages/PurchaseOrders";
-import PurchaseOrderDetail from "./pages/PurchaseOrderDetail";
-import GoodsReceipts from "./pages/GoodsReceipts";
-import Invoices from "./pages/Invoices";
-import InvoiceInbox from "./pages/InvoiceInbox";
-import MatchExceptions from "./pages/MatchExceptions";
-import POClosureReport from "./pages/POClosureReport";
-import Notifications from "./pages/Notifications";
-import Admin from "./pages/Admin";
-import UserManagement from "./pages/UserManagement";
-import ApprovalRules from "./pages/ApprovalRules";
-import Requisitions from "./pages/Requisitions";
-import RequisitionDetail from "./pages/RequisitionDetail";
-import RFPs from "./pages/RFPs";
-import RFPDetail from "./pages/RFPDetail";
-import VendorPerformance from "./pages/VendorPerformance";
-import ChartOfAccounts from "./pages/ChartOfAccounts";
-import JournalEntries from "./pages/JournalEntries";
-import FinancialReports from "./pages/FinancialReports";
-import FiscalPeriods from "./pages/FiscalPeriods";
-import APPayments from "./pages/APPayments";
-import APAging from "./pages/APAging";
-import Customers from "./pages/Customers";
-import ARInvoices from "./pages/ARInvoices";
-import ARReceipts from "./pages/ARReceipts";
-import ARCreditNotes from "./pages/ARCreditNotes";
-import ARAging from "./pages/ARAging";
-import BankAccounts from "./pages/BankAccounts";
-import BankReconciliation from "./pages/BankReconciliation";
-import FundTransfers from "./pages/FundTransfers";
-import CashFlowForecast from "./pages/CashFlowForecast";
-import InventoryValuation from "./pages/InventoryValuation";
-import InventoryIssues from "./pages/InventoryIssues";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import ProjectProfitability from "./pages/ProjectProfitability";
-import ProcurementReports from "./pages/ProcurementReports";
-import WarehouseReports from "./pages/WarehouseReports";
-import FinanceAPReports from "./pages/FinanceAPReports";
-import FinanceARReports from "./pages/FinanceARReports";
-import CashReports from "./pages/CashReports";
-import ResetPassword from "./pages/ResetPassword";
-import TaxConfiguration from "./pages/TaxConfiguration";
-import SalesQuotations from "./pages/SalesQuotations";
-import SalesOrders from "./pages/SalesOrders";
-import DeliveryNotes from "./pages/DeliveryNotes";
-import UserGuide from "./pages/UserGuide";
-import UserProfile from "./pages/UserProfile";
-import VendorDashboard from "./pages/VendorDashboard";
-import ChairmanVendorDashboard from "./pages/ChairmanVendorDashboard";
-import ChairmanVendorDetail from "./pages/ChairmanVendorDetail";
-import ChairmanList from "./pages/ChairmanList";
-import ProcurementDashboardPage from "./pages/ProcurementDashboardPage";
-import WarehouseDashboardPage from "./pages/WarehouseDashboardPage";
-import FinanceDashboardPage from "./pages/FinanceDashboardPage";
-import SalesDashboardPage from "./pages/SalesDashboardPage";
-import CashDashboardPage from "./pages/CashDashboardPage";
-import OrganizationSetup from "./pages/OrganizationSetup";
-import NotFound from "./pages/NotFound";
-import AuditReport from "./pages/AuditReport";
-import AccountStatement from "./pages/AccountStatement";
-import Workflows from "./pages/Workflows";
-import RecurringEntries from "./pages/RecurringEntries";
-import InventoryTransfers from "./pages/InventoryTransfers";
-import VendorPaymentReport from "./pages/VendorPaymentReport";
-import RequisitionToPaymentReport from "./pages/RequisitionToPaymentReport";
-import ProcurementAudit from "./pages/ProcurementAudit";
-import Departments from "./pages/Departments";
-import JobRoles from "./pages/JobRoles";
-import Services from "./pages/Services";
-import Employees from "./pages/Employees";
-import EmployeeDetail from "./pages/EmployeeDetail";
-import LeaveManagement from "./pages/LeaveManagement";
-import Attendance from "./pages/Attendance";
-import SalaryComponents from "./pages/SalaryComponents";
-import PayGrades from "./pages/PayGrades";
-import PayrollRuns from "./pages/PayrollRuns";
-import PayrollRunDetail from "./pages/PayrollRunDetail";
-import Payslips from "./pages/Payslips";
-import SelfServiceDashboard from "./pages/SelfServiceDashboard";
-import SelfServiceLeave from "./pages/SelfServiceLeave";
-import SelfServiceExpenses from "./pages/SelfServiceExpenses";
-import SelfServicePayslips from "./pages/SelfServicePayslips";
-import SelfServiceProfile from "./pages/SelfServiceProfile";
-import VendorPortal from "./pages/VendorPortal";
-import VendorRegistrations from "./pages/VendorRegistrations";
-import StaffPortalLogin from "./pages/StaffPortalLogin";
-import VendorPortalLogin from "./pages/VendorPortalLogin";
 import { StaffPortalGuard } from "./components/guards/StaffPortalGuard";
 import { VendorPortalGuard } from "./components/guards/VendorPortalGuard";
 
+// Lazy-loaded pages — each becomes its own chunk loaded on demand
+const Auth = lazy(() => import("./pages/Auth"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Vendors = lazy(() => import("./pages/Vendors"));
+const Items = lazy(() => import("./pages/Items"));
+const Locations = lazy(() => import("./pages/Locations"));
+const Inventory = lazy(() => import("./pages/Inventory"));
+const PurchaseOrders = lazy(() => import("./pages/PurchaseOrders"));
+const PurchaseOrderDetail = lazy(() => import("./pages/PurchaseOrderDetail"));
+const GoodsReceipts = lazy(() => import("./pages/GoodsReceipts"));
+const Invoices = lazy(() => import("./pages/Invoices"));
+const InvoiceInbox = lazy(() => import("./pages/InvoiceInbox"));
+const MatchExceptions = lazy(() => import("./pages/MatchExceptions"));
+const POClosureReport = lazy(() => import("./pages/POClosureReport"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Admin = lazy(() => import("./pages/Admin"));
+const UserManagement = lazy(() => import("./pages/UserManagement"));
+const ApprovalRules = lazy(() => import("./pages/ApprovalRules"));
+const Requisitions = lazy(() => import("./pages/Requisitions"));
+const RequisitionDetail = lazy(() => import("./pages/RequisitionDetail"));
+const RFPs = lazy(() => import("./pages/RFPs"));
+const RFPDetail = lazy(() => import("./pages/RFPDetail"));
+const VendorPerformance = lazy(() => import("./pages/VendorPerformance"));
+const ChartOfAccounts = lazy(() => import("./pages/ChartOfAccounts"));
+const JournalEntries = lazy(() => import("./pages/JournalEntries"));
+const FinancialReports = lazy(() => import("./pages/FinancialReports"));
+const FiscalPeriods = lazy(() => import("./pages/FiscalPeriods"));
+const APPayments = lazy(() => import("./pages/APPayments"));
+const APAging = lazy(() => import("./pages/APAging"));
+const Customers = lazy(() => import("./pages/Customers"));
+const ARInvoices = lazy(() => import("./pages/ARInvoices"));
+const ARReceipts = lazy(() => import("./pages/ARReceipts"));
+const ARCreditNotes = lazy(() => import("./pages/ARCreditNotes"));
+const ARAging = lazy(() => import("./pages/ARAging"));
+const BankAccounts = lazy(() => import("./pages/BankAccounts"));
+const BankReconciliation = lazy(() => import("./pages/BankReconciliation"));
+const FundTransfers = lazy(() => import("./pages/FundTransfers"));
+const CashFlowForecast = lazy(() => import("./pages/CashFlowForecast"));
+const InventoryValuation = lazy(() => import("./pages/InventoryValuation"));
+const InventoryIssues = lazy(() => import("./pages/InventoryIssues"));
+const Projects = lazy(() => import("./pages/Projects"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const ProjectProfitability = lazy(() => import("./pages/ProjectProfitability"));
+const ProcurementReports = lazy(() => import("./pages/ProcurementReports"));
+const WarehouseReports = lazy(() => import("./pages/WarehouseReports"));
+const FinanceAPReports = lazy(() => import("./pages/FinanceAPReports"));
+const FinanceARReports = lazy(() => import("./pages/FinanceARReports"));
+const CashReports = lazy(() => import("./pages/CashReports"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const TaxConfiguration = lazy(() => import("./pages/TaxConfiguration"));
+const SalesQuotations = lazy(() => import("./pages/SalesQuotations"));
+const SalesOrders = lazy(() => import("./pages/SalesOrders"));
+const DeliveryNotes = lazy(() => import("./pages/DeliveryNotes"));
+const UserGuide = lazy(() => import("./pages/UserGuide"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const VendorDashboard = lazy(() => import("./pages/VendorDashboard"));
+const ChairmanVendorDashboard = lazy(() => import("./pages/ChairmanVendorDashboard"));
+const ChairmanVendorDetail = lazy(() => import("./pages/ChairmanVendorDetail"));
+const ChairmanList = lazy(() => import("./pages/ChairmanList"));
+const ProcurementDashboardPage = lazy(() => import("./pages/ProcurementDashboardPage"));
+const WarehouseDashboardPage = lazy(() => import("./pages/WarehouseDashboardPage"));
+const FinanceDashboardPage = lazy(() => import("./pages/FinanceDashboardPage"));
+const SalesDashboardPage = lazy(() => import("./pages/SalesDashboardPage"));
+const CashDashboardPage = lazy(() => import("./pages/CashDashboardPage"));
+const OrganizationSetup = lazy(() => import("./pages/OrganizationSetup"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AuditReport = lazy(() => import("./pages/AuditReport"));
+const AccountStatement = lazy(() => import("./pages/AccountStatement"));
+const Workflows = lazy(() => import("./pages/Workflows"));
+const RecurringEntries = lazy(() => import("./pages/RecurringEntries"));
+const InventoryTransfers = lazy(() => import("./pages/InventoryTransfers"));
+const VendorPaymentReport = lazy(() => import("./pages/VendorPaymentReport"));
+const RequisitionToPaymentReport = lazy(() => import("./pages/RequisitionToPaymentReport"));
+const ProcurementAudit = lazy(() => import("./pages/ProcurementAudit"));
+const Departments = lazy(() => import("./pages/Departments"));
+const JobRoles = lazy(() => import("./pages/JobRoles"));
+const Services = lazy(() => import("./pages/Services"));
+const Employees = lazy(() => import("./pages/Employees"));
+const EmployeeDetail = lazy(() => import("./pages/EmployeeDetail"));
+const LeaveManagement = lazy(() => import("./pages/LeaveManagement"));
+const Attendance = lazy(() => import("./pages/Attendance"));
+const SalaryComponents = lazy(() => import("./pages/SalaryComponents"));
+const PayGrades = lazy(() => import("./pages/PayGrades"));
+const PayrollRuns = lazy(() => import("./pages/PayrollRuns"));
+const PayrollRunDetail = lazy(() => import("./pages/PayrollRunDetail"));
+const Payslips = lazy(() => import("./pages/Payslips"));
+const SelfServiceDashboard = lazy(() => import("./pages/SelfServiceDashboard"));
+const SelfServiceLeave = lazy(() => import("./pages/SelfServiceLeave"));
+const SelfServiceExpenses = lazy(() => import("./pages/SelfServiceExpenses"));
+const SelfServicePayslips = lazy(() => import("./pages/SelfServicePayslips"));
+const SelfServiceProfile = lazy(() => import("./pages/SelfServiceProfile"));
+const VendorPortal = lazy(() => import("./pages/VendorPortal"));
+const VendorRegistrations = lazy(() => import("./pages/VendorRegistrations"));
+const StaffPortalLogin = lazy(() => import("./pages/StaffPortalLogin"));
+const VendorPortalLogin = lazy(() => import("./pages/VendorPortalLogin"));
+
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 function OrgSetupRoute() {
   const { user, loading, organizationId } = useAuth();
@@ -131,8 +141,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!organizationId) {
-    // Self-registered user (no roles) → let them create an org
-    // Admin-created user (has roles but no org) → show pending message
     if (roles.length === 0) {
       return <Navigate to="/org-setup" replace />;
     }
@@ -165,6 +173,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -271,6 +280,7 @@ const App = () => (
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
       </OrgCurrencyProvider>
