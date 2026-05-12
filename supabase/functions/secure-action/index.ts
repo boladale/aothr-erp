@@ -77,15 +77,20 @@ Deno.serve(async (req) => {
     switch (action) {
       case 'po_approve': {
         const ids = 'ids' in payload ? payload.ids : [payload.id]
-        // Only approve POs currently in 'draft' status to prevent state-jump abuse
+        // Only approve POs currently in 'pending_approval' to prevent state-jump abuse
         const { data, error } = await admin
           .from('purchase_orders')
           .update({ status: 'approved', approved_by: userId, approved_at: nowIso })
           .in('id', ids)
-          .eq('status', 'draft')
+          .eq('status', 'pending_approval')
           .select('id')
         if (error) return jsonResponse({ error: error.message }, 400)
-        return jsonResponse({ ok: true, updated: data?.length ?? 0 })
+        if (!data?.length) return jsonResponse({ error: 'No POs in pending_approval status' }, 409)
+        // Record approval log entries
+        await admin.from('po_approvals').insert(
+          data.map((d) => ({ po_id: d.id, approved_by: userId, approved_at: nowIso }))
+        )
+        return jsonResponse({ ok: true, updated: data.length })
       }
       case 'invoice_post': {
         const { data, error } = await admin
