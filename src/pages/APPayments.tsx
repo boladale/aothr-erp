@@ -162,9 +162,12 @@ export default function APPayments() {
 
   const handlePost = async (paymentId: string, paymentNumber: string) => {
     setPosting(true);
-    const { error } = await supabase.from('ap_payments').update({ status: 'posted' }).eq('id', paymentId);
-    if (error) {
-      toast({ title: 'Post failed', description: error.message, variant: 'destructive' });
+    const { data, error } = await supabase.functions.invoke('secure-action', {
+      body: { action: 'payment_post', payload: { id: paymentId } },
+    });
+    const errMsg = error?.message || (data as any)?.error;
+    if (errMsg) {
+      toast({ title: 'Post failed', description: errMsg, variant: 'destructive' });
     } else {
       toast({ title: 'Payment posted', description: `${paymentNumber} posted and GL entry created.` });
       fetchPayments();

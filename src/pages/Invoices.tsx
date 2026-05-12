@@ -153,10 +153,13 @@ export default function Invoices() {
   };
 
   const handlePost = async (invoice: InvoiceWithDetails) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'posted', posted_at: new Date().toISOString(), posted_by: user?.id }).eq('id', invoice.id);
-    if (error) {
-      if (error.message?.includes('unresolved hold')) { toast.error('Invoice has unresolved exceptions'); return; }
-      toast.error(error.message); return;
+    const { data, error } = await supabase.functions.invoke('secure-action', {
+      body: { action: 'invoice_post', payload: { id: invoice.id } },
+    });
+    const errMsg = error?.message || (data as any)?.error;
+    if (errMsg) {
+      if (errMsg.includes('unresolved hold')) { toast.error('Invoice has unresolved exceptions'); return; }
+      toast.error(errMsg); return;
     }
     const { data: updated } = await supabase.from('ap_invoices').select('status').eq('id', invoice.id).single();
     if (updated?.status === 'draft') { toast.error('Invoice failed three-way matching'); fetchData(); return; }

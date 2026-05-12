@@ -91,12 +91,11 @@ export default function PayrollRuns() {
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('payroll_runs' as any).update({
-        status: 'approved',
-        approved_by: user?.id,
-        approved_at: new Date().toISOString(),
-      }).eq('id', id).eq('status', 'draft');
+      const { data, error } = await supabase.functions.invoke('secure-action', {
+        body: { action: 'payroll_approve', payload: { id } },
+      });
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payroll-runs'] });
