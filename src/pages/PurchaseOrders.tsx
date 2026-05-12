@@ -298,7 +298,7 @@ export default function PurchaseOrders() {
                 setBulkProcessing(true);
                 const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
                 const errMsg = error?.message || (data as any)?.error;
-                if (error) toast.error(error.message); else { toast.success(`${ids.length} POs approved`); setSelectedIds([]); fetchData(); }
+                if (errMsg) toast.error(errMsg); else { toast.success(`${(data as any)?.updated ?? ids.length} POs approved`); setSelectedIds([]); fetchData(); }
                 setBulkProcessing(false);
               }, disabled: bulkProcessing, variant: 'default' },
               { label: 'Reject', icon: <XCircle className="h-4 w-4 mr-1" />, onClick: async () => {
