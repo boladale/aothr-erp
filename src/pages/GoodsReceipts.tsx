@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Truck, Pencil } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -27,34 +28,47 @@ interface GRNLine { po_line_id: string; item_id: string; qty_received: number; m
 
 export default function GoodsReceipts() {
   const { user, organizationId } = useAuth();
-  const [receipts, setReceipts] = useState<GRNWithDetails[]>([]);
-  const [openPOs, setOpenPOs] = useState<POWithVendor[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [postingId, setPostingId] = useState<string | null>(null);
   const [editingGRN, setEditingGRN] = useState<GRNWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [form, setForm] = useState({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '', description: '' });
   const [lines, setLines] = useState<GRNLine[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
-  useEffect(() => { if (selectedPO && !editingGRN) fetchPOLines(selectedPO); }, [selectedPO]);
+  const receiptsQ = useQuery({
+    queryKey: ['goods_receipts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('goods_receipts').select('*, purchase_orders(po_number, vendors(name)), locations(*)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as GRNWithDetails[];
+    },
+  });
+  const openPOsQ = useQuery({
+    queryKey: ['purchase_orders', 'open-for-grn'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_orders').select('*, vendors(name)').in('status', ['sent', 'partially_received']).order('po_number');
+      if (error) throw error;
+      return (data || []) as POWithVendor[];
+    },
+  });
+  const locationsQ = useQuery({
+    queryKey: ['locations', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      const [receiptsRes, posRes, locationsRes] = await Promise.all([
-        supabase.from('goods_receipts').select('*, purchase_orders(po_number, vendors(name)), locations(*)').order('created_at', { ascending: false }),
-        supabase.from('purchase_orders').select('*, vendors(name)').in('status', ['sent', 'partially_received']).order('po_number'),
-        supabase.from('locations').select('*').eq('is_active', true).order('name'),
-      ]);
-      setReceipts((receiptsRes.data || []) as GRNWithDetails[]);
-      setOpenPOs((posRes.data || []) as POWithVendor[]);
-      setLocations((locationsRes.data || []) as Location[]);
-    } catch { toast.error('Failed to load data'); } finally { setLoading(false); }
-  };
+  const receipts = receiptsQ.data || [];
+  const openPOs = openPOsQ.data || [];
+  const locations = locationsQ.data || [];
+  const loading = receiptsQ.isLoading;
+
+  useEffect(() => { if (selectedPO && !editingGRN) fetchPOLines(selectedPO); }, [selectedPO, editingGRN]);
+
+  const invalidateReceipts = () => qc.invalidateQueries({ queryKey: ['goods_receipts'] });
 
   const fetchPOLines = async (poId: string) => {
     const { data } = await supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', poId).order('line_number');
@@ -85,16 +99,15 @@ export default function GoodsReceipts() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!selectedPO || !form.location_id) { toast.error('Please select a PO and location'); return; }
-    if (!form.weigh_bill_number.trim()) { toast.error('Weigh bill number is mandatory'); return; }
-    const validLines = lines.filter(l => l.qty_received > 0);
-    if (validLines.length === 0) { toast.error('Please enter at least one quantity'); return; }
-    const overReceipt = validLines.find(l => l.qty_received > l.max_receivable);
-    if (overReceipt) { toast.error(`Cannot receive more than ordered for ${overReceipt.item_name}`); return; }
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPO || !form.location_id) throw new Error('Please select a PO and location');
+      if (!form.weigh_bill_number.trim()) throw new Error('Weigh bill number is mandatory');
+      const validLines = lines.filter(l => l.qty_received > 0);
+      if (validLines.length === 0) throw new Error('Please enter at least one quantity');
+      const overReceipt = validLines.find(l => l.qty_received > l.max_receivable);
+      if (overReceipt) throw new Error(`Cannot receive more than ordered for ${overReceipt.item_name}`);
 
-    setSaving(true);
-    try {
       if (editingGRN) {
         const { error } = await supabase.from('goods_receipts').update({
           location_id: form.location_id, receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description,
@@ -104,42 +117,40 @@ export default function GoodsReceipts() {
         await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
           grn_id: editingGRN.id, po_line_id: l.po_line_id, item_id: l.item_id, qty_received: l.qty_received,
         })));
-        toast.success('Goods Receipt updated');
-      } else {
-        const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
-        const { data: grn, error } = await supabase.from('goods_receipts').insert({
-          grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
-          receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description, created_by: user?.id, organization_id: organizationId,
-        }).select().single();
-        if (error) throw error;
-        await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
-          grn_id: grn.id, po_line_id: l.po_line_id, item_id: l.item_id, qty_received: l.qty_received,
-        })));
-        toast.success('Goods Receipt created. Post it to update inventory.');
+        return 'updated';
       }
+      const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
+      const { data: grn, error } = await supabase.from('goods_receipts').insert({
+        grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
+        receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) throw error;
+      await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
+        grn_id: grn.id, po_line_id: l.po_line_id, item_id: l.item_id, qty_received: l.qty_received,
+      })));
+      return 'created';
+    },
+    onSuccess: (res) => {
+      toast.success(res === 'updated' ? 'Goods Receipt updated' : 'Goods Receipt created. Post it to update inventory.');
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save GRN');
-    } finally { setSaving(false); }
-  };
+      invalidateReceipts();
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save GRN'),
+  });
 
-  const handlePost = async (grn: GRNWithDetails) => {
-    if (postingId) return;
-    setPostingId(grn.id);
-    try {
+  const postMutation = useMutation({
+    mutationFn: async (grn: GRNWithDetails) => {
       const { data, error } = await supabase.functions.invoke('secure-action', {
         body: { action: 'grn_post', payload: { id: grn.id } },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success('GRN posted and inventory updated');
-      fetchData();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to post GRN');
-    } finally { setPostingId(null); }
-  };
+    },
+    onSuccess: () => { toast.success('GRN posted and inventory updated'); invalidateReceipts(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to post GRN'),
+  });
+  const postingId = postMutation.isPending ? (postMutation.variables as GRNWithDetails | undefined)?.id ?? null : null;
 
   const resetForm = () => {
     setEditingGRN(null); setSelectedPO(''); setLines([]);
@@ -171,7 +182,7 @@ export default function GoodsReceipts() {
           {r.status === 'draft' && (
             <>
               <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(r); }}><Pencil className="h-3 w-3" /></Button>
-              <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
+              <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); postMutation.mutate(r); }}>
                 {postingId === r.id ? 'Posting...' : 'Post'}
               </Button>
             </>
@@ -262,7 +273,7 @@ export default function GoodsReceipts() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingGRN ? 'Update GRN' : 'Create GRN'}</Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingGRN ? 'Update GRN' : 'Create GRN'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

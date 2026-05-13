@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Plus, Search, Receipt, Pencil } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -22,35 +23,49 @@ interface InvoiceLine { po_line_id: string; item_id: string; quantity: number; u
 
 export default function Invoices() {
   const { user, hasRole, organizationId } = useAuth();
+  const qc = useQueryClient();
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
-  const [invoices, setInvoices] = useState<InvoiceWithDetails[]>([]);
-  const [receivedPOs, setReceivedPOs] = useState<POWithVendor[]>([]);
-  const [glAccounts, setGLAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<InvoiceWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [poLines, setPOLines] = useState<POLineWithItem[]>([]);
   const [form, setForm] = useState({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '' });
   const [lines, setLines] = useState<InvoiceLine[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
-  useEffect(() => { if (selectedPO && !editingInvoice) fetchPOLines(selectedPO); }, [selectedPO]);
+  const invoicesQ = useQuery({
+    queryKey: ['ap_invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('ap_invoices').select('*, vendors(*), purchase_orders(po_number)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as InvoiceWithDetails[];
+    },
+  });
+  const receivedPOsQ = useQuery({
+    queryKey: ['purchase_orders', 'received-for-invoice'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_orders').select('*, vendors(id, name)').in('status', ['partially_received', 'fully_received']).order('po_number');
+      if (error) throw error;
+      return (data || []) as POWithVendor[];
+    },
+  });
+  const glAccountsQ = useQuery({
+    queryKey: ['gl_accounts', 'leaf-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name, account_type').eq('is_header', false).eq('is_active', true).order('account_code');
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      const [invoicesRes, posRes, glRes] = await Promise.all([
-        supabase.from('ap_invoices').select('*, vendors(*), purchase_orders(po_number)').order('created_at', { ascending: false }),
-        supabase.from('purchase_orders').select('*, vendors(id, name)').in('status', ['partially_received', 'fully_received']).order('po_number'),
-        supabase.from('gl_accounts').select('id, account_code, account_name, account_type').eq('is_header', false).eq('is_active', true).order('account_code'),
-      ]);
-      setInvoices((invoicesRes.data || []) as InvoiceWithDetails[]);
-      setReceivedPOs((posRes.data || []) as POWithVendor[]);
-      setGLAccounts((glRes.data || []) as GLAccount[]);
-    } catch { toast.error('Failed to load data'); } finally { setLoading(false); }
-  };
+  const invoices = invoicesQ.data || [];
+  const receivedPOs = receivedPOsQ.data || [];
+  const glAccounts = glAccountsQ.data || [];
+  const loading = invoicesQ.isLoading;
+
+  useEffect(() => { if (selectedPO && !editingInvoice) fetchPOLines(selectedPO); }, [selectedPO, editingInvoice]);
+
+  const invalidateInvoices = () => qc.invalidateQueries({ queryKey: ['ap_invoices'] });
 
   const fetchPOLines = async (poId: string) => {
     const { data } = await supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', poId).order('line_number');
@@ -81,15 +96,14 @@ export default function Invoices() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!selectedPO || !form.invoice_number) { toast.error('Please fill all required fields'); return; }
-    const validLines = lines.filter(l => l.quantity > 0);
-    if (validLines.length === 0) { toast.error('Please enter at least one quantity'); return; }
-    const overInvoice = validLines.find(l => l.quantity > l.max_invoiceable);
-    if (overInvoice) { toast.error(`Cannot invoice more than received for ${overInvoice.item_name}`); return; }
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPO || !form.invoice_number) throw new Error('Please fill all required fields');
+      const validLines = lines.filter(l => l.quantity > 0);
+      if (validLines.length === 0) throw new Error('Please enter at least one quantity');
+      const overInvoice = validLines.find(l => l.quantity > l.max_invoiceable);
+      if (overInvoice) throw new Error(`Cannot invoice more than received for ${overInvoice.item_name}`);
 
-    setSaving(true);
-    try {
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
 
       if (editingInvoice) {
@@ -103,69 +117,80 @@ export default function Invoices() {
           invoice_id: editingInvoice.id, po_line_id: l.po_line_id, item_id: l.item_id,
           quantity: l.quantity, unit_price: l.unit_price, expense_account_id: l.expense_account_id || null,
         })));
-        toast.success('Invoice updated');
-      } else {
-        const po = receivedPOs.find(p => p.id === selectedPO);
-        if (!po?.vendors?.id) { toast.error('Could not determine vendor'); return; }
-        const { data: invoice, error } = await supabase.from('ap_invoices').insert({
-          invoice_number: form.invoice_number, vendor_id: po.vendors.id, po_id: selectedPO,
-          invoice_date: form.invoice_date, due_date: form.due_date || null,
-          subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
-        }).select().single();
-        if (error) throw error;
-        await supabase.from('ap_invoice_lines').insert(validLines.map(l => ({
-          invoice_id: invoice.id, po_line_id: l.po_line_id, item_id: l.item_id,
-          quantity: l.quantity, unit_price: l.unit_price, expense_account_id: l.expense_account_id || null,
-        })));
-        toast.success('Invoice created');
+        return 'updated';
       }
+      const po = receivedPOs.find(p => p.id === selectedPO);
+      if (!po?.vendors?.id) throw new Error('Could not determine vendor');
+      const { data: invoice, error } = await supabase.from('ap_invoices').insert({
+        invoice_number: form.invoice_number, vendor_id: po.vendors.id, po_id: selectedPO,
+        invoice_date: form.invoice_date, due_date: form.due_date || null,
+        subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) throw error;
+      await supabase.from('ap_invoice_lines').insert(validLines.map(l => ({
+        invoice_id: invoice.id, po_line_id: l.po_line_id, item_id: l.item_id,
+        quantity: l.quantity, unit_price: l.unit_price, expense_account_id: l.expense_account_id || null,
+      })));
+      return 'created';
+    },
+    onSuccess: (res) => {
+      toast.success(res === 'updated' ? 'Invoice updated' : 'Invoice created');
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      toast.error(err.code === '23505' ? 'Invoice number already exists' : err.message || 'Failed to save');
-    } finally { setSaving(false); }
-  };
+      invalidateInvoices();
+    },
+    onError: (error: any) => {
+      const code = error?.code;
+      toast.error(code === '23505' ? 'Invoice number already exists' : error?.message || 'Failed to save');
+    },
+  });
 
-  const handleSubmitInvoice = async (invoice: InvoiceWithDetails) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'pending_approval', rejection_reason: null }).eq('id', invoice.id);
-    if (error) { toast.error('Failed to submit'); return; }
-    toast.success('Invoice submitted for approval');
-    fetchData();
-  };
-
-  const handleApproveInvoice = async (invoice: InvoiceWithDetails) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', invoice.id);
-    if (error) { toast.error('Failed to approve'); return; }
-    toast.success('Invoice approved');
-    fetchData();
-  };
-
-  const handleRejectInvoice = async (invoice: InvoiceWithDetails) => {
+  const submitMutation = useMutation({
+    mutationFn: async (invoice: InvoiceWithDetails) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'pending_approval', rejection_reason: null }).eq('id', invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice submitted for approval'); invalidateInvoices(); },
+    onError: () => toast.error('Failed to submit'),
+  });
+  const approveMutation = useMutation({
+    mutationFn: async (invoice: InvoiceWithDetails) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice approved'); invalidateInvoices(); },
+    onError: () => toast.error('Failed to approve'),
+  });
+  const rejectMutation = useMutation({
+    mutationFn: async ({ invoice, reason }: { invoice: InvoiceWithDetails; reason: string }) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'draft', rejection_reason: reason }).eq('id', invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice returned to draft'); invalidateInvoices(); },
+    onError: () => toast.error('Failed to reject'),
+  });
+  const handleRejectInvoice = (invoice: InvoiceWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
     if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
-    const { error } = await supabase.from('ap_invoices').update({ status: 'draft', rejection_reason: reason }).eq('id', invoice.id);
-    if (error) { toast.error('Failed to reject'); return; }
-    toast.success('Invoice returned to draft');
-    fetchData();
+    rejectMutation.mutate({ invoice, reason });
   };
-
-  const handlePost = async (invoice: InvoiceWithDetails) => {
-    const { data, error } = await supabase.functions.invoke('secure-action', {
-      body: { action: 'invoice_post', payload: { id: invoice.id } },
-    });
-    const errMsg = error?.message || (data as any)?.error;
-    if (errMsg) {
-      if (errMsg.includes('unresolved hold')) { toast.error('Invoice has unresolved exceptions'); return; }
-      toast.error(errMsg); return;
-    }
-    const { data: updated } = await supabase.from('ap_invoices').select('status').eq('id', invoice.id).single();
-    if (updated?.status === 'draft') { toast.error('Invoice failed three-way matching'); fetchData(); return; }
-    toast.success('Invoice posted');
-    fetchData();
-  };
+  const postMutation = useMutation({
+    mutationFn: async (invoice: InvoiceWithDetails) => {
+      const { data, error } = await supabase.functions.invoke('secure-action', {
+        body: { action: 'invoice_post', payload: { id: invoice.id } },
+      });
+      const errMsg = error?.message || (data as any)?.error;
+      if (errMsg) {
+        if (errMsg.includes('unresolved hold')) throw new Error('Invoice has unresolved exceptions');
+        throw new Error(errMsg);
+      }
+      const { data: updated } = await supabase.from('ap_invoices').select('status').eq('id', invoice.id).single();
+      if (updated?.status === 'draft') throw new Error('Invoice failed three-way matching');
+    },
+    onSuccess: () => { toast.success('Invoice posted'); invalidateInvoices(); },
+    onError: (e: any) => { toast.error(e?.message || 'Failed to post'); invalidateInvoices(); },
+  });
 
   const resetForm = () => {
     setEditingInvoice(null); setSelectedPO(''); setPOLines([]); setLines([]);
@@ -199,16 +224,16 @@ export default function Invoices() {
             <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(i); }}><Pencil className="h-3 w-3" /></Button>
           )}
           {i.status === 'draft' && i.created_by === user?.id && (
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitInvoice(i); }}>Submit</Button>
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); submitMutation.mutate(i); }}>Submit</Button>
           )}
           {i.status === 'pending_approval' && canApprove && (
             <>
-              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApproveInvoice(i); }}>Approve</Button>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); approveMutation.mutate(i); }}>Approve</Button>
               <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectInvoice(i); }}>Reject</Button>
             </>
           )}
           {i.status === 'approved' && canApprove && (
-            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handlePost(i); }}>Post</Button>
+            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); postMutation.mutate(i); }}>Post</Button>
           )}
         </div>
       )
@@ -280,7 +305,7 @@ export default function Invoices() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingInvoice ? 'Update Invoice' : 'Create Invoice'}</Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingInvoice ? 'Update Invoice' : 'Create Invoice'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
