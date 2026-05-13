@@ -187,11 +187,11 @@ export default function SalesQuotations() {
                           {q.status === 'draft' && (
                             <>
                               <Button variant="ghost" size="sm" onClick={() => openEditDialog(q)}><Pencil className="h-3 w-3" /></Button>
-                              <Button variant="outline" size="sm" onClick={() => handleStatusChange(q.id, 'sent')}>Send</Button>
+                              <Button variant="outline" size="sm" onClick={() => statusMutation.mutate({ id: q.id, status: 'sent' })}>Send</Button>
                             </>
                           )}
                           {q.status === 'sent' && (
-                            <Button variant="outline" size="sm" onClick={() => handleConvertToSO(q)}>
+                            <Button variant="outline" size="sm" onClick={() => convertMutation.mutate(q)}>
                               <ArrowRight className="h-3 w-3 mr-1" /> Convert to SO
                             </Button>
                           )}
@@ -244,7 +244,7 @@ export default function SalesQuotations() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-            <Button onClick={handleSave}>{editingQuotation ? 'Update Quotation' : 'Create Quotation'}</Button>
+            <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingQuotation ? 'Update Quotation' : 'Create Quotation'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
