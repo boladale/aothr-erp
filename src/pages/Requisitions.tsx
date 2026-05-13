@@ -163,12 +163,12 @@ export default function Requisitions() {
             <>
               <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(r); }} title="Edit"><Pencil className="h-4 w-4" /></Button>
               <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(r); }} title="Delete"><Trash2 className="h-4 w-4" /></Button>
-              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmit(r); }}>Submit</Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); submitMutation.mutate(r); }}>Submit</Button>
             </>
           )}
           {r.status === 'pending_approval' && canApprove && (
             <>
-              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(r); }}>Approve</Button>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); approveMutation.mutate(r); }}>Approve</Button>
               <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleReject(r); }}>Reject</Button>
             </>
           )}
@@ -218,7 +218,7 @@ export default function Requisitions() {
         <RequisitionFormDialog
           open={dialogOpen}
           onOpenChange={(open) => { setDialogOpen(open); if (!open) setEditReq(null); }}
-          onSuccess={fetchRequisitions}
+          onSuccess={invalidate}
           editRequisition={editReq}
         />
       </div>
