@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -22,11 +23,8 @@ interface JournalLine { account_id: string; debit: number; credit: number; descr
 
 export default function JournalEntries() {
   const { user, hasRole, organizationId } = useAuth();
+  const queryClient = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable') || hasRole('ap_clerk');
-  const [entries, setEntries] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [periods, setPeriods] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<any>(null);
   const [form, setForm] = useState({ entry_date: new Date().toISOString().split('T')[0], description: '', fiscal_period_id: '' });
@@ -35,26 +33,44 @@ export default function JournalEntries() {
     { account_id: '', debit: 0, credit: 0, description: '' },
   ]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkProcessing, setBulkProcessing] = useState(false);
 
-  useEffect(() => { fetchData(); }, []);
+  const entriesQ = useQuery({
+    queryKey: ['gl_journal_entries'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_journal_entries').select('*').order('created_at', { ascending: false }).limit(50);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const accountsQ = useQuery({
+    queryKey: ['gl_accounts-leaf'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_header', false).eq('is_active', true).order('account_code');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const periodsQ = useQuery({
+    queryKey: ['gl_fiscal_periods-open'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_fiscal_periods').select('*').eq('status', 'open').order('period_number');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const entries = entriesQ.data || [];
+  const accounts = accountsQ.data || [];
+  const periods = periodsQ.data || [];
+  const loading = entriesQ.isLoading;
 
-  const fetchData = async () => {
-    const [entriesRes, accountsRes, periodsRes] = await Promise.all([
-      supabase.from('gl_journal_entries').select('*').order('created_at', { ascending: false }).limit(50),
-      supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_header', false).eq('is_active', true).order('account_code'),
-      supabase.from('gl_fiscal_periods').select('*').eq('status', 'open').order('period_number'),
-    ]);
-    setEntries(entriesRes.data || []);
-    setAccounts(accountsRes.data || []);
-    setPeriods(periodsRes.data || []);
-    if (periodsRes.data && periodsRes.data.length > 0) {
+  // Auto-select current fiscal period when periods load
+  useEffect(() => {
+    if (periods.length > 0 && !form.fiscal_period_id) {
       const today = new Date().toISOString().split('T')[0];
-      const current = periodsRes.data.find((p: any) => p.start_date <= today && p.end_date >= today);
+      const current = periods.find((p: any) => p.start_date <= today && p.end_date >= today);
       if (current) setForm(f => ({ ...f, fiscal_period_id: current.id }));
     }
-    setLoading(false);
-  };
+  }, [periods, form.fiscal_period_id]);
 
   const openEditDialog = async (entry: any) => {
     setEditingEntry(entry);
@@ -77,56 +93,87 @@ export default function JournalEntries() {
   const addLine = () => setLines(l => [...l, { account_id: '', debit: 0, credit: 0, description: '' }]);
   const removeLine = (i: number) => { if (lines.length > 2) setLines(l => l.filter((_, idx) => idx !== i)); };
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const validLines = lines.filter(l => l.account_id && (l.debit > 0 || l.credit > 0));
+      if (editingEntry) {
+        const { error } = await supabase.from('gl_journal_entries').update({
+          entry_date: form.entry_date, description: form.description, fiscal_period_id: form.fiscal_period_id,
+          total_debit: totalDebit, total_credit: totalCredit,
+        }).eq('id', editingEntry.id);
+        if (error) throw error;
+        await supabase.from('gl_journal_lines').delete().eq('journal_entry_id', editingEntry.id);
+        await supabase.from('gl_journal_lines').insert(validLines.map((l, i) => ({
+          journal_entry_id: editingEntry.id, line_number: i + 1, account_id: l.account_id,
+          debit: l.debit || 0, credit: l.credit || 0, description: l.description || null,
+        })));
+        return 'Journal entry updated';
+      } else {
+        const entryNumber = await getNextTransactionNumber(organizationId!, 'JE', 'JE');
+        const { data: entry, error } = await supabase.from('gl_journal_entries').insert({
+          entry_number: entryNumber, entry_date: form.entry_date, description: form.description,
+          fiscal_period_id: form.fiscal_period_id, total_debit: totalDebit, total_credit: totalCredit,
+          created_by: user?.id, organization_id: organizationId,
+        }).select().single();
+        if (error) throw error;
+        await supabase.from('gl_journal_lines').insert(validLines.map((l, i) => ({
+          journal_entry_id: entry.id, line_number: i + 1, account_id: l.account_id,
+          debit: l.debit || 0, credit: l.credit || 0, description: l.description || null,
+        })));
+        return `Journal Entry ${entryNumber} created`;
+      }
+    },
+    onSuccess: (msg) => {
+      queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
+      setDialogOpen(false);
+      resetForm();
+      toast.success(msg);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const handleSave = () => {
     if (!form.description) { toast.error('Description required'); return; }
     if (!form.fiscal_period_id) { toast.error('Select a fiscal period'); return; }
     if (!isBalanced) { toast.error('Entry must be balanced'); return; }
     const validLines = lines.filter(l => l.account_id && (l.debit > 0 || l.credit > 0));
     if (validLines.length < 2) { toast.error('At least 2 lines required'); return; }
-
-    if (editingEntry) {
-      const { error } = await supabase.from('gl_journal_entries').update({
-        entry_date: form.entry_date, description: form.description, fiscal_period_id: form.fiscal_period_id,
-        total_debit: totalDebit, total_credit: totalCredit,
-      }).eq('id', editingEntry.id);
-      if (error) { toast.error(error.message); return; }
-      await supabase.from('gl_journal_lines').delete().eq('journal_entry_id', editingEntry.id);
-      await supabase.from('gl_journal_lines').insert(validLines.map((l, i) => ({
-        journal_entry_id: editingEntry.id, line_number: i + 1, account_id: l.account_id,
-        debit: l.debit || 0, credit: l.credit || 0, description: l.description || null,
-      })));
-      toast.success('Journal entry updated');
-    } else {
-      const entryNumber = await getNextTransactionNumber(organizationId!, 'JE', 'JE');
-      const { data: entry, error } = await supabase.from('gl_journal_entries').insert({
-        entry_number: entryNumber, entry_date: form.entry_date, description: form.description,
-        fiscal_period_id: form.fiscal_period_id, total_debit: totalDebit, total_credit: totalCredit,
-        created_by: user?.id, organization_id: organizationId,
-      }).select().single();
-      if (error) { toast.error(error.message); return; }
-      await supabase.from('gl_journal_lines').insert(validLines.map((l, i) => ({
-        journal_entry_id: entry.id, line_number: i + 1, account_id: l.account_id,
-        debit: l.debit || 0, credit: l.credit || 0, description: l.description || null,
-      })));
-      toast.success(`Journal Entry ${entryNumber} created`);
-    }
-    setDialogOpen(false); resetForm(); fetchData();
+    saveMutation.mutate();
   };
 
-  const handlePost = async (id: string) => {
-    const { error } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Journal entry posted'); fetchData();
-  };
+  const postMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
+      toast.success('Journal entry posted');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+  const handlePost = (id: string) => postMutation.mutate(id);
 
-  const handleBulkPost = async () => {
+  const bulkPostMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).in('id', ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
+      setSelectedIds([]);
+      toast.success(`${count} entries posted`);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+  const bulkProcessing = bulkPostMutation.isPending;
+
+  const handleBulkPost = () => {
     const draftIds = selectedIds.filter(id => entries.find((e: any) => e.id === id)?.status === 'draft');
     if (!draftIds.length) { toast.error('No draft entries selected'); return; }
     if (!window.confirm(`Post ${draftIds.length} journal entries?`)) return;
-    setBulkProcessing(true);
-    const { error } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).in('id', draftIds);
-    if (error) toast.error(error.message); else { toast.success(`${draftIds.length} entries posted`); setSelectedIds([]); fetchData(); }
-    setBulkProcessing(false);
+    bulkPostMutation.mutate(draftIds);
   };
 
   const draftEntries = entries.filter((e: any) => e.status === 'draft');
@@ -278,7 +325,7 @@ export default function JournalEntries() {
                 </table>
               </div>
 
-              <Button onClick={handleSave} className="w-full" disabled={!isBalanced}>{editingEntry ? 'Update Journal Entry' : 'Create Journal Entry'}</Button>
+              <Button onClick={handleSave} className="w-full" disabled={!isBalanced || saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingEntry ? 'Update Journal Entry' : 'Create Journal Entry')}</Button>
             </div>
           </DialogContent>
         </Dialog>
