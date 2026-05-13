@@ -23,35 +23,49 @@ interface InvoiceLine { po_line_id: string; item_id: string; quantity: number; u
 
 export default function Invoices() {
   const { user, hasRole, organizationId } = useAuth();
+  const qc = useQueryClient();
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
-  const [invoices, setInvoices] = useState<InvoiceWithDetails[]>([]);
-  const [receivedPOs, setReceivedPOs] = useState<POWithVendor[]>([]);
-  const [glAccounts, setGLAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<InvoiceWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [poLines, setPOLines] = useState<POLineWithItem[]>([]);
   const [form, setForm] = useState({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '' });
   const [lines, setLines] = useState<InvoiceLine[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
-  useEffect(() => { if (selectedPO && !editingInvoice) fetchPOLines(selectedPO); }, [selectedPO]);
+  const invoicesQ = useQuery({
+    queryKey: ['ap_invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('ap_invoices').select('*, vendors(*), purchase_orders(po_number)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as InvoiceWithDetails[];
+    },
+  });
+  const receivedPOsQ = useQuery({
+    queryKey: ['purchase_orders', 'received-for-invoice'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_orders').select('*, vendors(id, name)').in('status', ['partially_received', 'fully_received']).order('po_number');
+      if (error) throw error;
+      return (data || []) as POWithVendor[];
+    },
+  });
+  const glAccountsQ = useQuery({
+    queryKey: ['gl_accounts', 'leaf-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name, account_type').eq('is_header', false).eq('is_active', true).order('account_code');
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      const [invoicesRes, posRes, glRes] = await Promise.all([
-        supabase.from('ap_invoices').select('*, vendors(*), purchase_orders(po_number)').order('created_at', { ascending: false }),
-        supabase.from('purchase_orders').select('*, vendors(id, name)').in('status', ['partially_received', 'fully_received']).order('po_number'),
-        supabase.from('gl_accounts').select('id, account_code, account_name, account_type').eq('is_header', false).eq('is_active', true).order('account_code'),
-      ]);
-      setInvoices((invoicesRes.data || []) as InvoiceWithDetails[]);
-      setReceivedPOs((posRes.data || []) as POWithVendor[]);
-      setGLAccounts((glRes.data || []) as GLAccount[]);
-    } catch { toast.error('Failed to load data'); } finally { setLoading(false); }
-  };
+  const invoices = invoicesQ.data || [];
+  const receivedPOs = receivedPOsQ.data || [];
+  const glAccounts = glAccountsQ.data || [];
+  const loading = invoicesQ.isLoading;
+
+  useEffect(() => { if (selectedPO && !editingInvoice) fetchPOLines(selectedPO); }, [selectedPO, editingInvoice]);
+
+  const invalidateInvoices = () => qc.invalidateQueries({ queryKey: ['ap_invoices'] });
 
   const fetchPOLines = async (poId: string) => {
     const { data } = await supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', poId).order('line_number');
