@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, Pencil, CheckCircle, XCircle } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -36,18 +37,14 @@ interface POLine {
 
 export default function PurchaseOrders() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { user, hasRole, organizationId } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canSend = canApprove || hasRole('procurement_officer');
   const canInitiate = !!user;
-  const [orders, setOrders] = useState<POWithDetails[]>([]);
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [editingPO, setEditingPO] = useState<POWithDetails | null>(null);
   const [form, setForm] = useState({
     vendor_id: '',
@@ -61,29 +58,47 @@ export default function PurchaseOrders() {
   });
   const [lines, setLines] = useState<POLine[]>([{ item_id: '', quantity: 1, unit_price: 0 }]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkProcessing, setBulkProcessing] = useState(false);
 
-  useEffect(() => { fetchData(); }, []);
+  const ordersQ = useQuery({
+    queryKey: ['purchase_orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_orders').select('*, vendors(*), locations(*)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as POWithDetails[];
+    },
+  });
+  const vendorsQ = useQuery({
+    queryKey: ['vendors', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('vendors').select('*').eq('status', 'active').order('name');
+      if (error) throw error;
+      return (data || []) as Vendor[];
+    },
+  });
+  const locationsQ = useQuery({
+    queryKey: ['locations', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
+  const itemsQ = useQuery({
+    queryKey: ['items', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Item[];
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      const [ordersRes, vendorsRes, locationsRes, itemsRes] = await Promise.all([
-        supabase.from('purchase_orders').select('*, vendors(*), locations(*)').order('created_at', { ascending: false }),
-        supabase.from('vendors').select('*').eq('status', 'active').order('name'),
-        supabase.from('locations').select('*').eq('is_active', true).order('name'),
-        supabase.from('items').select('*').eq('is_active', true).order('name'),
-      ]);
-      setOrders((ordersRes.data || []) as POWithDetails[]);
-      setVendors((vendorsRes.data || []) as Vendor[]);
-      setLocations((locationsRes.data || []) as Location[]);
-      setItems((itemsRes.data || []) as Item[]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const orders = ordersQ.data || [];
+  const vendors = vendorsQ.data || [];
+  const locations = locationsQ.data || [];
+  const items = itemsQ.data || [];
+  const loading = ordersQ.isLoading;
+
+  const invalidateOrders = () => qc.invalidateQueries({ queryKey: ['purchase_orders'] });
 
   const openEditDialog = async (po: POWithDetails) => {
     setEditingPO(po);
@@ -102,13 +117,12 @@ export default function PurchaseOrders() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!form.vendor_id) { toast.error('Please select a vendor'); return; }
-    const validLines = lines.filter(l => l.item_id && l.quantity > 0);
-    if (validLines.length === 0) { toast.error('Please add at least one line item'); return; }
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!form.vendor_id) throw new Error('Please select a vendor');
+      const validLines = lines.filter(l => l.item_id && l.quantity > 0);
+      if (validLines.length === 0) throw new Error('Please add at least one line item');
 
-    setSaving(true);
-    try {
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
       const discountVal = form.discount_type === 'percentage'
         ? subtotal * (form.discount_amount / 100)
@@ -116,7 +130,6 @@ export default function PurchaseOrders() {
       const totalAmount = Math.max(0, subtotal - discountVal);
 
       if (editingPO) {
-        // Update existing draft PO
         const { error: poError } = await supabase.from('purchase_orders').update({
           vendor_id: form.vendor_id,
           ship_to_location_id: form.ship_to_location_id || null,
@@ -130,17 +143,14 @@ export default function PurchaseOrders() {
           discount_amount: form.discount_amount,
         }).eq('id', editingPO.id);
         if (poError) throw poError;
-
-        // Replace lines
         await supabase.from('purchase_order_lines').delete().eq('po_id', editingPO.id);
         const lineInserts = validLines.map((l, idx) => ({
           po_id: editingPO.id, line_number: idx + 1, item_id: l.item_id, quantity: l.quantity, unit_price: l.unit_price,
         }));
         const { error: linesError } = await supabase.from('purchase_order_lines').insert(lineInserts);
         if (linesError) throw linesError;
-        toast.success('Purchase Order updated');
+        return 'updated';
       } else {
-        // Create new
         const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
         const { data: po, error: poError } = await supabase.from('purchase_orders').insert({
           po_number: poNumber, vendor_id: form.vendor_id, ship_to_location_id: form.ship_to_location_id || null,
@@ -155,65 +165,89 @@ export default function PurchaseOrders() {
         }));
         const { error: linesError } = await supabase.from('purchase_order_lines').insert(lineInserts);
         if (linesError) throw linesError;
-        toast.success('Purchase Order created');
+        return 'created';
       }
-
+    },
+    onSuccess: (res) => {
+      toast.success(res === 'updated' ? 'Purchase Order updated' : 'Purchase Order created');
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save PO');
-    } finally {
-      setSaving(false);
-    }
+      invalidateOrders();
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save PO'),
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (po: POWithDetails) => {
+      const { error } = await supabase.from('purchase_orders').update({ status: 'pending_approval' as POStatus, rejection_reason: null }).eq('id', po.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Submitted for approval'); invalidateOrders(); },
+    onError: () => toast.error('Failed to submit'),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (po: POWithDetails) => {
+      const { data, error } = await supabase.functions.invoke('secure-action', {
+        body: { action: 'po_approve', payload: { id: po.id } },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+    },
+    onSuccess: () => { toast.success('PO approved'); invalidateOrders(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to approve'),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ po, reason }: { po: POWithDetails; reason: string }) => {
+      const { error } = await supabase.from('purchase_orders').update({ status: 'draft' as POStatus, rejection_reason: reason }).eq('id', po.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('PO returned to draft for corrections'); invalidateOrders(); },
+    onError: () => toast.error('Failed to reject PO'),
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: async (po: POWithDetails) => {
+      const { error } = await supabase.from('purchase_orders').update({ status: 'sent' as POStatus, sent_at: new Date().toISOString() }).eq('id', po.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('PO marked as sent'); invalidateOrders(); },
+    onError: () => toast.error('Failed to send'),
+  });
+
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
+      const errMsg = error?.message || (data as any)?.error;
+      if (errMsg) throw new Error(errMsg);
+      return (data as any)?.updated ?? ids.length;
+    },
+    onSuccess: (n) => { toast.success(`${n} POs approved`); setSelectedIds([]); invalidateOrders(); },
+    onError: (e: any) => toast.error(e?.message || 'Bulk approve failed'),
+  });
+
+  const bulkRejectMutation = useMutation({
+    mutationFn: async ({ ids, reason }: { ids: string[]; reason: string }) => {
+      const { error } = await supabase.from('purchase_orders').update({ status: 'draft' as POStatus, rejection_reason: reason }).in('id', ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (n) => { toast.success(`${n} POs rejected`); setSelectedIds([]); invalidateOrders(); },
+    onError: (e: any) => toast.error(e?.message || 'Bulk reject failed'),
+  });
+
+  const handleRejectPO = (po: POWithDetails) => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
+    rejectMutation.mutate({ po, reason });
   };
 
   const resetForm = () => {
     setEditingPO(null);
     setForm({ vendor_id: '', ship_to_location_id: '', expected_date: '', notes: '', payment_terms_type: 'percentage', payment_terms_amount: 0, discount_type: 'percentage', discount_amount: 0 });
     setLines([{ item_id: '', quantity: 1, unit_price: 0 }]);
-  };
-
-  const handleSubmit = async (po: POWithDetails) => {
-    try {
-      const { error } = await supabase.from('purchase_orders').update({ status: 'pending_approval' as POStatus, rejection_reason: null }).eq('id', po.id);
-      if (error) throw error;
-      toast.success('Submitted for approval');
-      fetchData();
-    } catch { toast.error('Failed to submit'); }
-  };
-
-  const handleApprove = async (po: POWithDetails) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('secure-action', {
-        body: { action: 'po_approve', payload: { id: po.id } },
-      });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success('PO approved');
-      fetchData();
-    } catch (e: any) { toast.error(e?.message || 'Failed to approve'); }
-  };
-
-  const handleRejectPO = async (po: POWithDetails) => {
-    const reason = window.prompt('Please enter a reason for rejection:');
-    if (reason === null) return;
-    if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
-    try {
-      const { error } = await supabase.from('purchase_orders').update({ status: 'draft' as POStatus, rejection_reason: reason }).eq('id', po.id);
-      if (error) throw error;
-      toast.success('PO returned to draft for corrections');
-      fetchData();
-    } catch { toast.error('Failed to reject PO'); }
-  };
-
-  const handleSend = async (po: POWithDetails) => {
-    try {
-      const { error } = await supabase.from('purchase_orders').update({ status: 'sent' as POStatus, sent_at: new Date().toISOString() }).eq('id', po.id);
-      if (error) throw error;
-      toast.success('PO marked as sent');
-      fetchData();
-    } catch { toast.error('Failed to send'); }
   };
 
   const addLine = () => setLines([...lines, { item_id: '', quantity: 1, unit_price: 0 }]);
@@ -234,6 +268,8 @@ export default function PurchaseOrders() {
     o.po_number.toLowerCase().includes(search.toLowerCase()) ||
     o.vendors?.name?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const bulkProcessing = bulkApproveMutation.isPending || bulkRejectMutation.isPending;
 
   const columns = [
     { key: 'po_number', header: 'PO Number', render: (o: POWithDetails) => <span className="font-medium">{o.po_number}</span> },
@@ -256,16 +292,16 @@ export default function PurchaseOrders() {
             <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(o); }}><Pencil className="h-3 w-3" /></Button>
           )}
           {o.status === 'draft' && canInitiate && o.created_by === user?.id && (
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmit(o); }}>Submit</Button>
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); submitMutation.mutate(o); }}>Submit</Button>
           )}
           {o.status === 'pending_approval' && canApprove && (
             <>
-              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApprove(o); }}>Approve</Button>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); approveMutation.mutate(o); }}>Approve</Button>
               <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectPO(o); }}>Reject</Button>
             </>
           )}
           {o.status === 'approved' && canSend && (
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSend(o); }}>Send</Button>
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); sendMutation.mutate(o); }}>Send</Button>
           )}
         </div>
       )
@@ -291,25 +327,18 @@ export default function PurchaseOrders() {
             selectedCount={selectedIds.length}
             onClearSelection={() => setSelectedIds([])}
             actions={[
-              { label: 'Approve', icon: <CheckCircle className="h-4 w-4 mr-1" />, onClick: async () => {
+              { label: 'Approve', icon: <CheckCircle className="h-4 w-4 mr-1" />, onClick: () => {
                 const ids = selectedIds.filter(id => orders.find(o => o.id === id)?.status === 'pending_approval');
                 if (!ids.length) { toast.error('No pending POs selected'); return; }
                 if (!window.confirm(`Approve ${ids.length} POs?`)) return;
-                setBulkProcessing(true);
-                const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
-                const errMsg = error?.message || (data as any)?.error;
-                if (errMsg) toast.error(errMsg); else { toast.success(`${(data as any)?.updated ?? ids.length} POs approved`); setSelectedIds([]); fetchData(); }
-                setBulkProcessing(false);
+                bulkApproveMutation.mutate(ids);
               }, disabled: bulkProcessing, variant: 'default' },
-              { label: 'Reject', icon: <XCircle className="h-4 w-4 mr-1" />, onClick: async () => {
+              { label: 'Reject', icon: <XCircle className="h-4 w-4 mr-1" />, onClick: () => {
                 const ids = selectedIds.filter(id => orders.find(o => o.id === id)?.status === 'pending_approval');
                 if (!ids.length) { toast.error('No pending POs selected'); return; }
                 const reason = window.prompt(`Reject ${ids.length} POs. Reason:`);
                 if (!reason?.trim()) return;
-                setBulkProcessing(true);
-                const { error } = await supabase.from('purchase_orders').update({ status: 'draft' as POStatus, rejection_reason: reason }).in('id', ids);
-                if (error) toast.error(error.message); else { toast.success(`${ids.length} POs rejected`); setSelectedIds([]); fetchData(); }
-                setBulkProcessing(false);
+                bulkRejectMutation.mutate({ ids, reason });
               }, disabled: bulkProcessing, variant: 'destructive' },
             ]}
           />
@@ -415,7 +444,7 @@ export default function PurchaseOrders() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingPO ? 'Update PO' : 'Create PO'}</Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingPO ? 'Update PO' : 'Create PO'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
