@@ -28,34 +28,47 @@ interface GRNLine { po_line_id: string; item_id: string; qty_received: number; m
 
 export default function GoodsReceipts() {
   const { user, organizationId } = useAuth();
-  const [receipts, setReceipts] = useState<GRNWithDetails[]>([]);
-  const [openPOs, setOpenPOs] = useState<POWithVendor[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [postingId, setPostingId] = useState<string | null>(null);
   const [editingGRN, setEditingGRN] = useState<GRNWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [form, setForm] = useState({ location_id: '', receipt_date: new Date().toISOString().split('T')[0], notes: '', weigh_bill_number: '', description: '' });
   const [lines, setLines] = useState<GRNLine[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
-  useEffect(() => { if (selectedPO && !editingGRN) fetchPOLines(selectedPO); }, [selectedPO]);
+  const receiptsQ = useQuery({
+    queryKey: ['goods_receipts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('goods_receipts').select('*, purchase_orders(po_number, vendors(name)), locations(*)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as GRNWithDetails[];
+    },
+  });
+  const openPOsQ = useQuery({
+    queryKey: ['purchase_orders', 'open-for-grn'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_orders').select('*, vendors(name)').in('status', ['sent', 'partially_received']).order('po_number');
+      if (error) throw error;
+      return (data || []) as POWithVendor[];
+    },
+  });
+  const locationsQ = useQuery({
+    queryKey: ['locations', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      const [receiptsRes, posRes, locationsRes] = await Promise.all([
-        supabase.from('goods_receipts').select('*, purchase_orders(po_number, vendors(name)), locations(*)').order('created_at', { ascending: false }),
-        supabase.from('purchase_orders').select('*, vendors(name)').in('status', ['sent', 'partially_received']).order('po_number'),
-        supabase.from('locations').select('*').eq('is_active', true).order('name'),
-      ]);
-      setReceipts((receiptsRes.data || []) as GRNWithDetails[]);
-      setOpenPOs((posRes.data || []) as POWithVendor[]);
-      setLocations((locationsRes.data || []) as Location[]);
-    } catch { toast.error('Failed to load data'); } finally { setLoading(false); }
-  };
+  const receipts = receiptsQ.data || [];
+  const openPOs = openPOsQ.data || [];
+  const locations = locationsQ.data || [];
+  const loading = receiptsQ.isLoading;
+
+  useEffect(() => { if (selectedPO && !editingGRN) fetchPOLines(selectedPO); }, [selectedPO, editingGRN]);
+
+  const invalidateReceipts = () => qc.invalidateQueries({ queryKey: ['goods_receipts'] });
 
   const fetchPOLines = async (poId: string) => {
     const { data } = await supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', poId).order('line_number');
