@@ -21,25 +21,39 @@ import { formatCurrency } from '@/lib/currency';
 
 export default function SalesQuotations() {
   const { user, organizationId } = useAuth();
-  const [quotations, setQuotations] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingQuotation, setEditingQuotation] = useState<any>(null);
   const [form, setForm] = useState({ customer_id: '', valid_until: '', notes: '' });
   const [lines, setLines] = useState<{ item_id: string; description: string; quantity: string; unit_price: string }[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
+  const { data: quotations = [], isLoading: loading } = useQuery({
+    queryKey: ['sales-quotations'],
+    queryFn: async () => {
+      const { data } = await supabase.from('sales_quotations').select('*, customers(name)').order('created_at', { ascending: false });
+      return data || [];
+    },
+  });
 
-  const fetchData = async () => {
-    const [qRes, cRes, iRes] = await Promise.all([
-      supabase.from('sales_quotations').select('*, customers(name)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id, name, code').eq('is_active', true).order('name'),
-      supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true).order('name'),
-    ]);
-    setQuotations(qRes.data || []); setCustomers(cRes.data || []); setItems(iRes.data || []);
-    setLoading(false);
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers-active'],
+    queryFn: async () => {
+      const { data } = await supabase.from('customers').select('id, name, code').eq('is_active', true).order('name');
+      return data || [];
+    },
+  });
+
+  const { data: items = [] } = useQuery({
+    queryKey: ['items-active'],
+    queryFn: async () => {
+      const { data } = await supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true).order('name');
+      return data || [];
+    },
+  });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['sales-quotations'] });
+    queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
   };
 
   const openEditDialog = async (q: any) => {
@@ -56,61 +70,74 @@ export default function SalesQuotations() {
     setLines([]);
   };
 
-  const handleSave = async () => {
-    if (!form.customer_id) return toast.error('Select a customer');
-    if (lines.length === 0) return toast.error('Add at least one line');
-    const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!form.customer_id) throw new Error('Select a customer');
+      if (lines.length === 0) throw new Error('Add at least one line');
+      const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
 
-    if (editingQuotation) {
-      const { error } = await supabase.from('sales_quotations').update({
-        customer_id: form.customer_id, valid_until: form.valid_until || null,
-        notes: form.notes || null, subtotal, total_amount: subtotal,
-      }).eq('id', editingQuotation.id);
-      if (error) return toast.error(error.message);
-      await supabase.from('sales_quotation_lines').delete().eq('quotation_id', editingQuotation.id);
-      await supabase.from('sales_quotation_lines').insert(lines.map((l, i) => ({
-        quotation_id: editingQuotation.id, line_number: i + 1, item_id: l.item_id || null,
-        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-      })));
-      toast.success('Quotation updated');
-    } else {
-      const qNum = await getNextTransactionNumber(organizationId!, 'SQ', 'SQ');
-      const { data: q, error } = await supabase.from('sales_quotations').insert({
-        quotation_number: qNum, customer_id: form.customer_id, valid_until: form.valid_until || null,
-        notes: form.notes || null, subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+      if (editingQuotation) {
+        const { error } = await supabase.from('sales_quotations').update({
+          customer_id: form.customer_id, valid_until: form.valid_until || null,
+          notes: form.notes || null, subtotal, total_amount: subtotal,
+        }).eq('id', editingQuotation.id);
+        if (error) throw error;
+        await supabase.from('sales_quotation_lines').delete().eq('quotation_id', editingQuotation.id);
+        await supabase.from('sales_quotation_lines').insert(lines.map((l, i) => ({
+          quotation_id: editingQuotation.id, line_number: i + 1, item_id: l.item_id || null,
+          description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+        })));
+      } else {
+        const qNum = await getNextTransactionNumber(organizationId!, 'SQ', 'SQ');
+        const { data: q, error } = await supabase.from('sales_quotations').insert({
+          quotation_number: qNum, customer_id: form.customer_id, valid_until: form.valid_until || null,
+          notes: form.notes || null, subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+        }).select().single();
+        if (error) throw error;
+        await supabase.from('sales_quotation_lines').insert(lines.map((l, i) => ({
+          quotation_id: q.id, line_number: i + 1, item_id: l.item_id || null,
+          description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+        })));
+      }
+    },
+    onSuccess: () => {
+      invalidate();
+      toast.success(editingQuotation ? 'Quotation updated' : 'Quotation created');
+      setDialogOpen(false); resetForm();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from('sales_quotations').update({ status: status as any }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => { invalidate(); toast.success(`Quotation ${v.status}`); },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const convertMutation = useMutation({
+    mutationFn: async (q: any) => {
+      const { data: qLines } = await supabase.from('sales_quotation_lines').select('*').eq('quotation_id', q.id);
+      if (!qLines || qLines.length === 0) throw new Error('No lines to convert');
+      const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
+      const { data: so, error } = await supabase.from('sales_orders').insert({
+        order_number: soNumber, customer_id: q.customer_id, quotation_id: q.id,
+        subtotal: q.subtotal, tax_amount: q.tax_amount, total_amount: q.total_amount,
+        created_by: user?.id, organization_id: organizationId,
       }).select().single();
-      if (error) return toast.error(error.message);
-      await supabase.from('sales_quotation_lines').insert(lines.map((l, i) => ({
-        quotation_id: q.id, line_number: i + 1, item_id: l.item_id || null,
-        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+      if (error) throw error;
+      await supabase.from('sales_order_lines').insert(qLines.map((l: any, i: number) => ({
+        order_id: so.id, line_number: i + 1, item_id: l.item_id, description: l.description,
+        quantity: l.quantity, unit_price: l.unit_price,
       })));
-      toast.success('Quotation created');
-    }
-    setDialogOpen(false); resetForm(); fetchData();
-  };
-
-  const handleStatusChange = async (id: string, status: string) => {
-    await supabase.from('sales_quotations').update({ status: status as any }).eq('id', id);
-    toast.success(`Quotation ${status}`); fetchData();
-  };
-
-  const handleConvertToSO = async (q: any) => {
-    const { data: qLines } = await supabase.from('sales_quotation_lines').select('*').eq('quotation_id', q.id);
-    if (!qLines || qLines.length === 0) return toast.error('No lines to convert');
-    const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
-    const { data: so, error } = await supabase.from('sales_orders').insert({
-      order_number: soNumber, customer_id: q.customer_id, quotation_id: q.id,
-      subtotal: q.subtotal, tax_amount: q.tax_amount, total_amount: q.total_amount,
-      created_by: user?.id, organization_id: organizationId,
-    }).select().single();
-    if (error) return toast.error(error.message);
-    await supabase.from('sales_order_lines').insert(qLines.map((l: any, i: number) => ({
-      order_id: so.id, line_number: i + 1, item_id: l.item_id, description: l.description,
-      quantity: l.quantity, unit_price: l.unit_price,
-    })));
-    await supabase.from('sales_quotations').update({ status: 'accepted' as any }).eq('id', q.id);
-    toast.success(`Sales Order ${soNumber} created from quotation`); fetchData();
-  };
+      await supabase.from('sales_quotations').update({ status: 'accepted' as any }).eq('id', q.id);
+      return soNumber;
+    },
+    onSuccess: (soNumber) => { invalidate(); toast.success(`Sales Order ${soNumber} created from quotation`); },
+    onError: (err: any) => toast.error(err.message),
+  });
 
   const addLine = () => setLines([...lines, { item_id: '', description: '', quantity: '1', unit_price: '0' }]);
 
