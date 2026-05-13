@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -20,11 +21,7 @@ import { formatCurrency } from '@/lib/currency';
 
 export default function SalesOrders() {
   const { user, organizationId } = useAuth();
-  const [orders, setOrders] = useState<any[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [items, setItems] = useState<any[]>([]);
-  const [locations, setLocations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [detailOrder, setDetailOrder] = useState<any>(null);
@@ -35,17 +32,29 @@ export default function SalesOrders() {
   const [form, setForm] = useState({ customer_id: '', expected_date: '', notes: '' });
   const [lines, setLines] = useState<{ item_id: string; description: string; quantity: string; unit_price: string }[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
+  const { data: orders = [], isLoading: loading } = useQuery({
+    queryKey: ['sales-orders'],
+    queryFn: async () => {
+      const { data } = await supabase.from('sales_orders').select('*, customers(name)').order('created_at', { ascending: false });
+      return data || [];
+    },
+  });
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers-active'],
+    queryFn: async () => { const { data } = await supabase.from('customers').select('id, name, code').eq('is_active', true).order('name'); return data || []; },
+  });
+  const { data: items = [] } = useQuery({
+    queryKey: ['items-active'],
+    queryFn: async () => { const { data } = await supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true).order('name'); return data || []; },
+  });
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations-active'],
+    queryFn: async () => { const { data } = await supabase.from('locations').select('id, name, code').eq('is_active', true).order('name'); return data || []; },
+  });
 
-  const fetchData = async () => {
-    const [oRes, cRes, iRes, lRes] = await Promise.all([
-      supabase.from('sales_orders').select('*, customers(name)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id, name, code').eq('is_active', true).order('name'),
-      supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true).order('name'),
-      supabase.from('locations').select('id, name, code').eq('is_active', true).order('name'),
-    ]);
-    setOrders(oRes.data || []); setCustomers(cRes.data || []); setItems(iRes.data || []); setLocations(lRes.data || []);
-    setLoading(false);
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
+    queryClient.invalidateQueries({ queryKey: ['delivery-notes'] });
   };
 
   const openEditDialog = async (order: any) => {
@@ -62,42 +71,49 @@ export default function SalesOrders() {
     setLines([]);
   };
 
-  const handleSave = async () => {
-    if (!form.customer_id) return toast.error('Select a customer');
-    if (lines.length === 0) return toast.error('Add at least one line');
-    const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!form.customer_id) throw new Error('Select a customer');
+      if (lines.length === 0) throw new Error('Add at least one line');
+      const subtotal = lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
 
-    if (editingOrder) {
-      const { error } = await supabase.from('sales_orders').update({
-        customer_id: form.customer_id, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
-      }).eq('id', editingOrder.id);
-      if (error) return toast.error(error.message);
-      await supabase.from('sales_order_lines').delete().eq('order_id', editingOrder.id);
-      await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
-        order_id: editingOrder.id, line_number: i + 1, item_id: l.item_id || null,
-        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-      })));
-      toast.success('Sales Order updated');
-    } else {
-      const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
-      const { data: so, error } = await supabase.from('sales_orders').insert({
-        order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
-        subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
-      }).select().single();
-      if (error) return toast.error(error.message);
-      await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
-        order_id: so.id, line_number: i + 1, item_id: l.item_id || null,
-        description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-      })));
-      toast.success(`Sales Order ${soNumber} created`);
-    }
-    setDialogOpen(false); resetForm(); fetchData();
-  };
+      if (editingOrder) {
+        const { error } = await supabase.from('sales_orders').update({
+          customer_id: form.customer_id, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
+        }).eq('id', editingOrder.id);
+        if (error) throw error;
+        await supabase.from('sales_order_lines').delete().eq('order_id', editingOrder.id);
+        await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
+          order_id: editingOrder.id, line_number: i + 1, item_id: l.item_id || null,
+          description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+        })));
+        return 'Sales Order updated';
+      } else {
+        const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
+        const { data: so, error } = await supabase.from('sales_orders').insert({
+          order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
+          subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+        }).select().single();
+        if (error) throw error;
+        await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
+          order_id: so.id, line_number: i + 1, item_id: l.item_id || null,
+          description: l.description, quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+        })));
+        return `Sales Order ${soNumber} created`;
+      }
+    },
+    onSuccess: (msg) => { invalidate(); toast.success(msg); setDialogOpen(false); resetForm(); },
+    onError: (err: any) => toast.error(err.message),
+  });
 
-  const handleConfirm = async (id: string) => {
-    await supabase.from('sales_orders').update({ status: 'confirmed' as any }).eq('id', id);
-    toast.success('Order confirmed'); fetchData();
-  };
+  const confirmMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('sales_orders').update({ status: 'confirmed' as any }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success('Order confirmed'); },
+    onError: (err: any) => toast.error(err.message),
+  });
 
   const openDelivery = async (order: any) => {
     const { data: soLines } = await supabase.from('sales_order_lines').select('*, items(name)').eq('order_id', order.id);
@@ -111,22 +127,25 @@ export default function SalesOrders() {
     setDnDialogOpen(true);
   };
 
-  const handleCreateDelivery = async () => {
-    if (!dnLocationId) return toast.error('Select a location');
-    const dnNumber = await getNextTransactionNumber(organizationId!, 'DN', 'DN');
-    const { data: dn, error } = await supabase.from('delivery_notes').insert({
-      dn_number: dnNumber, order_id: detailOrder.id, customer_id: detailOrder.customer_id,
-      location_id: dnLocationId, created_by: user?.id, organization_id: organizationId,
-    }).select().single();
-    if (error) return toast.error(error.message);
-    const validLines = dnLines.filter(l => parseFloat(l.qty) > 0);
-    await supabase.from('delivery_note_lines').insert(validLines.map(l => ({
-      dn_id: dn.id, order_line_id: l.order_line_id, qty_delivered: parseFloat(l.qty), item_id: null,
-    })));
-    await supabase.from('delivery_notes').update({ status: 'posted' as any }).eq('id', dn.id);
-    toast.success(`Delivery Note ${dnNumber} created and posted`);
-    setDnDialogOpen(false); fetchData();
-  };
+  const deliveryMutation = useMutation({
+    mutationFn: async () => {
+      if (!dnLocationId) throw new Error('Select a location');
+      const dnNumber = await getNextTransactionNumber(organizationId!, 'DN', 'DN');
+      const { data: dn, error } = await supabase.from('delivery_notes').insert({
+        dn_number: dnNumber, order_id: detailOrder.id, customer_id: detailOrder.customer_id,
+        location_id: dnLocationId, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) throw error;
+      const validLines = dnLines.filter(l => parseFloat(l.qty) > 0);
+      await supabase.from('delivery_note_lines').insert(validLines.map(l => ({
+        dn_id: dn.id, order_line_id: l.order_line_id, qty_delivered: parseFloat(l.qty), item_id: null,
+      })));
+      await supabase.from('delivery_notes').update({ status: 'posted' as any }).eq('id', dn.id);
+      return dnNumber;
+    },
+    onSuccess: (dnNumber) => { invalidate(); toast.success(`Delivery Note ${dnNumber} created and posted`); setDnDialogOpen(false); },
+    onError: (err: any) => toast.error(err.message),
+  });
 
   const viewOrderDetail = async (order: any) => {
     const { data } = await supabase.from('sales_order_lines').select('*, items(name, code)').eq('order_id', order.id);
@@ -179,7 +198,7 @@ export default function SalesOrders() {
                           {o.status === 'draft' && (
                             <>
                               <Button variant="ghost" size="sm" onClick={() => openEditDialog(o)}><Pencil className="h-3 w-3" /></Button>
-                              <Button variant="outline" size="sm" onClick={() => handleConfirm(o.id)}><Check className="h-3 w-3 mr-1" /> Confirm</Button>
+                              <Button variant="outline" size="sm" onClick={() => confirmMutation.mutate(o.id)}><Check className="h-3 w-3 mr-1" /> Confirm</Button>
                             </>
                           )}
                           {['confirmed', 'partially_delivered'].includes(o.status) && (
@@ -267,7 +286,7 @@ export default function SalesOrders() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-            <Button onClick={handleSave}>{editingOrder ? 'Update Order' : 'Create Order'}</Button>
+            <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -297,7 +316,7 @@ export default function SalesOrders() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDnDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateDelivery}>Post Delivery</Button>
+            <Button onClick={() => deliveryMutation.mutate()} disabled={deliveryMutation.isPending}>{deliveryMutation.isPending ? 'Posting...' : 'Post Delivery'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
