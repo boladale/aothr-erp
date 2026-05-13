@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, PackageMinus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
@@ -60,14 +61,9 @@ interface IssueRow {
 
 export default function InventoryIssues() {
   const { user, organizationId } = useAuth();
-  const [issues, setIssues] = useState<IssueRow[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [glAccounts, setGlAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     location_id: '',
@@ -80,27 +76,43 @@ export default function InventoryIssues() {
     { item_id: '', quantity: 1, target_gl_account_id: '', description: '' },
   ]);
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
-      const [issuesRes, itemsRes, locsRes, glRes] = await Promise.all([
-        supabase.from('inventory_issues').select('*, locations(name)').order('created_at', { ascending: false }),
-        supabase.from('items').select('id, code, name').eq('is_active', true).order('name'),
-        supabase.from('locations').select('id, code, name').eq('is_active', true).order('name'),
-        supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_active', true).eq('is_header', false).order('account_code'),
-      ]);
-      setIssues((issuesRes.data || []) as IssueRow[]);
-      setItems((itemsRes.data || []) as Item[]);
-      setLocations((locsRes.data || []) as Location[]);
-      setGlAccounts((glRes.data || []) as GLAccount[]);
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const issuesQ = useQuery({
+    queryKey: ['inventory_issues'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory_issues').select('*, locations(name)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as IssueRow[];
+    },
+  });
+  const itemsQ = useQuery({
+    queryKey: ['items-active-min'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('id, code, name').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Item[];
+    },
+  });
+  const locationsQ = useQuery({
+    queryKey: ['locations-active-min'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('id, code, name').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
+  const glAccountsQ = useQuery({
+    queryKey: ['gl_accounts-leaf-all'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_active', true).eq('is_header', false).order('account_code');
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
+  const issues = issuesQ.data || [];
+  const items = itemsQ.data || [];
+  const locations = locationsQ.data || [];
+  const glAccounts = glAccountsQ.data || [];
+  const loading = issuesQ.isLoading;
 
   const addLine = () => setLines([...lines, { item_id: '', quantity: 1, target_gl_account_id: '', description: '' }]);
   const removeLine = (i: number) => { if (lines.length > 1) setLines(lines.filter((_, idx) => idx !== i)); };
@@ -114,13 +126,8 @@ export default function InventoryIssues() {
     return await getNextTransactionNumber(organizationId!, 'ISS', 'ISS');
   };
 
-  const handleCreate = async () => {
-    if (!form.location_id) { toast.error('Select a warehouse location'); return; }
-    if (lines.some(l => !l.item_id || l.quantity <= 0)) { toast.error('Fill all item lines with valid quantities'); return; }
-    if (lines.some(l => !l.target_gl_account_id)) { toast.error('Select a GL account for each line'); return; }
-
-    setSaving(true);
-    try {
+  const createMutation = useMutation({
+    mutationFn: async () => {
       const issueNumber = await generateIssueNumber();
       const { data: issue, error: issueErr } = await supabase
         .from('inventory_issues')
@@ -136,7 +143,6 @@ export default function InventoryIssues() {
         })
         .select()
         .single();
-
       if (issueErr) throw issueErr;
 
       const lineInserts = lines.map(l => ({
@@ -146,36 +152,40 @@ export default function InventoryIssues() {
         target_gl_account_id: l.target_gl_account_id,
         description: l.description || null,
       }));
-
       const { error: linesErr } = await supabase.from('inventory_issue_lines').insert(lineInserts);
       if (linesErr) throw linesErr;
-
+      return issueNumber;
+    },
+    onSuccess: (issueNumber) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
       toast.success(`Issue ${issueNumber} created as draft`);
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || 'Failed to create issue');
-    } finally {
-      setSaving(false);
-    }
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to create issue'),
+  });
+  const saving = createMutation.isPending;
+
+  const handleCreate = () => {
+    if (!form.location_id) { toast.error('Select a warehouse location'); return; }
+    if (lines.some(l => !l.item_id || l.quantity <= 0)) { toast.error('Fill all item lines with valid quantities'); return; }
+    if (lines.some(l => !l.target_gl_account_id)) { toast.error('Select a GL account for each line'); return; }
+    createMutation.mutate();
   };
 
-  const handlePost = async (issue: IssueRow) => {
-    try {
-      const { error } = await supabase
-        .from('inventory_issues')
-        .update({ status: 'posted' })
-        .eq('id', issue.id);
+  const postMutation = useMutation({
+    mutationFn: async (issue: IssueRow) => {
+      const { error } = await supabase.from('inventory_issues').update({ status: 'posted' }).eq('id', issue.id);
       if (error) throw error;
-      toast.success(`Issue ${issue.issue_number} posted — inventory reduced & GL entries created`);
-      fetchData();
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || 'Failed to post issue');
-    }
-  };
+      return issue.issue_number;
+    },
+    onSuccess: (num) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      toast.success(`Issue ${num} posted — inventory reduced & GL entries created`);
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to post issue'),
+  });
+  const handlePost = (issue: IssueRow) => postMutation.mutate(issue);
 
   const resetForm = () => {
     setForm({ location_id: '', issue_date: new Date().toISOString().split('T')[0], issued_to: '', department: '', notes: '' });
