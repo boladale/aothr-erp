@@ -30,128 +30,111 @@ interface RequisitionRow {
 
 export default function Requisitions() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { user, hasRole } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canInitiate = !!user;
-  const [requisitions, setRequisitions] = useState<RequisitionRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editReq, setEditReq] = useState<RequisitionRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkProcessing, setBulkProcessing] = useState(false);
 
-  useEffect(() => { fetchRequisitions(); }, []);
-
-  const fetchRequisitions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('requisitions')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const requisitionsQ = useQuery({
+    queryKey: ['requisitions'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('requisitions').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setRequisitions((data || []).map(r => ({ ...r, profiles: null })) as RequisitionRow[]);
-    } catch (error) {
-      console.error('Error fetching requisitions:', error);
-      toast.error('Failed to load requisitions');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []).map(r => ({ ...r, profiles: null })) as RequisitionRow[];
+    },
+  });
+  const requisitions = requisitionsQ.data || [];
+  const loading = requisitionsQ.isLoading;
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['requisitions'] });
 
-  const handleSubmit = async (req: RequisitionRow) => {
-    try {
+  const submitMutation = useMutation({
+    mutationFn: async (req: RequisitionRow) => {
       const { error } = await supabase.from('requisitions').update({ status: 'pending_approval', submitted_at: new Date().toISOString() }).eq('id', req.id);
       if (error) throw error;
-      toast.success('Submitted for approval');
-      fetchRequisitions();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to submit');
-    }
-  };
-
-  const handleApprove = async (req: RequisitionRow) => {
-    if (req.status !== 'pending_approval') { toast.error('Only pending requisitions can be approved'); return; }
-    try {
+    },
+    onSuccess: () => { toast.success('Submitted for approval'); invalidate(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to submit'),
+  });
+  const approveMutation = useMutation({
+    mutationFn: async (req: RequisitionRow) => {
+      if (req.status !== 'pending_approval') throw new Error('Only pending requisitions can be approved');
       const { error } = await supabase.from('requisitions').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id }).eq('id', req.id).eq('status', 'pending_approval');
       if (error) throw error;
-      toast.success('Requisition approved');
-      fetchRequisitions();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to approve');
-    }
-  };
-
-  const handleReject = async (req: RequisitionRow) => {
-    const reason = window.prompt('Please enter a reason for rejection:');
-    if (reason === null) return;
-    if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
-    try {
+    },
+    onSuccess: () => { toast.success('Requisition approved'); invalidate(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to approve'),
+  });
+  const rejectMutation = useMutation({
+    mutationFn: async ({ req, reason }: { req: RequisitionRow; reason: string }) => {
       const { error } = await supabase.from('requisitions').update({
         status: 'draft', rejection_reason: reason, rejected_at: new Date().toISOString(), rejected_by: user?.id, submitted_at: null
       }).eq('id', req.id);
       if (error) throw error;
-      toast.success('Requisition returned to draft for corrections');
-      fetchRequisitions();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject');
-    }
-  };
-
-  const handleEdit = (req: RequisitionRow) => { setEditReq(req); setDialogOpen(true); };
-
-  const handleDelete = async (req: RequisitionRow) => {
-    if (req.status !== 'draft') { toast.error('Only draft requisitions can be deleted'); return; }
-    if (!window.confirm(`Delete requisition ${req.req_number}? This cannot be undone.`)) return;
-    try {
+    },
+    onSuccess: () => { toast.success('Requisition returned to draft for corrections'); invalidate(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to reject'),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: async (req: RequisitionRow) => {
       await supabase.from('requisition_lines').delete().eq('requisition_id', req.id);
       const { error } = await supabase.from('requisitions').delete().eq('id', req.id);
       if (error) throw error;
-      toast.success('Requisition deleted');
-      fetchRequisitions();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete');
-    }
-  };
-
-  // Bulk operations
-  const handleBulkApprove = async () => {
-    const pendingIds = selectedIds.filter(id => {
-      const r = requisitions.find(req => req.id === id);
-      return r?.status === 'pending_approval';
-    });
-    if (pendingIds.length === 0) { toast.error('No pending requisitions selected'); return; }
-    if (!window.confirm(`Approve ${pendingIds.length} requisitions?`)) return;
-    setBulkProcessing(true);
-    try {
+    },
+    onSuccess: () => { toast.success('Requisition deleted'); invalidate(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete'),
+  });
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
       const { error } = await supabase.from('requisitions').update({
         status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id
-      }).in('id', pendingIds);
+      }).in('id', ids);
       if (error) throw error;
-      toast.success(`${pendingIds.length} requisitions approved`);
-      setSelectedIds([]);
-      fetchRequisitions();
-    } catch (e: any) { toast.error(e.message); } finally { setBulkProcessing(false); }
-  };
+      return ids.length;
+    },
+    onSuccess: (n) => { toast.success(`${n} requisitions approved`); setSelectedIds([]); invalidate(); },
+    onError: (e: any) => toast.error(e?.message),
+  });
+  const bulkRejectMutation = useMutation({
+    mutationFn: async ({ ids, reason }: { ids: string[]; reason: string }) => {
+      const { error } = await supabase.from('requisitions').update({
+        status: 'draft', rejection_reason: reason, rejected_at: new Date().toISOString(), rejected_by: user?.id, submitted_at: null
+      }).in('id', ids);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (n) => { toast.success(`${n} requisitions rejected`); setSelectedIds([]); invalidate(); },
+    onError: (e: any) => toast.error(e?.message),
+  });
+  const bulkProcessing = bulkApproveMutation.isPending || bulkRejectMutation.isPending;
 
-  const handleBulkReject = async () => {
-    const pendingIds = selectedIds.filter(id => {
-      const r = requisitions.find(req => req.id === id);
-      return r?.status === 'pending_approval';
-    });
+  const handleReject = (req: RequisitionRow) => {
+    const reason = window.prompt('Please enter a reason for rejection:');
+    if (reason === null) return;
+    if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
+    rejectMutation.mutate({ req, reason });
+  };
+  const handleEdit = (req: RequisitionRow) => { setEditReq(req); setDialogOpen(true); };
+  const handleDelete = (req: RequisitionRow) => {
+    if (req.status !== 'draft') { toast.error('Only draft requisitions can be deleted'); return; }
+    if (!window.confirm(`Delete requisition ${req.req_number}? This cannot be undone.`)) return;
+    deleteMutation.mutate(req);
+  };
+  const handleBulkApprove = () => {
+    const pendingIds = selectedIds.filter(id => requisitions.find(r => r.id === id)?.status === 'pending_approval');
+    if (pendingIds.length === 0) { toast.error('No pending requisitions selected'); return; }
+    if (!window.confirm(`Approve ${pendingIds.length} requisitions?`)) return;
+    bulkApproveMutation.mutate(pendingIds);
+  };
+  const handleBulkReject = () => {
+    const pendingIds = selectedIds.filter(id => requisitions.find(r => r.id === id)?.status === 'pending_approval');
     if (pendingIds.length === 0) { toast.error('No pending requisitions selected'); return; }
     const reason = window.prompt(`Reject ${pendingIds.length} requisitions. Enter reason:`);
     if (!reason?.trim()) { toast.error('Reason required'); return; }
-    setBulkProcessing(true);
-    try {
-      const { error } = await supabase.from('requisitions').update({
-        status: 'draft', rejection_reason: reason, rejected_at: new Date().toISOString(), rejected_by: user?.id, submitted_at: null
-      }).in('id', pendingIds);
-      if (error) throw error;
-      toast.success(`${pendingIds.length} requisitions rejected`);
-      setSelectedIds([]);
-      fetchRequisitions();
-    } catch (e: any) { toast.error(e.message); } finally { setBulkProcessing(false); }
+    bulkRejectMutation.mutate({ ids: pendingIds, reason });
   };
 
   const filtered = requisitions.filter(r =>
