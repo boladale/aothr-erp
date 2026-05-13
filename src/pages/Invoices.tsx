@@ -224,16 +224,16 @@ export default function Invoices() {
             <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(i); }}><Pencil className="h-3 w-3" /></Button>
           )}
           {i.status === 'draft' && i.created_by === user?.id && (
-            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitInvoice(i); }}>Submit</Button>
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); submitMutation.mutate(i); }}>Submit</Button>
           )}
           {i.status === 'pending_approval' && canApprove && (
             <>
-              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handleApproveInvoice(i); }}>Approve</Button>
+              <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); approveMutation.mutate(i); }}>Approve</Button>
               <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectInvoice(i); }}>Reject</Button>
             </>
           )}
           {i.status === 'approved' && canApprove && (
-            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); handlePost(i); }}>Post</Button>
+            <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); postMutation.mutate(i); }}>Post</Button>
           )}
         </div>
       )
@@ -305,7 +305,7 @@ export default function Invoices() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingInvoice ? 'Update Invoice' : 'Create Invoice'}</Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingInvoice ? 'Update Invoice' : 'Create Invoice'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
