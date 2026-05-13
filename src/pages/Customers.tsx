@@ -31,8 +31,7 @@ interface Customer {
 export default function Customers() {
   const { hasRole, organizationId } = useAuth();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -40,30 +39,35 @@ export default function Customers() {
     payment_terms: '30', credit_limit: '0',
   });
 
-  useEffect(() => { fetchCustomers(); }, []);
+  const { data: customers = [], isLoading: loading } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('*').order('code');
+      if (error) throw error;
+      return (data || []) as Customer[];
+    },
+  });
 
-  const fetchCustomers = async () => {
-    const { data, error } = await supabase.from('customers').select('*').order('code');
-    if (error) { toast.error('Failed to load customers'); return; }
-    setCustomers((data || []) as Customer[]);
-    setLoading(false);
-  };
-
-  const handleCreate = async () => {
-    if (!form.code || !form.name) { toast.error('Code and name required'); return; }
-    const { error } = await supabase.from('customers').insert({
-      code: form.code, name: form.name, email: form.email || null,
-      phone: form.phone || null, address: form.address || null,
-      city: form.city || null, country: form.country || null,
-      payment_terms: parseInt(form.payment_terms) || 30,
-      credit_limit: parseFloat(form.credit_limit) || 0, organization_id: organizationId,
-    });
-    if (error) { toast.error(error.message); return; }
-    toast.success('Customer created');
-    setDialogOpen(false);
-    setForm({ code: '', name: '', email: '', phone: '', address: '', city: '', country: '', payment_terms: '30', credit_limit: '0' });
-    fetchCustomers();
-  };
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      if (!form.code || !form.name) throw new Error('Code and name required');
+      const { error } = await supabase.from('customers').insert({
+        code: form.code, name: form.name, email: form.email || null,
+        phone: form.phone || null, address: form.address || null,
+        city: form.city || null, country: form.country || null,
+        payment_terms: parseInt(form.payment_terms) || 30,
+        credit_limit: parseFloat(form.credit_limit) || 0, organization_id: organizationId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      toast.success('Customer created');
+      setDialogOpen(false);
+      setForm({ code: '', name: '', email: '', phone: '', address: '', city: '', country: '', payment_terms: '30', credit_limit: '0' });
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
 
   const filtered = customers.filter(c =>
     c.code.toLowerCase().includes(search.toLowerCase()) ||
