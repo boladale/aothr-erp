@@ -135,7 +135,7 @@ export default function DeliveryNotes() {
                       <td className="px-4 py-3"><StatusBadge status={d.status} /></td>
                       <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {d.status === 'posted' && (
-                          <Button variant="outline" size="sm" onClick={() => handleGenerateInvoice(d)}>
+                          <Button variant="outline" size="sm" onClick={() => invoiceMutation.mutate(d)}>
                             <Receipt className="h-3 w-3 mr-1" /> Invoice
                           </Button>
                         )}
