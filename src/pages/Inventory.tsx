@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Boxes, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
@@ -35,13 +36,9 @@ interface BalanceWithDetails extends InventoryBalance {
 
 export default function Inventory() {
   const { user, organizationId } = useAuth();
-  const [balances, setBalances] = useState<BalanceWithDetails[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     item_id: '',
     location_id: '',
@@ -50,38 +47,37 @@ export default function Inventory() {
     reason: '',
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const balancesQ = useQuery({
+    queryKey: ['inventory_balances'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory_balances').select('*, items(*), locations(*)');
+      if (error) throw error;
+      return (data || []) as BalanceWithDetails[];
+    },
+  });
+  const itemsQ = useQuery({
+    queryKey: ['items-active-full'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Item[];
+    },
+  });
+  const locationsQ = useQuery({
+    queryKey: ['locations-active-full'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
+  const balances = balancesQ.data || [];
+  const items = itemsQ.data || [];
+  const locations = locationsQ.data || [];
+  const loading = balancesQ.isLoading;
 
-  const fetchData = async () => {
-    try {
-      const [balancesRes, itemsRes, locationsRes] = await Promise.all([
-        supabase.from('inventory_balances').select('*, items(*), locations(*)'),
-        supabase.from('items').select('*').eq('is_active', true).order('name'),
-        supabase.from('locations').select('*').eq('is_active', true).order('name'),
-      ]);
-
-      setBalances((balancesRes.data || []) as BalanceWithDetails[]);
-      setItems((itemsRes.data || []) as Item[]);
-      setLocations((locationsRes.data || []) as Location[]);
-    } catch (error) {
-      console.error('Error fetching inventory:', error);
-      toast.error('Failed to load inventory');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAdjust = async () => {
-    if (!form.item_id || !form.location_id || form.quantity <= 0) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      // Check current balance for decreases
+  const adjustMutation = useMutation({
+    mutationFn: async () => {
       const { data: currentBalance } = await supabase
         .from('inventory_balances')
         .select('quantity')
@@ -92,15 +88,11 @@ export default function Inventory() {
       const currentQty = currentBalance?.quantity || 0;
 
       if (form.adjustment_type === 'decrease' && form.quantity > currentQty) {
-        toast.error(`Cannot decrease by ${form.quantity}. Current balance is only ${currentQty}`);
-        setSaving(false);
-        return;
+        throw new Error(`Cannot decrease by ${form.quantity}. Current balance is only ${currentQty}`);
       }
 
-      // Generate adjustment number
       const adjNumber = await getNextTransactionNumber(organizationId!, 'ADJ', 'ADJ');
 
-      // Create adjustment record
       const { data: adjustment, error: adjError } = await supabase
         .from('inventory_adjustments')
         .insert({
@@ -114,10 +106,8 @@ export default function Inventory() {
         })
         .select()
         .single();
-
       if (adjError) throw adjError;
 
-      // Create adjustment line
       const { error: lineError } = await supabase
         .from('inventory_adjustment_lines')
         .insert({
@@ -126,12 +116,10 @@ export default function Inventory() {
           adjustment_type: form.adjustment_type,
           quantity: form.quantity,
         });
-
       if (lineError) throw lineError;
 
-      // Update inventory balance
-      const newQty = form.adjustment_type === 'increase' 
-        ? currentQty + form.quantity 
+      const newQty = form.adjustment_type === 'increase'
+        ? currentQty + form.quantity
         : currentQty - form.quantity;
 
       if (currentBalance) {
@@ -140,7 +128,6 @@ export default function Inventory() {
           .update({ quantity: newQty, last_updated: new Date().toISOString() })
           .eq('item_id', form.item_id)
           .eq('location_id', form.location_id);
-
         if (updateError) throw updateError;
       } else {
         const { error: insertError } = await supabase
@@ -150,20 +137,25 @@ export default function Inventory() {
             location_id: form.location_id,
             quantity: newQty,
           });
-
         if (insertError) throw insertError;
       }
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory_balances'] });
       toast.success('Inventory adjusted');
       setDialogOpen(false);
       setForm({ item_id: '', location_id: '', adjustment_type: 'increase', quantity: 0, reason: '' });
-      fetchData();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to adjust inventory';
-      toast.error(message);
-    } finally {
-      setSaving(false);
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to adjust inventory'),
+  });
+  const saving = adjustMutation.isPending;
+
+  const handleAdjust = () => {
+    if (!form.item_id || !form.location_id || form.quantity <= 0) {
+      toast.error('Please fill all required fields');
+      return;
     }
+    adjustMutation.mutate();
   };
 
   const filtered = balances.filter(b =>

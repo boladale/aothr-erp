@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Package, Pencil, Trash2, Power } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,11 +22,9 @@ import type { Item } from '@/lib/supabase';
 
 export default function Items() {
   const { organizationId } = useAuth();
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [editItem, setEditItem] = useState<Item | null>(null);
   const [form, setForm] = useState({
     code: '',
@@ -36,26 +35,16 @@ export default function Items() {
     unit_cost: 0,
   });
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const fetchItems = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .order('code');
-
+  const itemsQ = useQuery({
+    queryKey: ['items'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*').order('code');
       if (error) throw error;
-      setItems((data || []) as Item[]);
-    } catch (error) {
-      console.error('Error fetching items:', error);
-      toast.error('Failed to load items');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []) as Item[];
+    },
+  });
+  const items = itemsQ.data || [];
+  const loading = itemsQ.isLoading;
 
   const openCreate = () => {
     setEditItem(null);
@@ -76,60 +65,64 @@ export default function Items() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!form.code || !form.name) {
-      toast.error('Code and Name are required');
-      return;
-    }
-
-    setSaving(true);
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
       if (editItem) {
         const { error } = await supabase.from('items').update({
-          code: form.code,
-          name: form.name,
-          description: form.description || null,
-          category: form.category || null,
-          unit_of_measure: form.unit_of_measure,
-          unit_cost: form.unit_cost,
+          code: form.code, name: form.name,
+          description: form.description || null, category: form.category || null,
+          unit_of_measure: form.unit_of_measure, unit_cost: form.unit_cost,
         }).eq('id', editItem.id);
         if (error) throw error;
-        toast.success('Item updated');
+        return 'updated';
       } else {
         const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
         if (error) throw error;
-        toast.success('Item created');
+        return 'created';
       }
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
       setDialogOpen(false);
-      fetchItems();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save item');
-    } finally {
-      setSaving(false);
-    }
+      toast.success(`Item ${res}`);
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to save item'),
+  });
+  const saving = saveMutation.isPending;
+
+  const handleSave = () => {
+    if (!form.code || !form.name) { toast.error('Code and Name are required'); return; }
+    saveMutation.mutate();
   };
 
-  const handleToggleActive = async (item: Item) => {
-    try {
+  const toggleActiveMutation = useMutation({
+    mutationFn: async (item: Item) => {
       const { error } = await supabase.from('items').update({ is_active: !item.is_active }).eq('id', item.id);
       if (error) throw error;
-      toast.success(item.is_active ? 'Item disabled' : 'Item enabled');
-      fetchItems();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update item');
-    }
-  };
+      return item.is_active;
+    },
+    onSuccess: (wasActive) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      toast.success(wasActive ? 'Item disabled' : 'Item enabled');
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to update item'),
+  });
+  const handleToggleActive = (item: Item) => toggleActiveMutation.mutate(item);
 
-  const handleDelete = async (item: Item) => {
-    if (!window.confirm(`Delete item "${item.name}"? This cannot be undone.`)) return;
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (item: Item) => {
       const { error } = await supabase.from('items').delete().eq('id', item.id);
       if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
       toast.success('Item deleted');
-      fetchItems();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete item. It may be in use.');
-    }
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to delete item. It may be in use.'),
+  });
+  const handleDelete = (item: Item) => {
+    if (!window.confirm(`Delete item "${item.name}"? This cannot be undone.`)) return;
+    deleteMutation.mutate(item);
   };
 
   const filtered = items.filter(i =>
