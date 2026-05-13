@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -27,27 +28,33 @@ interface ARReceipt {
 
 export default function ARReceipts() {
   const { hasRole, organizationId } = useAuth();
+  const queryClient = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [receipts, setReceipts] = useState<ARReceipt[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<ARReceipt | null>(null);
   const [form, setForm] = useState({ customer_id: '', receipt_date: new Date().toISOString().split('T')[0], payment_method: 'bank_transfer', reference_number: '', notes: '' });
   const [outstandingInvoices, setOutstandingInvoices] = useState<OutstandingInvoice[]>([]);
   const [allocations, setAllocations] = useState<Allocation[]>([]);
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
-    const [recRes, custRes] = await Promise.all([
-      supabase.from('ar_receipts').select('*, customers(name, code)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id, code, name').eq('is_active', true),
-    ]);
-    setReceipts((recRes.data || []) as ARReceipt[]);
-    setCustomers((custRes.data || []) as Customer[]);
-    setLoading(false);
-  };
+  const receiptsQ = useQuery({
+    queryKey: ['ar_receipts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('ar_receipts').select('*, customers(name, code)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as ARReceipt[];
+    },
+  });
+  const customersQ = useQuery({
+    queryKey: ['customers-active-min'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('id, code, name').eq('is_active', true);
+      if (error) throw error;
+      return (data || []) as Customer[];
+    },
+  });
+  const receipts = receiptsQ.data || [];
+  const customers = customersQ.data || [];
+  const loading = receiptsQ.isLoading;
 
   const openEditDialog = async (rec: ARReceipt) => {
     setEditingReceipt(rec);
@@ -100,39 +107,48 @@ export default function ARReceipts() {
 
   const totalAllocated = allocations.reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (editingReceipt) {
+        const { error } = await supabase.from('ar_receipts').update({
+          receipt_date: form.receipt_date, total_amount: totalAllocated,
+          payment_method: form.payment_method, reference_number: form.reference_number || null, notes: form.notes || null,
+        }).eq('id', editingReceipt.id);
+        if (error) throw error;
+        await supabase.from('ar_receipt_allocations').delete().eq('receipt_id', editingReceipt.id);
+        const allocInserts = allocations.filter(a => parseFloat(a.amount) > 0).map(a => ({
+          receipt_id: editingReceipt.id, invoice_id: a.invoice_id, allocated_amount: parseFloat(a.amount),
+        }));
+        await supabase.from('ar_receipt_allocations').insert(allocInserts);
+        return 'updated';
+      } else {
+        const recNum = await getNextTransactionNumber(organizationId!, 'REC', 'REC');
+        const { data: rec, error } = await supabase.from('ar_receipts').insert({
+          receipt_number: recNum, customer_id: form.customer_id, receipt_date: form.receipt_date,
+          total_amount: totalAllocated, payment_method: form.payment_method,
+          reference_number: form.reference_number || null, notes: form.notes || null, organization_id: organizationId,
+        }).select().single();
+        if (error) throw error;
+        const allocInserts = allocations.filter(a => parseFloat(a.amount) > 0).map(a => ({
+          receipt_id: rec.id, invoice_id: a.invoice_id, allocated_amount: parseFloat(a.amount),
+        }));
+        await supabase.from('ar_receipt_allocations').insert(allocInserts);
+        return 'created';
+      }
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['ar_receipts'] });
+      setDialogOpen(false);
+      resetForm();
+      toast.success(`Receipt ${res}`);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const handleSave = () => {
     if (!form.customer_id) { toast.error('Select a customer'); return; }
     if (totalAllocated <= 0) { toast.error('Allocate at least one payment'); return; }
-
-    if (editingReceipt) {
-      const { error } = await supabase.from('ar_receipts').update({
-        receipt_date: form.receipt_date, total_amount: totalAllocated,
-        payment_method: form.payment_method, reference_number: form.reference_number || null, notes: form.notes || null,
-      }).eq('id', editingReceipt.id);
-      if (error) { toast.error(error.message); return; }
-      await supabase.from('ar_receipt_allocations').delete().eq('receipt_id', editingReceipt.id);
-      const allocInserts = allocations.filter(a => parseFloat(a.amount) > 0).map(a => ({
-        receipt_id: editingReceipt.id, invoice_id: a.invoice_id, allocated_amount: parseFloat(a.amount),
-      }));
-      await supabase.from('ar_receipt_allocations').insert(allocInserts);
-      toast.success('Receipt updated');
-    } else {
-      const recNum = await getNextTransactionNumber(organizationId!, 'REC', 'REC');
-      const { data: rec, error } = await supabase.from('ar_receipts').insert({
-        receipt_number: recNum, customer_id: form.customer_id, receipt_date: form.receipt_date,
-        total_amount: totalAllocated, payment_method: form.payment_method,
-        reference_number: form.reference_number || null, notes: form.notes || null, organization_id: organizationId,
-      }).select().single();
-      if (error) { toast.error(error.message); return; }
-      const allocInserts = allocations.filter(a => parseFloat(a.amount) > 0).map(a => ({
-        receipt_id: rec.id, invoice_id: a.invoice_id, allocated_amount: parseFloat(a.amount),
-      }));
-      await supabase.from('ar_receipt_allocations').insert(allocInserts);
-      toast.success('Receipt created');
-    }
-    setDialogOpen(false);
-    resetForm();
-    fetchAll();
+    saveMutation.mutate();
   };
 
   const resetForm = () => {
@@ -141,12 +157,18 @@ export default function ARReceipts() {
     setAllocations([]); setOutstandingInvoices([]);
   };
 
-  const handlePost = async (id: string) => {
-    const { error } = await supabase.from('ar_receipts').update({ status: 'posted' }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Receipt posted to GL');
-    fetchAll();
-  };
+  const postMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('ar_receipts').update({ status: 'posted' }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ar_receipts'] });
+      toast.success('Receipt posted to GL');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+  const handlePost = (id: string) => postMutation.mutate(id);
 
   return (
     <AppLayout>
@@ -255,7 +277,7 @@ export default function ARReceipts() {
                 </Card>
               )}
 
-              <Button onClick={handleSave} className="w-full">{editingReceipt ? 'Update Receipt' : 'Create Receipt'}</Button>
+              <Button onClick={handleSave} className="w-full" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingReceipt ? 'Update Receipt' : 'Create Receipt')}</Button>
             </div>
           </DialogContent>
         </Dialog>
