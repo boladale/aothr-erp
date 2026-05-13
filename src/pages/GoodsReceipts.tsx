@@ -182,7 +182,7 @@ export default function GoodsReceipts() {
           {r.status === 'draft' && (
             <>
               <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(r); }}><Pencil className="h-3 w-3" /></Button>
-              <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); handlePost(r); }}>
+              <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); postMutation.mutate(r); }}>
                 {postingId === r.id ? 'Posting...' : 'Post'}
               </Button>
             </>
@@ -273,7 +273,7 @@ export default function GoodsReceipts() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : editingGRN ? 'Update GRN' : 'Create GRN'}</Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingGRN ? 'Update GRN' : 'Create GRN'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
