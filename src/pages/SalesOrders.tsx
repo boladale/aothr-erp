@@ -198,7 +198,7 @@ export default function SalesOrders() {
                           {o.status === 'draft' && (
                             <>
                               <Button variant="ghost" size="sm" onClick={() => openEditDialog(o)}><Pencil className="h-3 w-3" /></Button>
-                              <Button variant="outline" size="sm" onClick={() => handleConfirm(o.id)}><Check className="h-3 w-3 mr-1" /> Confirm</Button>
+                              <Button variant="outline" size="sm" onClick={() => confirmMutation.mutate(o.id)}><Check className="h-3 w-3 mr-1" /> Confirm</Button>
                             </>
                           )}
                           {['confirmed', 'partially_delivered'].includes(o.status) && (
@@ -286,7 +286,7 @@ export default function SalesOrders() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
-            <Button onClick={handleSave}>{editingOrder ? 'Update Order' : 'Create Order'}</Button>
+            <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : editingOrder ? 'Update Order' : 'Create Order'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -316,7 +316,7 @@ export default function SalesOrders() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDnDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateDelivery}>Post Delivery</Button>
+            <Button onClick={() => deliveryMutation.mutate()} disabled={deliveryMutation.isPending}>{deliveryMutation.isPending ? 'Posting...' : 'Post Delivery'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
