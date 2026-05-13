@@ -103,7 +103,7 @@ export default function Customers() {
                   </div>
                   <div><Label>Credit Limit</Label><Input type="number" value={form.credit_limit} onChange={e => setForm(f => ({ ...f, credit_limit: e.target.value }))} /></div>
                   <div><Label>Address</Label><Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
-                  <Button onClick={handleCreate} className="w-full">Create Customer</Button>
+                  <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="w-full">{createMutation.isPending ? 'Creating...' : 'Create Customer'}</Button>
                 </div>
               </DialogContent>
             </Dialog>
