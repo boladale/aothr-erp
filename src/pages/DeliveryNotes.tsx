@@ -17,20 +17,19 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function DeliveryNotes() {
   const { user, organizationId } = useAuth();
-  const [deliveries, setDeliveries] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [detail, setDetail] = useState<any>(null);
   const [detailLines, setDetailLines] = useState<any[]>([]);
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    const { data } = await supabase.from('delivery_notes')
-      .select('*, customers(name), sales_orders(order_number), locations(name)')
-      .order('created_at', { ascending: false });
-    setDeliveries(data || []);
-    setLoading(false);
-  };
+  const { data: deliveries = [], isLoading: loading } = useQuery({
+    queryKey: ['delivery-notes'],
+    queryFn: async () => {
+      const { data } = await supabase.from('delivery_notes')
+        .select('*, customers(name), sales_orders(order_number), locations(name)')
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+  });
 
   const viewDetail = async (dn: any) => {
     const { data } = await supabase.from('delivery_note_lines')
@@ -40,51 +39,52 @@ export default function DeliveryNotes() {
     setDetail(dn);
   };
 
-  const handleGenerateInvoice = async (dn: any) => {
-    // Get DN lines with SO line details
-    const { data: dnLines } = await supabase.from('delivery_note_lines')
-      .select('*, sales_order_lines(item_id, description, unit_price)')
-      .eq('dn_id', dn.id);
-    if (!dnLines || dnLines.length === 0) return toast.error('No lines to invoice');
+  const invoiceMutation = useMutation({
+    mutationFn: async (dn: any) => {
+      const { data: dnLines } = await supabase.from('delivery_note_lines')
+        .select('*, sales_order_lines(item_id, description, unit_price)')
+        .eq('dn_id', dn.id);
+      if (!dnLines || dnLines.length === 0) throw new Error('No lines to invoice');
 
-    // Get the SO to get tax info
-    const { data: so } = await supabase.from('sales_orders').select('*').eq('id', dn.order_id).single();
+      const { data: so } = await supabase.from('sales_orders').select('*').eq('id', dn.order_id).single();
 
-    const invNumber = await getNextTransactionNumber(organizationId!, 'AR_INV', 'INV');
-    const subtotal = dnLines.reduce((s: number, l: any) => s + (l.qty_delivered * (l.sales_order_lines?.unit_price || 0)), 0);
+      const invNumber = await getNextTransactionNumber(organizationId!, 'AR_INV', 'INV');
+      const subtotal = dnLines.reduce((s: number, l: any) => s + (l.qty_delivered * (l.sales_order_lines?.unit_price || 0)), 0);
 
-    const { data: inv, error } = await supabase.from('ar_invoices').insert({
-      invoice_number: invNumber,
-      customer_id: dn.customer_id,
-      subtotal,
-      total_amount: subtotal + (so?.tax_amount || 0),
-      tax_amount: so?.tax_amount || 0,
-      notes: `Generated from DN ${dn.dn_number}`,
-      created_by: user?.id, organization_id: organizationId,
-    }).select().single();
+      const { data: inv, error } = await supabase.from('ar_invoices').insert({
+        invoice_number: invNumber,
+        customer_id: dn.customer_id,
+        subtotal,
+        total_amount: subtotal + (so?.tax_amount || 0),
+        tax_amount: so?.tax_amount || 0,
+        notes: `Generated from DN ${dn.dn_number}`,
+        created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) throw error;
 
-    if (error) return toast.error(error.message);
+      await supabase.from('ar_invoice_lines').insert(dnLines.map((l: any) => ({
+        invoice_id: inv.id,
+        description: l.sales_order_lines?.description || 'Delivered item',
+        item_id: l.sales_order_lines?.item_id || l.item_id,
+        quantity: l.qty_delivered,
+        unit_price: l.sales_order_lines?.unit_price || 0,
+      })));
 
-    // Create invoice lines
-    await supabase.from('ar_invoice_lines').insert(dnLines.map((l: any, i: number) => ({
-      invoice_id: inv.id,
-      description: l.sales_order_lines?.description || 'Delivered item',
-      item_id: l.sales_order_lines?.item_id || l.item_id,
-      quantity: l.qty_delivered,
-      unit_price: l.sales_order_lines?.unit_price || 0,
-    })));
-
-    // Update SO line qty_invoiced
-    for (const l of dnLines) {
-      const { data: currentLine } = await supabase.from('sales_order_lines').select('qty_invoiced').eq('id', l.order_line_id).single();
-      await supabase.from('sales_order_lines').update({
-        qty_invoiced: (currentLine?.qty_invoiced || 0) + l.qty_delivered
-      }).eq('id', l.order_line_id);
-    }
-
-    toast.success(`AR Invoice ${invNumber} created from delivery note`);
-    fetchData();
-  };
+      for (const l of dnLines) {
+        const { data: currentLine } = await supabase.from('sales_order_lines').select('qty_invoiced').eq('id', l.order_line_id).single();
+        await supabase.from('sales_order_lines').update({
+          qty_invoiced: (currentLine?.qty_invoiced || 0) + l.qty_delivered,
+        }).eq('id', l.order_line_id);
+      }
+      return invNumber;
+    },
+    onSuccess: (invNumber) => {
+      queryClient.invalidateQueries({ queryKey: ['delivery-notes'] });
+      queryClient.invalidateQueries({ queryKey: ['ar-invoices'] });
+      toast.success(`AR Invoice ${invNumber} created from delivery note`);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
 
   const exportColumns = [
     { key: 'dn_number', header: 'DN #' },
