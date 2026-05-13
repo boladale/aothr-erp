@@ -99,16 +99,15 @@ export default function GoodsReceipts() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!selectedPO || !form.location_id) { toast.error('Please select a PO and location'); return; }
-    if (!form.weigh_bill_number.trim()) { toast.error('Weigh bill number is mandatory'); return; }
-    const validLines = lines.filter(l => l.qty_received > 0);
-    if (validLines.length === 0) { toast.error('Please enter at least one quantity'); return; }
-    const overReceipt = validLines.find(l => l.qty_received > l.max_receivable);
-    if (overReceipt) { toast.error(`Cannot receive more than ordered for ${overReceipt.item_name}`); return; }
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPO || !form.location_id) throw new Error('Please select a PO and location');
+      if (!form.weigh_bill_number.trim()) throw new Error('Weigh bill number is mandatory');
+      const validLines = lines.filter(l => l.qty_received > 0);
+      if (validLines.length === 0) throw new Error('Please enter at least one quantity');
+      const overReceipt = validLines.find(l => l.qty_received > l.max_receivable);
+      if (overReceipt) throw new Error(`Cannot receive more than ordered for ${overReceipt.item_name}`);
 
-    setSaving(true);
-    try {
       if (editingGRN) {
         const { error } = await supabase.from('goods_receipts').update({
           location_id: form.location_id, receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description,
@@ -118,42 +117,40 @@ export default function GoodsReceipts() {
         await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
           grn_id: editingGRN.id, po_line_id: l.po_line_id, item_id: l.item_id, qty_received: l.qty_received,
         })));
-        toast.success('Goods Receipt updated');
-      } else {
-        const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
-        const { data: grn, error } = await supabase.from('goods_receipts').insert({
-          grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
-          receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description, created_by: user?.id, organization_id: organizationId,
-        }).select().single();
-        if (error) throw error;
-        await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
-          grn_id: grn.id, po_line_id: l.po_line_id, item_id: l.item_id, qty_received: l.qty_received,
-        })));
-        toast.success('Goods Receipt created. Post it to update inventory.');
+        return 'updated';
       }
+      const grnNumber = await getNextTransactionNumber(organizationId!, 'GRN', 'GRN');
+      const { data: grn, error } = await supabase.from('goods_receipts').insert({
+        grn_number: grnNumber, po_id: selectedPO, location_id: form.location_id,
+        receipt_date: form.receipt_date, notes: form.notes, weigh_bill_number: form.weigh_bill_number, description: form.description, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) throw error;
+      await supabase.from('goods_receipt_lines').insert(validLines.map(l => ({
+        grn_id: grn.id, po_line_id: l.po_line_id, item_id: l.item_id, qty_received: l.qty_received,
+      })));
+      return 'created';
+    },
+    onSuccess: (res) => {
+      toast.success(res === 'updated' ? 'Goods Receipt updated' : 'Goods Receipt created. Post it to update inventory.');
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save GRN');
-    } finally { setSaving(false); }
-  };
+      invalidateReceipts();
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to save GRN'),
+  });
 
-  const handlePost = async (grn: GRNWithDetails) => {
-    if (postingId) return;
-    setPostingId(grn.id);
-    try {
+  const postMutation = useMutation({
+    mutationFn: async (grn: GRNWithDetails) => {
       const { data, error } = await supabase.functions.invoke('secure-action', {
         body: { action: 'grn_post', payload: { id: grn.id } },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success('GRN posted and inventory updated');
-      fetchData();
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to post GRN');
-    } finally { setPostingId(null); }
-  };
+    },
+    onSuccess: () => { toast.success('GRN posted and inventory updated'); invalidateReceipts(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to post GRN'),
+  });
+  const postingId = postMutation.isPending ? (postMutation.variables as GRNWithDetails | undefined)?.id ?? null : null;
 
   const resetForm = () => {
     setEditingGRN(null); setSelectedPO(''); setLines([]);
