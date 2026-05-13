@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
