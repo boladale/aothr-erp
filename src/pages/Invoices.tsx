@@ -96,15 +96,14 @@ export default function Invoices() {
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!selectedPO || !form.invoice_number) { toast.error('Please fill all required fields'); return; }
-    const validLines = lines.filter(l => l.quantity > 0);
-    if (validLines.length === 0) { toast.error('Please enter at least one quantity'); return; }
-    const overInvoice = validLines.find(l => l.quantity > l.max_invoiceable);
-    if (overInvoice) { toast.error(`Cannot invoice more than received for ${overInvoice.item_name}`); return; }
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPO || !form.invoice_number) throw new Error('Please fill all required fields');
+      const validLines = lines.filter(l => l.quantity > 0);
+      if (validLines.length === 0) throw new Error('Please enter at least one quantity');
+      const overInvoice = validLines.find(l => l.quantity > l.max_invoiceable);
+      if (overInvoice) throw new Error(`Cannot invoice more than received for ${overInvoice.item_name}`);
 
-    setSaving(true);
-    try {
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
 
       if (editingInvoice) {
@@ -118,69 +117,80 @@ export default function Invoices() {
           invoice_id: editingInvoice.id, po_line_id: l.po_line_id, item_id: l.item_id,
           quantity: l.quantity, unit_price: l.unit_price, expense_account_id: l.expense_account_id || null,
         })));
-        toast.success('Invoice updated');
-      } else {
-        const po = receivedPOs.find(p => p.id === selectedPO);
-        if (!po?.vendors?.id) { toast.error('Could not determine vendor'); return; }
-        const { data: invoice, error } = await supabase.from('ap_invoices').insert({
-          invoice_number: form.invoice_number, vendor_id: po.vendors.id, po_id: selectedPO,
-          invoice_date: form.invoice_date, due_date: form.due_date || null,
-          subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
-        }).select().single();
-        if (error) throw error;
-        await supabase.from('ap_invoice_lines').insert(validLines.map(l => ({
-          invoice_id: invoice.id, po_line_id: l.po_line_id, item_id: l.item_id,
-          quantity: l.quantity, unit_price: l.unit_price, expense_account_id: l.expense_account_id || null,
-        })));
-        toast.success('Invoice created');
+        return 'updated';
       }
+      const po = receivedPOs.find(p => p.id === selectedPO);
+      if (!po?.vendors?.id) throw new Error('Could not determine vendor');
+      const { data: invoice, error } = await supabase.from('ap_invoices').insert({
+        invoice_number: form.invoice_number, vendor_id: po.vendors.id, po_id: selectedPO,
+        invoice_date: form.invoice_date, due_date: form.due_date || null,
+        subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+      }).select().single();
+      if (error) throw error;
+      await supabase.from('ap_invoice_lines').insert(validLines.map(l => ({
+        invoice_id: invoice.id, po_line_id: l.po_line_id, item_id: l.item_id,
+        quantity: l.quantity, unit_price: l.unit_price, expense_account_id: l.expense_account_id || null,
+      })));
+      return 'created';
+    },
+    onSuccess: (res) => {
+      toast.success(res === 'updated' ? 'Invoice updated' : 'Invoice created');
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      toast.error(err.code === '23505' ? 'Invoice number already exists' : err.message || 'Failed to save');
-    } finally { setSaving(false); }
-  };
+      invalidateInvoices();
+    },
+    onError: (error: any) => {
+      const code = error?.code;
+      toast.error(code === '23505' ? 'Invoice number already exists' : error?.message || 'Failed to save');
+    },
+  });
 
-  const handleSubmitInvoice = async (invoice: InvoiceWithDetails) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'pending_approval', rejection_reason: null }).eq('id', invoice.id);
-    if (error) { toast.error('Failed to submit'); return; }
-    toast.success('Invoice submitted for approval');
-    fetchData();
-  };
-
-  const handleApproveInvoice = async (invoice: InvoiceWithDetails) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', invoice.id);
-    if (error) { toast.error('Failed to approve'); return; }
-    toast.success('Invoice approved');
-    fetchData();
-  };
-
-  const handleRejectInvoice = async (invoice: InvoiceWithDetails) => {
+  const submitMutation = useMutation({
+    mutationFn: async (invoice: InvoiceWithDetails) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'pending_approval', rejection_reason: null }).eq('id', invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice submitted for approval'); invalidateInvoices(); },
+    onError: () => toast.error('Failed to submit'),
+  });
+  const approveMutation = useMutation({
+    mutationFn: async (invoice: InvoiceWithDetails) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice approved'); invalidateInvoices(); },
+    onError: () => toast.error('Failed to approve'),
+  });
+  const rejectMutation = useMutation({
+    mutationFn: async ({ invoice, reason }: { invoice: InvoiceWithDetails; reason: string }) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'draft', rejection_reason: reason }).eq('id', invoice.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice returned to draft'); invalidateInvoices(); },
+    onError: () => toast.error('Failed to reject'),
+  });
+  const handleRejectInvoice = (invoice: InvoiceWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');
     if (reason === null) return;
     if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
-    const { error } = await supabase.from('ap_invoices').update({ status: 'draft', rejection_reason: reason }).eq('id', invoice.id);
-    if (error) { toast.error('Failed to reject'); return; }
-    toast.success('Invoice returned to draft');
-    fetchData();
+    rejectMutation.mutate({ invoice, reason });
   };
-
-  const handlePost = async (invoice: InvoiceWithDetails) => {
-    const { data, error } = await supabase.functions.invoke('secure-action', {
-      body: { action: 'invoice_post', payload: { id: invoice.id } },
-    });
-    const errMsg = error?.message || (data as any)?.error;
-    if (errMsg) {
-      if (errMsg.includes('unresolved hold')) { toast.error('Invoice has unresolved exceptions'); return; }
-      toast.error(errMsg); return;
-    }
-    const { data: updated } = await supabase.from('ap_invoices').select('status').eq('id', invoice.id).single();
-    if (updated?.status === 'draft') { toast.error('Invoice failed three-way matching'); fetchData(); return; }
-    toast.success('Invoice posted');
-    fetchData();
-  };
+  const postMutation = useMutation({
+    mutationFn: async (invoice: InvoiceWithDetails) => {
+      const { data, error } = await supabase.functions.invoke('secure-action', {
+        body: { action: 'invoice_post', payload: { id: invoice.id } },
+      });
+      const errMsg = error?.message || (data as any)?.error;
+      if (errMsg) {
+        if (errMsg.includes('unresolved hold')) throw new Error('Invoice has unresolved exceptions');
+        throw new Error(errMsg);
+      }
+      const { data: updated } = await supabase.from('ap_invoices').select('status').eq('id', invoice.id).single();
+      if (updated?.status === 'draft') throw new Error('Invoice failed three-way matching');
+    },
+    onSuccess: () => { toast.success('Invoice posted'); invalidateInvoices(); },
+    onError: (e: any) => { toast.error(e?.message || 'Failed to post'); invalidateInvoices(); },
+  });
 
   const resetForm = () => {
     setEditingInvoice(null); setSelectedPO(''); setPOLines([]); setLines([]);
