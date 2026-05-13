@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Search, ArrowRightLeft } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -31,55 +32,86 @@ interface TransferRow {
 interface TransferLine {
   item_id: string;
   quantity: number;
-  item_name?: string;
-  available?: number;
 }
 
 export default function InventoryTransfers() {
   const { user, organizationId, hasRole } = useAuth();
+  const qc = useQueryClient();
   const canApproveSource = hasRole('admin') || hasRole('warehouse_manager');
   const canApproveDest = hasRole('admin') || hasRole('warehouse_manager');
-  const [transfers, setTransfers] = useState<TransferRow[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [postingId, setPostingId] = useState<string | null>(null);
   const [form, setForm] = useState({ from_location_id: '', to_location_id: '', transfer_date: new Date().toISOString().split('T')[0], notes: '' });
   const [lines, setLines] = useState<TransferLine[]>([{ item_id: '', quantity: 1 }]);
 
-  useEffect(() => { fetchData(); }, []);
+  const transfersQ = useQuery({
+    queryKey: ['inventory_transfers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory_transfers' as any).select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as any[];
+    },
+  });
+  const locationsQ = useQuery({
+    queryKey: ['locations', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
+  const itemsQ = useQuery({
+    queryKey: ['items', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*').eq('is_active', true).order('name');
+      if (error) throw error;
+      return (data || []) as Item[];
+    },
+  });
+  // Live source-warehouse balances for stock-availability validation
+  const balancesQ = useQuery({
+    queryKey: ['inventory_balances', form.from_location_id],
+    enabled: !!form.from_location_id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory_balances')
+        .select('item_id, quantity').eq('location_id', form.from_location_id);
+      if (error) throw error;
+      return (data || []) as { item_id: string; quantity: number }[];
+    },
+  });
 
-  const fetchData = async () => {
-    try {
-      const [tRes, lRes, iRes] = await Promise.all([
-        supabase.from('inventory_transfers' as any).select('*').order('created_at', { ascending: false }),
-        supabase.from('locations').select('*').eq('is_active', true).order('name'),
-        supabase.from('items').select('*').eq('is_active', true).order('name'),
-      ]);
-      // Enrich transfers with location names
-      const locMap = new Map((lRes.data || []).map((l: any) => [l.id, l]));
-      const enriched = ((tRes.data || []) as any[]).map(t => ({
-        ...t,
-        from_location: locMap.get(t.from_location_id) || null,
-        to_location: locMap.get(t.to_location_id) || null,
-      }));
-      setTransfers(enriched as TransferRow[]);
-      setLocations((lRes.data || []) as Location[]);
-      setItems((iRes.data || []) as Item[]);
-    } catch { toast.error('Failed to load data'); } finally { setLoading(false); }
-  };
+  const locations = locationsQ.data || [];
+  const items = itemsQ.data || [];
+  const loading = transfersQ.isLoading;
 
-  const handleSave = async () => {
-    if (!form.from_location_id || !form.to_location_id) { toast.error('Select both locations'); return; }
-    if (form.from_location_id === form.to_location_id) { toast.error('Source and destination must be different'); return; }
-    const validLines = lines.filter(l => l.item_id && l.quantity > 0);
-    if (validLines.length === 0) { toast.error('Add at least one item'); return; }
+  const transfers: TransferRow[] = useMemo(() => {
+    const locMap = new Map(locations.map(l => [l.id, l]));
+    return (transfersQ.data || []).map((t: any) => ({
+      ...t,
+      from_location: locMap.get(t.from_location_id) || null,
+      to_location: locMap.get(t.to_location_id) || null,
+    }));
+  }, [transfersQ.data, locations]);
 
-    setSaving(true);
-    try {
+  const balanceMap = useMemo(() => new Map((balancesQ.data || []).map(b => [b.item_id, Number(b.quantity)])), [balancesQ.data]);
+  const availableFor = (itemId: string) => balanceMap.get(itemId) ?? 0;
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['inventory_transfers'] });
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!form.from_location_id || !form.to_location_id) throw new Error('Select both locations');
+      if (form.from_location_id === form.to_location_id) throw new Error('Source and destination must be different');
+      const validLines = lines.filter(l => l.item_id && l.quantity > 0);
+      if (validLines.length === 0) throw new Error('Add at least one item');
+
+      // Stock availability guard — surfaces friendly error before the DB trigger fires
+      const insufficient = validLines.find(l => l.quantity > availableFor(l.item_id));
+      if (insufficient) {
+        const item = items.find(i => i.id === insufficient.item_id);
+        throw new Error(`Insufficient stock for ${item?.name || 'item'}: requested ${insufficient.quantity}, available ${availableFor(insufficient.item_id)}`);
+      }
+
       const num = await getNextTransactionNumber(organizationId!, 'TRF', 'TRF');
       const { data: transfer, error } = await (supabase.from('inventory_transfers' as any) as any).insert({
         transfer_number: num, from_location_id: form.from_location_id, to_location_id: form.to_location_id,
@@ -91,33 +123,43 @@ export default function InventoryTransfers() {
         transfer_id: transfer.id, item_id: l.item_id, quantity: l.quantity, line_number: idx + 1,
       }));
       const { error: lErr } = await (supabase.from('inventory_transfer_lines' as any) as any).insert(lineInserts);
-      if (lErr) throw lErr;
-
+      if (lErr) {
+        await (supabase.from('inventory_transfers' as any) as any).delete().eq('id', transfer.id);
+        throw lErr;
+      }
+    },
+    onSuccess: () => {
       toast.success('Transfer created. Submit for source-warehouse approval.');
       setDialogOpen(false);
       resetForm();
-      fetchData();
-    } catch (e: any) { toast.error(e.message || 'Failed to create transfer'); } finally { setSaving(false); }
-  };
+      invalidate();
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to create transfer'),
+  });
 
-  const updateStatus = async (t: TransferRow, patch: Record<string, any>, success: string) => {
-    if (postingId) return;
-    setPostingId(t.id);
-    try {
-      const { error } = await (supabase.from('inventory_transfers' as any) as any).update(patch).eq('id', t.id);
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, any> }) => {
+      const { error } = await (supabase.from('inventory_transfers' as any) as any).update(patch).eq('id', id);
       if (error) throw error;
-      toast.success(success);
-      fetchData();
-    } catch (e: any) { toast.error(e.message || 'Action failed'); } finally { setPostingId(null); }
-  };
+    },
+    onSuccess: (_, vars) => {
+      toast.success((vars as any).successMessage || 'Updated');
+      invalidate();
+      qc.invalidateQueries({ queryKey: ['inventory_balances'] });
+    },
+    onError: (e: any) => toast.error(e?.message || 'Action failed'),
+  });
+  const postingId = updateStatusMutation.isPending ? (updateStatusMutation.variables as any)?.id ?? null : null;
+  const runStatus = (id: string, patch: Record<string, any>, successMessage: string) =>
+    updateStatusMutation.mutate({ id, patch, successMessage } as any);
 
-  const handleSubmit = (t: TransferRow) => updateStatus(t, { status: 'pending_source_approval' }, 'Submitted for source approval');
-  const handleApproveSource = (t: TransferRow) => updateStatus(t, { status: 'in_transit', source_approved_by: user?.id, source_approved_at: new Date().toISOString() }, 'Approved at source. Stock dispatched.');
-  const handleApproveDest = (t: TransferRow) => updateStatus(t, { status: 'received', destination_approved_by: user?.id, destination_approved_at: new Date().toISOString() }, 'Received at destination. Stock added.');
+  const handleSubmit = (t: TransferRow) => runStatus(t.id, { status: 'pending_source_approval' }, 'Submitted for source approval');
+  const handleApproveSource = (t: TransferRow) => runStatus(t.id, { status: 'in_transit', source_approved_by: user?.id, source_approved_at: new Date().toISOString() }, 'Approved at source. Stock dispatched.');
+  const handleApproveDest = (t: TransferRow) => runStatus(t.id, { status: 'received', destination_approved_by: user?.id, destination_approved_at: new Date().toISOString() }, 'Received at destination. Stock added.');
   const handleReject = (t: TransferRow) => {
     const reason = prompt('Reason for rejection?');
     if (!reason) return;
-    updateStatus(t, { status: 'rejected', rejection_reason: reason }, 'Transfer rejected');
+    runStatus(t.id, { status: 'rejected', rejection_reason: reason }, 'Transfer rejected');
   };
 
   const resetForm = () => {
@@ -200,22 +242,44 @@ export default function InventoryTransfers() {
                 <Input type="date" value={form.transfer_date} onChange={e => setForm({ ...form, transfer_date: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between"><Label>Items</Label><Button type="button" variant="outline" size="sm" onClick={() => setLines([...lines, { item_id: '', quantity: 1 }])}>Add Item</Button></div>
+                <div className="flex items-center justify-between">
+                  <Label>Items {form.from_location_id && <span className="text-xs text-muted-foreground font-normal">(showing available qty at source)</span>}</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setLines([...lines, { item_id: '', quantity: 1 }])}>Add Item</Button>
+                </div>
                 <div className="space-y-2">
-                  {lines.map((line, idx) => (
-                    <div key={idx} className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <Select value={line.item_id} onValueChange={v => { const nl = [...lines]; nl[idx].item_id = v; setLines(nl); }}>
-                          <SelectTrigger><SelectValue placeholder="Select item" /></SelectTrigger>
-                          <SelectContent>{items.map(item => <SelectItem key={item.id} value={item.id}>{item.code} - {item.name}</SelectItem>)}</SelectContent>
-                        </Select>
+                  {lines.map((line, idx) => {
+                    const avail = line.item_id ? availableFor(line.item_id) : null;
+                    const overLimit = avail !== null && line.quantity > avail;
+                    return (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1">
+                            <Select value={line.item_id} onValueChange={v => { const nl = [...lines]; nl[idx].item_id = v; setLines(nl); }}>
+                              <SelectTrigger><SelectValue placeholder="Select item" /></SelectTrigger>
+                              <SelectContent>
+                                {items.map(item => {
+                                  const stock = form.from_location_id ? availableFor(item.id) : null;
+                                  return (
+                                    <SelectItem key={item.id} value={item.id} disabled={stock !== null && stock <= 0}>
+                                      {item.code} - {item.name}{stock !== null ? ` (${stock} available)` : ''}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="w-24">
+                            <Input type="number" min="1" placeholder="Qty" value={line.quantity}
+                              onChange={e => { const nl = [...lines]; nl[idx].quantity = parseFloat(e.target.value) || 0; setLines(nl); }} />
+                          </div>
+                          {lines.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => setLines(lines.filter((_, i) => i !== idx))}>×</Button>}
+                        </div>
+                        {overLimit && (
+                          <p className="text-xs text-destructive">Only {avail} available at source warehouse</p>
+                        )}
                       </div>
-                      <div className="w-24">
-                        <Input type="number" min="1" placeholder="Qty" value={line.quantity} onChange={e => { const nl = [...lines]; nl[idx].quantity = parseFloat(e.target.value) || 0; setLines(nl); }} />
-                      </div>
-                      {lines.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => setLines(lines.filter((_, i) => i !== idx))}>×</Button>}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               <div className="space-y-2">
@@ -225,7 +289,7 @@ export default function InventoryTransfers() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Create Transfer'}</Button>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : 'Create Transfer'}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
