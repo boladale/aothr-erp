@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -30,33 +31,51 @@ interface ARInvoice {
 
 export default function ARInvoices() {
   const { hasRole, organizationId } = useAuth();
+  const queryClient = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [invoices, setInvoices] = useState<ARInvoice[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [revenueAccounts, setRevenueAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<ARInvoice | null>(null);
   const [form, setForm] = useState({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0' });
   const [lines, setLines] = useState<InvoiceLine[]>([{ description: '', item_id: '', quantity: '1', unit_price: '0', revenue_account_id: '' }]);
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
-    const [invRes, custRes, itemRes, accRes] = await Promise.all([
-      supabase.from('ar_invoices').select('*, customers(name, code)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id, code, name, payment_terms').eq('is_active', true),
-      supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true),
-      supabase.from('gl_accounts').select('id, account_code, account_name').eq('account_type', 'revenue').eq('is_active', true).eq('is_header', false),
-    ]);
-    setInvoices((invRes.data || []) as ARInvoice[]);
-    setCustomers((custRes.data || []) as Customer[]);
-    setItems((itemRes.data || []) as Item[]);
-    setRevenueAccounts((accRes.data || []) as GLAccount[]);
-    setLoading(false);
-  };
+  const invoicesQ = useQuery({
+    queryKey: ['ar_invoices'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('ar_invoices').select('*, customers(name, code)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as ARInvoice[];
+    },
+  });
+  const customersQ = useQuery({
+    queryKey: ['customers-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('id, code, name, payment_terms').eq('is_active', true);
+      if (error) throw error;
+      return (data || []) as Customer[];
+    },
+  });
+  const itemsQ = useQuery({
+    queryKey: ['items-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('id, code, name, unit_cost').eq('is_active', true);
+      if (error) throw error;
+      return (data || []) as Item[];
+    },
+  });
+  const revenueAccountsQ = useQuery({
+    queryKey: ['gl-revenue-accounts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name').eq('account_type', 'revenue').eq('is_active', true).eq('is_header', false);
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
+  const invoices = invoicesQ.data || [];
+  const customers = customersQ.data || [];
+  const items = itemsQ.data || [];
+  const revenueAccounts = revenueAccountsQ.data || [];
+  const loading = invoicesQ.isLoading;
 
   const openEditDialog = async (inv: ARInvoice) => {
     setEditingInvoice(inv);
@@ -91,53 +110,68 @@ export default function ARInvoices() {
   const tax = parseFloat(form.tax_amount) || 0;
   const total = subtotal + tax;
 
-  const handleSave = async () => {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const customer = customers.find(c => c.id === form.customer_id);
+      const dueDate = new Date(form.invoice_date);
+      dueDate.setDate(dueDate.getDate() + (customer?.payment_terms || 30));
+
+      if (editingInvoice) {
+        const { error } = await supabase.from('ar_invoices').update({
+          customer_id: form.customer_id, invoice_date: form.invoice_date,
+          due_date: dueDate.toISOString().split('T')[0], subtotal, tax_amount: tax, total_amount: total,
+        }).eq('id', editingInvoice.id);
+        if (error) throw error;
+        await supabase.from('ar_invoice_lines').delete().eq('invoice_id', editingInvoice.id);
+        await supabase.from('ar_invoice_lines').insert(lines.map(l => ({
+          invoice_id: editingInvoice.id, item_id: l.item_id || null, description: l.description,
+          quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+          revenue_account_id: l.revenue_account_id || null,
+        })));
+        return 'updated';
+      } else {
+        const invNum = await getNextTransactionNumber(organizationId!, 'AR_INV', 'INV');
+        const { data: inv, error } = await supabase.from('ar_invoices').insert({
+          invoice_number: invNum, customer_id: form.customer_id, invoice_date: form.invoice_date,
+          due_date: dueDate.toISOString().split('T')[0], subtotal, tax_amount: tax, total_amount: total,
+          notes: form.notes || null, organization_id: organizationId,
+        }).select().single();
+        if (error) throw error;
+        await supabase.from('ar_invoice_lines').insert(lines.map(l => ({
+          invoice_id: inv.id, item_id: l.item_id || null, description: l.description,
+          quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
+          revenue_account_id: l.revenue_account_id || null,
+        })));
+        return 'created';
+      }
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['ar_invoices'] });
+      setDialogOpen(false);
+      resetForm();
+      toast.success(`Invoice ${res}`);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  const handleSave = () => {
     if (!form.customer_id) { toast.error('Select a customer'); return; }
     if (lines.some(l => !l.description)) { toast.error('All lines need a description'); return; }
-
-    const customer = customers.find(c => c.id === form.customer_id);
-    const dueDate = new Date(form.invoice_date);
-    dueDate.setDate(dueDate.getDate() + (customer?.payment_terms || 30));
-
-    if (editingInvoice) {
-      const { error } = await supabase.from('ar_invoices').update({
-        customer_id: form.customer_id, invoice_date: form.invoice_date,
-        due_date: dueDate.toISOString().split('T')[0], subtotal, tax_amount: tax, total_amount: total,
-      }).eq('id', editingInvoice.id);
-      if (error) { toast.error(error.message); return; }
-      await supabase.from('ar_invoice_lines').delete().eq('invoice_id', editingInvoice.id);
-      await supabase.from('ar_invoice_lines').insert(lines.map(l => ({
-        invoice_id: editingInvoice.id, item_id: l.item_id || null, description: l.description,
-        quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-        revenue_account_id: l.revenue_account_id || null,
-      })));
-      toast.success('Invoice updated');
-    } else {
-      const invNum = await getNextTransactionNumber(organizationId!, 'AR_INV', 'INV');
-      const { data: inv, error } = await supabase.from('ar_invoices').insert({
-        invoice_number: invNum, customer_id: form.customer_id, invoice_date: form.invoice_date,
-        due_date: dueDate.toISOString().split('T')[0], subtotal, tax_amount: tax, total_amount: total,
-        notes: form.notes || null, organization_id: organizationId,
-      }).select().single();
-      if (error) { toast.error(error.message); return; }
-      await supabase.from('ar_invoice_lines').insert(lines.map(l => ({
-        invoice_id: inv.id, item_id: l.item_id || null, description: l.description,
-        quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
-        revenue_account_id: l.revenue_account_id || null,
-      })));
-      toast.success('Invoice created');
-    }
-    setDialogOpen(false);
-    resetForm();
-    fetchAll();
+    saveMutation.mutate();
   };
 
-  const handlePost = async (id: string) => {
-    const { error } = await supabase.from('ar_invoices').update({ status: 'posted' }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Invoice posted to GL');
-    fetchAll();
-  };
+  const postMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('ar_invoices').update({ status: 'posted' }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ar_invoices'] });
+      toast.success('Invoice posted to GL');
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+  const handlePost = (id: string) => postMutation.mutate(id);
 
   const filtered = invoices.filter(inv =>
     inv.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
@@ -272,7 +306,7 @@ export default function ARInvoices() {
                 <div className="text-right pt-6"><span className="font-semibold">Total: {formatCurrency(total)}</span></div>
               </div>
 
-              <Button onClick={handleSave} className="w-full">{editingInvoice ? 'Update Invoice' : 'Create Invoice'}</Button>
+              <Button onClick={handleSave} className="w-full" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingInvoice ? 'Update Invoice' : 'Create Invoice')}</Button>
             </div>
           </DialogContent>
         </Dialog>
