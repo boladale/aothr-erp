@@ -111,25 +111,30 @@ export default function RFPDetail() {
   const [editAmounts, setEditAmounts] = useState<Record<string, number>>({});
   const [editDays, setEditDays] = useState<Record<string, string>>({});
 
-  const fetchData = useCallback(async () => {
-    if (!id) return;
-    try {
+  const { isLoading: loading } = useQuery({
+    queryKey: ['rfp_detail', id],
+    enabled: !!id,
+    queryFn: async () => {
       const [rfpRes, itemsRes, criteriaRes, proposalsRes, scoresRes] = await Promise.all([
-        supabase.from('rfps').select('*').eq('id', id).single(),
-        supabase.from('rfp_items').select('*, items(code, name, category), services(code, name)').eq('rfp_id', id),
-        supabase.from('rfp_criteria').select('*').eq('rfp_id', id),
-        supabase.from('rfp_proposals').select('*, vendors(code, name, service_categories, project_size_capacity)').eq('rfp_id', id),
+        supabase.from('rfps').select('*').eq('id', id!).single(),
+        supabase.from('rfp_items').select('*, items(code, name, category), services(code, name)').eq('rfp_id', id!),
+        supabase.from('rfp_criteria').select('*').eq('rfp_id', id!),
+        supabase.from('rfp_proposals').select('*, vendors(code, name, service_categories, project_size_capacity)').eq('rfp_id', id!),
         supabase.from('rfp_scores').select('*'),
       ]);
 
-      if (rfpRes.error) throw rfpRes.error;
-      setRfp(rfpRes.data as unknown as RFPData);
+      if (rfpRes.error) {
+        toast.error('Failed to load RFP details');
+        throw rfpRes.error;
+      }
+
+      const rfpData = rfpRes.data as unknown as RFPData;
+      setRfp(rfpData);
       setRfpItems((itemsRes.data || []) as unknown as RFPItem[]);
       setCriteria((criteriaRes.data || []) as unknown as Criterion[]);
       const proposalData = (proposalsRes.data || []) as unknown as Proposal[];
       setProposals(proposalData);
 
-      // Sync controlled amount/delivery inputs
       const amounts: Record<string, number> = {};
       const days: Record<string, string> = {};
       proposalData.forEach(p => {
@@ -139,12 +144,10 @@ export default function RFPDetail() {
       setEditAmounts(amounts);
       setEditDays(days);
 
-      // Filter scores for this RFP's proposals
       const proposalIds = proposalData.map(p => p.id);
       const rfpScores = (scoresRes.data || []).filter((s: { proposal_id: string }) => proposalIds.includes(s.proposal_id));
       setScores(rfpScores as unknown as Score[]);
 
-      // Init score editing state
       const scoreMap: Record<string, Record<string, number>> = {};
       const commentMap: Record<string, Record<string, string>> = {};
       rfpScores.forEach((s: Score) => {
@@ -156,23 +159,18 @@ export default function RFPDetail() {
       setEditingScores(scoreMap);
       setScoreComments(commentMap);
 
-      // Check if a PO already exists for this RFP
       const { data: existingPO } = await supabase
         .from('purchase_orders')
         .select('id')
-        .like('notes', `%RFP ${rfpRes.data.rfp_number}%`)
+        .like('notes', `%RFP ${(rfpRes.data as any).rfp_number}%`)
         .limit(1)
         .maybeSingle();
       setExistingPOId(existingPO?.id || null);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to load RFP details');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+      return true;
+    },
+  });
+  const fetchData = () => queryClient.invalidateQueries({ queryKey: ['rfp_detail', id] });
 
   const handlePublish = async () => {
     if (!rfp || proposals.length === 0) {
