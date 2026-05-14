@@ -298,7 +298,16 @@ export default function InventoryTransfers() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : 'Create Transfer'}</Button>
+              <Button
+                onClick={() => saveMutation.mutate()}
+                disabled={
+                  saveMutation.isPending ||
+                  !form.from_location_id ||
+                  lines.some(l => l.item_id && form.from_location_id && l.quantity > availableFor(l.item_id))
+                }
+              >
+                {saveMutation.isPending ? 'Saving...' : 'Create Transfer'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
