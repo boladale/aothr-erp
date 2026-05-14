@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -24,9 +25,8 @@ interface ClosingCheck {
 
 export default function FiscalPeriods() {
   const { hasRole } = useAuth();
+  const qc = useQueryClient();
   const isAdmin = hasRole('admin');
-  const [periods, setPeriods] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [runningAction, setRunningAction] = useState<string | null>(null);
 
   // Year-end close dialog
@@ -44,18 +44,22 @@ export default function FiscalPeriods() {
   // Automated period-end wizard
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardYear, setWizardYear] = useState<string>('');
-  const [wizardStep, setWizardStep] = useState(0); // 0=select, 1=checklist, 2=running, 3=done
+  const [wizardStep, setWizardStep] = useState(0);
   const [checks, setChecks] = useState<ClosingCheck[]>([]);
   const [wizardOptions, setWizardOptions] = useState({ closePeriods: true, yearEndClose: true, carryForward: true });
   const [wizardLog, setWizardLog] = useState<string[]>([]);
 
-  useEffect(() => { fetchPeriods(); }, []);
-
-  const fetchPeriods = async () => {
-    const { data } = await supabase.from('gl_fiscal_periods').select('*').order('fiscal_year').order('period_number');
-    setPeriods(data || []);
-    setLoading(false);
-  };
+  const periodsQ = useQuery({
+    queryKey: ['gl_fiscal_periods'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_fiscal_periods').select('*').order('fiscal_year').order('period_number');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const periods = periodsQ.data || [];
+  const loading = periodsQ.isLoading;
+  const fetchPeriods = () => qc.invalidateQueries({ queryKey: ['gl_fiscal_periods'] });
 
   const fiscalYears = useMemo(() => {
     const years = [...new Set(periods.map(p => p.fiscal_year))];

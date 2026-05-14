@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Shield, Plus, Trash2, Key, Users, UserPlus, MailPlus, Loader2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -94,12 +95,7 @@ const SYSTEM_PROGRAMS: { code: string; description: string }[] = [
 
 export default function UserManagement() {
   const { isAdmin } = useAuth();
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [rolePermissions, setRolePermissions] = useState<RolePermission[]>([]);
-  const [appRolePermissions, setAppRolePermissions] = useState<AppRolePermission[]>([]);
-  const [users, setUsers] = useState<UserWithRoles[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
 
   // Role dialog
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
@@ -143,12 +139,9 @@ export default function UserManagement() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
+  const dataQ = useQuery({
+    queryKey: ['user_management'],
+    queryFn: async () => {
       const [rolesRes, permsRes, rpRes, arpRes, profilesRes, userRolesRes, ucrRes] = await Promise.all([
         supabase.from('roles').select('*').order('name'),
         supabase.from('permissions').select('*').order('code'),
@@ -158,29 +151,30 @@ export default function UserManagement() {
         supabase.from('user_roles').select('*'),
         (supabase.from('user_custom_roles' as any).select('id, user_id, role_id') as any),
       ]);
-
       const rolesData = (rolesRes.data || []) as Role[];
-      setRoles(rolesData);
-      setPermissions((permsRes.data || []) as Permission[]);
-      setRolePermissions((rpRes.data || []) as RolePermission[]);
-      setAppRolePermissions((arpRes.data || []) as AppRolePermission[]);
+      const permissions = (permsRes.data || []) as Permission[];
+      const rolePermissions = (rpRes.data || []) as RolePermission[];
+      const appRolePermissions = (arpRes.data || []) as AppRolePermission[];
       const profiles = (profilesRes.data || []) as Profile[];
       const uRoles = userRolesRes.data || [];
       const uCustom = (ucrRes.data || []) as { id: string; user_id: string; role_id: string }[];
-      const usersWithRoles: UserWithRoles[] = profiles.map(p => ({
+      const users: UserWithRoles[] = profiles.map(p => ({
         ...p,
         user_roles: uRoles.filter(r => r.user_id === p.user_id).map(r => ({ role: r.role as AppRole })),
         custom_roles: uCustom
           .filter(c => c.user_id === p.user_id)
           .map(c => ({ id: c.id, role_id: c.role_id, name: rolesData.find(r => r.id === c.role_id)?.name || 'Unknown' })),
       }));
-      setUsers(usersWithRoles);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { roles: rolesData, permissions, rolePermissions, appRolePermissions, users };
+    },
+  });
+  const roles = dataQ.data?.roles || [];
+  const permissions = dataQ.data?.permissions || [];
+  const rolePermissions = dataQ.data?.rolePermissions || [];
+  const appRolePermissions = dataQ.data?.appRolePermissions || [];
+  const users = dataQ.data?.users || [];
+  const loading = dataQ.isLoading;
+  const fetchData = () => qc.invalidateQueries({ queryKey: ['user_management'] });
 
   // Seed default permissions if none exist
   const seedPermissions = async () => {

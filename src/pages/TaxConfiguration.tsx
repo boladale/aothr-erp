@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -33,9 +34,7 @@ interface TaxRate {
 }
 
 export default function TaxConfiguration() {
-  const [groups, setGroups] = useState<TaxGroup[]>([]);
-  const [glAccounts, setGlAccounts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [rateDialogOpen, setRateDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<TaxGroup | null>(null);
@@ -44,23 +43,25 @@ export default function TaxConfiguration() {
   const [form, setForm] = useState({ name: '', description: '', is_default: false });
   const [rateForm, setRateForm] = useState({ name: '', rate_pct: '', gl_account_id: '' });
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    const [groupsRes, ratesRes, accountsRes] = await Promise.all([
-      supabase.from('tax_groups').select('*').order('name'),
-      supabase.from('tax_rates').select('*').order('name'),
-      supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_header', false).eq('is_active', true).order('account_code'),
-    ]);
-
-    const groupsWithRates = (groupsRes.data || []).map((g: any) => ({
-      ...g,
-      rates: (ratesRes.data || []).filter((r: any) => r.tax_group_id === g.id),
-    }));
-    setGroups(groupsWithRates);
-    setGlAccounts(accountsRes.data || []);
-    setLoading(false);
-  };
+  const dataQ = useQuery({
+    queryKey: ['tax_config'],
+    queryFn: async () => {
+      const [groupsRes, ratesRes, accountsRes] = await Promise.all([
+        supabase.from('tax_groups').select('*').order('name'),
+        supabase.from('tax_rates').select('*').order('name'),
+        supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_header', false).eq('is_active', true).order('account_code'),
+      ]);
+      const groupsWithRates = (groupsRes.data || []).map((g: any) => ({
+        ...g,
+        rates: (ratesRes.data || []).filter((r: any) => r.tax_group_id === g.id),
+      }));
+      return { groups: groupsWithRates as TaxGroup[], glAccounts: (accountsRes.data || []) as any[] };
+    },
+  });
+  const groups = dataQ.data?.groups || [];
+  const glAccounts = dataQ.data?.glAccounts || [];
+  const loading = dataQ.isLoading;
+  const fetchData = () => qc.invalidateQueries({ queryKey: ['tax_config'] });
 
   const handleSaveGroup = async () => {
     if (!form.name.trim()) return toast.error('Name is required');
