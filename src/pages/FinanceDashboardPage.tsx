@@ -1,7 +1,7 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { APDashboard } from '@/components/dashboard/APDashboard';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { MetricCard } from '@/components/ui/metric-card';
@@ -17,18 +17,9 @@ const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(142 76% 
 
 function CFOMetrics() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({
-    totalRevenue: 0, totalExpenses: 0, netIncome: 0,
-    totalAR: 0, totalAP: 0, cashBalance: 0,
-    revenueByMonth: [] as { month: string; amount: number }[],
-    expenseByType: [] as { name: string; value: number }[],
-  });
-
-  useEffect(() => { fetchCFOData(); }, []);
-
-  const fetchCFOData = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['finance-cfo-metrics'],
+    queryFn: async () => {
       const [arInv, apInv, bankAccts, journalLines] = await Promise.all([
         supabase.from('ar_invoices').select('total_amount, payment_status'),
         supabase.from('ap_invoices').select('total_amount, payment_status'),
@@ -51,23 +42,22 @@ function CFOMetrics() {
         }
       });
 
-      // Build monthly trend from AR invoices as revenue proxy
       const monthMap: Record<string, number> = {};
       (arInv.data || []).forEach((i: any) => {
         const month = new Date().toLocaleDateString('en', { month: 'short' });
         monthMap[month] = (monthMap[month] || 0) + (i.total_amount || 0);
       });
 
-      setData({
+      return {
         totalRevenue, totalExpenses, netIncome: totalRevenue - totalExpenses,
         totalAR: arTotal, totalAP: apTotal, cashBalance: cashBal,
         revenueByMonth: Object.entries(monthMap).map(([month, amount]) => ({ month, amount })),
         expenseByType: Object.entries(expenseMap).map(([name, value]) => ({ name, value })),
-      });
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  };
+      };
+    },
+  });
 
-  if (loading) return <div className="card-grid">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
+  if (loading || !data) return <div className="card-grid">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
 
   const summaryData = [
     { name: 'AR Outstanding', value: data.totalAR },
