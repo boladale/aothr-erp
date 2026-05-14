@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Receipt, ArrowDownToLine, FileX, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -12,39 +12,29 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(199, 89%, 48%)'];
 
 export default function FinanceARReports() {
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ totalInvoices: 0, totalRevenue: 0, totalReceipts: 0, totalCredits: 0 });
-  const [invoicesByStatus, setInvoicesByStatus] = useState<{ status: string; count: number }[]>([]);
-  const [revenueByMonth, setRevenueByMonth] = useState<{ month: string; invoiced: number; received: number }[]>([]);
-  const [topCustomers, setTopCustomers] = useState<{ name: string; total: number; count: number; id: string }[]>([]);
-
-  useEffect(() => { fetchReports(); }, []);
-
-  const fetchReports = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['finance-ar-reports'],
+    queryFn: async () => {
       const [invRes, recRes, cnRes] = await Promise.all([
         supabase.from('ar_invoices').select('*, customers(name)'),
         supabase.from('ar_receipts').select('*'),
         supabase.from('ar_credit_notes').select('*'),
       ]);
-
       const invoices = invRes.data || [];
       const receipts = recRes.data || [];
       const credits = cnRes.data || [];
 
-      setMetrics({
+      const metrics = {
         totalInvoices: invoices.length,
         totalRevenue: invoices.reduce((s, i) => s + (i.total_amount || 0), 0),
         totalReceipts: receipts.reduce((s, r) => s + (r.total_amount || 0), 0),
         totalCredits: credits.reduce((s, c) => s + (c.total_amount || 0), 0),
-      });
+      };
 
-      // By status
       const statusMap: Record<string, number> = {};
       invoices.forEach(i => { statusMap[i.status] = (statusMap[i.status] || 0) + 1; });
-      setInvoicesByStatus(Object.entries(statusMap).map(([status, count]) => ({ status, count })));
+      const invoicesByStatus = Object.entries(statusMap).map(([status, count]) => ({ status, count }));
 
-      // Revenue by month
       const monthMap: Record<string, { invoiced: number; received: number }> = {};
       invoices.forEach(i => {
         const m = new Date(i.invoice_date).toLocaleDateString('en', { year: 'numeric', month: 'short' });
@@ -56,9 +46,8 @@ export default function FinanceARReports() {
         if (!monthMap[m]) monthMap[m] = { invoiced: 0, received: 0 };
         monthMap[m].received += r.total_amount || 0;
       });
-      setRevenueByMonth(Object.entries(monthMap).map(([month, d]) => ({ month, ...d })));
+      const revenueByMonth = Object.entries(monthMap).map(([month, d]) => ({ month, ...d }));
 
-      // Top customers
       const custMap: Record<string, { name: string; total: number; count: number }> = {};
       invoices.forEach(i => {
         const name = (i as any).customers?.name || 'Unknown';
@@ -66,13 +55,16 @@ export default function FinanceARReports() {
         custMap[i.customer_id].total += i.total_amount || 0;
         custMap[i.customer_id].count++;
       });
-      setTopCustomers(Object.entries(custMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.total - a.total).slice(0, 10));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const topCustomers = Object.entries(custMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.total - a.total).slice(0, 10);
+
+      return { metrics, invoicesByStatus, revenueByMonth, topCustomers };
+    },
+  });
+
+  const metrics = data?.metrics || { totalInvoices: 0, totalRevenue: 0, totalReceipts: 0, totalCredits: 0 };
+  const invoicesByStatus = data?.invoicesByStatus || [];
+  const revenueByMonth = data?.revenueByMonth || [];
+  const topCustomers = data?.topCustomers || [];
 
   return (
     <AppLayout>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Receipt, CreditCard, Clock, TrendingDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -13,22 +13,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(199, 89%, 48%)'];
 
 export default function FinanceAPReports() {
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ totalInvoices: 0, totalValue: 0, unpaid: 0, overdue: 0 });
-  const [invoicesByStatus, setInvoicesByStatus] = useState<{ status: string; count: number }[]>([]);
-  const [invoicesByMonth, setInvoicesByMonth] = useState<{ month: string; count: number; total: number }[]>([]);
-  const [paymentsByMethod, setPaymentsByMethod] = useState<{ method: string; count: number; total: number }[]>([]);
-  const [topVendorsByInvoice, setTopVendorsByInvoice] = useState<{ name: string; total: number; count: number; id: string }[]>([]);
-
-  useEffect(() => { fetchReports(); }, []);
-
-  const fetchReports = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['finance-ap-reports'],
+    queryFn: async () => {
       const [invoicesRes, paymentsRes] = await Promise.all([
         supabase.from('ap_invoices').select('*, vendors(name)'),
         supabase.from('ap_payments').select('*'),
       ]);
-
       const invoices = invoicesRes.data || [];
       const payments = paymentsRes.data || [];
       const today = new Date().toISOString().split('T')[0];
@@ -36,15 +27,12 @@ export default function FinanceAPReports() {
       const totalValue = invoices.reduce((s, i) => s + (i.total_amount || 0), 0);
       const unpaid = invoices.filter(i => i.payment_status === 'unpaid').reduce((s, i) => s + (i.total_amount || 0), 0);
       const overdue = invoices.filter(i => i.due_date && i.due_date < today && i.payment_status !== 'paid').length;
+      const metrics = { totalInvoices: invoices.length, totalValue, unpaid, overdue };
 
-      setMetrics({ totalInvoices: invoices.length, totalValue, unpaid, overdue });
-
-      // By status
       const statusMap: Record<string, number> = {};
       invoices.forEach(i => { statusMap[i.status] = (statusMap[i.status] || 0) + 1; });
-      setInvoicesByStatus(Object.entries(statusMap).map(([status, count]) => ({ status, count })));
+      const invoicesByStatus = Object.entries(statusMap).map(([status, count]) => ({ status, count }));
 
-      // By month
       const monthMap: Record<string, { count: number; total: number }> = {};
       invoices.forEach(i => {
         const m = new Date(i.invoice_date).toLocaleDateString('en', { year: 'numeric', month: 'short' });
@@ -52,18 +40,16 @@ export default function FinanceAPReports() {
         monthMap[m].count++;
         monthMap[m].total += i.total_amount || 0;
       });
-      setInvoicesByMonth(Object.entries(monthMap).map(([month, d]) => ({ month, ...d })));
+      const invoicesByMonth = Object.entries(monthMap).map(([month, d]) => ({ month, ...d }));
 
-      // Payments by method
       const methodMap: Record<string, { count: number; total: number }> = {};
       payments.forEach(p => {
         if (!methodMap[p.payment_method]) methodMap[p.payment_method] = { count: 0, total: 0 };
         methodMap[p.payment_method].count++;
         methodMap[p.payment_method].total += p.total_amount || 0;
       });
-      setPaymentsByMethod(Object.entries(methodMap).map(([method, d]) => ({ method: method.replace(/_/g, ' '), ...d })));
+      const paymentsByMethod = Object.entries(methodMap).map(([method, d]) => ({ method: method.replace(/_/g, ' '), ...d }));
 
-      // Top vendors
       const vendorMap: Record<string, { name: string; total: number; count: number }> = {};
       invoices.forEach(i => {
         const name = (i as any).vendors?.name || 'Unknown';
@@ -71,13 +57,17 @@ export default function FinanceAPReports() {
         vendorMap[i.vendor_id].total += i.total_amount || 0;
         vendorMap[i.vendor_id].count++;
       });
-      setTopVendorsByInvoice(Object.entries(vendorMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.total - a.total).slice(0, 10));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const topVendorsByInvoice = Object.entries(vendorMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.total - a.total).slice(0, 10);
+
+      return { metrics, invoicesByStatus, invoicesByMonth, paymentsByMethod, topVendorsByInvoice };
+    },
+  });
+
+  const metrics = data?.metrics || { totalInvoices: 0, totalValue: 0, unpaid: 0, overdue: 0 };
+  const invoicesByStatus = data?.invoicesByStatus || [];
+  const invoicesByMonth = data?.invoicesByMonth || [];
+  const paymentsByMethod = data?.paymentsByMethod || [];
+  const topVendorsByInvoice = data?.topVendorsByInvoice || [];
 
   return (
     <AppLayout>
