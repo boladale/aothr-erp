@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -23,65 +24,49 @@ interface AccountBalance {
 }
 
 export default function FinancialReports() {
-  const [loading, setLoading] = useState(true);
-  const [periods, setPeriods] = useState<any[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
-  const [balances, setBalances] = useState<AccountBalance[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetchPeriods();
-    fetchAccounts();
-  }, []);
+  const { data: periods = [] } = useQuery({
+    queryKey: ['gl-fiscal-periods-all'],
+    queryFn: async () => {
+      const { data } = await supabase.from('gl_fiscal_periods').select('*').order('fiscal_year', { ascending: false }).order('period_number', { ascending: false });
+      return data || [];
+    },
+  });
 
-  useEffect(() => { fetchBalances(); }, [selectedPeriod]);
+  const { data: balances = [], isLoading: loading } = useQuery<AccountBalance[]>({
+    queryKey: ['gl-account-balances', selectedPeriod],
+    queryFn: async () => {
+      let query = supabase.from('gl_account_balances').select('*, account:gl_accounts(account_code, account_name, account_type, is_header, parent_id, normal_balance)');
+      if (selectedPeriod !== 'all') query = query.eq('fiscal_period_id', selectedPeriod);
+      const { data } = await query;
 
-  const fetchPeriods = async () => {
-    const { data } = await supabase.from('gl_fiscal_periods').select('*').order('fiscal_year', { ascending: false }).order('period_number', { ascending: false });
-    setPeriods(data || []);
-  };
-
-  const fetchAccounts = async () => {
-    const { data } = await supabase.from('gl_accounts').select('*').order('account_code');
-    setAccounts(data || []);
-  };
-
-  const fetchBalances = async () => {
-    setLoading(true);
-    let query = supabase.from('gl_account_balances').select('*, account:gl_accounts(account_code, account_name, account_type, is_header, parent_id, normal_balance)');
-    if (selectedPeriod !== 'all') {
-      query = query.eq('fiscal_period_id', selectedPeriod);
-    }
-    const { data } = await query;
-
-    // Aggregate by account
-    const aggMap = new Map<string, AccountBalance>();
-    (data || []).forEach((b: any) => {
-      const key = b.account_id;
-      const existing = aggMap.get(key);
-      if (existing) {
-        existing.debit_total += b.debit_total;
-        existing.credit_total += b.credit_total;
-        existing.balance += b.balance;
-      } else {
-        aggMap.set(key, {
-          account_id: b.account_id,
-          account_code: b.account?.account_code || '',
-          account_name: b.account?.account_name || '',
-          account_type: b.account?.account_type || '',
-          is_header: b.account?.is_header || false,
-          parent_id: b.account?.parent_id || null,
-          normal_balance: b.account?.normal_balance || 'debit',
-          debit_total: b.debit_total,
-          credit_total: b.credit_total,
-          balance: b.balance,
-        });
-      }
-    });
-
-    setBalances(Array.from(aggMap.values()).sort((a, b) => a.account_code.localeCompare(b.account_code)));
-    setLoading(false);
-  };
+      const aggMap = new Map<string, AccountBalance>();
+      (data || []).forEach((b: any) => {
+        const key = b.account_id;
+        const existing = aggMap.get(key);
+        if (existing) {
+          existing.debit_total += b.debit_total;
+          existing.credit_total += b.credit_total;
+          existing.balance += b.balance;
+        } else {
+          aggMap.set(key, {
+            account_id: b.account_id,
+            account_code: b.account?.account_code || '',
+            account_name: b.account?.account_name || '',
+            account_type: b.account?.account_type || '',
+            is_header: b.account?.is_header || false,
+            parent_id: b.account?.parent_id || null,
+            normal_balance: b.account?.normal_balance || 'debit',
+            debit_total: b.debit_total,
+            credit_total: b.credit_total,
+            balance: b.balance,
+          });
+        }
+      });
+      return Array.from(aggMap.values()).sort((a, b) => a.account_code.localeCompare(b.account_code));
+    },
+  });
 
   const trialBalanceAccounts = balances.filter(b => b.debit_total > 0 || b.credit_total > 0);
   const totalTBDebit = trialBalanceAccounts.reduce((s, b) => s + b.debit_total, 0);
