@@ -248,7 +248,9 @@ export default function InventoryTransfers() {
                 </div>
                 <div className="space-y-2">
                   {lines.map((line, idx) => {
-                    const avail = line.item_id ? availableFor(line.item_id) : null;
+                    const hasSource = !!form.from_location_id;
+                    const avail = line.item_id && hasSource ? availableFor(line.item_id) : null;
+                    const noStock = avail !== null && avail <= 0;
                     const overLimit = avail !== null && line.quantity > avail;
                     return (
                       <div key={idx} className="space-y-1">
@@ -258,7 +260,7 @@ export default function InventoryTransfers() {
                               <SelectTrigger><SelectValue placeholder="Select item" /></SelectTrigger>
                               <SelectContent>
                                 {items.map(item => {
-                                  const stock = form.from_location_id ? availableFor(item.id) : null;
+                                  const stock = hasSource ? availableFor(item.id) : null;
                                   return (
                                     <SelectItem key={item.id} value={item.id} disabled={stock !== null && stock <= 0}>
                                       {item.code} - {item.name}{stock !== null ? ` (${stock} available)` : ''}
@@ -270,12 +272,19 @@ export default function InventoryTransfers() {
                           </div>
                           <div className="w-24">
                             <Input type="number" min="1" placeholder="Qty" value={line.quantity}
+                              disabled={noStock}
                               onChange={e => { const nl = [...lines]; nl[idx].quantity = parseFloat(e.target.value) || 0; setLines(nl); }} />
                           </div>
                           {lines.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => setLines(lines.filter((_, i) => i !== idx))}>×</Button>}
                         </div>
+                        {line.item_id && hasSource && !noStock && !overLimit && (
+                          <p className="text-xs text-muted-foreground">Available at source: {avail} units</p>
+                        )}
+                        {noStock && (
+                          <p className="text-xs text-destructive">No stock available at this location</p>
+                        )}
                         {overLimit && (
-                          <p className="text-xs text-destructive">Only {avail} available at source warehouse</p>
+                          <p className="text-xs text-destructive">Insufficient stock. Only {avail} units available at this location.</p>
                         )}
                       </div>
                     );
