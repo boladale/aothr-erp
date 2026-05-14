@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Building2, FileText, Receipt, DollarSign, Clock, AlertCircle, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,27 +53,17 @@ export default function ChairmanVendorDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { baseCurrency } = useOrgCurrency();
-  const [loading, setLoading] = useState(true);
-  const [vendor, setVendor] = useState<VendorInfo | null>(null);
-  const [contracts, setContracts] = useState<ContractRow[]>([]);
-  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
-
-  useEffect(() => {
-    if (id) load(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const load = async (vendorId: string) => {
-    setLoading(true);
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['chairman_vendor_detail', id],
+    enabled: !!id,
+    queryFn: async () => {
       const today = todayISO();
+      const vendorId = id!;
       const [vRes, poRes, invRes] = await Promise.all([
         supabase.from('vendors').select('id, name, code, email, phone, status').eq('id', vendorId).maybeSingle(),
         supabase.from('purchase_orders').select('id, po_number, status, order_date, total_amount').eq('vendor_id', vendorId).order('order_date', { ascending: false }),
         supabase.from('ap_invoices').select('id, invoice_number, invoice_date, due_date, total_amount, status, payment_status').eq('vendor_id', vendorId).order('invoice_date', { ascending: false }),
       ]);
-
-      setVendor(vRes.data as any);
 
       const pos = poRes.data || [];
       const poIds = pos.map(p => p.id);
@@ -91,7 +81,7 @@ export default function ChairmanVendorDetail() {
         });
       }
 
-      setContracts(pos.map((p: any) => {
+      const contracts: ContractRow[] = pos.map((p: any) => {
         const t = linesByPo[p.id] || { ord: 0, rec: 0 };
         return {
           id: p.id,
@@ -103,7 +93,7 @@ export default function ChairmanVendorDetail() {
           qty_ordered: t.ord,
           qty_received: t.rec,
         };
-      }));
+      });
 
       const invs = invRes.data || [];
       const invIds = invs.map(i => i.id);
@@ -118,7 +108,7 @@ export default function ChairmanVendorDetail() {
         });
       }
 
-      setInvoices(invs.map((i: any) => {
+      const invoices: InvoiceRow[] = invs.map((i: any) => {
         const total = Number(i.total_amount || 0);
         const paid = paidByInvoice[i.id] || 0;
         const outstanding = Math.max(0, total - paid);
@@ -134,13 +124,14 @@ export default function ChairmanVendorDetail() {
           payment_status: i.payment_status,
           is_overdue: !!(i.due_date && i.due_date < today && outstanding > 0),
         };
-      }));
-    } catch (e) {
-      console.error('Vendor detail error', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      });
+
+      return { vendor: vRes.data as VendorInfo | null, contracts, invoices };
+    },
+  });
+  const vendor = data?.vendor ?? null;
+  const contracts = data?.contracts ?? [];
+  const invoices = data?.invoices ?? [];
 
   const fmt = (v: number) => formatCurrency(v, baseCurrency);
 

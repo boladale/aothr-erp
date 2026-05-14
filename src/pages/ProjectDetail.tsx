@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, DollarSign, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -64,10 +65,7 @@ export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [project, setProject] = useState<Project | null>(null);
-  const [costs, setCosts] = useState<ProjectCost[]>([]);
-  const [revenues, setRevenues] = useState<ProjectRevenue[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [costDialogOpen, setCostDialogOpen] = useState(false);
   const [revenueDialogOpen, setRevenueDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -83,25 +81,30 @@ export default function ProjectDetail() {
     revenue_date: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => { if (id) fetchAll(); }, [id]);
-
-  const fetchAll = async () => {
-    try {
+  const { data: detail, isLoading: loading } = useQuery({
+    queryKey: ['project', id],
+    enabled: !!id,
+    queryFn: async () => {
       const [projRes, costsRes, revRes] = await Promise.all([
         supabase.from('projects').select('*').eq('id', id!).single(),
         supabase.from('project_costs').select('*').eq('project_id', id!).order('cost_date', { ascending: false }),
         supabase.from('project_revenues').select('*').eq('project_id', id!).order('revenue_date', { ascending: false }),
       ]);
-      if (projRes.error) throw projRes.error;
-      setProject(projRes.data as Project);
-      setCosts((costsRes.data || []) as ProjectCost[]);
-      setRevenues((revRes.data || []) as ProjectRevenue[]);
-    } catch (error) {
-      toast.error('Failed to load project');
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (projRes.error) {
+        toast.error('Failed to load project');
+        throw projRes.error;
+      }
+      return {
+        project: projRes.data as Project,
+        costs: (costsRes.data || []) as ProjectCost[],
+        revenues: (revRes.data || []) as ProjectRevenue[],
+      };
+    },
+  });
+  const project = detail?.project ?? null;
+  const costs = detail?.costs ?? [];
+  const revenues = detail?.revenues ?? [];
+  const fetchAll = () => queryClient.invalidateQueries({ queryKey: ['project', id] });
 
   const handleAddCost = async () => {
     if (!costForm.description || costForm.amount <= 0) {
