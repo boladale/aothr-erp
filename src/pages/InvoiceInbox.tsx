@@ -29,50 +29,59 @@ interface VendorInvoice {
 
 export default function InvoiceInbox() {
   const { user, hasRole } = useAuth();
+  const qc = useQueryClient();
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
-  const [rows, setRows] = useState<VendorInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<VendorInvoice | null>(null);
 
-  const fetchData = async () => {
-    setLoading(true);
-    const { data } = await (supabase
-      .from('ap_invoices' as any) as any)
-      .select('*, vendors(name), purchase_orders(po_number)')
-      .eq('source', 'vendor')
-      .order('created_at', { ascending: false });
-    setRows((data || []) as any);
-    setLoading(false);
-  };
+  const invoicesQ = useQuery({
+    queryKey: ['ap_invoices', 'inbox'],
+    queryFn: async () => {
+      const { data, error } = await (supabase
+        .from('ap_invoices' as any) as any)
+        .select('*, vendors(name), purchase_orders(po_number)')
+        .eq('source', 'vendor')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as VendorInvoice[];
+    },
+  });
+  const rows = invoicesQ.data || [];
+  const loading = invoicesQ.isLoading;
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['ap_invoices', 'inbox'] });
 
-  useEffect(() => { fetchData(); }, []);
+  const approveMutation = useMutation({
+    mutationFn: async (inv: VendorInvoice) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', inv.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice approved — ready to post'); setSelected(null); invalidate(); },
+    onError: (e: any) => toast.error(e?.message),
+  });
+  const rejectMutation = useMutation({
+    mutationFn: async ({ inv, reason }: { inv: VendorInvoice; reason: string }) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'draft', rejection_reason: reason }).eq('id', inv.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice returned to vendor'); setSelected(null); invalidate(); },
+    onError: (e: any) => toast.error(e?.message),
+  });
+  const postMutation = useMutation({
+    mutationFn: async (inv: VendorInvoice) => {
+      const { error } = await supabase.from('ap_invoices').update({ status: 'posted', posted_at: new Date().toISOString(), posted_by: user?.id }).eq('id', inv.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Invoice posted to GL'); setSelected(null); invalidate(); },
+    onError: (e: any) => toast.error(e?.message),
+  });
 
-  const approve = async (inv: VendorInvoice) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', inv.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Invoice approved — ready to post');
-    setSelected(null);
-    fetchData();
-  };
-
-  const reject = async (inv: VendorInvoice) => {
+  const approve = (inv: VendorInvoice) => approveMutation.mutate(inv);
+  const reject = (inv: VendorInvoice) => {
     const reason = window.prompt('Reason for rejection (sent back to vendor):');
     if (!reason || !reason.trim()) { toast.error('Rejection reason required'); return; }
-    const { error } = await supabase.from('ap_invoices').update({ status: 'draft', rejection_reason: reason }).eq('id', inv.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Invoice returned to vendor');
-    setSelected(null);
-    fetchData();
+    rejectMutation.mutate({ inv, reason });
   };
-
-  const post = async (inv: VendorInvoice) => {
-    const { error } = await supabase.from('ap_invoices').update({ status: 'posted', posted_at: new Date().toISOString(), posted_by: user?.id }).eq('id', inv.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Invoice posted to GL');
-    setSelected(null);
-    fetchData();
-  };
+  const post = (inv: VendorInvoice) => postMutation.mutate(inv);
 
   const filtered = rows.filter(r =>
     r.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
