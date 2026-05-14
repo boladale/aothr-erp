@@ -11,38 +11,28 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function CashReports() {
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ totalAccounts: 0, totalBalance: 0, totalTransfers: 0, reconciliations: 0 });
-  const [balancesByAccount, setBalancesByAccount] = useState<{ name: string; balance: number; id: string }[]>([]);
-  const [transfersByMonth, setTransfersByMonth] = useState<{ month: string; count: number; total: number }[]>([]);
-  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
-
-  useEffect(() => { fetchReports(); }, []);
-
-  const fetchReports = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['cash-reports'],
+    queryFn: async () => {
       const [accountsRes, transfersRes, reconcRes, txnsRes] = await Promise.all([
         supabase.from('bank_accounts').select('*').eq('is_active', true),
         supabase.from('fund_transfers').select('*'),
         supabase.from('bank_reconciliations').select('*'),
         supabase.from('bank_transactions').select('*, bank_accounts(account_name)').order('transaction_date', { ascending: false }).limit(50),
       ]);
-
       const accounts = accountsRes.data || [];
       const transfers = transfersRes.data || [];
       const recons = reconcRes.data || [];
       const txns = txnsRes.data || [];
 
-      setMetrics({
+      const metrics = {
         totalAccounts: accounts.length,
         totalBalance: accounts.reduce((s, a) => s + a.current_balance, 0),
         totalTransfers: transfers.length,
         reconciliations: recons.filter(r => r.status === 'completed').length,
-      });
+      };
+      const balancesByAccount = accounts.map(a => ({ id: a.id, name: a.account_name, balance: a.current_balance }));
 
-      setBalancesByAccount(accounts.map(a => ({ id: a.id, name: a.account_name, balance: a.current_balance })));
-
-      // Transfers by month
       const monthMap: Record<string, { count: number; total: number }> = {};
       transfers.forEach(t => {
         const m = new Date(t.transfer_date).toLocaleDateString('en', { year: 'numeric', month: 'short' });
@@ -50,9 +40,9 @@ export default function CashReports() {
         monthMap[m].count++;
         monthMap[m].total += t.amount;
       });
-      setTransfersByMonth(Object.entries(monthMap).map(([month, d]) => ({ month, ...d })));
+      const transfersByMonth = Object.entries(monthMap).map(([month, d]) => ({ month, ...d }));
 
-      setRecentTransactions(txns.map(t => ({
+      const recentTransactions = txns.map(t => ({
         id: t.id,
         date: new Date(t.transaction_date).toLocaleDateString(),
         account: (t as any).bank_accounts?.account_name || '-',
@@ -60,13 +50,16 @@ export default function CashReports() {
         amount: t.amount,
         status: t.status,
         description: t.description || '-',
-      })));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      }));
+
+      return { metrics, balancesByAccount, transfersByMonth, recentTransactions };
+    },
+  });
+
+  const metrics = data?.metrics || { totalAccounts: 0, totalBalance: 0, totalTransfers: 0, reconciliations: 0 };
+  const balancesByAccount = data?.balancesByAccount || [];
+  const transfersByMonth = data?.transfersByMonth || [];
+  const recentTransactions = data?.recentTransactions || [];
 
   return (
     <AppLayout>
