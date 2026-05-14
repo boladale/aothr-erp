@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Boxes, TrendingUp, AlertTriangle, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -12,18 +12,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(199, 89%, 48%)'];
 
 export default function WarehouseReports() {
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ totalItems: 0, totalLocations: 0, totalGRNs: 0, lowStockItems: 0 });
-  const [inventoryByLocation, setInventoryByLocation] = useState<{ location: string; totalQty: number; items: number }[]>([]);
-  const [grnsByMonth, setGrnsByMonth] = useState<{ month: string; count: number }[]>([]);
-  const [topItems, setTopItems] = useState<{ name: string; totalQty: number; id: string }[]>([]);
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const fetchReports = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['warehouse-reports'],
+    queryFn: async () => {
       const [balancesRes, grnsRes, locationsRes, itemsRes] = await Promise.all([
         supabase.from('inventory_balances').select('*, items(name), locations(name)'),
         supabase.from('goods_receipts').select('id, receipt_date, status'),
@@ -36,17 +27,14 @@ export default function WarehouseReports() {
       const locations = locationsRes.data || [];
       const items = itemsRes.data || [];
 
-      // Low stock (qty <= 10)
       const lowStock = balances.filter(b => b.quantity <= 10).length;
-
-      setMetrics({
+      const metrics = {
         totalItems: items.length,
         totalLocations: locations.length,
         totalGRNs: grns.length,
         lowStockItems: lowStock,
-      });
+      };
 
-      // Inventory by location
       const locMap: Record<string, { totalQty: number; items: Set<string> }> = {};
       balances.forEach(b => {
         const locName = (b as any).locations?.name || 'Unknown';
@@ -54,30 +42,31 @@ export default function WarehouseReports() {
         locMap[locName].totalQty += b.quantity;
         locMap[locName].items.add(b.item_id);
       });
-      setInventoryByLocation(Object.entries(locMap).map(([location, d]) => ({ location, totalQty: d.totalQty, items: d.items.size })));
+      const inventoryByLocation = Object.entries(locMap).map(([location, d]) => ({ location, totalQty: d.totalQty, items: d.items.size }));
 
-      // GRNs by month
       const monthMap: Record<string, number> = {};
       grns.forEach(g => {
         const m = new Date(g.receipt_date).toLocaleDateString('en', { year: 'numeric', month: 'short' });
         monthMap[m] = (monthMap[m] || 0) + 1;
       });
-      setGrnsByMonth(Object.entries(monthMap).map(([month, count]) => ({ month, count })));
+      const grnsByMonth = Object.entries(monthMap).map(([month, count]) => ({ month, count }));
 
-      // Top items by total quantity
       const itemMap: Record<string, { name: string; totalQty: number }> = {};
       balances.forEach(b => {
         const name = (b as any).items?.name || 'Unknown';
         if (!itemMap[b.item_id]) itemMap[b.item_id] = { name, totalQty: 0 };
         itemMap[b.item_id].totalQty += b.quantity;
       });
-      setTopItems(Object.entries(itemMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.totalQty - a.totalQty).slice(0, 15));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const topItems = Object.entries(itemMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.totalQty - a.totalQty).slice(0, 15);
+
+      return { metrics, inventoryByLocation, grnsByMonth, topItems };
+    },
+  });
+
+  const metrics = data?.metrics || { totalItems: 0, totalLocations: 0, totalGRNs: 0, lowStockItems: 0 };
+  const inventoryByLocation = data?.inventoryByLocation || [];
+  const grnsByMonth = data?.grnsByMonth || [];
+  const topItems = data?.topItems || [];
 
   return (
     <AppLayout>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -13,19 +13,9 @@ import { FileCheck, ShoppingCart, Truck, ArrowRight, DollarSign } from 'lucide-r
 
 export default function SalesDashboardPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({
-    totalQuotations: 0, draftQuotations: 0,
-    totalOrders: 0, confirmedOrders: 0,
-    totalDeliveries: 0, pendingDeliveries: 0,
-  });
-  const [recentOrders, setRecentOrders] = useState<any[]>([]);
-  const [recentQuotations, setRecentQuotations] = useState<any[]>([]);
-
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['sales-dashboard'],
+    queryFn: async () => {
       const [tq, dq, to, co, td, pd, ordersRes, quotesRes] = await Promise.all([
         supabase.from('sales_quotations').select('id', { count: 'exact', head: true }),
         supabase.from('sales_quotations').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
@@ -36,15 +26,20 @@ export default function SalesDashboardPage() {
         supabase.from('sales_orders').select('id, order_number, status, total_amount, customer:customers(name)').order('created_at', { ascending: false }).limit(5),
         supabase.from('sales_quotations').select('id, quotation_number, status, total_amount, customer:customers(name)').order('created_at', { ascending: false }).limit(5),
       ]);
-      setMetrics({
-        totalQuotations: tq.count || 0, draftQuotations: dq.count || 0,
-        totalOrders: to.count || 0, confirmedOrders: co.count || 0,
-        totalDeliveries: td.count || 0, pendingDeliveries: pd.count || 0,
-      });
-      setRecentOrders(ordersRes.data || []);
-      setRecentQuotations(quotesRes.data || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  };
+      return {
+        metrics: {
+          totalQuotations: tq.count || 0, draftQuotations: dq.count || 0,
+          totalOrders: to.count || 0, confirmedOrders: co.count || 0,
+          totalDeliveries: td.count || 0, pendingDeliveries: pd.count || 0,
+        },
+        recentOrders: ordersRes.data || [],
+        recentQuotations: quotesRes.data || [],
+      };
+    },
+  });
+  const metrics = data?.metrics || { totalQuotations: 0, draftQuotations: 0, totalOrders: 0, confirmedOrders: 0, totalDeliveries: 0, pendingDeliveries: 0 };
+  const recentOrders = data?.recentOrders || [];
+  const recentQuotations = data?.recentQuotations || [];
 
   return (
     <AppLayout>

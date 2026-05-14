@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -14,15 +14,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function CashDashboardPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ totalAccounts: 0, totalBalance: 0, pendingTransfers: 0, pendingReconciliations: 0 });
-  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
-  const [recentTransfers, setRecentTransfers] = useState<any[]>([]);
-
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['cash-dashboard'],
+    queryFn: async () => {
       const [accounts, transfers, pendingTransfers, pendingRecon, transfersRes] = await Promise.all([
         supabase.from('bank_accounts').select('id, account_name, account_code, current_balance, currency, is_active').eq('is_active', true).order('account_name'),
         supabase.from('fund_transfers').select('id', { count: 'exact', head: true }),
@@ -32,11 +26,16 @@ export default function CashDashboardPage() {
       ]);
       const accts = accounts.data || [];
       const totalBal = accts.reduce((sum: number, a: any) => sum + (a.current_balance || 0), 0);
-      setMetrics({ totalAccounts: accts.length, totalBalance: totalBal, pendingTransfers: pendingTransfers.count || 0, pendingReconciliations: pendingRecon.count || 0 });
-      setBankAccounts(accts);
-      setRecentTransfers(transfersRes.data || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  };
+      return {
+        metrics: { totalAccounts: accts.length, totalBalance: totalBal, pendingTransfers: pendingTransfers.count || 0, pendingReconciliations: pendingRecon.count || 0 },
+        bankAccounts: accts,
+        recentTransfers: transfersRes.data || [],
+      };
+    },
+  });
+  const metrics = data?.metrics || { totalAccounts: 0, totalBalance: 0, pendingTransfers: 0, pendingReconciliations: 0 };
+  const bankAccounts = data?.bankAccounts || [];
+  const recentTransfers = data?.recentTransfers || [];
 
   return (
     <AppLayout>

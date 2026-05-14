@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { BarChart3, FileText, TrendingUp, Package } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -13,46 +13,31 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(199, 89%, 48%)'];
 
 export default function ProcurementReports() {
-  const [loading, setLoading] = useState(true);
-  const [posByStatus, setPosByStatus] = useState<{ status: string; count: number }[]>([]);
-  const [posByMonth, setPosByMonth] = useState<{ month: string; count: number; total: number }[]>([]);
-  const [topVendors, setTopVendors] = useState<{ name: string; total: number; po_count: number }[]>([]);
-  const [reqsByStatus, setReqsByStatus] = useState<{ status: string; count: number }[]>([]);
-  const [rfpSummary, setRfpSummary] = useState<{ status: string; count: number }[]>([]);
-  const [metrics, setMetrics] = useState({ totalPOs: 0, totalValue: 0, avgPOValue: 0, pendingApproval: 0 });
-
-  useEffect(() => {
-    fetchReports();
-  }, []);
-
-  const fetchReports = async () => {
-    try {
-      const [posRes, reqsRes, rfpsRes, vendorsRes] = await Promise.all([
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['procurement-reports'],
+    queryFn: async () => {
+      const [posRes, reqsRes, rfpsRes] = await Promise.all([
         supabase.from('purchase_orders').select('id, status, order_date, total_amount, vendor_id, vendors(name)'),
         supabase.from('requisitions').select('id, status'),
         supabase.from('rfps').select('id, status'),
-        supabase.from('vendors').select('id, name'),
       ]);
 
       const pos = posRes.data || [];
       const reqs = reqsRes.data || [];
       const rfps = rfpsRes.data || [];
 
-      // Metrics
       const totalValue = pos.reduce((s, p) => s + (p.total_amount || 0), 0);
-      setMetrics({
+      const metrics = {
         totalPOs: pos.length,
         totalValue,
         avgPOValue: pos.length > 0 ? totalValue / pos.length : 0,
         pendingApproval: pos.filter(p => p.status === 'pending_approval').length,
-      });
+      };
 
-      // POs by status
       const statusMap: Record<string, number> = {};
       pos.forEach(p => { statusMap[p.status] = (statusMap[p.status] || 0) + 1; });
-      setPosByStatus(Object.entries(statusMap).map(([status, count]) => ({ status, count })));
+      const posByStatus = Object.entries(statusMap).map(([status, count]) => ({ status, count }));
 
-      // POs by month
       const monthMap: Record<string, { count: number; total: number }> = {};
       pos.forEach(p => {
         const m = new Date(p.order_date).toLocaleDateString('en', { year: 'numeric', month: 'short' });
@@ -60,9 +45,8 @@ export default function ProcurementReports() {
         monthMap[m].count++;
         monthMap[m].total += p.total_amount || 0;
       });
-      setPosByMonth(Object.entries(monthMap).map(([month, d]) => ({ month, ...d })));
+      const posByMonth = Object.entries(monthMap).map(([month, d]) => ({ month, ...d }));
 
-      // Top vendors by PO value
       const vendorTotals: Record<string, { name: string; total: number; po_count: number }> = {};
       pos.forEach(p => {
         const vName = (p as any).vendors?.name || 'Unknown';
@@ -70,23 +54,26 @@ export default function ProcurementReports() {
         vendorTotals[p.vendor_id].total += p.total_amount || 0;
         vendorTotals[p.vendor_id].po_count++;
       });
-      setTopVendors(Object.values(vendorTotals).sort((a, b) => b.total - a.total).slice(0, 10));
+      const topVendors = Object.values(vendorTotals).sort((a, b) => b.total - a.total).slice(0, 10);
 
-      // Requisitions by status
       const reqStatusMap: Record<string, number> = {};
       reqs.forEach(r => { reqStatusMap[r.status] = (reqStatusMap[r.status] || 0) + 1; });
-      setReqsByStatus(Object.entries(reqStatusMap).map(([status, count]) => ({ status, count })));
+      const reqsByStatus = Object.entries(reqStatusMap).map(([status, count]) => ({ status, count }));
 
-      // RFPs
       const rfpStatusMap: Record<string, number> = {};
       rfps.forEach(r => { rfpStatusMap[r.status] = (rfpStatusMap[r.status] || 0) + 1; });
-      setRfpSummary(Object.entries(rfpStatusMap).map(([status, count]) => ({ status, count })));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      const rfpSummary = Object.entries(rfpStatusMap).map(([status, count]) => ({ status, count }));
+
+      return { metrics, posByStatus, posByMonth, topVendors, reqsByStatus, rfpSummary };
+    },
+  });
+
+  const metrics = data?.metrics || { totalPOs: 0, totalValue: 0, avgPOValue: 0, pendingApproval: 0 };
+  const posByStatus = data?.posByStatus || [];
+  const posByMonth = data?.posByMonth || [];
+  const topVendors = data?.topVendors || [];
+  const reqsByStatus = data?.reqsByStatus || [];
+  const rfpSummary = data?.rfpSummary || [];
 
   return (
     <AppLayout>

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -24,14 +25,11 @@ interface LifecycleRow {
 }
 
 export default function RequisitionToPaymentReport() {
-  const [rows, setRows] = useState<LifecycleRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
+  const { data: rows = [], isLoading: loading } = useQuery<LifecycleRow[]>({
+    queryKey: ['req-to-payment-report'],
+    queryFn: async () => {
       // Get requisitions with approval dates
       const { data: reqs } = await supabase
         .from('requisitions')
@@ -137,9 +135,9 @@ export default function RequisitionToPaymentReport() {
         });
       });
 
-      setRows(result);
-    } catch { } finally { setLoading(false); }
-  };
+      return result;
+    },
+  });
 
   const fmt = (d: string) => d && d !== '-' ? new Date(d).toLocaleDateString() : '-';
 
