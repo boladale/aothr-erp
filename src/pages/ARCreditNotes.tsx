@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -29,27 +30,28 @@ interface ARCreditNote {
 
 export default function ARCreditNotes() {
   const { hasRole, organizationId } = useAuth();
+  const qc = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [creditNotes, setCreditNotes] = useState<ARCreditNote[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerInvoices, setCustomerInvoices] = useState<ARInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCN, setEditingCN] = useState<ARCreditNote | null>(null);
   const [form, setForm] = useState({ customer_id: '', invoice_id: '', credit_date: new Date().toISOString().split('T')[0], reason: '' });
   const [lines, setLines] = useState<CreditNoteLine[]>([{ description: '', quantity: '1', unit_price: '0' }]);
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
-    const [cnRes, custRes] = await Promise.all([
-      supabase.from('ar_credit_notes').select('*, customers(name, code), ar_invoices(invoice_number)').order('created_at', { ascending: false }),
-      supabase.from('customers').select('id, code, name').eq('is_active', true),
-    ]);
-    setCreditNotes((cnRes.data || []) as ARCreditNote[]);
-    setCustomers((custRes.data || []) as Customer[]);
-    setLoading(false);
-  };
+  const dataQ = useQuery({
+    queryKey: ['ar_credit_notes'],
+    queryFn: async () => {
+      const [cnRes, custRes] = await Promise.all([
+        supabase.from('ar_credit_notes').select('*, customers(name, code), ar_invoices(invoice_number)').order('created_at', { ascending: false }),
+        supabase.from('customers').select('id, code, name').eq('is_active', true),
+      ]);
+      return { creditNotes: (cnRes.data || []) as ARCreditNote[], customers: (custRes.data || []) as Customer[] };
+    },
+  });
+  const creditNotes = dataQ.data?.creditNotes || [];
+  const customers = dataQ.data?.customers || [];
+  const loading = dataQ.isLoading;
+  const fetchAll = () => qc.invalidateQueries({ queryKey: ['ar_credit_notes'] });
 
   const onCustomerChange = async (customerId: string) => {
     setForm(f => ({ ...f, customer_id: customerId, invoice_id: '' }));

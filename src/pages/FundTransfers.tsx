@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -26,10 +27,8 @@ interface FundTransfer {
 
 export default function FundTransfers() {
   const { hasRole, organizationId } = useAuth();
+  const qc = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [transfers, setTransfers] = useState<FundTransfer[]>([]);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransfer, setEditingTransfer] = useState<FundTransfer | null>(null);
   const [form, setForm] = useState({
@@ -37,22 +36,25 @@ export default function FundTransfers() {
     transfer_date: new Date().toISOString().split('T')[0], reference: '', notes: '',
   });
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
-    const { data: tData } = await supabase.from('fund_transfers').select('*').order('created_at', { ascending: false });
-    const { data: bData } = await supabase.from('bank_accounts').select('id, account_code, account_name, current_balance').eq('is_active', true);
-    const banks = (bData || []) as BankAccount[];
-    setBankAccounts(banks);
-    const bankMap = new Map(banks.map(b => [b.id, b]));
-    const enriched = (tData || []).map((t: any) => ({
-      ...t,
-      from_bank: bankMap.get(t.from_bank_account_id) ? { account_code: bankMap.get(t.from_bank_account_id)!.account_code, account_name: bankMap.get(t.from_bank_account_id)!.account_name } : null,
-      to_bank: bankMap.get(t.to_bank_account_id) ? { account_code: bankMap.get(t.to_bank_account_id)!.account_code, account_name: bankMap.get(t.to_bank_account_id)!.account_name } : null,
-    }));
-    setTransfers(enriched as FundTransfer[]);
-    setLoading(false);
-  };
+  const dataQ = useQuery({
+    queryKey: ['fund_transfers'],
+    queryFn: async () => {
+      const { data: tData } = await supabase.from('fund_transfers').select('*').order('created_at', { ascending: false });
+      const { data: bData } = await supabase.from('bank_accounts').select('id, account_code, account_name, current_balance').eq('is_active', true);
+      const banks = (bData || []) as BankAccount[];
+      const bankMap = new Map(banks.map(b => [b.id, b]));
+      const enriched = (tData || []).map((t: any) => ({
+        ...t,
+        from_bank: bankMap.get(t.from_bank_account_id) ? { account_code: bankMap.get(t.from_bank_account_id)!.account_code, account_name: bankMap.get(t.from_bank_account_id)!.account_name } : null,
+        to_bank: bankMap.get(t.to_bank_account_id) ? { account_code: bankMap.get(t.to_bank_account_id)!.account_code, account_name: bankMap.get(t.to_bank_account_id)!.account_name } : null,
+      }));
+      return { transfers: enriched as FundTransfer[], bankAccounts: banks };
+    },
+  });
+  const transfers = dataQ.data?.transfers || [];
+  const bankAccounts = dataQ.data?.bankAccounts || [];
+  const loading = dataQ.isLoading;
+  const fetchAll = () => qc.invalidateQueries({ queryKey: ['fund_transfers'] });
 
   const openEditDialog = (t: FundTransfer) => {
     setEditingTransfer(t);
