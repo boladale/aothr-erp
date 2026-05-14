@@ -131,14 +131,9 @@ function CFOMetrics() {
 
 function AROverview() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ totalInvoices: 0, unpaid: 0, totalReceipts: 0, creditNotes: 0 });
-  const [recentInvoices, setRecentInvoices] = useState<any[]>([]);
-
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
+  const { data: ar, isLoading: loading } = useQuery({
+    queryKey: ['finance-ar-overview'],
+    queryFn: async () => {
       const [total, unpaid, receipts, cns, recent] = await Promise.all([
         supabase.from('ar_invoices').select('id', { count: 'exact', head: true }),
         supabase.from('ar_invoices').select('id', { count: 'exact', head: true }).eq('payment_status', 'unpaid'),
@@ -146,10 +141,14 @@ function AROverview() {
         supabase.from('ar_credit_notes').select('id', { count: 'exact', head: true }),
         supabase.from('ar_invoices').select('id, invoice_number, status, total_amount, payment_status, customer:customers(name)').order('created_at', { ascending: false }).limit(5),
       ]);
-      setMetrics({ totalInvoices: total.count || 0, unpaid: unpaid.count || 0, totalReceipts: receipts.count || 0, creditNotes: cns.count || 0 });
-      setRecentInvoices(recent.data || []);
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  };
+      return {
+        metrics: { totalInvoices: total.count || 0, unpaid: unpaid.count || 0, totalReceipts: receipts.count || 0, creditNotes: cns.count || 0 },
+        recentInvoices: recent.data || [],
+      };
+    },
+  });
+  const metrics = ar?.metrics || { totalInvoices: 0, unpaid: 0, totalReceipts: 0, creditNotes: 0 };
+  const recentInvoices = ar?.recentInvoices || [];
 
   if (loading) return <div className="card-grid">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
 
@@ -194,22 +193,19 @@ function AROverview() {
 
 function GLOverview() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState({ accounts: 0, entries: 0, draftEntries: 0, openPeriods: 0 });
-
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
+  const { data: metricsData, isLoading: loading } = useQuery({
+    queryKey: ['finance-gl-overview'],
+    queryFn: async () => {
       const [accounts, entries, drafts, periods] = await Promise.all([
         supabase.from('gl_accounts').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('gl_journal_entries').select('id', { count: 'exact', head: true }),
         supabase.from('gl_journal_entries').select('id', { count: 'exact', head: true }).eq('status', 'draft'),
         supabase.from('gl_fiscal_periods').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       ]);
-      setMetrics({ accounts: accounts.count || 0, entries: entries.count || 0, draftEntries: drafts.count || 0, openPeriods: periods.count || 0 });
-    } catch (e) { console.error(e); } finally { setLoading(false); }
-  };
+      return { accounts: accounts.count || 0, entries: entries.count || 0, draftEntries: drafts.count || 0, openPeriods: periods.count || 0 };
+    },
+  });
+  const metrics = metricsData || { accounts: 0, entries: 0, draftEntries: 0, openPeriods: 0 };
 
   if (loading) return <div className="card-grid">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
 
