@@ -135,9 +135,9 @@ export default function RequisitionToPaymentReport() {
         });
       });
 
-      setRows(result);
-    } catch { } finally { setLoading(false); }
-  };
+      return result;
+    },
+  });
 
   const fmt = (d: string) => d && d !== '-' ? new Date(d).toLocaleDateString() : '-';
 
