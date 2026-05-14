@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -83,12 +84,12 @@ export default function RFPDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [rfp, setRfp] = useState<RFPData | null>(null);
+  const queryClient = useQueryClient();
+  const [scores, setScores] = useState<Score[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [rfpItems, setRfpItems] = useState<RFPItem[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [scores, setScores] = useState<Score[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rfp, setRfp] = useState<RFPData | null>(null);
 
   // Invite dialog state
   const [inviteOpen, setInviteOpen] = useState(false);
