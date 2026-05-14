@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
@@ -34,9 +35,7 @@ export default function PurchaseOrderDetail() {
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canSend = canApprove || hasRole('procurement_officer');
   const canClose = canApprove || hasRole('warehouse_manager') || hasRole('warehouse_officer');
-  const [po, setPO] = useState<POWithDetails | null>(null);
-  const [lines, setLines] = useState<POLineWithItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showDocument, setShowDocument] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [signDialog, setSignDialog] = useState(false);
@@ -48,27 +47,24 @@ export default function PurchaseOrderDetail() {
       .then(({ data }: any) => { if (data?.signature_url) setManagerSig(data.signature_url); });
   }, [user?.id]);
 
-  useEffect(() => {
-    if (id) fetchPO();
-  }, [id]);
-
-  const fetchPO = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['purchase_order', id],
+    enabled: !!id,
+    queryFn: async () => {
       const [poRes, linesRes] = await Promise.all([
         supabase.from('purchase_orders').select('*, vendors(*), locations(*)').eq('id', id).single(),
         supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', id).order('line_number'),
       ]);
-
       if (poRes.error) throw poRes.error;
-      setPO(poRes.data as POWithDetails);
-      setLines((linesRes.data || []) as POLineWithItem[]);
-    } catch (error) {
-      console.error('Error fetching PO:', error);
-      toast.error('Failed to load purchase order');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return {
+        po: poRes.data as POWithDetails,
+        lines: (linesRes.data || []) as POLineWithItem[],
+      };
+    },
+  });
+  const po = data?.po ?? null;
+  const lines = data?.lines ?? [];
+  const fetchPO = () => queryClient.invalidateQueries({ queryKey: ['purchase_order', id] });
 
   const handleSubmitForApproval = async () => {
     if (!po) return;

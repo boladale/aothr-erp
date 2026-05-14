@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
@@ -30,14 +31,19 @@ export default function UserProfile() {
   const { user, profile, roles, refreshProfile } = useAuth();
   const { appName } = useOrgBranding();
   const [fullName, setFullName] = useState(profile?.full_name || '');
-  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+  const [signatureOverride, setSignatureOverride] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase.from('profiles').select('signature_url').eq('user_id', user.id).maybeSingle()
-      .then(({ data }: any) => { if (data?.signature_url) setSignatureUrl(data.signature_url); });
-  }, [user?.id]);
+  const { data: sigData } = useQuery({
+    queryKey: ['profile_signature', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from('profiles').select('signature_url').eq('user_id', user!.id).maybeSingle();
+      return (data as any)?.signature_url as string | null ?? null;
+    },
+  });
+  const signatureUrl = signatureOverride ?? sigData ?? null;
+  const setSignatureUrl = setSignatureOverride;
 
   const saveSignature = async (url: string) => {
     setSignatureUrl(url);

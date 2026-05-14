@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -47,32 +48,32 @@ export default function RequisitionDetail() {
   const navigate = useNavigate();
   const { user, hasRole, organizationId } = useAuth();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
-  const [requisition, setRequisition] = useState<Requisition | null>(null);
-  const [lines, setLines] = useState<RequisitionLine[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [convertOpen, setConvertOpen] = useState(false);
   const [rfpOpen, setRfpOpen] = useState(false);
 
-  useEffect(() => {
-    if (id) fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
-    try {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['requisition', id],
+    enabled: !!id,
+    queryFn: async () => {
       const [reqRes, linesRes] = await Promise.all([
         supabase.from('requisitions').select('*').eq('id', id!).single(),
         supabase.from('requisition_lines').select('*, items(code, name, unit_of_measure), services(code, name)').eq('requisition_id', id!).order('line_number'),
       ]);
-      if (reqRes.error) throw reqRes.error;
-      setRequisition(reqRes.data as Requisition);
-      setLines((linesRes.data || []) as RequisitionLine[]);
-    } catch (error) {
-      toast.error('Failed to load requisition');
-      navigate('/requisitions');
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (reqRes.error) {
+        toast.error('Failed to load requisition');
+        navigate('/requisitions');
+        throw reqRes.error;
+      }
+      return {
+        requisition: reqRes.data as Requisition,
+        lines: (linesRes.data || []) as RequisitionLine[],
+      };
+    },
+  });
+  const requisition = data?.requisition ?? null;
+  const lines = data?.lines ?? [];
+  const fetchData = () => queryClient.invalidateQueries({ queryKey: ['requisition', id] });
 
   const handleSubmit = async () => {
     try {
