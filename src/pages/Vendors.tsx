@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, Search, Pencil, Trash2, Power, Link2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -23,35 +24,25 @@ const PROJECT_SIZE_LABELS: Record<string, string> = {
 
 export default function Vendors() {
   const { user, hasRole } = useAuth();
+  const qc = useQueryClient();
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const canInitiate = !!user;
-  const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editVendor, setEditVendor] = useState<Vendor | null>(null);
   const [inviteVendor, setInviteVendor] = useState<Vendor | null>(null);
 
-  useEffect(() => {
-    fetchVendors();
-  }, []);
-
-  const fetchVendors = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('vendors')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+  const vendorsQ = useQuery({
+    queryKey: ['vendors'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('vendors').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setVendors((data || []) as Vendor[]);
-    } catch (error) {
-      console.error('Error fetching vendors:', error);
-      toast.error('Failed to load vendors');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []) as Vendor[];
+    },
+  });
+  const vendors = vendorsQ.data || [];
+  const loading = vendorsQ.isLoading;
+  const fetchVendors = () => qc.invalidateQueries({ queryKey: ['vendors'] });
 
   const handleSubmitForApproval = async (vendor: Vendor) => {
     try {

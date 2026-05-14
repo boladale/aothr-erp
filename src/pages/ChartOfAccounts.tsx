@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -140,10 +141,8 @@ const emptyForm = {
 
 export default function ChartOfAccounts() {
   const { hasRole } = useAuth();
+  const qc = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [accounts, setAccounts] = useState<GLAccount[]>([]);
-  const [tree, setTree] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -153,20 +152,26 @@ export default function ChartOfAccounts() {
   const [activeTab, setActiveTab] = useState('all');
   const [form, setForm] = useState(emptyForm);
 
-  useEffect(() => { fetchAccounts(); }, []);
+  const accountsQ = useQuery({
+    queryKey: ['gl_accounts', 'all'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('*').order('account_code');
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
+  const accounts = accountsQ.data || [];
+  const tree = buildTree(accounts);
+  const loading = accountsQ.isLoading;
+  const fetchAccounts = () => qc.invalidateQueries({ queryKey: ['gl_accounts', 'all'] });
 
-  const fetchAccounts = async () => {
-    const { data, error } = await supabase
-      .from('gl_accounts')
-      .select('*')
-      .order('account_code');
-    if (error) { toast.error('Failed to load accounts'); return; }
-    const accts = (data || []) as GLAccount[];
-    setAccounts(accts);
-    setTree(buildTree(accts));
-    setExpanded(new Set(accts.filter(a => !a.parent_id).map(a => a.id)));
-    setLoading(false);
-  };
+  // Auto-expand roots when accounts first load
+  useEffect(() => {
+    if (accounts.length && expanded.size === 0) {
+      setExpanded(new Set(accounts.filter(a => !a.parent_id).map(a => a.id)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accounts.length]);
 
   const toggleExpand = (id: string) => {
     setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });

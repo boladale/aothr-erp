@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, Search, MapPin, Pencil, Trash2, Power } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -21,38 +22,24 @@ import type { Location } from '@/lib/supabase';
 
 export default function Locations() {
   const { organizationId } = useAuth();
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editLocation, setEditLocation] = useState<Location | null>(null);
-  const [form, setForm] = useState({
-    code: '',
-    name: '',
-    address: '',
-  });
+  const [form, setForm] = useState({ code: '', name: '', address: '' });
 
-  useEffect(() => {
-    fetchLocations();
-  }, []);
-
-  const fetchLocations = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .order('code');
-
+  const locationsQ = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').order('code');
       if (error) throw error;
-      setLocations((data || []) as Location[]);
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-      toast.error('Failed to load locations');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []) as Location[];
+    },
+  });
+  const locations = locationsQ.data || [];
+  const loading = locationsQ.isLoading;
+  const fetchLocations = () => qc.invalidateQueries({ queryKey: ['locations'] });
 
   const openCreate = () => {
     setEditLocation(null);
