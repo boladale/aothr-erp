@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FolderKanban } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -48,8 +49,7 @@ const statusColors: Record<string, string> = {
 export default function Projects() {
   const { user, organizationId } = useAuth();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -64,22 +64,17 @@ export default function Projects() {
     budgeted_amount: 0,
   });
 
-  useEffect(() => { fetchProjects(); }, []);
-
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const projectsQ = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setProjects((data || []) as Project[]);
-    } catch (error) {
-      toast.error('Failed to load projects');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []) as Project[];
+    },
+  });
+  const projects = projectsQ.data || [];
+  const loading = projectsQ.isLoading;
+  const fetchProjects = () => qc.invalidateQueries({ queryKey: ['projects'] });
 
   const handleCreate = async () => {
     if (!form.project_code || !form.project_name) {

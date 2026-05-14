@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -26,27 +27,34 @@ interface BankAccount {
 
 export default function BankAccounts() {
   const { hasRole, organizationId } = useAuth();
+  const qc = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
-  const [accounts, setAccounts] = useState<BankAccount[]>([]);
-  const [glAccounts, setGlAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
     account_code: '', account_name: '', bank_name: '', account_number: '',
     currency: 'USD', gl_account_id: '', opening_balance: '0',
   });
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
-    const [accRes, glRes] = await Promise.all([
-      supabase.from('bank_accounts').select('*, gl_accounts(account_code, account_name)').order('account_code'),
-      supabase.from('gl_accounts').select('id, account_code, account_name').eq('account_type', 'asset').eq('is_active', true).eq('is_header', false),
-    ]);
-    setAccounts((accRes.data || []) as BankAccount[]);
-    setGlAccounts((glRes.data || []) as GLAccount[]);
-    setLoading(false);
-  };
+  const accountsQ = useQuery({
+    queryKey: ['bank_accounts'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('bank_accounts').select('*, gl_accounts(account_code, account_name)').order('account_code');
+      if (error) throw error;
+      return (data || []) as BankAccount[];
+    },
+  });
+  const glAccountsQ = useQuery({
+    queryKey: ['gl_accounts', 'asset-postable'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name').eq('account_type', 'asset').eq('is_active', true).eq('is_header', false);
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
+  const accounts = accountsQ.data || [];
+  const glAccounts = glAccountsQ.data || [];
+  const loading = accountsQ.isLoading;
+  const fetchAll = () => { qc.invalidateQueries({ queryKey: ['bank_accounts'] }); qc.invalidateQueries({ queryKey: ['gl_accounts', 'asset-postable'] }); };
 
   const handleCreate = async () => {
     if (!form.account_code || !form.account_name) { toast.error('Code and name required'); return; }

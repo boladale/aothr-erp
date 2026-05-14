@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Users, Shield, History, UserPlus, Database, Palette, Plus, Trash2, UserX, UserCheck, HardDrive, Coins, Upload } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,9 +43,7 @@ interface UserWithRoles extends Profile {
 
 export default function Admin() {
   const { isAdmin } = useAuth();
-  const [users, setUsers] = useState<UserWithRoles[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [createUserOpen, setCreateUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
@@ -54,37 +53,33 @@ export default function Admin() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
-    fetchData();
     (async () => {
       const { data } = await supabase.from('roles').select('id, name').order('name');
       setCustomRoles((data || []) as any);
     })();
   }, []);
 
-  const fetchData = async () => {
-    try {
+  const dataQ = useQuery({
+    queryKey: ['admin_users_audit'],
+    queryFn: async () => {
       const [profilesRes, rolesRes, logsRes] = await Promise.all([
         supabase.from('profiles').select('*'),
         supabase.from('user_roles').select('*'),
         supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(100),
       ]);
-
       const profiles = (profilesRes.data || []) as Profile[];
       const roles = (rolesRes.data || []) as UserRole[];
-      
-      const usersWithRoles: UserWithRoles[] = profiles.map(p => ({
+      const users: UserWithRoles[] = profiles.map(p => ({
         ...p,
-        user_roles: roles.filter(r => r.user_id === p.user_id).map(r => ({ role: r.role }))
+        user_roles: roles.filter(r => r.user_id === p.user_id).map(r => ({ role: r.role })),
       }));
-      
-      setUsers(usersWithRoles);
-      setAuditLogs((logsRes.data || []) as AuditLog[]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return { users, auditLogs: (logsRes.data || []) as AuditLog[] };
+    },
+  });
+  const users = dataQ.data?.users || [];
+  const auditLogs = dataQ.data?.auditLogs || [];
+  const loading = dataQ.isLoading;
+  const fetchData = () => qc.invalidateQueries({ queryKey: ['admin_users_audit'] });
 
   const handleAddRole = async () => {
     if (!selectedUser || !newRole) return;

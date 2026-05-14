@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -44,9 +45,7 @@ interface RecurringLine {
 
 export default function RecurringEntries() {
   const { isAdmin } = useAuth();
-  const [entries, setEntries] = useState<RecurringEntry[]>([]);
-  const [accounts, setAccounts] = useState<GLAccount[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [generating, setGenerating] = useState<string | null>(null);
 
@@ -61,17 +60,26 @@ export default function RecurringEntries() {
     { line_number: 2, account_id: '', debit: 0, credit: 0, description: '' },
   ]);
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    const [entriesRes, accountsRes] = await Promise.all([
-      supabase.from('gl_recurring_entries' as any).select('*').order('created_at', { ascending: false }),
-      supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_active', true).eq('is_header', false).order('account_code'),
-    ]);
-    setEntries((entriesRes.data || []) as unknown as RecurringEntry[]);
-    setAccounts((accountsRes.data || []) as GLAccount[]);
-    setLoading(false);
-  };
+  const entriesQ = useQuery({
+    queryKey: ['gl_recurring_entries'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_recurring_entries' as any).select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as RecurringEntry[];
+    },
+  });
+  const accountsQ = useQuery({
+    queryKey: ['gl_accounts', 'postable'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gl_accounts').select('id, account_code, account_name').eq('is_active', true).eq('is_header', false).order('account_code');
+      if (error) throw error;
+      return (data || []) as GLAccount[];
+    },
+  });
+  const entries = entriesQ.data || [];
+  const accounts = accountsQ.data || [];
+  const loading = entriesQ.isLoading || accountsQ.isLoading;
+  const fetchData = () => { qc.invalidateQueries({ queryKey: ['gl_recurring_entries'] }); qc.invalidateQueries({ queryKey: ['gl_accounts', 'postable'] }); };
 
   const resetForm = () => {
     setName(''); setDescription(''); setFrequency('monthly'); setNextRunDate(''); setEndDate('');
