@@ -30,31 +30,21 @@ interface RFP {
 export default function RFPs() {
   const { user, organizationId } = useAuth();
   const navigate = useNavigate();
-  const [rfps, setRfps] = useState<RFP[]>([]);
-  const [loading, setLoading] = useState(true);
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    fetchRFPs();
-  }, []);
-
-  const fetchRFPs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('rfps')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+  const rfpsQ = useQuery({
+    queryKey: ['rfps'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('rfps').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      setRfps((data || []) as RFP[]);
-    } catch (error) {
-      console.error('Error fetching RFPs:', error);
-      toast.error('Failed to load RFPs');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return (data || []) as RFP[];
+    },
+  });
+  const rfps = rfpsQ.data || [];
+  const loading = rfpsQ.isLoading;
+  const fetchRFPs = () => qc.invalidateQueries({ queryKey: ['rfps'] });
 
   const filtered = rfps.filter(r =>
     r.title.toLowerCase().includes(search.toLowerCase()) ||
