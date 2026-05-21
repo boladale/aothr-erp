@@ -58,6 +58,7 @@ const WarehouseReports = lazy(() => import("./pages/WarehouseReports"));
 const FinanceAPReports = lazy(() => import("./pages/FinanceAPReports"));
 const FinanceARReports = lazy(() => import("./pages/FinanceARReports"));
 const CashReports = lazy(() => import("./pages/CashReports"));
+const ComplianceReports = lazy(() => import("./pages/ComplianceReports"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const TaxConfiguration = lazy(() => import("./pages/TaxConfiguration"));
 const SalesQuotations = lazy(() => import("./pages/SalesQuotations"));
