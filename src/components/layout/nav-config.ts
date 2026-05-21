@@ -88,6 +88,7 @@ export const pathToProgram: Record<string, string> = {
   '/ap-reports': 'ap_reports',
   '/ar-reports': 'ar_reports',
   '/cash-reports': 'cash_reports',
+  '/compliance-reports': 'compliance_reports',
   '/tax-configuration': 'tax_configuration',
   '/sales-quotations': 'sales_quotations',
   '/sales-orders': 'sales_orders',
@@ -193,6 +194,12 @@ export const navSections = [
       { path: '/ar-receipts', label: 'AR Receipts', icon: ArrowDownToLine },
       { path: '/ar-credit-notes', label: 'Credit Notes', icon: FileX },
       { path: '/ar-aging', label: 'AR Aging', icon: Clock },
+    ],
+  },
+  {
+    label: 'Finance - Compliance',
+    items: [
+      { path: '/compliance-reports', label: 'Compliance Reports', icon: FileCheck },
     ],
   },
   {
