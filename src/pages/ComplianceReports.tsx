@@ -910,7 +910,7 @@ export default function ComplianceReports() {
     );
   }
 
-  const orgName = (branding as any)?.name || (branding as any)?.organizationName || 'Organization';
+  const orgName = branding?.appName || 'Organization';
 
   return (
     <div className="p-4 md:p-6 space-y-4">
