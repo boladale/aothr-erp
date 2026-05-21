@@ -197,6 +197,12 @@ export const navSections = [
     ],
   },
   {
+    label: 'Finance - Compliance',
+    items: [
+      { path: '/compliance-reports', label: 'Compliance Reports', icon: FileCheck },
+    ],
+  },
+  {
     label: 'Sales',
     items: [
       { path: '/sales-quotations', label: 'Quotations', icon: FileCheck },
