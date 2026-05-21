@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/currency';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BudgetUtilisationWidget } from './BudgetUtilisationWidget';
 
 export function ProcurementDashboard() {
   const navigate = useNavigate();
@@ -145,6 +146,8 @@ export function ProcurementDashboard() {
           )}
         </div>
       )}
+
+      <BudgetUtilisationWidget />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

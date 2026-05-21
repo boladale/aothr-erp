@@ -37,6 +37,7 @@ import {
   Bell,
   GitBranch,
   Repeat,
+  PiggyBank,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
@@ -89,6 +90,8 @@ export const pathToProgram: Record<string, string> = {
   '/ar-reports': 'ar_reports',
   '/cash-reports': 'cash_reports',
   '/compliance-reports': 'compliance_reports',
+  '/budgets': 'budgets',
+  '/budget-reports': 'budgets',
   '/tax-configuration': 'tax_configuration',
   '/sales-quotations': 'sales_quotations',
   '/sales-orders': 'sales_orders',
@@ -200,6 +203,8 @@ export const navSections = [
     label: 'Finance - Compliance',
     items: [
       { path: '/compliance-reports', label: 'Compliance Reports', icon: FileCheck },
+      { path: '/budgets', label: 'Budgets', icon: PiggyBank },
+      { path: '/budget-reports', label: 'Budget Reports', icon: BarChart3 },
     ],
   },
   {

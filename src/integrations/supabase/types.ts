@@ -1302,39 +1302,73 @@ export type Database = {
       }
       budget_lines: {
         Row: {
+          account_id: string | null
+          actual_amount: number
+          annual_amount: number
           available_amount: number | null
           budget_id: string
           budgeted_amount: number
-          category: string
+          category: string | null
           committed_amount: number
           consumed_amount: number
           created_at: string
+          department_id: string | null
+          description: string | null
           id: string
+          q1: number
+          q2: number
+          q3: number
+          q4: number
           updated_at: string
         }
         Insert: {
+          account_id?: string | null
+          actual_amount?: number
+          annual_amount?: number
           available_amount?: number | null
           budget_id: string
           budgeted_amount?: number
-          category: string
+          category?: string | null
           committed_amount?: number
           consumed_amount?: number
           created_at?: string
+          department_id?: string | null
+          description?: string | null
           id?: string
+          q1?: number
+          q2?: number
+          q3?: number
+          q4?: number
           updated_at?: string
         }
         Update: {
+          account_id?: string | null
+          actual_amount?: number
+          annual_amount?: number
           available_amount?: number | null
           budget_id?: string
           budgeted_amount?: number
-          category?: string
+          category?: string | null
           committed_amount?: number
           consumed_amount?: number
           created_at?: string
+          department_id?: string | null
+          description?: string | null
           id?: string
+          q1?: number
+          q2?: number
+          q3?: number
+          q4?: number
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "budget_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "budget_lines_budget_id_fkey"
             columns: ["budget_id"]
@@ -1342,10 +1376,63 @@ export type Database = {
             referencedRelation: "budgets"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "budget_lines_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      budget_transactions: {
+        Row: {
+          amount: number
+          budget_line_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          reference_id: string | null
+          reference_type: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          budget_line_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          budget_line_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_transactions_budget_line_id_fkey"
+            columns: ["budget_line_id"]
+            isOneToOne: false
+            referencedRelation: "budget_lines"
+            referencedColumns: ["id"]
+          },
         ]
       }
       budgets: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           budget_code: string
           created_at: string
           created_by: string | null
@@ -1359,6 +1446,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           budget_code: string
           created_at?: string
           created_by?: string | null
@@ -1372,6 +1461,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           budget_code?: string
           created_at?: string
           created_by?: string | null
@@ -4562,6 +4653,7 @@ export type Database = {
           notes: string | null
           order_date: string
           organization_id: string | null
+          over_budget: boolean
           payment_terms: string | null
           po_number: string
           rejection_reason: string | null
@@ -4599,6 +4691,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           organization_id?: string | null
+          over_budget?: boolean
           payment_terms?: string | null
           po_number: string
           rejection_reason?: string | null
@@ -4636,6 +4729,7 @@ export type Database = {
           notes?: string | null
           order_date?: string
           organization_id?: string | null
+          over_budget?: boolean
           payment_terms?: string | null
           po_number?: string
           rejection_reason?: string | null
@@ -6840,6 +6934,10 @@ export type Database = {
       next_transaction_number: {
         Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
         Returns: string
+      }
+      recalc_budget_line_totals: {
+        Args: { p_line_id: string }
+        Returns: undefined
       }
       reject_po_reaward: {
         Args: { p_notes: string; p_request_id: string }
