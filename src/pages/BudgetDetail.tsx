@@ -77,7 +77,7 @@ export default function BudgetDetail() {
     queryFn: async () => {
       const lineIds = lines.map((l: any) => l.id);
       if (!lineIds.length) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('budget_transactions')
         .select('*')
         .in('budget_line_id', lineIds)
