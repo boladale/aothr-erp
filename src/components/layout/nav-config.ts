@@ -88,6 +88,7 @@ export const pathToProgram: Record<string, string> = {
   '/ap-reports': 'ap_reports',
   '/ar-reports': 'ar_reports',
   '/cash-reports': 'cash_reports',
+  '/compliance-reports': 'compliance_reports',
   '/tax-configuration': 'tax_configuration',
   '/sales-quotations': 'sales_quotations',
   '/sales-orders': 'sales_orders',
