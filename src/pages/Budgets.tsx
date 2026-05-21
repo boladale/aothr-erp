@@ -22,7 +22,7 @@ export default function Budgets() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { hasRole } = useAuth();
-  const canCreate = hasRole('admin') || hasRole('finance_manager') || hasRole('accounts_payable');
+  const canCreate = hasRole('admin') || hasRole('accounts_payable');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ name: '', fiscal_year: new Date().getFullYear() });
@@ -76,7 +76,6 @@ export default function Budgets() {
         <PageHeader
           title="Budgets"
           description="Annual budgets with departmental and account-level allocations."
-          icon={PiggyBank}
           actions={
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
