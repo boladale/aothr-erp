@@ -59,6 +59,9 @@ const FinanceAPReports = lazy(() => import("./pages/FinanceAPReports"));
 const FinanceARReports = lazy(() => import("./pages/FinanceARReports"));
 const CashReports = lazy(() => import("./pages/CashReports"));
 const ComplianceReports = lazy(() => import("./pages/ComplianceReports"));
+const Budgets = lazy(() => import("./pages/Budgets"));
+const BudgetDetail = lazy(() => import("./pages/BudgetDetail"));
+const BudgetReports = lazy(() => import("./pages/BudgetReports"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const TaxConfiguration = lazy(() => import("./pages/TaxConfiguration"));
 const SalesQuotations = lazy(() => import("./pages/SalesQuotations"));
@@ -235,6 +238,9 @@ const App = () => (
             <Route path="/ar-reports" element={<ProtectedRoute><FinanceARReports /></ProtectedRoute>} />
             <Route path="/cash-reports" element={<ProtectedRoute><CashReports /></ProtectedRoute>} />
             <Route path="/compliance-reports" element={<ProtectedRoute><ComplianceReports /></ProtectedRoute>} />
+            <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
+            <Route path="/budgets/:id" element={<ProtectedRoute><BudgetDetail /></ProtectedRoute>} />
+            <Route path="/budget-reports" element={<ProtectedRoute><BudgetReports /></ProtectedRoute>} />
             <Route path="/tax-configuration" element={<ProtectedRoute><TaxConfiguration /></ProtectedRoute>} />
             <Route path="/sales-quotations" element={<ProtectedRoute><SalesQuotations /></ProtectedRoute>} />
             <Route path="/sales-orders" element={<ProtectedRoute><SalesOrders /></ProtectedRoute>} />

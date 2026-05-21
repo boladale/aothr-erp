@@ -37,6 +37,7 @@ import {
   Bell,
   GitBranch,
   Repeat,
+  PiggyBank,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
