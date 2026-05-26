@@ -828,29 +828,51 @@ export default function UserManagement() {
 
         {/* Assign Programs Dialog */}
         <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-          <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogContent className="max-w-2xl max-h-[85vh]">
             <DialogHeader>
               <DialogTitle>Assign Programs to "{selectedRole?.name}"</DialogTitle>
             </DialogHeader>
-            <div className="py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {permissions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs available. Initialize programs first.</p>
               ) : (
-                permissions.map(perm => (
-                  <label
-                    key={perm.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors"
-                  >
-                    <Checkbox
-                      checked={selectedPermissions.includes(perm.id)}
-                      onCheckedChange={() => togglePermission(perm.id)}
-                    />
-                    <div>
-                      <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-muted-foreground">{perm.description}</p>
+                groupPermsByModule(permissions).map(group => {
+                  const groupIds = group.perms.map(p => p.id);
+                  const allSelected = groupIds.every(id => selectedPermissions.includes(id));
+                  const someSelected = groupIds.some(id => selectedPermissions.includes(id));
+                  const toggleGroup = () => {
+                    setSelectedPermissions(prev => allSelected
+                      ? prev.filter(id => !groupIds.includes(id))
+                      : Array.from(new Set([...prev, ...groupIds])));
+                  };
+                  return (
+                    <div key={group.module} className="space-y-2">
+                      <div className="flex items-center justify-between border-b pb-1">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.module}</h4>
+                        <button type="button" onClick={toggleGroup} className="text-xs text-primary hover:underline">
+                          {allSelected ? 'Clear all' : someSelected ? 'Select all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {group.perms.map(perm => (
+                          <label
+                            key={perm.id}
+                            className="flex items-start gap-2 p-2 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors"
+                          >
+                            <Checkbox
+                              checked={selectedPermissions.includes(perm.id)}
+                              onCheckedChange={() => togglePermission(perm.id)}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{perm.description}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </label>
-                ))
+                  );
+                })
               )}
             </div>
             <DialogFooter>
