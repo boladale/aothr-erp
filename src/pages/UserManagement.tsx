@@ -403,6 +403,7 @@ export default function UserManagement() {
     warehouse_manager: 'bg-info text-info-foreground',
     warehouse_officer: 'bg-info/80 text-info-foreground',
     accounts_payable: 'bg-success text-success-foreground',
+    finance_manager: 'bg-success text-success-foreground',
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',

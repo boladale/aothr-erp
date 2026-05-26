@@ -142,7 +142,7 @@ const emptyForm = {
 export default function ChartOfAccounts() {
   const { hasRole } = useAuth();
   const qc = useQueryClient();
-  const canManage = hasRole('admin') || hasRole('accounts_payable');
+  const canManage = hasRole('admin') || hasRole('accounts_payable') || hasRole('finance_manager');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
