@@ -674,12 +674,46 @@ export default function UserGuide() {
 
               <div className="space-y-2">
                 <h4 className="font-semibold flex items-center gap-2">
-                  <Shield className="h-4 w-4" /> Approval Rules
+                  <Shield className="h-4 w-4" /> Approval Rules &amp; Separation of Duties
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Set up who needs to approve what. For example: <strong>"Any purchase over ₦5,000 needs the Finance Manager's approval."</strong> You can create multi-step approval chains.
+                  Approval rules decide <strong>who reviews and who approves</strong> each transaction. The system also blocks the same person from approving a Purchase Order they created — this is called <strong>Separation of Duties</strong> and is required for clean audits.
                 </p>
+
+                <div className="rounded-md border bg-muted/30 p-3 mt-2 space-y-2">
+                  <p className="text-sm font-semibold">📋 How a PO flows through 3 people</p>
+                  <Flow steps={['Officer creates', 'Manager reviews', 'Finance approves', 'PO sent to vendor']} />
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li><strong>Procurement Officer</strong> creates the PO and submits it for approval.</li>
+                    <li><strong>Procurement Manager</strong> reviews and forwards it.</li>
+                    <li><strong>Finance Manager</strong> (or Admin) gives the final approval.</li>
+                    <li>A creator can <strong>never</strong> approve their own PO — the system will block it.</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-md border bg-muted/30 p-3 mt-2 space-y-2">
+                  <p className="text-sm font-semibold">⚙️ One-time setup (Admin)</p>
+                  <Step number={1}>Go to <strong>User Management</strong>. For each person, assign the right role:
+                    <ul className="text-xs text-muted-foreground mt-1 ml-4 list-disc list-inside">
+                      <li>Person who <em>raises</em> POs → <strong>Procurement Officer</strong></li>
+                      <li>Person who <em>reviews</em> POs → <strong>Procurement Manager</strong></li>
+                      <li>Person who gives <em>final approval</em> → <strong>Finance Manager</strong> (or Admin)</li>
+                    </ul>
+                  </Step>
+                  <Step number={2}>Go to <strong>Approval Rules</strong>. The system ships with a default <strong>"Default PO Approval (Manager → Finance)"</strong> rule already active for every organization.</Step>
+                  <Step number={3}>(Optional) Click the rule to add a money threshold — e.g. only POs over ₦500,000 require 2 levels; smaller ones only need the Manager.</Step>
+                  <Step number={4}>Repeat the same pattern for Invoices, Payments, and Payroll if you want multi-level approvals there too.</Step>
+                </div>
+
+                <div className="rounded-md border bg-muted/30 p-3 mt-2 space-y-1">
+                  <p className="text-sm font-semibold">🚫 What users will see if they try to self-approve</p>
+                  <p className="text-xs text-muted-foreground italic">
+                    "Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver."
+                  </p>
+                  <p className="text-xs text-muted-foreground">This is enforced by the server, so it cannot be bypassed from the screen.</p>
+                </div>
               </div>
+
 
               <Separator />
 
