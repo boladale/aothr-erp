@@ -16,6 +16,7 @@ interface CreateUserDialogProps {
 
 const SYSTEM_ROLES = [
   'admin',
+  'finance_manager',
   'procurement_manager',
   'procurement_officer',
   'warehouse_manager',
