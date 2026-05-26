@@ -72,14 +72,16 @@ interface UserWithRoles extends Profile {
   custom_roles: { id: string; role_id: string; name: string }[];
 }
 
-// Default system programs/modules
+// Default system programs/modules (used only for one-time seeding of missing rows)
 const SYSTEM_PROGRAMS: { code: string; description: string }[] = [
   { code: 'dashboard', description: 'Access to main dashboard and analytics' },
   { code: 'vendors', description: 'Manage vendors and vendor approvals' },
   { code: 'vendor_performance', description: 'View vendor performance metrics' },
   { code: 'items', description: 'Manage items catalog' },
+  { code: 'services', description: 'Manage service catalog' },
   { code: 'locations', description: 'Manage warehouse locations' },
   { code: 'inventory', description: 'Manage inventory balances, adjustments, and reservations' },
+  { code: 'inventory_issues', description: 'Issue inventory to consuming accounts (FIFO)' },
   { code: 'purchase_orders', description: 'Create and manage purchase orders' },
   { code: 'requisitions', description: 'Create and manage procurement requisitions' },
   { code: 'rfps', description: 'Manage requests for proposals' },
@@ -87,11 +89,67 @@ const SYSTEM_PROGRAMS: { code: string; description: string }[] = [
   { code: 'invoices', description: 'Manage AP invoices' },
   { code: 'match_exceptions', description: 'Review three-way match exceptions' },
   { code: 'po_closure', description: 'PO closure readiness report' },
-  { code: 'approval_rules', description: 'Configure approval workflows' },
+  { code: 'compliance_reports', description: 'View statutory and compliance reports' },
   { code: 'budgets', description: 'Manage budgets and budget lines' },
+  { code: 'budget_reports', description: 'View budget performance reports' },
+  { code: 'approval_rules', description: 'Configure approval workflows' },
   { code: 'notifications', description: 'View notifications' },
   { code: 'admin', description: 'Full admin access including user management' },
 ];
+
+// Map program codes to a UI module group for easier assignment.
+// Anything not listed falls under "Other".
+const PROGRAM_MODULES: Record<string, string> = {
+  dashboard: 'Dashboards', vendor_dashboard: 'Dashboards', procurement_dashboard: 'Dashboards',
+  warehouse_dashboard: 'Dashboards', finance_dashboard: 'Dashboards', sales_dashboard: 'Dashboards',
+  cash_dashboard: 'Dashboards', hr_dashboard: 'Dashboards',
+  vendors: 'Procurement', vendor_performance: 'Procurement', requisitions: 'Procurement',
+  rfps: 'Procurement', purchase_orders: 'Procurement', locations: 'Procurement',
+  vendor_registrations: 'Procurement',
+  items: 'Warehouse', services: 'Warehouse', inventory: 'Warehouse',
+  inventory_issues: 'Warehouse', inventory_transfers: 'Warehouse', goods_receipts: 'Warehouse',
+  inventory_valuation: 'Warehouse',
+  chart_of_accounts: 'General Ledger', journal_entries: 'General Ledger',
+  financial_reports: 'General Ledger', fiscal_periods: 'General Ledger',
+  recurring_entries: 'General Ledger',
+  invoices: 'Finance — AP', ap_payments: 'Finance — AP', ap_aging: 'Finance — AP',
+  match_exceptions: 'Finance — AP', ap_reports: 'Finance — AP',
+  customers: 'Finance — AR', ar_invoices: 'Finance — AR', ar_receipts: 'Finance — AR',
+  ar_credit_notes: 'Finance — AR', ar_aging: 'Finance — AR', ar_reports: 'Finance — AR',
+  compliance_reports: 'Compliance & Budgets', budgets: 'Compliance & Budgets',
+  budget_reports: 'Compliance & Budgets', tax_configuration: 'Compliance & Budgets',
+  sales_quotations: 'Sales', sales_orders: 'Sales', delivery_notes: 'Sales', sales_reports: 'Sales',
+  bank_accounts: 'Cash Management', fund_transfers: 'Cash Management',
+  bank_reconciliation: 'Cash Management', cash_flow_forecast: 'Cash Management',
+  cash_reports: 'Cash Management',
+  projects: 'Projects', project_profitability: 'Projects', project_reports: 'Projects',
+  po_closure: 'Reports', procurement_reports: 'Reports', warehouse_reports: 'Reports',
+  vendor_payment_report: 'Reports', req_to_payment_report: 'Reports', procurement_audit: 'Reports',
+  departments: 'HR & Payroll', employees: 'HR & Payroll', leave_management: 'HR & Payroll',
+  attendance: 'HR & Payroll', salary_components: 'HR & Payroll', pay_grades: 'HR & Payroll',
+  payroll_runs: 'HR & Payroll', payslips: 'HR & Payroll',
+  self_service: 'Self Service', expense_claims: 'Self Service', vendor_portal: 'Self Service',
+  approval_rules: 'Administration', workflows: 'Administration',
+  user_management: 'Administration', notifications: 'Administration', admin: 'Administration',
+};
+
+const MODULE_ORDER = [
+  'Dashboards', 'Procurement', 'Warehouse', 'General Ledger',
+  'Finance — AP', 'Finance — AR', 'Compliance & Budgets', 'Sales',
+  'Cash Management', 'Projects', 'Reports', 'HR & Payroll',
+  'Self Service', 'Administration', 'Other',
+];
+
+function groupPermsByModule(perms: Permission[]) {
+  const groups: Record<string, Permission[]> = {};
+  for (const p of perms) {
+    const mod = PROGRAM_MODULES[p.code] || 'Other';
+    (groups[mod] ||= []).push(p);
+  }
+  return MODULE_ORDER
+    .filter(m => groups[m]?.length)
+    .map(m => ({ module: m, perms: groups[m].sort((a, b) => a.code.localeCompare(b.code)) }));
+}
 
 export default function UserManagement() {
   const { isAdmin } = useAuth();
@@ -770,29 +828,51 @@ export default function UserManagement() {
 
         {/* Assign Programs Dialog */}
         <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-          <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogContent className="max-w-2xl max-h-[85vh]">
             <DialogHeader>
               <DialogTitle>Assign Programs to "{selectedRole?.name}"</DialogTitle>
             </DialogHeader>
-            <div className="py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {permissions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs available. Initialize programs first.</p>
               ) : (
-                permissions.map(perm => (
-                  <label
-                    key={perm.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors"
-                  >
-                    <Checkbox
-                      checked={selectedPermissions.includes(perm.id)}
-                      onCheckedChange={() => togglePermission(perm.id)}
-                    />
-                    <div>
-                      <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-muted-foreground">{perm.description}</p>
+                groupPermsByModule(permissions).map(group => {
+                  const groupIds = group.perms.map(p => p.id);
+                  const allSelected = groupIds.every(id => selectedPermissions.includes(id));
+                  const someSelected = groupIds.some(id => selectedPermissions.includes(id));
+                  const toggleGroup = () => {
+                    setSelectedPermissions(prev => allSelected
+                      ? prev.filter(id => !groupIds.includes(id))
+                      : Array.from(new Set([...prev, ...groupIds])));
+                  };
+                  return (
+                    <div key={group.module} className="space-y-2">
+                      <div className="flex items-center justify-between border-b pb-1">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.module}</h4>
+                        <button type="button" onClick={toggleGroup} className="text-xs text-primary hover:underline">
+                          {allSelected ? 'Clear all' : someSelected ? 'Select all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {group.perms.map(perm => (
+                          <label
+                            key={perm.id}
+                            className="flex items-start gap-2 p-2 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors"
+                          >
+                            <Checkbox
+                              checked={selectedPermissions.includes(perm.id)}
+                              onCheckedChange={() => togglePermission(perm.id)}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{perm.description}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </label>
-                ))
+                  );
+                })
               )}
             </div>
             <DialogFooter>
@@ -865,31 +945,53 @@ export default function UserManagement() {
 
         {/* App Role Programs Assignment Dialog */}
         <Dialog open={appRoleAssignOpen} onOpenChange={setAppRoleAssignOpen}>
-          <DialogContent className="max-w-lg max-h-[80vh]">
+          <DialogContent className="max-w-2xl max-h-[85vh]">
             <DialogHeader>
               <DialogTitle>
                 Configure Programs for "{selectedAppRole?.replace(/_/g, ' ')}"
               </DialogTitle>
             </DialogHeader>
-            <div className="py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+            <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
               {permissions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No programs available. Go to the Programs tab to initialize.</p>
               ) : (
-                permissions.map(perm => (
-                  <label
-                    key={perm.id}
-                    className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 cursor-pointer transition-colors"
-                  >
-                    <Checkbox
-                      checked={selectedAppRolePerms.includes(perm.id)}
-                      onCheckedChange={() => toggleAppRolePerm(perm.id)}
-                    />
-                    <div>
-                      <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
-                      <p className="text-xs text-muted-foreground">{perm.description}</p>
+                groupPermsByModule(permissions).map(group => {
+                  const groupIds = group.perms.map(p => p.id);
+                  const allSelected = groupIds.every(id => selectedAppRolePerms.includes(id));
+                  const someSelected = groupIds.some(id => selectedAppRolePerms.includes(id));
+                  const toggleGroup = () => {
+                    setSelectedAppRolePerms(prev => allSelected
+                      ? prev.filter(id => !groupIds.includes(id))
+                      : Array.from(new Set([...prev, ...groupIds])));
+                  };
+                  return (
+                    <div key={group.module} className="space-y-2">
+                      <div className="flex items-center justify-between border-b pb-1">
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{group.module}</h4>
+                        <button type="button" onClick={toggleGroup} className="text-xs text-primary hover:underline">
+                          {allSelected ? 'Clear all' : someSelected ? 'Select all' : 'Select all'}
+                        </button>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {group.perms.map(perm => (
+                          <label
+                            key={perm.id}
+                            className="flex items-start gap-2 p-2 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors"
+                          >
+                            <Checkbox
+                              checked={selectedAppRolePerms.includes(perm.id)}
+                              onCheckedChange={() => toggleAppRolePerm(perm.id)}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm">{perm.code.replace(/_/g, ' ')}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{perm.description}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </label>
-                ))
+                  );
+                })
               )}
             </div>
             <DialogFooter>
