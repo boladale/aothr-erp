@@ -77,6 +77,17 @@ Deno.serve(async (req) => {
     switch (action) {
       case 'po_approve': {
         const ids = 'ids' in payload ? payload.ids : [payload.id]
+        // Block self-approval: a user cannot approve a PO they created
+        const { data: ownPOs } = await admin
+          .from('purchase_orders')
+          .select('id')
+          .in('id', ids)
+          .eq('created_by', userId)
+        if (ownPOs && ownPOs.length > 0) {
+          return jsonResponse({
+            error: 'Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver.',
+          }, 403)
+        }
         // Only approve POs currently in 'pending_approval' to prevent state-jump abuse
         const { data, error } = await admin
           .from('purchase_orders')
@@ -92,6 +103,7 @@ Deno.serve(async (req) => {
         )
         return jsonResponse({ ok: true, updated: data.length })
       }
+
       case 'invoice_post': {
         const { data, error } = await admin
           .from('ap_invoices')
