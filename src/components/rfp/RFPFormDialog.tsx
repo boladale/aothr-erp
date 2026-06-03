@@ -107,7 +107,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
         .eq('requisition_id', reqId)
         .order('line_number'),
     ]);
-    if (req && !title) setTitle(`RFP for ${(req as any).req_number}`);
+    if (req && !title) setTitle(`RFQ for ${(req as any).req_number}`);
     if (req?.justification) {
       setDescription(prev => prev ? prev : `Based on Requisition ${(req as any).req_number}:\n${(req as any).justification}`);
     }
@@ -138,7 +138,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
 
     setSubmitting(true);
     try {
-      const rfpNumber = await getNextTransactionNumber(organizationId!, 'RFP', 'RFP');
+      const rfpNumber = await getNextTransactionNumber(organizationId!, 'RFQ', 'RFQ');
 
       const { data: rfp, error: rfpError } = await supabase
         .from('rfps')
@@ -170,12 +170,12 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
       );
       if (criteriaError) throw criteriaError;
 
-      toast.success('RFP created successfully');
+      toast.success('RFQ created successfully');
       resetForm();
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create RFP');
+      toast.error(error instanceof Error ? error.message : 'Failed to create RFQ');
     } finally {
       setSubmitting(false);
     }
@@ -199,7 +199,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Create New RFP</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Create New RFQ</DialogTitle></DialogHeader>
 
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -327,7 +327,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Creating...' : 'Create RFP'}</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Creating...' : 'Create RFQ'}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

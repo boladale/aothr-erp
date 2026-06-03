@@ -774,8 +774,8 @@ export default function UserManagement() {
                       <Badge className={color}>{role.replace(/_/g, ' ')}</Badge>
                       <p className="text-sm text-muted-foreground mt-2">
                         {role === 'admin' && 'Full system access, user management, audit logs'}
-                        {role === 'procurement_manager' && 'Approve vendors, POs, RFPs — management level'}
-                        {role === 'procurement_officer' && 'Create and submit vendors, POs, RFPs — cannot approve'}
+                        {role === 'procurement_manager' && 'Approve vendors, POs, RFQs — management level'}
+                        {role === 'procurement_officer' && 'Create and submit vendors, POs, RFQs — cannot approve'}
                         {role === 'warehouse_manager' && 'Approve GRNs, inventory adjustments — management level'}
                         {role === 'warehouse_officer' && 'Create and submit GRNs, adjustments — cannot approve'}
                         {role === 'accounts_payable' && 'Approve and post invoices — management level'}

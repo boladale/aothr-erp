@@ -238,7 +238,7 @@ export default function VendorPortalLogin() {
           </div>
           <div>
             <CardTitle className="text-2xl">Vendor Portal</CardTitle>
-            <CardDescription className="mt-2">Bid on RFPs, manage POs, submit invoices &amp; documents</CardDescription>
+            <CardDescription className="mt-2">Bid on RFQs, manage POs, submit invoices &amp; documents</CardDescription>
           </div>
         </CardHeader>
         <CardContent>

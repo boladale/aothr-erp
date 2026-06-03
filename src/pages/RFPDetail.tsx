@@ -100,7 +100,7 @@ export default function RFPDetail() {
   const [editOpen, setEditOpen] = useState(false);
   // Create PO dialog state
   const [createPOOpen, setCreatePOOpen] = useState(false);
-  // Existing PO for this RFP
+  // Existing PO for this RFQ
   const [existingPOId, setExistingPOId] = useState<string | null>(null);
 
   // Score editing
@@ -124,7 +124,7 @@ export default function RFPDetail() {
       ]);
 
       if (rfpRes.error) {
-        toast.error('Failed to load RFP details');
+        toast.error('Failed to load RFQ details');
         throw rfpRes.error;
       }
 
@@ -162,7 +162,7 @@ export default function RFPDetail() {
       const { data: existingPO } = await supabase
         .from('purchase_orders')
         .select('id')
-        .like('notes', `%RFP ${(rfpRes.data as any).rfp_number}%`)
+        .like('notes', `%RFQ ${(rfpRes.data as any).rfp_number}%`)
         .limit(1)
         .maybeSingle();
       setExistingPOId(existingPO?.id || null);
@@ -179,7 +179,7 @@ export default function RFPDetail() {
     }
     const { error } = await supabase.from('rfps').update({ status: 'published' }).eq('id', rfp.id);
     if (error) { toast.error(error.message); return; }
-    toast.success('RFP published and vendors notified');
+    toast.success('RFQ published and vendors notified');
     fetchData();
   };
 
@@ -233,7 +233,7 @@ export default function RFPDetail() {
             entity_type: 'rfps',
             entity_id: rfp.id,
             notification_type: 'rfp_invitation',
-            title: 'New RFP Invitation',
+            title: 'New RFQ Invitation',
             message: `You have been invited to bid on ${rfp.rfp_number} — ${rfp.title}.`,
           }))
         );
@@ -341,12 +341,12 @@ export default function RFPDetail() {
       toast.success(`Awarded to ${proposal.vendors?.name}`);
       fetchData();
     } catch (error) {
-      toast.error('Failed to award RFP');
+      toast.error('Failed to award RFQ');
     }
   };
 
   if (loading) return <AppLayout><div className="page-container"><p>Loading...</p></div></AppLayout>;
-  if (!rfp) return <AppLayout><div className="page-container"><p>RFP not found</p></div></AppLayout>;
+  if (!rfp) return <AppLayout><div className="page-container"><p>RFQ not found</p></div></AppLayout>;
 
   const sortedProposals = [...proposals].sort((a, b) => b.weighted_score - a.weighted_score);
   const showEvaluation = rfp.status === 'evaluating' || rfp.status === 'awarded';
@@ -356,7 +356,7 @@ export default function RFPDetail() {
     <AppLayout>
       <div className="page-container">
         <Button variant="ghost" onClick={() => navigate('/rfps')} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" /> Back to RFPs
+          <ArrowLeft className="h-4 w-4 mr-2" /> Back to RFQs
         </Button>
 
         <PageHeader
@@ -367,13 +367,13 @@ export default function RFPDetail() {
               {rfp.status === 'draft' && (
                 <>
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit RFP
+                    <Pencil className="mr-2 h-4 w-4" /> Edit RFQ
                   </Button>
                   <Button variant="outline" onClick={openInviteDialog}>
                     <UserPlus className="mr-2 h-4 w-4" /> Invite Vendors
                   </Button>
                   <Button onClick={handlePublish}>
-                    <Send className="mr-2 h-4 w-4" /> Publish RFP
+                    <Send className="mr-2 h-4 w-4" /> Publish RFQ
                   </Button>
                 </>
               )}

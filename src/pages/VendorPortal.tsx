@@ -86,7 +86,7 @@ export default function VendorPortal() {
         <Tabs defaultValue="quotes">
           <TabsList className="flex-wrap">
             <TabsTrigger value="quotes" className="gap-1"><ClipboardList className="h-4 w-4" /> Quote Requests</TabsTrigger>
-            <TabsTrigger value="rfps" className="gap-1"><Send className="h-4 w-4" /> RFPs & Bidding</TabsTrigger>
+            <TabsTrigger value="rfps" className="gap-1"><Send className="h-4 w-4" /> RFQs & Bidding</TabsTrigger>
             <TabsTrigger value="pos" className="gap-1"><ClipboardCheck className="h-4 w-4" /> Purchase Orders</TabsTrigger>
             <TabsTrigger value="invoices" className="gap-1"><FileText className="h-4 w-4" /> Invoices</TabsTrigger>
             <TabsTrigger value="payments" className="gap-1"><DollarSign className="h-4 w-4" /> Payments</TabsTrigger>

@@ -152,7 +152,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           subtotal,
           total_amount: subtotal,
           payment_terms: (rfpRow as any)?.payment_terms || null,
-          notes: `Created from RFP ${rfpNumber} — ${rfpTitle}`,
+          notes: `Created from RFQ ${rfpNumber} — ${rfpTitle}`,
           created_by: user?.id,
           organization_id: organizationId,
           rfp_id: rfpId,
@@ -182,7 +182,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         throw linesError;
       }
 
-      toast.success(`PO ${poNumber} created from RFP`);
+      toast.success(`PO ${poNumber} created from RFQ`);
       setCreatedPOId(po.id);
       onOpenChange(false);
       onSuccess();

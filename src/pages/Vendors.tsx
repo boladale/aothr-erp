@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Power, Link2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Power, Link2, Ban } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -10,11 +10,21 @@ import { ExportButton } from '@/components/ui/export-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { Vendor, VendorStatus } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { VendorFormDialog } from '@/components/vendors/VendorFormDialog';
 import { VendorInviteDialog } from '@/components/vendors/VendorInviteDialog';
+
+type VendorWithBlacklist = Vendor & {
+  blacklist_status?: 'none' | 'pending' | 'approved' | 'rejected';
+  blacklist_reason?: string | null;
+  blacklist_rejection_reason?: string | null;
+  blacklist_requested_at?: string | null;
+  blacklist_approved_at?: string | null;
+};
 
 const PROJECT_SIZE_LABELS: Record<string, string> = {
   small: 'Small',
@@ -32,13 +42,15 @@ export default function Vendors() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editVendor, setEditVendor] = useState<Vendor | null>(null);
   const [inviteVendor, setInviteVendor] = useState<Vendor | null>(null);
+  const [blacklistVendor, setBlacklistVendor] = useState<VendorWithBlacklist | null>(null);
+  const [blacklistReason, setBlacklistReason] = useState('');
 
   const vendorsQ = useQuery({
     queryKey: ['vendors'],
     queryFn: async () => {
       const { data, error } = await supabase.from('vendors').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as Vendor[];
+      return (data || []) as VendorWithBlacklist[];
     },
   });
   const vendors = vendorsQ.data || [];
@@ -127,6 +139,90 @@ export default function Vendors() {
     }
   };
 
+  const openBlacklistDialog = (vendor: VendorWithBlacklist) => {
+    setBlacklistVendor(vendor);
+    setBlacklistReason('');
+  };
+
+  const submitBlacklistRequest = async () => {
+    if (!blacklistVendor) return;
+    const reason = blacklistReason.trim();
+    if (!reason) { toast.error('A reason is required to blacklist a vendor'); return; }
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        blacklist_status: 'pending',
+        blacklist_reason: reason,
+        blacklist_requested_by: user?.id,
+        blacklist_requested_at: new Date().toISOString(),
+        blacklist_rejection_reason: null,
+        blacklist_approved_by: null,
+        blacklist_approved_at: null,
+      }).eq('id', blacklistVendor.id);
+      if (error) throw error;
+      toast.success('Blacklist request submitted for manager approval');
+      setBlacklistVendor(null);
+      setBlacklistReason('');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to submit blacklist request');
+    }
+  };
+
+  const handleApproveBlacklist = async (vendor: VendorWithBlacklist) => {
+    if (!window.confirm(`Approve blacklist for "${vendor.name}"? This will block the vendor from any new transactions.`)) return;
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        status: 'blacklisted',
+        blacklist_status: 'approved',
+        blacklist_approved_by: user?.id,
+        blacklist_approved_at: new Date().toISOString(),
+      }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Vendor blacklisted');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to approve blacklist');
+    }
+  };
+
+  const handleRejectBlacklist = async (vendor: VendorWithBlacklist) => {
+    const reason = window.prompt('Reason for rejecting this blacklist request:');
+    if (reason === null) return;
+    if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        blacklist_status: 'rejected',
+        blacklist_rejection_reason: reason,
+      }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Blacklist request rejected');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to reject blacklist request');
+    }
+  };
+
+  const handleRemoveBlacklist = async (vendor: VendorWithBlacklist) => {
+    if (!window.confirm(`Remove blacklist from "${vendor.name}" and reinstate as active?`)) return;
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        status: 'active',
+        blacklist_status: 'none',
+        blacklist_reason: null,
+        blacklist_requested_by: null,
+        blacklist_requested_at: null,
+        blacklist_approved_by: null,
+        blacklist_approved_at: null,
+        blacklist_rejection_reason: null,
+      }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Vendor reinstated');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to remove blacklist');
+    }
+  };
+
   const handleDelete = async (vendor: Vendor) => {
     if (!window.confirm(`Delete vendor "${vendor.name}"? This cannot be undone.`)) return;
     try {
@@ -188,11 +284,20 @@ export default function Vendors() {
     { 
       key: 'status', 
       header: 'Status', 
-      render: (v: Vendor) => (
+      render: (v: VendorWithBlacklist) => (
         <div>
           <StatusBadge status={v.status} />
           {v.status === 'draft' && v.rejection_reason && (
             <p className="text-xs text-destructive mt-1" title={v.rejection_reason}>⚠ {v.rejection_reason.length > 40 ? v.rejection_reason.slice(0, 40) + '…' : v.rejection_reason}</p>
+          )}
+          {v.blacklist_status === 'pending' && (
+            <Badge variant="outline" className="mt-1 text-xs border-amber-500 text-amber-700">Blacklist pending</Badge>
+          )}
+          {v.status === 'blacklisted' && v.blacklist_reason && (
+            <p className="text-xs text-destructive mt-1" title={v.blacklist_reason}>⛔ {v.blacklist_reason.length > 40 ? v.blacklist_reason.slice(0, 40) + '…' : v.blacklist_reason}</p>
+          )}
+          {v.blacklist_status === 'rejected' && v.blacklist_rejection_reason && (
+            <p className="text-xs text-muted-foreground mt-1" title={v.blacklist_rejection_reason}>Blacklist rejected: {v.blacklist_rejection_reason.length > 30 ? v.blacklist_rejection_reason.slice(0, 30) + '…' : v.blacklist_rejection_reason}</p>
           )}
         </div>
       )
@@ -200,7 +305,7 @@ export default function Vendors() {
     {
       key: 'actions',
       header: '',
-      render: (v: Vendor) => (
+      render: (v: VendorWithBlacklist) => (
         <div className="flex gap-2 justify-end">
           {v.status === 'draft' && canInitiate && (v.created_by === user?.id || canApprove) && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitForApproval(v); }}>
@@ -217,6 +322,16 @@ export default function Vendors() {
               </Button>
             </>
           )}
+          {v.blacklist_status === 'pending' && canApprove && (
+            <>
+              <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); handleApproveBlacklist(v); }}>
+                Approve Blacklist
+              </Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectBlacklist(v); }}>
+                Reject
+              </Button>
+            </>
+          )}
           {v.status === 'draft' && (
             <Button size="sm" variant="ghost" title="Edit" onClick={(e) => { e.stopPropagation(); handleEdit(v); }}>
               <Pencil className="h-4 w-4" />
@@ -225,6 +340,16 @@ export default function Vendors() {
           {(v.status === 'active' || v.status === 'inactive') && (
             <Button size="sm" variant="ghost" title={v.status === 'active' ? 'Disable' : 'Enable'} onClick={(e) => { e.stopPropagation(); handleToggleActive(v); }}>
               <Power className={`h-4 w-4 ${v.status === 'inactive' ? 'text-muted-foreground' : ''}`} />
+            </Button>
+          )}
+          {(v.status === 'active' || v.status === 'inactive') && v.blacklist_status !== 'pending' && (
+            <Button size="sm" variant="ghost" title="Request Blacklist" onClick={(e) => { e.stopPropagation(); openBlacklistDialog(v); }}>
+              <Ban className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
+          {v.status === 'blacklisted' && canApprove && (
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRemoveBlacklist(v); }}>
+              Remove Blacklist
             </Button>
           )}
           {v.status === 'active' && v.email && (
@@ -312,6 +437,27 @@ export default function Vendors() {
             vendorEmail={inviteVendor.email}
           />
         )}
+
+        <Dialog open={!!blacklistVendor} onOpenChange={(open) => { if (!open) { setBlacklistVendor(null); setBlacklistReason(''); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Request Blacklist — {blacklistVendor?.name}</DialogTitle>
+              <DialogDescription>
+                Provide a clear reason. The request will be sent to a procurement manager for approval before the vendor is blacklisted.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              placeholder="Reason for blacklisting this vendor (required)..."
+              value={blacklistReason}
+              onChange={(e) => setBlacklistReason(e.target.value)}
+              rows={5}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setBlacklistVendor(null); setBlacklistReason(''); }}>Cancel</Button>
+              <Button variant="destructive" onClick={submitBlacklistRequest} disabled={!blacklistReason.trim()}>Submit Request</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

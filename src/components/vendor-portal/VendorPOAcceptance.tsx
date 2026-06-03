@@ -181,7 +181,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
               />
               {actionDialog.action === 'rejected' && (
                 <p className="text-xs text-muted-foreground">
-                  Rejecting will cancel this PO and notify the procurement team. If this PO came from an RFP, the runner-up bidder will be proposed for re-award.
+                  Rejecting will cancel this PO and notify the procurement team. If this PO came from an RFQ, the runner-up bidder will be proposed for re-award.
                 </p>
               )}
             </div>
