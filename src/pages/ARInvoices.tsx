@@ -237,6 +237,15 @@ export default function ARInvoices() {
                                 <Button variant="outline" size="sm" onClick={() => handlePost(inv.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
                               </>
                             )}
+                            <DeleteDraftButton
+                              table="ar_invoices"
+                              childTable="ar_invoice_lines"
+                              childKey="invoice_id"
+                              id={inv.id}
+                              status={inv.status}
+                              label={`Invoice ${inv.invoice_number || ''}`.trim()}
+                              onDeleted={() => queryClient.invalidateQueries({ queryKey: ['ar_invoices'] })}
+                            />
                           </div>
                         </td>
                       )}
