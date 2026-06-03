@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Search, FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
-import { formatCurrency } from '@/lib/utils';
 
 interface AuditData {
   requisition: any;
