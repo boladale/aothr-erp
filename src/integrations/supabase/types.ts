@@ -6642,6 +6642,13 @@ export type Database = {
           address: string | null
           bank_account_number: string | null
           bank_name: string | null
+          blacklist_approved_at: string | null
+          blacklist_approved_by: string | null
+          blacklist_reason: string | null
+          blacklist_rejection_reason: string | null
+          blacklist_requested_at: string | null
+          blacklist_requested_by: string | null
+          blacklist_status: string
           city: string | null
           code: string
           country: string | null
@@ -6664,6 +6671,13 @@ export type Database = {
           address?: string | null
           bank_account_number?: string | null
           bank_name?: string | null
+          blacklist_approved_at?: string | null
+          blacklist_approved_by?: string | null
+          blacklist_reason?: string | null
+          blacklist_rejection_reason?: string | null
+          blacklist_requested_at?: string | null
+          blacklist_requested_by?: string | null
+          blacklist_status?: string
           city?: string | null
           code: string
           country?: string | null
@@ -6686,6 +6700,13 @@ export type Database = {
           address?: string | null
           bank_account_number?: string | null
           bank_name?: string | null
+          blacklist_approved_at?: string | null
+          blacklist_approved_by?: string | null
+          blacklist_reason?: string | null
+          blacklist_rejection_reason?: string | null
+          blacklist_requested_at?: string | null
+          blacklist_requested_by?: string | null
+          blacklist_status?: string
           city?: string | null
           code?: string
           country?: string | null
@@ -7071,7 +7092,12 @@ export type Database = {
         | "fully_delivered"
         | "closed"
         | "cancelled"
-      vendor_status: "draft" | "pending_approval" | "active" | "inactive"
+      vendor_status:
+        | "draft"
+        | "pending_approval"
+        | "active"
+        | "inactive"
+        | "blacklisted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7315,7 +7341,13 @@ export const Constants = {
         "closed",
         "cancelled",
       ],
-      vendor_status: ["draft", "pending_approval", "active", "inactive"],
+      vendor_status: [
+        "draft",
+        "pending_approval",
+        "active",
+        "inactive",
+        "blacklisted",
+      ],
     },
   },
 } as const
