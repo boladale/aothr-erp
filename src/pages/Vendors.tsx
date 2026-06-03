@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Power, Link2 } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Power, Link2, Ban } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -10,11 +10,21 @@ import { ExportButton } from '@/components/ui/export-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { Vendor, VendorStatus } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { VendorFormDialog } from '@/components/vendors/VendorFormDialog';
 import { VendorInviteDialog } from '@/components/vendors/VendorInviteDialog';
+
+type VendorWithBlacklist = Vendor & {
+  blacklist_status?: 'none' | 'pending' | 'approved' | 'rejected';
+  blacklist_reason?: string | null;
+  blacklist_rejection_reason?: string | null;
+  blacklist_requested_at?: string | null;
+  blacklist_approved_at?: string | null;
+};
 
 const PROJECT_SIZE_LABELS: Record<string, string> = {
   small: 'Small',
