@@ -58,7 +58,7 @@ export default function VendorDashboard() {
   return (
     <AppLayout>
       <div className="page-container space-y-8">
-        <PageHeader title="Vendor Management Dashboard" description="Overview of vendors, approvals, and RFPs." />
+        <PageHeader title="Vendor Management Dashboard" description="Overview of vendors, approvals, and RFQs." />
 
         {loading ? (
           <div className="card-grid">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>
@@ -68,7 +68,7 @@ export default function VendorDashboard() {
               <MetricCard title="Total Vendors" value={metrics.totalVendors} icon={Building2} />
               <MetricCard title="Active Vendors" value={metrics.activeVendors} icon={CheckCircle2} />
               <MetricCard title="Pending Approval" value={metrics.pendingVendors} icon={AlertCircle} />
-              <MetricCard title="Open RFPs" value={metrics.openRFPs} icon={FileSearch} />
+              <MetricCard title="Open RFQs" value={metrics.openRFPs} icon={FileSearch} />
             </div>
 
             {metrics.pendingVendors > 0 && (
@@ -110,12 +110,12 @@ export default function VendorDashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-base">Recent RFPs</CardTitle>
+                  <CardTitle className="text-base">Recent RFQs</CardTitle>
                   <Button variant="ghost" size="sm" onClick={() => navigate('/rfps')}>View All <ArrowRight className="ml-1 h-4 w-4" /></Button>
                 </CardHeader>
                 <CardContent>
                   {recentRFPs.length === 0 ? (
-                    <p className="text-center py-6 text-sm text-muted-foreground">No RFPs yet</p>
+                    <p className="text-center py-6 text-sm text-muted-foreground">No RFQs yet</p>
                   ) : (
                     <div className="space-y-3">
                       {recentRFPs.map((r: any) => (

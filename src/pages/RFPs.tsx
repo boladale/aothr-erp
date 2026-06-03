@@ -52,7 +52,7 @@ export default function RFPs() {
   );
 
   const columns = [
-    { key: 'rfp_number', header: 'RFP #', render: (r: RFP) => <span className="font-medium">{r.rfp_number}</span> },
+    { key: 'rfp_number', header: 'RFQ #', render: (r: RFP) => <span className="font-medium">{r.rfp_number}</span> },
     { key: 'title', header: 'Title' },
     {
       key: 'deadline', header: 'Deadline',
@@ -73,10 +73,10 @@ export default function RFPs() {
       <div className="page-container">
         <PageHeader
           title="Requests for Proposal"
-          description="Create and manage RFPs, invite vendors, and evaluate proposals"
+          description="Create and manage RFQs, invite vendors, and evaluate proposals"
           actions={
             <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> New RFP
+              <Plus className="mr-2 h-4 w-4" /> New RFQ
             </Button>
           }
         />
@@ -85,7 +85,7 @@ export default function RFPs() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search RFPs..."
+              placeholder="Search RFQs..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
@@ -98,7 +98,7 @@ export default function RFPs() {
           data={filtered}
           loading={loading}
           onRowClick={(r) => navigate(`/rfps/${r.id}`)}
-          emptyMessage="No RFPs found. Create your first RFP to get started."
+          emptyMessage="No RFQs found. Create your first RFQ to get started."
         />
 
         <RFPFormDialog

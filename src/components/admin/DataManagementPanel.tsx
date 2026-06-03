@@ -72,7 +72,7 @@ export function DataManagementPanel() {
             <div className="flex-1 p-4 border rounded-lg space-y-3">
               <h4 className="font-medium">Seed Demo Data</h4>
               <p className="text-sm text-muted-foreground">
-                Create sample requisitions, purchase orders, invoices, RFPs, sales orders, projects, and inventory balances for testing.
+                Create sample requisitions, purchase orders, invoices, RFQs, sales orders, projects, and inventory balances for testing.
                 Requires existing master data (vendors, items, locations).
               </p>
               <Button onClick={handleSeed} disabled={seeding} className="gap-2">
@@ -113,7 +113,7 @@ export function DataManagementPanel() {
               <ul className="list-disc list-inside text-sm space-y-1">
                 <li>Requisitions, Purchase Orders, and GRNs</li>
                 <li>AP & AR Invoices, Payments, and Receipts</li>
-                <li>RFPs and Proposals</li>
+                <li>RFQs and Proposals</li>
                 <li>Sales Quotations, Orders, and Delivery Notes</li>
                 <li>Journal Entries and GL Balances</li>
                 <li>Bank Transactions and Reconciliations</li>

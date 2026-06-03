@@ -172,7 +172,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>RFP #</TableHead>
+              <TableHead>RFQ #</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Deadline</TableHead>
               <TableHead>Status</TableHead>
@@ -184,7 +184,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
             {isLoading ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : rfps.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">You have not been invited to any RFPs yet.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">You have not been invited to any RFQs yet.</TableCell></TableRow>
             ) : rfps.map((rfp: any) => {
               const canBid = ['published', 'evaluating'].includes(rfp.status) && rfp.my_proposal?.status === 'invited';
               return (
@@ -218,7 +218,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
           <div className="space-y-4">
             {bidDialog.rfp?.description && (
               <div className="rounded-md border bg-muted/40 p-3">
-                <Label className="text-xs uppercase text-muted-foreground">RFP Description</Label>
+                <Label className="text-xs uppercase text-muted-foreground">RFQ Description</Label>
                 <p className="text-sm whitespace-pre-wrap mt-1">{bidDialog.rfp.description}</p>
               </div>
             )}

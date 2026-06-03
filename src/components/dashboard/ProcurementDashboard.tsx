@@ -81,7 +81,7 @@ export function ProcurementDashboard() {
           <MetricCard title="Active Vendors" value={metrics.activeVendors} icon={Building2} />
         </div>
         <div className="cursor-pointer" onClick={() => navigate('/rfps')}>
-          <MetricCard title="Open RFPs" value={metrics.openRFPs} icon={FileSearch} />
+          <MetricCard title="Open RFQs" value={metrics.openRFPs} icon={FileSearch} />
         </div>
         {isManager && (
           <div className="cursor-pointer" onClick={() => navigate('/requisitions')}>

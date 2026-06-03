@@ -151,11 +151,11 @@ export function RFPEditDialog({
       );
       if (insCriteriaErr) throw insCriteriaErr;
 
-      toast.success('RFP updated successfully');
+      toast.success('RFQ updated successfully');
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update RFP');
+      toast.error(error instanceof Error ? error.message : 'Failed to update RFQ');
     } finally {
       setSubmitting(false);
     }
@@ -164,7 +164,7 @@ export function RFPEditDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Edit RFP</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Edit RFQ</DialogTitle></DialogHeader>
 
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">

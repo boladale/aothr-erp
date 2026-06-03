@@ -159,12 +159,12 @@ export default function UserGuide() {
               {/* RFPs */}
               <div className="space-y-2">
                 <h4 className="font-semibold flex items-center gap-2">
-                  <FileSearch className="h-4 w-4" /> Requests for Proposal (RFPs)
+                  <FileSearch className="h-4 w-4" /> Requests for Proposal (RFQs)
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  When you want to buy something big, you ask multiple vendors to <strong>"give me your best price."</strong> That's an RFP!
+                  When you want to buy something big, you ask multiple vendors to <strong>"give me your best price."</strong> That's an RFQ!
                 </p>
-                <Step number={1}>Create an RFP with a title and description of what you need.</Step>
+                <Step number={1}>Create an RFQ with a title and description of what you need.</Step>
                 <Step number={2}>Add the items you want and invite vendors to submit their prices.</Step>
                 <Step number={3}>Compare responses and pick the best one.</Step>
               </div>

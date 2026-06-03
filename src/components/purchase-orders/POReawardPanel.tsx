@@ -71,7 +71,7 @@ export function POReawardPanel() {
             <TableHeader>
               <TableRow>
                 <TableHead>Original PO</TableHead>
-                <TableHead>RFP</TableHead>
+                <TableHead>RFQ</TableHead>
                 <TableHead>Runner-Up Vendor</TableHead>
                 <TableHead>Proposed Total</TableHead>
                 <TableHead>Payment Terms</TableHead>
@@ -134,7 +134,7 @@ export function POReawardPanel() {
             <DialogDescription>
               {dialog.action === 'approve'
                 ? `Create a new PO for ${dialog.req?.runner_up_vendor?.name} at ${dialog.req?.proposed_total ? formatCurrency(dialog.req.proposed_total) : ''} using the runner-up's quoted price and payment terms.`
-                : 'Rejecting will close this re-award request and notify procurement to re-open the RFP manually.'}
+                : 'Rejecting will close this re-award request and notify procurement to re-open the RFQ manually.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">

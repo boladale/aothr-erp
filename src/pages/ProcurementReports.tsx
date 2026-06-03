@@ -78,7 +78,7 @@ export default function ProcurementReports() {
   return (
     <AppLayout>
       <div className="page-container">
-        <PageHeader title="Procurement Reports" description="Purchase orders, requisitions, RFPs, and vendor analytics" />
+        <PageHeader title="Procurement Reports" description="Purchase orders, requisitions, RFQs, and vendor analytics" />
 
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           <MetricCard title="Total POs" value={metrics.totalPOs} icon={FileText} />
@@ -93,7 +93,7 @@ export default function ProcurementReports() {
             <TabsTrigger value="po-status">PO by Status</TabsTrigger>
             <TabsTrigger value="vendors">Top Vendors</TabsTrigger>
             <TabsTrigger value="requisitions">Requisitions</TabsTrigger>
-            <TabsTrigger value="rfps">RFPs</TabsTrigger>
+            <TabsTrigger value="rfps">RFQs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="po-trend">
@@ -174,7 +174,7 @@ export default function ProcurementReports() {
 
           <TabsContent value="rfps">
             <Card>
-              <CardHeader><CardTitle>RFP Status Summary</CardTitle></CardHeader>
+              <CardHeader><CardTitle>RFQ Status Summary</CardTitle></CardHeader>
               <CardContent>
                 <DataTable
                   columns={[
