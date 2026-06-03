@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2 } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
