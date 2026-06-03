@@ -376,18 +376,39 @@ export default function PurchaseOrders() {
                   <Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Payment Terms Type</Label>
-                  <Select value={form.payment_terms_type} onValueChange={v => setForm({ ...form, payment_terms_type: v })}>
+                  <Label>Payment Terms</Label>
+                  <Select value={form.payment_terms_type} onValueChange={v => setForm({ ...form, payment_terms_type: v, payment_terms_amount: 0 })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="percentage">Percentage (%)</SelectItem>
-                      <SelectItem value="value">Fixed Value (₦)</SelectItem>
+                      <SelectItem value="upfront_full">Upfront — 100% Advance</SelectItem>
+                      <SelectItem value="partial_advance">Partial Advance (% deposit)</SelectItem>
+                      <SelectItem value="partial_value">Partial Advance (₦ deposit)</SelectItem>
+                      <SelectItem value="on_delivery">Cash on Delivery</SelectItem>
+                      <SelectItem value="net_15">Net 15 days</SelectItem>
+                      <SelectItem value="net_30">Net 30 days</SelectItem>
+                      <SelectItem value="net_60">Net 60 days</SelectItem>
+                      <SelectItem value="net_90">Net 90 days</SelectItem>
+                      <SelectItem value="milestone">Milestone / Installments</SelectItem>
+                      <SelectItem value="percentage">Custom (%)</SelectItem>
+                      <SelectItem value="value">Custom (₦)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Payment Terms {form.payment_terms_type === 'percentage' ? '(%)' : '(₦)'}</Label>
-                  <Input type="number" min="0" step="0.01" value={form.payment_terms_amount} onChange={e => setForm({ ...form, payment_terms_amount: parseFloat(e.target.value) || 0 })} />
+                  {['partial_advance','partial_value','percentage','value','milestone'].includes(form.payment_terms_type) ? (
+                    <>
+                      <Label>
+                        {form.payment_terms_type === 'milestone' ? 'Number of Installments' :
+                         ['partial_advance','percentage'].includes(form.payment_terms_type) ? 'Amount (%)' : 'Amount (₦)'}
+                      </Label>
+                      <Input type="number" min="0" step="0.01" value={form.payment_terms_amount} onChange={e => setForm({ ...form, payment_terms_amount: parseFloat(e.target.value) || 0 })} />
+                    </>
+                  ) : (
+                    <>
+                      <Label className="text-muted-foreground">Amount</Label>
+                      <Input disabled placeholder="N/A for this term" />
+                    </>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
