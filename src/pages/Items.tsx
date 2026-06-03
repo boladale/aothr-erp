@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Package, Pencil, Trash2, Power } from 'lucide-react';
+import { Plus, Search, Package, Pencil, Trash2, Power, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -60,7 +60,17 @@ export default function Items() {
     },
   });
   const items = itemsQ.data || [];
-  const loading = itemsQ.isLoading;
+
+  const balancesQ = useQuery({
+    queryKey: ['inventory_balances'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('inventory_balances').select('*');
+      if (error) throw error;
+      return (data || []) as { item_id: string; location_id: string; quantity: number }[];
+    },
+  });
+  const balances = balancesQ.data || [];
+  const loading = itemsQ.isLoading || balancesQ.isLoading;
 
   const openCreate = () => {
     setEditItem(null);
@@ -160,19 +170,44 @@ export default function Items() {
 
   const categories = Array.from(new Set(items.map(i => i.category).filter(Boolean))).sort();
 
+  const getItemBalance = (itemId: string) => {
+    return balances
+      .filter(b => b.item_id === itemId)
+      .reduce((sum, b) => sum + (Number(b.quantity) || 0), 0);
+  };
+
   const columns = [
     { key: 'code', header: 'Code', render: (i: Item) => <span className="font-medium">{i.code}</span> },
     { key: 'name', header: 'Name' },
     { key: 'category', header: 'Category', render: (i: Item) => i.category || '-' },
     { key: 'unit_of_measure', header: 'UOM' },
-    { 
-      key: 'unit_cost', 
-      header: 'Unit Cost', 
-      render: (i: Item) => `₦${(i.unit_cost || 0).toFixed(2)}` 
+    {
+      key: 'stock',
+      header: 'Stock',
+      render: (i: Item) => {
+        const qty = getItemBalance(i.id);
+        const reorder = Number((i as any).reorder_level) || 0;
+        const isLow = reorder > 0 && qty <= reorder;
+        return (
+          <div className="flex items-center gap-2">
+            <span className={isLow ? 'text-destructive font-semibold' : ''}>{qty.toFixed(2)}</span>
+            {isLow && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive" title={`Re-order level: ${reorder}`}>
+                <AlertTriangle className="h-3 w-3" /> Low
+              </span>
+            )}
+          </div>
+        );
+      }
     },
-    { 
-      key: 'is_active', 
-      header: 'Status', 
+    {
+      key: 'unit_cost',
+      header: 'Unit Cost',
+      render: (i: Item) => `₦${(i.unit_cost || 0).toFixed(2)}`
+    },
+    {
+      key: 'is_active',
+      header: 'Status',
       render: (i: Item) => (
         <Badge variant={i.is_active ? 'default' : 'secondary'}>
           {i.is_active ? 'Active' : 'Inactive'}
