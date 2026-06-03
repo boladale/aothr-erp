@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Plus, Edit, Power } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 export default function Services() {
   const { organizationId } = useAuth();
@@ -118,7 +119,7 @@ export default function Services() {
                   <TableCell className="font-mono">{s.code}</TableCell>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell className="text-muted-foreground">{s.description || '-'}</TableCell>
-                  <TableCell className="text-right">₦{Number(s.estimated_cost || 0).toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(s.estimated_cost)}</TableCell>
                   <TableCell><StatusBadge status={s.is_active ? 'active' : 'inactive'} /></TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => toggleActiveMutation.mutate(s)} title={s.is_active ? 'Deactivate' : 'Activate'} disabled={toggleActiveMutation.isPending}>
