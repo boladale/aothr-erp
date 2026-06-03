@@ -3356,6 +3356,7 @@ export type Database = {
           category: string | null
           code: string
           created_at: string
+          default_location_id: string | null
           description: string | null
           id: string
           is_active: boolean | null
@@ -3369,6 +3370,7 @@ export type Database = {
           category?: string | null
           code: string
           created_at?: string
+          default_location_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -3382,6 +3384,7 @@ export type Database = {
           category?: string | null
           code?: string
           created_at?: string
+          default_location_id?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -3392,6 +3395,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "items_default_location_id_fkey"
+            columns: ["default_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "items_organization_id_fkey"
             columns: ["organization_id"]
