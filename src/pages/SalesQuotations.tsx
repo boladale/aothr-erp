@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 export default function SalesQuotations() {
   const { user, organizationId } = useAuth();
