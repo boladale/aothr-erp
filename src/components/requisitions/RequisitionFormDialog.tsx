@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ClipboardList } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface Item {
   id: string;
@@ -345,7 +346,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
                     />
                   </div>
                   <div className="w-24 text-right font-medium text-sm">
-                    ₦{(line.quantity * line.estimated_unit_cost).toFixed(2)}
+                    {formatCurrency((line.quantity * line.estimated_unit_cost))}
                   </div>
                   {lines.length > 1 && (
                     <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)}>×</Button>
@@ -354,7 +355,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
               ))}
             </div>
             <div className="text-right text-sm font-semibold text-muted-foreground">
-              Estimated Total: ₦{totalEstimate.toFixed(2)}
+              Estimated Total: {formatCurrency(totalEstimate)}
             </div>
           </div>
 

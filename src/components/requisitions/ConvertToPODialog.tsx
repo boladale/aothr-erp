@@ -24,6 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Award } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface ReqLine {
   id: string;
@@ -369,7 +370,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
                         />
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ₦{(sl.selected ? sl.quantity * sl.unit_price : 0).toFixed(2)}
+                        {formatCurrency((sl.selected ? sl.quantity * sl.unit_price : 0))}
                       </TableCell>
                       {awardedInfo && (
                         <TableCell className="text-center">
@@ -385,7 +386,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
                 })}
               </TableBody>
             </Table>
-            <div className="text-right font-semibold">PO Total: ₦{total.toFixed(2)}</div>
+            <div className="text-right font-semibold">PO Total: {formatCurrency(total)}</div>
           </div>
         </div>
         <DialogFooter>

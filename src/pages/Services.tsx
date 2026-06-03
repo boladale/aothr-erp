@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Plus, Edit, Power } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 export default function Services() {
   const { organizationId } = useAuth();

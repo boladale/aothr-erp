@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface PaymentRow {
   id: string;
@@ -105,7 +106,7 @@ export default function VendorPaymentReport() {
     { key: 'vendor_name', header: 'Vendor' },
     { key: 'item_name', header: 'Item', render: (r: PaymentRow) => <div><p className="font-medium">{r.item_name}</p><p className="text-xs text-muted-foreground">{r.item_code}</p></div> },
     { key: 'quantity', header: 'Qty', render: (r: PaymentRow) => r.quantity },
-    { key: 'amount', header: 'Amount', render: (r: PaymentRow) => `₦${r.amount.toFixed(2)}` },
+    { key: 'amount', header: 'Amount', render: (r: PaymentRow) => formatCurrency(r.amount) },
     { key: 'payment_status', header: 'Status', render: (r: PaymentRow) => <StatusBadge status={r.payment_status} /> },
   ];
 

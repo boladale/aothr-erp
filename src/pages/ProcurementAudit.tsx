@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Search, FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/utils';
 
 interface AuditData {
   requisition: any;
@@ -187,7 +188,7 @@ export default function ProcurementAudit() {
                     <div><span className="text-muted-foreground">PO No:</span> <span className="font-medium">{auditData.purchaseOrder.po_number}</span></div>
                     <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={auditData.purchaseOrder.status} /></div>
                     <div><span className="text-muted-foreground">Vendor:</span> {auditData.purchaseOrder.vendors?.name}</div>
-                    <div><span className="text-muted-foreground">Total:</span> ₦{(auditData.purchaseOrder.total_amount || 0).toFixed(2)}</div>
+                    <div><span className="text-muted-foreground">Total:</span> {formatCurrency((auditData.purchaseOrder.total_amount || 0))}</div>
                     <div><span className="text-muted-foreground">Order Date:</span> {new Date(auditData.purchaseOrder.order_date).toLocaleDateString()}</div>
                   </div>
                   <Table>
@@ -200,8 +201,8 @@ export default function ProcurementAudit() {
                           <TableCell>{l.line_number}</TableCell>
                           <TableCell>{l.items?.name} ({l.items?.code})</TableCell>
                           <TableCell className="text-right">{l.quantity}</TableCell>
-                          <TableCell className="text-right">₦{l.unit_price.toFixed(2)}</TableCell>
-                          <TableCell className="text-right">₦{l.line_total.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(l.unit_price)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(l.line_total)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -243,7 +244,7 @@ export default function ProcurementAudit() {
                       <span className="font-medium">{inv.invoice_number}</span>
                       <StatusBadge status={inv.status} />
                       <span className="text-muted-foreground">Date: {new Date(inv.invoice_date).toLocaleDateString()}</span>
-                      <span>₦{(inv.total_amount || 0).toFixed(2)}</span>
+                      <span>{formatCurrency((inv.total_amount || 0))}</span>
                       <StatusBadge status={inv.payment_status} />
                     </div>
                   ))}
