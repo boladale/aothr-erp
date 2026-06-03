@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { APInvoice, PurchaseOrder, Vendor, PurchaseOrderLine, Item } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 interface InvoiceWithDetails extends APInvoice { vendors: Vendor | null; purchase_orders: { po_number: string } | null; }
 interface POWithVendor extends PurchaseOrder { vendors: { id: string; name: string } | null; }
