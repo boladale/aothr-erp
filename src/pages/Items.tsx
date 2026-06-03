@@ -34,7 +34,18 @@ export default function Items() {
     category: '',
     unit_of_measure: 'EA',
     unit_cost: 0,
+    default_location_id: 'none' as string,
   });
+
+  const locationsQ = useQuery({
+    queryKey: ['locations', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('code');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
+  const locations = locationsQ.data || [];
 
   const itemsQ = useQuery({
     queryKey: ['items'],
