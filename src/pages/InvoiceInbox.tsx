@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
+import { formatCurrency } from '@/lib/utils';
 
 interface VendorInvoice {
   id: string;
@@ -138,7 +139,7 @@ export default function InvoiceInbox() {
                   <div><span className="text-muted-foreground">PO:</span> <span className="font-medium">{selected.purchase_orders?.po_number}</span></div>
                   <div><span className="text-muted-foreground">Invoice Date:</span> {new Date(selected.invoice_date).toLocaleDateString()}</div>
                   <div><span className="text-muted-foreground">Due Date:</span> {selected.due_date ? new Date(selected.due_date).toLocaleDateString() : '-'}</div>
-                  <div><span className="text-muted-foreground">Amount:</span> <span className="font-semibold">₦{Number(selected.total_amount).toLocaleString()}</span></div>
+                  <div><span className="text-muted-foreground">Amount:</span> <span className="font-semibold">{formatCurrency(selected.total_amount)}</span></div>
                   <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={selected.status} /></div>
                 </div>
                 <AttachmentPanel entityType="ap_invoice" entityId={selected.id} />

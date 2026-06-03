@@ -329,7 +329,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                           />
                         </div>
                         <div className="col-span-2 text-sm font-mono">
-                          ₦{computed.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          {formatCurrency(computed)}
                         </div>
                         <div className="col-span-1">
                           <Button type="button" size="icon" variant="ghost" onClick={() => removeMilestone(idx)}>
