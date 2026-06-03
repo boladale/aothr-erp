@@ -265,6 +265,35 @@ export default function Vendors() {
               className="pl-9"
             />
           </div>
+          <div className="ml-auto">
+            <ExportButton
+              filename="vendors"
+              sheetName="Vendors"
+              rows={filtered.map(v => ({
+                Code: v.code,
+                Name: v.name,
+                'Trading Name': v.trading_name || '',
+                Email: v.email || '',
+                Phone: v.phone || '',
+                Address: v.address || '',
+                City: v.city || '',
+                State: v.state || '',
+                'Postal Code': v.postal_code || '',
+                Country: v.country || '',
+                Categories: (v.service_categories || []).join(', '),
+                'Project Capacity': v.project_size_capacity || '',
+                'Bank Name': v.bank_name || '',
+                'Bank Account': v.bank_account_number || '',
+                'Bank Sort Code': v.bank_sort_code || '',
+                'Tax ID': v.tax_id || '',
+                'RC Number': v.rc_number || '',
+                'Contact Name': v.contact_name || '',
+                'Contact Email': v.contact_email || '',
+                'Contact Phone': v.contact_phone || '',
+                Status: v.status,
+              }))}
+            />
+          </div>
         </div>
 
         <DataTable
