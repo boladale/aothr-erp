@@ -236,6 +236,15 @@ export default function Invoices() {
           {i.status === 'approved' && canApprove && (
             <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); postMutation.mutate(i); }}>Post</Button>
           )}
+          <DeleteDraftButton
+            table="ap_invoices"
+            childTable="ap_invoice_lines"
+            childKey="invoice_id"
+            id={i.id}
+            status={i.status}
+            label={`Invoice ${i.invoice_number || ''}`.trim()}
+            onDeleted={invalidateInvoices}
+          />
         </div>
       )
     }
