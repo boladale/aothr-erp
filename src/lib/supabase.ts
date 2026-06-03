@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export { supabase };
 
-export type VendorStatus = 'draft' | 'pending_approval' | 'active' | 'inactive';
+export type VendorStatus = 'draft' | 'pending_approval' | 'active' | 'inactive' | 'blacklisted';
 export type POStatus = 'draft' | 'pending_approval' | 'approved' | 'sent' | 'partially_received' | 'fully_received' | 'closed';
 export type RequisitionStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'cancelled' | 'partially_converted' | 'fully_converted';
 export type AdjustmentType = 'increase' | 'decrease';
