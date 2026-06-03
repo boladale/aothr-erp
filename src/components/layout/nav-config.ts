@@ -151,13 +151,13 @@ export const navSections = [
       { path: '/vendor-performance', label: 'Vendor Performance', icon: BarChart3 },
       { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
       { path: '/rfps', label: 'Requests for Proposal', icon: FileSearch },
-      { path: '/locations', label: 'Locations', icon: MapPin },
       { path: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
     ],
   },
   {
     label: 'Warehouse',
     items: [
+      { path: '/locations', label: 'Locations', icon: MapPin },
       { path: '/items', label: 'Items', icon: Package },
       { path: '/services', label: 'Services', icon: ClipboardCheck },
       { path: '/inventory', label: 'Inventory', icon: Boxes },
