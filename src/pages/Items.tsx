@@ -94,6 +94,9 @@ export default function Items() {
           description: form.description || null, category: form.category || null,
           unit_of_measure: form.unit_of_measure, unit_cost: form.unit_cost,
           default_location_id: locId,
+          reorder_level: form.reorder_level,
+          serial_number: form.serial_number || null,
+          barcode: form.barcode || null,
         } as any).eq('id', editItem.id);
         if (error) throw error;
         return 'updated';
