@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Plus, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 interface Customer { id: string; code: string; name: string; }
 interface OutstandingInvoice { id: string; invoice_number: string; total_amount: number; payment_status: string; outstanding: number; }
