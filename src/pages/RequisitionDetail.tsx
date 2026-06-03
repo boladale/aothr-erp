@@ -51,6 +51,7 @@ export default function RequisitionDetail() {
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const queryClient = useQueryClient();
   const [convertOpen, setConvertOpen] = useState(false);
+  const [convertSendDirect, setConvertSendDirect] = useState(false);
   const [rfpOpen, setRfpOpen] = useState(false);
 
   const { data, isLoading: loading } = useQuery({
@@ -89,7 +90,7 @@ export default function RequisitionDetail() {
     }
   };
 
-  const handleApprove = async () => {
+  const handleApprove = async (sendDirect = false) => {
     if (requisition?.status !== 'pending_approval') {
       toast.error('This requisition is not pending approval');
       return;
@@ -102,6 +103,10 @@ export default function RequisitionDetail() {
       if (error) throw error;
       toast.success('Requisition approved');
       fetchData();
+      if (sendDirect) {
+        setConvertSendDirect(true);
+        setConvertOpen(true);
+      }
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to approve');
     }
@@ -198,7 +203,8 @@ export default function RequisitionDetail() {
                 )}
                 {requisition.status === 'pending_approval' && canApprove && (
                   <>
-                    <Button onClick={handleApprove}><Check className="mr-2 h-4 w-4" /> Approve</Button>
+                    <Button onClick={() => handleApprove(false)}><Check className="mr-2 h-4 w-4" /> Approve</Button>
+                    <Button variant="default" onClick={() => handleApprove(true)}><Send className="mr-2 h-4 w-4" /> Approve & Send to Vendor</Button>
                     <Button variant="outline" onClick={handleReject}><X className="mr-2 h-4 w-4" /> Reject</Button>
                   </>
                 )}
@@ -297,10 +303,11 @@ export default function RequisitionDetail() {
         {canConvert && (
           <ConvertToPODialog
             open={convertOpen}
-            onOpenChange={setConvertOpen}
+            onOpenChange={(v) => { setConvertOpen(v); if (!v) setConvertSendDirect(false); }}
             requisition={requisition}
             lines={unconvertedLines}
             onSuccess={fetchData}
+            defaultSendToVendor={convertSendDirect}
           />
         )}
 
