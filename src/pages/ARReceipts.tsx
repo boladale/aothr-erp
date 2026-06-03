@@ -205,12 +205,22 @@ export default function ARReceipts() {
                       <td className="px-4 py-2.5"><StatusBadge status={rec.status} /></td>
                       {canManage && (
                         <td className="px-4 py-2.5">
-                          {rec.status === 'draft' && (
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => openEditDialog(rec)}><Pencil className="h-3 w-3" /></Button>
-                              <Button variant="outline" size="sm" onClick={() => handlePost(rec.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
-                            </div>
-                          )}
+                          <div className="flex gap-1">
+                            {rec.status === 'draft' && (
+                              <>
+                                <Button variant="ghost" size="sm" onClick={() => openEditDialog(rec)}><Pencil className="h-3 w-3" /></Button>
+                                <Button variant="outline" size="sm" onClick={() => handlePost(rec.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
+                              </>
+                            )}
+                            <DeleteDraftButton
+                              table="ar_receipts"
+                              extraCleanup={[{ table: 'ar_receipt_allocations', key: 'receipt_id', value: rec.id }]}
+                              id={rec.id}
+                              status={rec.status}
+                              label={`Receipt ${rec.receipt_number || ''}`.trim()}
+                              onDeleted={() => queryClient.invalidateQueries({ queryKey: ['ar_receipts'] })}
+                            />
+                          </div>
                         </td>
                       )}
                     </tr>
