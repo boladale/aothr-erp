@@ -60,7 +60,7 @@ export default function Items() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0 });
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none' });
     setDialogOpen(true);
   };
 
@@ -73,22 +73,26 @@ export default function Items() {
       category: item.category || '',
       unit_of_measure: item.unit_of_measure,
       unit_cost: item.unit_cost || 0,
+      default_location_id: (item as any).default_location_id || 'none',
     });
     setDialogOpen(true);
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const locId = form.default_location_id === 'none' ? null : form.default_location_id;
       if (editItem) {
         const { error } = await supabase.from('items').update({
           code: form.code, name: form.name,
           description: form.description || null, category: form.category || null,
           unit_of_measure: form.unit_of_measure, unit_cost: form.unit_cost,
-        }).eq('id', editItem.id);
+          default_location_id: locId,
+        } as any).eq('id', editItem.id);
         if (error) throw error;
         return 'updated';
       } else {
-        const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
+        const { default_location_id: _drop, ...rest } = form;
+        const { error } = await supabase.from('items').insert({ ...rest, default_location_id: locId, organization_id: organizationId } as any);
         if (error) throw error;
         return 'created';
       }
