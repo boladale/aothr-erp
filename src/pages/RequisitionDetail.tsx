@@ -90,7 +90,7 @@ export default function RequisitionDetail() {
     }
   };
 
-  const handleApprove = async () => {
+  const handleApprove = async (sendDirect = false) => {
     if (requisition?.status !== 'pending_approval') {
       toast.error('This requisition is not pending approval');
       return;
@@ -103,6 +103,10 @@ export default function RequisitionDetail() {
       if (error) throw error;
       toast.success('Requisition approved');
       fetchData();
+      if (sendDirect) {
+        setConvertSendDirect(true);
+        setConvertOpen(true);
+      }
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to approve');
     }
