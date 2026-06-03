@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import type { Item, Location as DbLocation } from '@/lib/supabase';
 import { ExportButton } from '@/components/ui/export-button';
+import { formatCurrency, formatNumber } from '@/lib/utils';
 
 export default function Items() {
   const { organizationId } = useAuth();
