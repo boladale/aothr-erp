@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, FileText, Pencil, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, FileText, Pencil, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
