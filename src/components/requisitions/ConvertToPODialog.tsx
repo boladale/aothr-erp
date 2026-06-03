@@ -410,10 +410,23 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
             <div className="text-right font-semibold">PO Total: {formatCurrency(total)}</div>
           </div>
         </div>
+        <div className="flex items-center gap-2 p-3 rounded-md border bg-muted/30">
+          <Checkbox
+            id="send-to-vendor"
+            checked={sendToVendor}
+            onCheckedChange={(v) => setSendToVendor(!!v)}
+          />
+          <Label htmlFor="send-to-vendor" className="cursor-pointer text-sm font-normal">
+            Approve and send directly to vendor after creation
+            <span className="block text-xs text-muted-foreground">
+              Skips manual approval. Requires sufficient permissions; falls back to draft if approval is rejected.
+            </span>
+          </Label>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleConvert} disabled={saving}>
-            {saving ? 'Converting...' : 'Create Purchase Order'}
+            {saving ? 'Processing...' : sendToVendor ? 'Create & Send to Vendor' : 'Create Purchase Order'}
           </Button>
         </DialogFooter>
       </DialogContent>
