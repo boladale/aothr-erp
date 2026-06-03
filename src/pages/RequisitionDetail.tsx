@@ -303,10 +303,11 @@ export default function RequisitionDetail() {
         {canConvert && (
           <ConvertToPODialog
             open={convertOpen}
-            onOpenChange={setConvertOpen}
+            onOpenChange={(v) => { setConvertOpen(v); if (!v) setConvertSendDirect(false); }}
             requisition={requisition}
             lines={unconvertedLines}
             onSuccess={fetchData}
+            defaultSendToVendor={convertSendDirect}
           />
         )}
 
