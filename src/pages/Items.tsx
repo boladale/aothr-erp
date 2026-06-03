@@ -321,6 +321,34 @@ export default function Items() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Re-order Level</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form.reorder_level}
+                    onChange={e => setForm({ ...form, reorder_level: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Serial Number</Label>
+                  <Input
+                    value={form.serial_number}
+                    onChange={e => setForm({ ...form, serial_number: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Barcode</Label>
+                  <Input
+                    value={form.barcode}
+                    onChange={e => setForm({ ...form, barcode: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
