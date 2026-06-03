@@ -1,0 +1,2 @@
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS default_location_id uuid REFERENCES public.locations(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_items_default_location ON public.items(default_location_id);

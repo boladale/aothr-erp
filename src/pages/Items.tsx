@@ -17,8 +17,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import type { Item } from '@/lib/supabase';
+import type { Item, Location } from '@/lib/supabase';
 
 export default function Items() {
   const { organizationId } = useAuth();
@@ -33,7 +34,18 @@ export default function Items() {
     category: '',
     unit_of_measure: 'EA',
     unit_cost: 0,
+    default_location_id: 'none' as string,
   });
+
+  const locationsQ = useQuery({
+    queryKey: ['locations', 'active'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('code');
+      if (error) throw error;
+      return (data || []) as Location[];
+    },
+  });
+  const locations = locationsQ.data || [];
 
   const itemsQ = useQuery({
     queryKey: ['items'],
@@ -48,7 +60,7 @@ export default function Items() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0 });
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none' });
     setDialogOpen(true);
   };
 
@@ -61,22 +73,26 @@ export default function Items() {
       category: item.category || '',
       unit_of_measure: item.unit_of_measure,
       unit_cost: item.unit_cost || 0,
+      default_location_id: (item as any).default_location_id || 'none',
     });
     setDialogOpen(true);
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const locId = form.default_location_id === 'none' ? null : form.default_location_id;
       if (editItem) {
         const { error } = await supabase.from('items').update({
           code: form.code, name: form.name,
           description: form.description || null, category: form.category || null,
           unit_of_measure: form.unit_of_measure, unit_cost: form.unit_cost,
-        }).eq('id', editItem.id);
+          default_location_id: locId,
+        } as any).eq('id', editItem.id);
         if (error) throw error;
         return 'updated';
       } else {
-        const { error } = await supabase.from('items').insert({ ...form, organization_id: organizationId });
+        const { default_location_id: _drop, ...rest } = form;
+        const { error } = await supabase.from('items').insert({ ...rest, default_location_id: locId, organization_id: organizationId } as any);
         if (error) throw error;
         return 'created';
       }
@@ -260,6 +276,25 @@ export default function Items() {
                     onChange={e => setForm({ ...form, unit_cost: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Default Location</Label>
+                <Select
+                  value={form.default_location_id}
+                  onValueChange={(v) => setForm({ ...form, default_location_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No default location</SelectItem>
+                    {locations.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.code} — {l.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
