@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, PurchaseOrderLine, Vendor, Location, Item, POStatus } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
