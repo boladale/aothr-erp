@@ -19,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, CreditCard, Send, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 interface Invoice { id: string; invoice_number: string; total_amount: number; payment_status: string; }
 
