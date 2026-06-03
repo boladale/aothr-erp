@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle, FileText } from 'lucide-react';
+import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle, FileText, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -133,6 +133,35 @@ export default function RequisitionDetail() {
     }
   };
 
+  const handleDeleteRequisition = async () => {
+    if (!requisition) return;
+    if (requisition.status !== 'draft') { toast.error('Only draft requisitions can be deleted'); return; }
+    if (!window.confirm(`Delete requisition ${requisition.req_number}? This cannot be undone.`)) return;
+    try {
+      await supabase.from('requisition_lines').delete().eq('requisition_id', requisition.id);
+      const { error } = await supabase.from('requisitions').delete().eq('id', requisition.id);
+      if (error) throw error;
+      toast.success('Requisition deleted');
+      navigate('/requisitions');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete');
+    }
+  };
+
+  const handleDeleteLine = async (lineId: string) => {
+    if (!requisition || requisition.status !== 'draft') { toast.error('Only draft requisition lines can be deleted'); return; }
+    if (lines.length <= 1) { toast.error('A requisition must have at least one line. Delete the requisition instead.'); return; }
+    if (!window.confirm('Remove this line from the requisition?')) return;
+    try {
+      const { error } = await supabase.from('requisition_lines').delete().eq('id', lineId);
+      if (error) throw error;
+      toast.success('Line removed');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove line');
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -183,6 +212,11 @@ export default function RequisitionDetail() {
                     </Button>
                   </>
                 )}
+                {requisition.status === 'draft' && (requisition.requester_id === user?.id || canApprove) && (
+                  <Button variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleDeleteRequisition}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </Button>
+                )}
               </div>
             }
           />
@@ -227,6 +261,7 @@ export default function RequisitionDetail() {
                   <TableHead className="text-right">Est. Total</TableHead>
                   <TableHead className="text-right">Converted</TableHead>
                   <TableHead>Specs</TableHead>
+                  {requisition.status === 'draft' && (requisition.requester_id === user?.id || canApprove) && <TableHead></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -244,6 +279,13 @@ export default function RequisitionDetail() {
                       {line.qty_converted} / {line.quantity}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{line.specifications || '-'}</TableCell>
+                    {requisition.status === 'draft' && (requisition.requester_id === user?.id || canApprove) && (
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLine(line.id)} title="Remove line">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

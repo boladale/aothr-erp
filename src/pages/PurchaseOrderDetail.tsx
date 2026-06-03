@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2 } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
@@ -197,6 +197,49 @@ export default function PurchaseOrderDetail() {
     }
   };
 
+  const handleDeletePO = async () => {
+    if (!po) return;
+    if (po.status !== 'draft') { toast.error('Only draft POs can be deleted'); return; }
+    if (!window.confirm(`Delete PO ${po.po_number}? This cannot be undone.`)) return;
+    setActionLoading(true);
+    try {
+      const lineIds = lines.map(l => l.id);
+      if (lineIds.length) {
+        await (supabase.from('po_line_requisition_lines' as any) as any).delete().in('po_line_id', lineIds);
+      }
+      await (supabase.from('purchase_order_lines') as any).delete().eq('po_id', po.id);
+      const { error } = await (supabase.from('purchase_orders') as any).delete().eq('id', po.id);
+      if (error) throw error;
+      toast.success('Purchase order deleted');
+      navigate('/purchase-orders');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete PO');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteLine = async (lineId: string) => {
+    if (!po || po.status !== 'draft') { toast.error('Only draft PO lines can be deleted'); return; }
+    if (lines.length <= 1) { toast.error('A PO must have at least one line. Delete the PO instead.'); return; }
+    if (!window.confirm('Remove this line from the PO?')) return;
+    try {
+      await (supabase.from('po_line_requisition_lines' as any) as any).delete().eq('po_line_id', lineId);
+      const { error } = await (supabase.from('purchase_order_lines') as any).delete().eq('id', lineId);
+      if (error) throw error;
+      // Recompute totals from remaining lines
+      const remaining = lines.filter(l => l.id !== lineId);
+      const subtotal = remaining.reduce((s, l) => s + Number(l.line_total || 0), 0);
+      await (supabase.from('purchase_orders') as any)
+        .update({ subtotal, total_amount: subtotal + Number(po.tax_amount || 0) })
+        .eq('id', po.id);
+      toast.success('Line removed');
+      fetchPO();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove line');
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -279,6 +322,11 @@ export default function PurchaseOrderDetail() {
             {po.close_ready && po.status !== 'closed' && canClose && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
+            {po.status === 'draft' && (po.created_by === user?.id || canApprove) && (
+              <Button variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleDeletePO} disabled={actionLoading}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete PO
+              </Button>
+            )}
           </div>
         </div>
 
@@ -353,6 +401,7 @@ export default function PurchaseOrderDetail() {
                   <TableHead className="text-right">Invoiced</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Line Total</TableHead>
+                  {po.status === 'draft' && (po.created_by === user?.id || canApprove) && <TableHead></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -383,6 +432,13 @@ export default function PurchaseOrderDetail() {
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(line.unit_price)}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(line.line_total)}</TableCell>
+                    {po.status === 'draft' && (po.created_by === user?.id || canApprove) && (
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLine(line.id)} title="Remove line">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

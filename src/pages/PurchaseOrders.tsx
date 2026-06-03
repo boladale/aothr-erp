@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, FileText, Pencil, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, FileText, Pencil, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
@@ -217,6 +217,28 @@ export default function PurchaseOrders() {
     onError: () => toast.error('Failed to send'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (po: POWithDetails) => {
+      if (po.status !== 'draft') throw new Error('Only draft POs can be deleted');
+      const { data: poLines } = await (supabase.from('purchase_order_lines') as any).select('id').eq('po_id', po.id);
+      const lineIds = (poLines || []).map((l: any) => l.id);
+      if (lineIds.length) {
+        await (supabase.from('po_line_requisition_lines' as any) as any).delete().in('po_line_id', lineIds);
+      }
+      await (supabase.from('purchase_order_lines') as any).delete().eq('po_id', po.id);
+      const { error } = await (supabase.from('purchase_orders') as any).delete().eq('id', po.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Purchase order deleted'); invalidateOrders(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete PO'),
+  });
+
+  const handleDeletePO = (po: POWithDetails) => {
+    if (po.status !== 'draft') { toast.error('Only draft POs can be deleted'); return; }
+    if (!window.confirm(`Delete PO ${po.po_number}? This cannot be undone.`)) return;
+    deleteMutation.mutate(po);
+  };
+
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
@@ -303,6 +325,9 @@ export default function PurchaseOrders() {
           )}
           {o.status === 'approved' && canSend && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); sendMutation.mutate(o); }}>Send</Button>
+          )}
+          {o.status === 'draft' && (o.created_by === user?.id || canApprove) && (
+            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeletePO(o); }} title="Delete"><Trash2 className="h-4 w-4" /></Button>
           )}
         </div>
       )
