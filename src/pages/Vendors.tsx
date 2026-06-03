@@ -42,6 +42,8 @@ export default function Vendors() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editVendor, setEditVendor] = useState<Vendor | null>(null);
   const [inviteVendor, setInviteVendor] = useState<Vendor | null>(null);
+  const [blacklistVendor, setBlacklistVendor] = useState<VendorWithBlacklist | null>(null);
+  const [blacklistReason, setBlacklistReason] = useState('');
 
   const vendorsQ = useQuery({
     queryKey: ['vendors'],
