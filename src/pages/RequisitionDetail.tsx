@@ -133,6 +133,35 @@ export default function RequisitionDetail() {
     }
   };
 
+  const handleDeleteRequisition = async () => {
+    if (!requisition) return;
+    if (requisition.status !== 'draft') { toast.error('Only draft requisitions can be deleted'); return; }
+    if (!window.confirm(`Delete requisition ${requisition.req_number}? This cannot be undone.`)) return;
+    try {
+      await supabase.from('requisition_lines').delete().eq('requisition_id', requisition.id);
+      const { error } = await supabase.from('requisitions').delete().eq('id', requisition.id);
+      if (error) throw error;
+      toast.success('Requisition deleted');
+      navigate('/requisitions');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete');
+    }
+  };
+
+  const handleDeleteLine = async (lineId: string) => {
+    if (!requisition || requisition.status !== 'draft') { toast.error('Only draft requisition lines can be deleted'); return; }
+    if (lines.length <= 1) { toast.error('A requisition must have at least one line. Delete the requisition instead.'); return; }
+    if (!window.confirm('Remove this line from the requisition?')) return;
+    try {
+      const { error } = await supabase.from('requisition_lines').delete().eq('id', lineId);
+      if (error) throw error;
+      toast.success('Line removed');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove line');
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
