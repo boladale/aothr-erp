@@ -57,6 +57,7 @@ interface Props {
   requisition: { id: string; req_number: string };
   lines: ReqLine[];
   onSuccess: () => void;
+  defaultSendToVendor?: boolean;
 }
 
 interface SelectedLine {
@@ -75,7 +76,7 @@ interface AwardedBidInfo {
   linePrices: Record<string, { unit_price: number; quantity: number }>;
 }
 
-export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSuccess }: Props) {
+export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSuccess, defaultSendToVendor = false }: Props) {
   const { user, organizationId } = useAuth();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -85,7 +86,11 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
   const [selectedLines, setSelectedLines] = useState<SelectedLine[]>([]);
   const [saving, setSaving] = useState(false);
   const [awardedInfo, setAwardedInfo] = useState<AwardedBidInfo | null>(null);
-  const [sendToVendor, setSendToVendor] = useState(false);
+  const [sendToVendor, setSendToVendor] = useState(defaultSendToVendor);
+
+  useEffect(() => {
+    if (open) setSendToVendor(defaultSendToVendor);
+  }, [open, defaultSendToVendor]);
 
   useEffect(() => {
     if (!open) return;
