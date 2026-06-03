@@ -167,9 +167,9 @@ export default function ProcurementAudit() {
                       {auditData.bids.map((b: any) => (
                         <TableRow key={b.id}>
                           <TableCell>{b.vendors?.name} ({b.vendors?.code})</TableCell>
-                          <TableCell className="text-right">₦{b.unit_price?.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(b.unit_price)}</TableCell>
                           <TableCell className="text-right">{b.quantity}</TableCell>
-                          <TableCell className="text-right">₦{((b.unit_price || 0) * (b.quantity || 0)).toFixed(2)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency((b.unit_price || 0) * (b.quantity || 0))}</TableCell>
                           <TableCell>{b.is_recommended ? <Badge className="bg-primary">Winner</Badge> : '-'}</TableCell>
                         </TableRow>
                       ))}
