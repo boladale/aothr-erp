@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import type { Item, Location as DbLocation } from '@/lib/supabase';
+import { ExportButton } from '@/components/ui/export-button';
 
 export default function Items() {
   const { organizationId } = useAuth();
