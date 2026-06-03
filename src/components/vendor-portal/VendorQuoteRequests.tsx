@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Send } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface Props {
   vendorId: string;
@@ -225,7 +226,7 @@ export function VendorQuoteRequests({ vendorId }: Props) {
                       />
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      ₦{((linePrices[l.id]?.unit_price || 0) * l.quantity).toLocaleString()}
+                      {formatCurrency((linePrices[l.id]?.unit_price || 0) * l.quantity)}
                     </TableCell>
                     <TableCell>
                       <Input
@@ -242,7 +243,7 @@ export function VendorQuoteRequests({ vendorId }: Props) {
               </TableBody>
             </Table>
             <div className="text-right font-semibold">
-              Total: ₦{active?.lines?.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0).toLocaleString()}
+              Total: {formatCurrency(active?.lines?.reduce((s: number, l: any) => s + (linePrices[l.id]?.unit_price || 0) * l.quantity, 0) || 0)}
             </div>
             <div className="space-y-2 border-t pt-4">
               <Label className="text-base font-semibold">Payment Terms</Label>
@@ -304,7 +305,7 @@ export function VendorQuoteRequests({ vendorId }: Props) {
                     <span className={`text-sm font-medium ${valid ? 'text-green-600' : 'text-destructive'}`}>
                       {milestoneMode === 'percentage'
                         ? <>Total: {milestonePctTotal}% {!valid && '(must equal 100%)'}</>
-                        : <>Total: ₦{milestoneAmtTotal.toLocaleString()} {!valid && `(must equal ₦${totalCost.toLocaleString()})`}</>}
+                        : <>Total: {formatCurrency(milestoneAmtTotal)} {!valid && `(must equal ${formatCurrency(totalCost)})`}</>}
                     </span>
                   </div>
                 </div>
