@@ -279,6 +279,13 @@ export default function RequisitionDetail() {
                       {line.qty_converted} / {line.quantity}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate">{line.specifications || '-'}</TableCell>
+                    {requisition.status === 'draft' && (requisition.requester_id === user?.id || canApprove) && (
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLine(line.id)} title="Remove line">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
