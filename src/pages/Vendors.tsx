@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { ExportButton } from '@/components/ui/export-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -262,6 +263,27 @@ export default function Vendors() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9"
+            />
+          </div>
+          <div className="ml-auto">
+            <ExportButton
+              filename="vendors"
+              sheetName="Vendors"
+              rows={filtered.map(v => ({
+                Code: v.code,
+                Name: v.name,
+                Email: v.email || '',
+                Phone: v.phone || '',
+                Address: v.address || '',
+                City: v.city || '',
+                Country: v.country || '',
+                Categories: (v.service_categories || []).join(', '),
+                'Project Capacity': v.project_size_capacity || '',
+                'Bank Name': v.bank_name || '',
+                'Bank Account': v.bank_account_number || '',
+                'Payment Terms (Days)': v.payment_terms || '',
+                Status: v.status,
+              }))}
             />
           </div>
         </div>
