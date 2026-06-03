@@ -209,7 +209,7 @@ export default function RequisitionDetail() {
           </Card>
           <Card>
             <CardHeader><CardTitle className="text-sm">Estimated Total</CardTitle></CardHeader>
-            <CardContent><p className="text-2xl font-bold">₦{totalEstimate.toFixed(2)}</p></CardContent>
+            <CardContent><p className="text-2xl font-bold">{formatCurrency(totalEstimate)}</p></CardContent>
           </Card>
         </div>
 
@@ -238,8 +238,8 @@ export default function RequisitionDetail() {
                     </TableCell>
                     <TableCell>{line.items?.unit_of_measure || (line.services ? 'Service' : '-')}</TableCell>
                     <TableCell className="text-right">{line.quantity}</TableCell>
-                    <TableCell className="text-right">₦{line.estimated_unit_cost.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">₦{(line.estimated_total || 0).toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(line.estimated_unit_cost)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(line.estimated_total)}</TableCell>
                     <TableCell className="text-right">
                       {line.qty_converted} / {line.quantity}
                     </TableCell>
