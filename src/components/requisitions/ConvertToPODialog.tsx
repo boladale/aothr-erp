@@ -85,6 +85,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
   const [selectedLines, setSelectedLines] = useState<SelectedLine[]>([]);
   const [saving, setSaving] = useState(false);
   const [awardedInfo, setAwardedInfo] = useState<AwardedBidInfo | null>(null);
+  const [sendToVendor, setSendToVendor] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -247,7 +248,27 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         throw traceError;
       }
 
-      toast.success(`PO ${poNumber} created from requisition`);
+      if (sendToVendor) {
+        try {
+          const { data: approveData, error: approveErr } = await supabase.functions.invoke('secure-action', {
+            body: { action: 'po_approve', payload: { ids: [po.id] } },
+          });
+          const errMsg = approveErr?.message || (approveData as any)?.error;
+          if (errMsg) throw new Error(errMsg);
+
+          const { error: sendErr } = await supabase
+            .from('purchase_orders')
+            .update({ status: 'sent', sent_at: new Date().toISOString() } as any)
+            .eq('id', po.id);
+          if (sendErr) throw sendErr;
+
+          toast.success(`PO ${poNumber} created, approved and sent to vendor`);
+        } catch (e: any) {
+          toast.warning(`PO ${poNumber} created but auto-send failed: ${e?.message || 'approval required'}`);
+        }
+      } else {
+        toast.success(`PO ${poNumber} created from requisition`);
+      }
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
@@ -389,10 +410,23 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
             <div className="text-right font-semibold">PO Total: {formatCurrency(total)}</div>
           </div>
         </div>
+        <div className="flex items-center gap-2 p-3 rounded-md border bg-muted/30">
+          <Checkbox
+            id="send-to-vendor"
+            checked={sendToVendor}
+            onCheckedChange={(v) => setSendToVendor(!!v)}
+          />
+          <Label htmlFor="send-to-vendor" className="cursor-pointer text-sm font-normal">
+            Approve and send directly to vendor after creation
+            <span className="block text-xs text-muted-foreground">
+              Skips manual approval. Requires sufficient permissions; falls back to draft if approval is rejected.
+            </span>
+          </Label>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleConvert} disabled={saving}>
-            {saving ? 'Converting...' : 'Create Purchase Order'}
+            {saving ? 'Processing...' : sendToVendor ? 'Create & Send to Vendor' : 'Create Purchase Order'}
           </Button>
         </DialogFooter>
       </DialogContent>
