@@ -340,7 +340,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                     );
                   })}
                   <div className={`text-right text-sm ${milestonesOver ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                    Milestones total: ₦{milestonesTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({milestonesPercent.toFixed(2)}%)
+                    Milestones total: {formatCurrency(milestonesTotal)} ({milestonesPercent.toFixed(2)}%)
                     {milestonesOver && ' — exceeds quote total'}
                   </div>
                 </div>

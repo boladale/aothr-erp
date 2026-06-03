@@ -445,7 +445,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
                     <TableRow className="font-bold border-t-2">
                       <TableCell className="sticky left-0 bg-background">Total</TableCell>
                       <TableCell className="text-right text-muted-foreground">
-                        ₦{lines.reduce((s, l) => s + l.estimated_unit_cost * l.quantity, 0).toFixed(2)}
+                        {formatCurrency(lines.reduce((s, l) => s + l.estimated_unit_cost * l.quantity, 0))}
                       </TableCell>
                       {biddingVendorIds.map(vid => {
                         const total = vendorTotals.get(vid) || 0;
@@ -557,7 +557,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             </Table>
 
             <div className="text-right font-semibold">
-              Total: ₦{bidLines.reduce((s, bl) => s + bl.unit_price * bl.quantity, 0).toFixed(2)}
+              Total: {formatCurrency(bidLines.reduce((s, bl) => s + bl.unit_price * bl.quantity, 0))}
             </div>
           </div>
           <DialogFooter>
