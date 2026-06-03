@@ -156,12 +156,23 @@ export default function ARCreditNotes() {
                       <td className="px-4 py-2.5"><StatusBadge status={cn.status} /></td>
                       {canManage && (
                         <td className="px-4 py-2.5">
-                          {cn.status === 'draft' && (
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => openEditDialog(cn)}><Pencil className="h-3 w-3" /></Button>
-                              <Button variant="outline" size="sm" onClick={() => handlePost(cn.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
-                            </div>
-                          )}
+                          <div className="flex gap-1">
+                            {cn.status === 'draft' && (
+                              <>
+                                <Button variant="ghost" size="sm" onClick={() => openEditDialog(cn)}><Pencil className="h-3 w-3" /></Button>
+                                <Button variant="outline" size="sm" onClick={() => handlePost(cn.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
+                              </>
+                            )}
+                            <DeleteDraftButton
+                              table="ar_credit_notes"
+                              childTable="ar_credit_note_lines"
+                              childKey="credit_note_id"
+                              id={cn.id}
+                              status={cn.status}
+                              label={`Credit Note ${cn.credit_note_number || ''}`.trim()}
+                              onDeleted={fetchAll}
+                            />
+                          </div>
                         </td>
                       )}
                     </tr>
