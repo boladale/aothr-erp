@@ -36,6 +36,9 @@ export default function Items() {
     unit_of_measure: 'EA',
     unit_cost: 0,
     default_location_id: 'none' as string,
+    reorder_level: 0,
+    serial_number: '',
+    barcode: '',
   });
 
   const locationsQ = useQuery<DbLocation[]>({
