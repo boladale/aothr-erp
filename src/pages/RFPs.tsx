@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
 import { format } from 'date-fns';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 interface RFP {
   id: string;
