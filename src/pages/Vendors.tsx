@@ -436,14 +436,6 @@ export default function Vendors() {
             vendorName={inviteVendor.name}
             vendorEmail={inviteVendor.email}
           />
-        {inviteVendor && (
-          <VendorInviteDialog
-            open={!!inviteVendor}
-            onOpenChange={(open) => { if (!open) setInviteVendor(null); }}
-            vendorId={inviteVendor.id}
-            vendorName={inviteVendor.name}
-            vendorEmail={inviteVendor.email}
-          />
         )}
 
         <Dialog open={!!blacklistVendor} onOpenChange={(open) => { if (!open) { setBlacklistVendor(null); setBlacklistReason(''); } }}>
