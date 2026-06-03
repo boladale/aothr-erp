@@ -212,6 +212,11 @@ export default function RequisitionDetail() {
                     </Button>
                   </>
                 )}
+                {requisition.status === 'draft' && (requisition.requester_id === user?.id || canApprove) && (
+                  <Button variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleDeleteRequisition}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </Button>
+                )}
               </div>
             }
           />
