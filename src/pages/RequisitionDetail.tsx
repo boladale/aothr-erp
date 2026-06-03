@@ -203,7 +203,8 @@ export default function RequisitionDetail() {
                 )}
                 {requisition.status === 'pending_approval' && canApprove && (
                   <>
-                    <Button onClick={handleApprove}><Check className="mr-2 h-4 w-4" /> Approve</Button>
+                    <Button onClick={() => handleApprove(false)}><Check className="mr-2 h-4 w-4" /> Approve</Button>
+                    <Button variant="default" onClick={() => handleApprove(true)}><Send className="mr-2 h-4 w-4" /> Approve & Send to Vendor</Button>
                     <Button variant="outline" onClick={handleReject}><X className="mr-2 h-4 w-4" /> Reject</Button>
                   </>
                 )}
