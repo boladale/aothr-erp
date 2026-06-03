@@ -322,6 +322,11 @@ export default function PurchaseOrderDetail() {
             {po.close_ready && po.status !== 'closed' && canClose && (
               <Button onClick={handleClose}>Close PO</Button>
             )}
+            {po.status === 'draft' && (po.created_by === user?.id || canApprove) && (
+              <Button variant="outline" className="text-destructive border-destructive/40 hover:bg-destructive/10" onClick={handleDeletePO} disabled={actionLoading}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete PO
+              </Button>
+            )}
           </div>
         </div>
 
