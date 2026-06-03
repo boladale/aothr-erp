@@ -326,6 +326,9 @@ export default function PurchaseOrders() {
           {o.status === 'approved' && canSend && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); sendMutation.mutate(o); }}>Send</Button>
           )}
+          {o.status === 'draft' && (o.created_by === user?.id || canApprove) && (
+            <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeletePO(o); }} title="Delete"><Trash2 className="h-4 w-4" /></Button>
+          )}
         </div>
       )
     }
