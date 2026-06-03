@@ -188,14 +188,26 @@ export default function APPayments() {
     { key: 'status', header: 'Status', render: (item: any) => <StatusBadge status={item.status} /> },
     ...(canManage ? [{
       key: 'actions', header: 'Actions',
-      render: (item: any) => item.status === 'draft' ? (
+      render: (item: any) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEditDialog(item); }}><Pencil className="h-3 w-3" /></Button>
-          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); postMutation.mutate({ id: item.id, number: item.payment_number }); }} disabled={postMutation.isPending}>
-            <Send className="h-3 w-3 mr-1" /> Post
-          </Button>
+          {item.status === 'draft' && (
+            <>
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEditDialog(item); }}><Pencil className="h-3 w-3" /></Button>
+              <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); postMutation.mutate({ id: item.id, number: item.payment_number }); }} disabled={postMutation.isPending}>
+                <Send className="h-3 w-3 mr-1" /> Post
+              </Button>
+            </>
+          )}
+          <DeleteDraftButton
+            table="ap_payments"
+            extraCleanup={[{ table: 'ap_payment_allocations', key: 'payment_id', value: item.id }]}
+            id={item.id}
+            status={item.status}
+            label={`Payment ${item.payment_number || ''}`.trim()}
+            onDeleted={() => queryClient.invalidateQueries({ queryKey: ['ap_payments'] })}
+          />
         </div>
-      ) : null,
+      ),
     }] : []),
   ];
 
