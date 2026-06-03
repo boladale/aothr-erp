@@ -18,6 +18,7 @@ import { ExportButtons } from '@/components/exports/ExportButtons';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 export default function SalesOrders() {
   const { user, organizationId } = useAuth();
