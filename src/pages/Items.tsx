@@ -38,7 +38,7 @@ export default function Items() {
     default_location_id: 'none' as string,
   });
 
-  const locationsQ = useQuery({
+  const locationsQ = useQuery<DbLocation[]>({
     queryKey: ['locations', 'active'],
     queryFn: async () => {
       const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('code');
