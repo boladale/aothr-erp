@@ -85,6 +85,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
   const [selectedLines, setSelectedLines] = useState<SelectedLine[]>([]);
   const [saving, setSaving] = useState(false);
   const [awardedInfo, setAwardedInfo] = useState<AwardedBidInfo | null>(null);
+  const [sendToVendor, setSendToVendor] = useState(false);
 
   useEffect(() => {
     if (!open) return;
