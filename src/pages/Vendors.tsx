@@ -223,6 +223,7 @@ export default function Vendors() {
     }
   };
 
+  const handleDelete = async (vendor: Vendor) => {
     if (!window.confirm(`Delete vendor "${vendor.name}"? This cannot be undone.`)) return;
     try {
       // Check for references in POs, invoices, bids, RFP responses
