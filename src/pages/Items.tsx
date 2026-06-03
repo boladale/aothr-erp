@@ -192,7 +192,7 @@ export default function Items() {
         const isLow = reorder > 0 && qty <= reorder;
         return (
           <div className="flex items-center gap-2">
-            <span className={isLow ? 'text-destructive font-semibold' : ''}>{qty.toFixed(2)}</span>
+            <span className={isLow ? 'text-destructive font-semibold' : ''}>{formatNumber(qty)}</span>
             {isLow && (
               <span className="inline-flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive" title={`Re-order level: ${reorder}`}>
                 <AlertTriangle className="h-3 w-3" /> Low
@@ -205,7 +205,7 @@ export default function Items() {
     {
       key: 'unit_cost',
       header: 'Unit Cost',
-      render: (i: Item) => `₦${(i.unit_cost || 0).toFixed(2)}`
+      render: (i: Item) => formatCurrency(i.unit_cost)
     },
     {
       key: 'is_active',
