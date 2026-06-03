@@ -436,7 +436,36 @@ export default function Vendors() {
             vendorName={inviteVendor.name}
             vendorEmail={inviteVendor.email}
           />
+        {inviteVendor && (
+          <VendorInviteDialog
+            open={!!inviteVendor}
+            onOpenChange={(open) => { if (!open) setInviteVendor(null); }}
+            vendorId={inviteVendor.id}
+            vendorName={inviteVendor.name}
+            vendorEmail={inviteVendor.email}
+          />
         )}
+
+        <Dialog open={!!blacklistVendor} onOpenChange={(open) => { if (!open) { setBlacklistVendor(null); setBlacklistReason(''); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Request Blacklist — {blacklistVendor?.name}</DialogTitle>
+              <DialogDescription>
+                Provide a clear reason. The request will be sent to a procurement manager for approval before the vendor is blacklisted.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              placeholder="Reason for blacklisting this vendor (required)..."
+              value={blacklistReason}
+              onChange={(e) => setBlacklistReason(e.target.value)}
+              rows={5}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setBlacklistVendor(null); setBlacklistReason(''); }}>Cancel</Button>
+              <Button variant="destructive" onClick={submitBlacklistRequest} disabled={!blacklistReason.trim()}>Submit Request</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
