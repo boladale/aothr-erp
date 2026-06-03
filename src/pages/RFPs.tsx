@@ -67,6 +67,23 @@ export default function RFPs() {
       key: 'created_at', header: 'Created',
       render: (r: RFP) => format(new Date(r.created_at), 'dd MMM yyyy')
     },
+    {
+      key: 'actions', header: '',
+      render: (r: RFP) => (
+        <div className="flex justify-end">
+          <DeleteDraftButton
+            table="rfps"
+            childTable="rfp_items"
+            childKey="rfp_id"
+            extraCleanup={[{ table: 'rfp_criteria', key: 'rfp_id', value: r.id }]}
+            id={r.id}
+            status={r.status}
+            label={`RFQ ${r.rfp_number}`}
+            onDeleted={fetchRFPs}
+          />
+        </div>
+      )
+    },
   ];
 
   return (
