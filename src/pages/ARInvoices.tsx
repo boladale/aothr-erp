@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { Plus, Search, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 interface Customer { id: string; code: string; name: string; payment_terms: number | null; }
 interface Item { id: string; code: string; name: string; unit_cost: number | null; }
@@ -236,6 +237,15 @@ export default function ARInvoices() {
                                 <Button variant="outline" size="sm" onClick={() => handlePost(inv.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
                               </>
                             )}
+                            <DeleteDraftButton
+                              table="ar_invoices"
+                              childTable="ar_invoice_lines"
+                              childKey="invoice_id"
+                              id={inv.id}
+                              status={inv.status}
+                              label={`Invoice ${inv.invoice_number || ''}`.trim()}
+                              onDeleted={() => queryClient.invalidateQueries({ queryKey: ['ar_invoices'] })}
+                            />
                           </div>
                         </td>
                       )}

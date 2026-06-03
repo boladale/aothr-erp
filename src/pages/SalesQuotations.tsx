@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 export default function SalesQuotations() {
   const { user, organizationId } = useAuth();
@@ -195,6 +196,15 @@ export default function SalesQuotations() {
                               <ArrowRight className="h-3 w-3 mr-1" /> Convert to SO
                             </Button>
                           )}
+                          <DeleteDraftButton
+                            table="sales_quotations"
+                            childTable="sales_quotation_lines"
+                            childKey="quotation_id"
+                            id={q.id}
+                            status={q.status}
+                            label={`Quotation ${q.quotation_number || ''}`.trim()}
+                            onDeleted={() => queryClient.invalidateQueries({ queryKey: ['sales-quotations'] })}
+                          />
                         </div>
                       </td>
                     </tr>

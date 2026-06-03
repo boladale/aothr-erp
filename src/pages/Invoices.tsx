@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { APInvoice, PurchaseOrder, Vendor, PurchaseOrderLine, Item } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 interface InvoiceWithDetails extends APInvoice { vendors: Vendor | null; purchase_orders: { po_number: string } | null; }
 interface POWithVendor extends PurchaseOrder { vendors: { id: string; name: string } | null; }
@@ -236,6 +237,15 @@ export default function Invoices() {
           {i.status === 'approved' && canApprove && (
             <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); postMutation.mutate(i); }}>Post</Button>
           )}
+          <DeleteDraftButton
+            table="ap_invoices"
+            childTable="ap_invoice_lines"
+            childKey="invoice_id"
+            id={i.id}
+            status={i.status}
+            label={`Invoice ${i.invoice_number || ''}`.trim()}
+            onDeleted={invalidateInvoices}
+          />
         </div>
       )
     }

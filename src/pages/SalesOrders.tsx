@@ -18,6 +18,7 @@ import { ExportButtons } from '@/components/exports/ExportButtons';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 
 export default function SalesOrders() {
   const { user, organizationId } = useAuth();
@@ -204,6 +205,15 @@ export default function SalesOrders() {
                           {['confirmed', 'partially_delivered'].includes(o.status) && (
                             <Button variant="outline" size="sm" onClick={() => openDelivery(o)}><Truck className="h-3 w-3 mr-1" /> Deliver</Button>
                           )}
+                          <DeleteDraftButton
+                            table="sales_orders"
+                            childTable="sales_order_lines"
+                            childKey="order_id"
+                            id={o.id}
+                            status={o.status}
+                            label={`Sales Order ${o.order_number || ''}`.trim()}
+                            onDeleted={() => queryClient.invalidateQueries({ queryKey: ['sales-orders'] })}
+                          />
                         </div>
                       </td>
                     </tr>

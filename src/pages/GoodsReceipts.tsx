@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 import { Textarea } from '@/components/ui/textarea';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
@@ -187,6 +188,15 @@ export default function GoodsReceipts() {
               </Button>
             </>
           )}
+          <DeleteDraftButton
+            table="goods_receipts"
+            childTable="goods_receipt_lines"
+            childKey="grn_id"
+            id={r.id}
+            status={r.status}
+            label={`GRN ${r.grn_number || ''}`.trim()}
+            onDeleted={() => qc.invalidateQueries({ queryKey: ['goods_receipts'] })}
+          />
         </div>
       )
     }
