@@ -284,11 +284,20 @@ export default function Vendors() {
     { 
       key: 'status', 
       header: 'Status', 
-      render: (v: Vendor) => (
+      render: (v: VendorWithBlacklist) => (
         <div>
           <StatusBadge status={v.status} />
           {v.status === 'draft' && v.rejection_reason && (
             <p className="text-xs text-destructive mt-1" title={v.rejection_reason}>⚠ {v.rejection_reason.length > 40 ? v.rejection_reason.slice(0, 40) + '…' : v.rejection_reason}</p>
+          )}
+          {v.blacklist_status === 'pending' && (
+            <Badge variant="outline" className="mt-1 text-xs border-amber-500 text-amber-700">Blacklist pending</Badge>
+          )}
+          {v.status === 'blacklisted' && v.blacklist_reason && (
+            <p className="text-xs text-destructive mt-1" title={v.blacklist_reason}>⛔ {v.blacklist_reason.length > 40 ? v.blacklist_reason.slice(0, 40) + '…' : v.blacklist_reason}</p>
+          )}
+          {v.blacklist_status === 'rejected' && v.blacklist_rejection_reason && (
+            <p className="text-xs text-muted-foreground mt-1" title={v.blacklist_rejection_reason}>Blacklist rejected: {v.blacklist_rejection_reason.length > 30 ? v.blacklist_rejection_reason.slice(0, 30) + '…' : v.blacklist_rejection_reason}</p>
           )}
         </div>
       )
@@ -296,7 +305,7 @@ export default function Vendors() {
     {
       key: 'actions',
       header: '',
-      render: (v: Vendor) => (
+      render: (v: VendorWithBlacklist) => (
         <div className="flex gap-2 justify-end">
           {v.status === 'draft' && canInitiate && (v.created_by === user?.id || canApprove) && (
             <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleSubmitForApproval(v); }}>
@@ -313,6 +322,16 @@ export default function Vendors() {
               </Button>
             </>
           )}
+          {v.blacklist_status === 'pending' && canApprove && (
+            <>
+              <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); handleApproveBlacklist(v); }}>
+                Approve Blacklist
+              </Button>
+              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRejectBlacklist(v); }}>
+                Reject
+              </Button>
+            </>
+          )}
           {v.status === 'draft' && (
             <Button size="sm" variant="ghost" title="Edit" onClick={(e) => { e.stopPropagation(); handleEdit(v); }}>
               <Pencil className="h-4 w-4" />
@@ -321,6 +340,16 @@ export default function Vendors() {
           {(v.status === 'active' || v.status === 'inactive') && (
             <Button size="sm" variant="ghost" title={v.status === 'active' ? 'Disable' : 'Enable'} onClick={(e) => { e.stopPropagation(); handleToggleActive(v); }}>
               <Power className={`h-4 w-4 ${v.status === 'inactive' ? 'text-muted-foreground' : ''}`} />
+            </Button>
+          )}
+          {(v.status === 'active' || v.status === 'inactive') && v.blacklist_status !== 'pending' && (
+            <Button size="sm" variant="ghost" title="Request Blacklist" onClick={(e) => { e.stopPropagation(); openBlacklistDialog(v); }}>
+              <Ban className="h-4 w-4 text-destructive" />
+            </Button>
+          )}
+          {v.status === 'blacklisted' && canApprove && (
+            <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleRemoveBlacklist(v); }}>
+              Remove Blacklist
             </Button>
           )}
           {v.status === 'active' && v.email && (
