@@ -197,6 +197,49 @@ export default function PurchaseOrderDetail() {
     }
   };
 
+  const handleDeletePO = async () => {
+    if (!po) return;
+    if (po.status !== 'draft') { toast.error('Only draft POs can be deleted'); return; }
+    if (!window.confirm(`Delete PO ${po.po_number}? This cannot be undone.`)) return;
+    setActionLoading(true);
+    try {
+      const lineIds = lines.map(l => l.id);
+      if (lineIds.length) {
+        await (supabase.from('po_line_requisition_lines' as any) as any).delete().in('po_line_id', lineIds);
+      }
+      await (supabase.from('purchase_order_lines') as any).delete().eq('po_id', po.id);
+      const { error } = await (supabase.from('purchase_orders') as any).delete().eq('id', po.id);
+      if (error) throw error;
+      toast.success('Purchase order deleted');
+      navigate('/purchase-orders');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete PO');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteLine = async (lineId: string) => {
+    if (!po || po.status !== 'draft') { toast.error('Only draft PO lines can be deleted'); return; }
+    if (lines.length <= 1) { toast.error('A PO must have at least one line. Delete the PO instead.'); return; }
+    if (!window.confirm('Remove this line from the PO?')) return;
+    try {
+      await (supabase.from('po_line_requisition_lines' as any) as any).delete().eq('po_line_id', lineId);
+      const { error } = await (supabase.from('purchase_order_lines') as any).delete().eq('id', lineId);
+      if (error) throw error;
+      // Recompute totals from remaining lines
+      const remaining = lines.filter(l => l.id !== lineId);
+      const subtotal = remaining.reduce((s, l) => s + Number(l.line_total || 0), 0);
+      await (supabase.from('purchase_orders') as any)
+        .update({ subtotal, total_amount: subtotal + Number(po.tax_amount || 0) })
+        .eq('id', po.id);
+      toast.success('Line removed');
+      fetchPO();
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to remove line');
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout>
