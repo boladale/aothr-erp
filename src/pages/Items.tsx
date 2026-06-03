@@ -277,6 +277,25 @@ export default function Items() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>Default Location</Label>
+                <Select
+                  value={form.default_location_id}
+                  onValueChange={(v) => setForm({ ...form, default_location_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No default location</SelectItem>
+                    {locations.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.code} — {l.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
