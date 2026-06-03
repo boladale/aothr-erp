@@ -268,6 +268,25 @@ export default function Items() {
               ))}
             </SelectContent>
           </Select>
+          <div className="ml-auto">
+            <ExportButton
+              filename="items"
+              sheetName="Items"
+              rows={filtered.map(i => ({
+                Code: i.code,
+                Name: i.name,
+                Description: i.description || '',
+                Category: i.category || '',
+                UOM: i.unit_of_measure,
+                'Unit Cost': i.unit_cost || 0,
+                'Stock On Hand': getItemBalance(i.id),
+                'Re-order Level': Number((i as any).reorder_level) || 0,
+                'Serial Number': (i as any).serial_number || '',
+                Barcode: (i as any).barcode || '',
+                Status: i.is_active ? 'Active' : 'Inactive',
+              }))}
+            />
+          </div>
         </div>
 
         <DataTable
