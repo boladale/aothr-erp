@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 import { Textarea } from '@/components/ui/textarea';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
