@@ -19,12 +19,13 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import type { Item, Location } from '@/lib/supabase';
+import type { Item, Location as DbLocation } from '@/lib/supabase';
 
 export default function Items() {
   const { organizationId } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Item | null>(null);
   const [form, setForm] = useState({
@@ -37,12 +38,12 @@ export default function Items() {
     default_location_id: 'none' as string,
   });
 
-  const locationsQ = useQuery({
+  const locationsQ = useQuery<DbLocation[]>({
     queryKey: ['locations', 'active'],
     queryFn: async () => {
       const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('code');
       if (error) throw error;
-      return (data || []) as Location[];
+      return (data || []) as DbLocation[];
     },
   });
   const locations = locationsQ.data || [];
@@ -141,10 +142,14 @@ export default function Items() {
     deleteMutation.mutate(item);
   };
 
-  const filtered = items.filter(i =>
-    i.name.toLowerCase().includes(search.toLowerCase()) ||
-    i.code.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = items.filter(i => {
+    const matchesSearch = i.name.toLowerCase().includes(search.toLowerCase()) ||
+      i.code.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || i.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const categories = Array.from(new Set(items.map(i => i.category).filter(Boolean))).sort();
 
   const columns = [
     { key: 'code', header: 'Code', render: (i: Item) => <span className="font-medium">{i.code}</span> },
@@ -197,7 +202,7 @@ export default function Items() {
           }
         />
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -207,6 +212,17 @@ export default function Items() {
               className="pl-9"
             />
           </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(cat => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <DataTable
