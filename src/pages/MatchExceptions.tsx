@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import type { InvoiceHold, MatchLine, MatchLineStatus } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
 
 interface InvoiceHoldWithDetails extends InvoiceHold {
   ap_invoices: {
@@ -229,7 +230,7 @@ export default function MatchExceptions() {
     {
       key: 'amount',
       header: 'Amount',
-      render: (h: InvoiceHoldWithDetails) => `₦${(h.ap_invoices?.total_amount || 0).toFixed(2)}`
+      render: (h: InvoiceHoldWithDetails) => formatCurrency((h.ap_invoices?.total_amount || 0))
     },
     {
       key: 'created_at',
@@ -340,7 +341,7 @@ export default function MatchExceptions() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Invoice Amount</p>
-                  <p className="font-medium">₦{(selectedHold?.ap_invoices?.total_amount || 0).toFixed(2)}</p>
+                  <p className="font-medium">{formatCurrency((selectedHold?.ap_invoices?.total_amount || 0))}</p>
                 </div>
               </div>
 
@@ -377,7 +378,7 @@ export default function MatchExceptions() {
                         </span>
                         <span className="text-right">{line.qty_invoice}</span>
                         <span className={`text-right ${line.variance_amt !== 0 ? 'text-destructive font-medium' : ''}`}>
-                          ₦{line.variance_amt.toFixed(2)}
+                          {formatCurrency(line.variance_amt)}
                         </span>
                         <span>{getMatchStatusBadge(line.match_status)}</span>
                       </div>

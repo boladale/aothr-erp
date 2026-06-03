@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { APInvoice, PurchaseOrder, Vendor, PurchaseOrderLine, Item } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
 
 interface InvoiceWithDetails extends APInvoice { vendors: Vendor | null; purchase_orders: { po_number: string } | null; }
 interface POWithVendor extends PurchaseOrder { vendors: { id: string; name: string } | null; }
@@ -207,7 +208,7 @@ export default function Invoices() {
     { key: 'vendor', header: 'Vendor', render: (i: InvoiceWithDetails) => i.vendors?.name || '-' },
     { key: 'po', header: 'PO', render: (i: InvoiceWithDetails) => i.purchase_orders?.po_number || '-' },
     { key: 'invoice_date', header: 'Date', render: (i: InvoiceWithDetails) => new Date(i.invoice_date).toLocaleDateString() },
-    { key: 'total_amount', header: 'Total', render: (i: InvoiceWithDetails) => `₦${(i.total_amount || 0).toFixed(2)}` },
+    { key: 'total_amount', header: 'Total', render: (i: InvoiceWithDetails) => formatCurrency(i.total_amount) },
     { key: 'status', header: 'Status', render: (i: InvoiceWithDetails) => (
       <div>
         <StatusBadge status={i.status} />
@@ -284,11 +285,11 @@ export default function Invoices() {
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex-1">
                             <p className="font-medium">{line.item_name}</p>
-                            <p className="text-xs text-muted-foreground">Max invoiceable: {line.max_invoiceable} @ ₦{line.unit_price.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">Max invoiceable: {line.max_invoiceable} @ {formatCurrency(line.unit_price)}</p>
                           </div>
                           <Input type="number" min="0" max={line.max_invoiceable} className="w-28" value={line.quantity}
                             onChange={e => { const newLines = [...lines]; newLines[idx].quantity = parseFloat(e.target.value) || 0; setLines(newLines); }} placeholder="0" />
-                          <span className="w-24 text-right font-medium">₦{(line.quantity * line.unit_price).toFixed(2)}</span>
+                          <span className="w-24 text-right font-medium">{formatCurrency(line.quantity * line.unit_price)}</span>
                         </div>
                         <Select value={line.expense_account_id} onValueChange={(val) => { const newLines = [...lines]; newLines[idx].expense_account_id = val; setLines(newLines); }}>
                           <SelectTrigger className="w-full"><SelectValue placeholder="Select GL Account (defaults to COGS)" /></SelectTrigger>
@@ -298,7 +299,7 @@ export default function Invoices() {
                     ))}
                   </div>
                   <div className="flex justify-end pt-2 border-t">
-                    <span className="font-medium">Total: ₦{lines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0).toFixed(2)}</span>
+                    <span className="font-medium">Total: {formatCurrency(lines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0))}</span>
                   </div>
                 </div>
               )}

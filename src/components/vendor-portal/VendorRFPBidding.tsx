@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Send, Plus, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatCurrency } from '@/lib/utils';
 
 type Milestone = { description: string; type: 'percent' | 'amount'; value: number };
 
@@ -328,7 +329,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                           />
                         </div>
                         <div className="col-span-2 text-sm font-mono">
-                          ₦{computed.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          {formatCurrency(computed)}
                         </div>
                         <div className="col-span-1">
                           <Button type="button" size="icon" variant="ghost" onClick={() => removeMilestone(idx)}>
@@ -339,7 +340,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
                     );
                   })}
                   <div className={`text-right text-sm ${milestonesOver ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                    Milestones total: ₦{milestonesTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} ({milestonesPercent.toFixed(2)}%)
+                    Milestones total: {formatCurrency(milestonesTotal)} ({milestonesPercent.toFixed(2)}%)
                     {milestonesOver && ' — exceeds quote total'}
                   </div>
                 </div>

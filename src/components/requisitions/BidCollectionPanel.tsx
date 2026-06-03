@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { formatCurrency } from '@/lib/utils';
 
 interface ReqLine {
   id: string;
@@ -426,7 +427,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
                           <span className="text-xs text-muted-foreground ml-1">×{line.quantity}</span>
                         </TableCell>
                         <TableCell className="text-right text-sm text-muted-foreground">
-                          ₦{line.estimated_unit_cost.toFixed(2)}
+                          {formatCurrency(line.estimated_unit_cost)}
                         </TableCell>
                         {biddingVendorIds.map(vid => {
                           const entry = entries.find(e => e.vendor_id === vid && e.requisition_line_id === line.id);
@@ -434,7 +435,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
                             entry.unit_price === Math.min(...entries.filter(e => e.requisition_line_id === line.id).map(e => e.unit_price));
                           return (
                             <TableCell key={vid} className={`text-center ${isLowest ? 'text-green-600 font-semibold' : ''}`}>
-                              {entry ? `₦${entry.unit_price.toFixed(2)}` : '-'}
+                              {entry ? formatCurrency(entry.unit_price) : '-'}
                             </TableCell>
                           );
                         })}
@@ -444,14 +445,14 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
                     <TableRow className="font-bold border-t-2">
                       <TableCell className="sticky left-0 bg-background">Total</TableCell>
                       <TableCell className="text-right text-muted-foreground">
-                        ₦{lines.reduce((s, l) => s + l.estimated_unit_cost * l.quantity, 0).toFixed(2)}
+                        {formatCurrency(lines.reduce((s, l) => s + l.estimated_unit_cost * l.quantity, 0))}
                       </TableCell>
                       {biddingVendorIds.map(vid => {
                         const total = vendorTotals.get(vid) || 0;
                         const isLowest = total === lowestTotal && biddingVendorIds.length > 1;
                         return (
                           <TableCell key={vid} className={`text-center ${isLowest ? 'text-green-600' : ''}`}>
-                            ₦{total.toFixed(2)}
+                            {formatCurrency(total)}
                           </TableCell>
                         );
                       })}
@@ -535,7 +536,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
                         />
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        ₦{(bl.unit_price * bl.quantity).toFixed(2)}
+                        {formatCurrency((bl.unit_price * bl.quantity))}
                       </TableCell>
                       <TableCell>
                         <Input
@@ -556,7 +557,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             </Table>
 
             <div className="text-right font-semibold">
-              Total: ₦{bidLines.reduce((s, bl) => s + bl.unit_price * bl.quantity, 0).toFixed(2)}
+              Total: {formatCurrency(bidLines.reduce((s, bl) => s + bl.unit_price * bl.quantity, 0))}
             </div>
           </div>
           <DialogFooter>

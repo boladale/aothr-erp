@@ -7,6 +7,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface LifecycleRow {
   id: string;
@@ -159,7 +160,7 @@ export default function RequisitionToPaymentReport() {
     { key: 'invoice_date', header: 'Invoice Date', render: (r: LifecycleRow) => fmt(r.invoice_date) },
     { key: 'payment_date', header: 'Payment Date', render: (r: LifecycleRow) => fmt(r.payment_date) },
     { key: 'vendor_name', header: 'Vendor' },
-    { key: 'total_amount', header: 'Amount', render: (r: LifecycleRow) => `₦${r.total_amount.toFixed(2)}` },
+    { key: 'total_amount', header: 'Amount', render: (r: LifecycleRow) => formatCurrency(r.total_amount) },
   ];
 
   const exportCols = columns.map(c => ({ key: c.key, header: c.header }));

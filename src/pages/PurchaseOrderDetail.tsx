@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, PurchaseOrderLine, Vendor, Location, Item, POStatus } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
@@ -322,15 +323,15 @@ export default function PurchaseOrderDetail() {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>₦{(po.subtotal || 0).toFixed(2)}</span>
+                <span>{formatCurrency(po.subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax</span>
-                <span>₦{(po.tax_amount || 0).toFixed(2)}</span>
+                <span>{formatCurrency(po.tax_amount)}</span>
               </div>
               <div className="flex justify-between font-medium text-lg border-t pt-2">
                 <span>Total</span>
-                <span>₦{(po.total_amount || 0).toFixed(2)}</span>
+                <span>{formatCurrency(po.total_amount)}</span>
               </div>
             </CardContent>
           </Card>
@@ -380,8 +381,8 @@ export default function PurchaseOrderDetail() {
                         {line.qty_invoiced}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">₦{line.unit_price.toFixed(2)}</TableCell>
-                    <TableCell className="text-right font-medium">₦{line.line_total.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(line.unit_price)}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrency(line.line_total)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

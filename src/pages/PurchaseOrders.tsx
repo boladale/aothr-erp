@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, Vendor, Location, Item, POStatus } from '@/lib/supabase';
 import { POReawardPanel } from '@/components/purchase-orders/POReawardPanel';
+import { formatCurrency } from '@/lib/utils';
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
@@ -275,7 +276,7 @@ export default function PurchaseOrders() {
     { key: 'po_number', header: 'PO Number', render: (o: POWithDetails) => <span className="font-medium">{o.po_number}</span> },
     { key: 'vendor', header: 'Vendor', render: (o: POWithDetails) => o.vendors?.name || '-' },
     { key: 'order_date', header: 'Order Date', render: (o: POWithDetails) => new Date(o.order_date).toLocaleDateString() },
-    { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => `₦${(o.total_amount || 0).toFixed(2)}` },
+    { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => formatCurrency(o.total_amount) },
     { key: 'status', header: 'Status', render: (o: POWithDetails) => (
       <div>
         <StatusBadge status={o.status} />
@@ -440,7 +441,7 @@ export default function PurchaseOrders() {
                       </div>
                       <div className="w-24"><Input type="number" min="1" placeholder="Qty" value={line.quantity} onChange={e => updateLine(idx, 'quantity', parseFloat(e.target.value) || 0)} /></div>
                       <div className="w-28"><Input type="number" step="0.01" placeholder="Price" value={line.unit_price} onChange={e => updateLine(idx, 'unit_price', parseFloat(e.target.value) || 0)} /></div>
-                      <div className="w-24 text-right font-medium">₦{(line.quantity * line.unit_price).toFixed(2)}</div>
+                      <div className="w-24 text-right font-medium">{formatCurrency(line.quantity * line.unit_price)}</div>
                       {lines.length > 1 && <Button type="button" variant="ghost" size="sm" onClick={() => removeLine(idx)}>×</Button>}
                     </div>
                   ))}
@@ -451,9 +452,9 @@ export default function PurchaseOrders() {
                   const tot = Math.max(0, sub - disc);
                   return (
                     <div className="text-right space-y-1 text-sm">
-                      <div>Subtotal: ₦{sub.toFixed(2)}</div>
-                      {form.discount_amount > 0 && <div className="text-destructive">Discount: -₦{disc.toFixed(2)}</div>}
-                      <div className="font-semibold text-base">Total: ₦{tot.toFixed(2)}</div>
+                      <div>Subtotal: {formatCurrency(sub)}</div>
+                      {form.discount_amount > 0 && <div className="text-destructive">Discount: -{formatCurrency(disc)}</div>}
+                      <div className="font-semibold text-base">Total: {formatCurrency(tot)}</div>
                     </div>
                   );
                 })()}
