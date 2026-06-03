@@ -43,7 +43,7 @@ export default function Items() {
     queryFn: async () => {
       const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('code');
       if (error) throw error;
-      return (data || []) as Location[];
+      return (data || []) as DbLocation[];
     },
   });
   const locations = locationsQ.data || [];
