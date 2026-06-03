@@ -50,7 +50,7 @@ export default function Vendors() {
     queryFn: async () => {
       const { data, error } = await supabase.from('vendors').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as Vendor[];
+      return (data || []) as VendorWithBlacklist[];
     },
   });
   const vendors = vendorsQ.data || [];
