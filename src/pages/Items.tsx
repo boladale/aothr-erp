@@ -64,7 +64,7 @@ export default function Items() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none' });
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none', reorder_level: 0, serial_number: '', barcode: '' });
     setDialogOpen(true);
   };
 
@@ -78,6 +78,9 @@ export default function Items() {
       unit_of_measure: item.unit_of_measure,
       unit_cost: item.unit_cost || 0,
       default_location_id: (item as any).default_location_id || 'none',
+      reorder_level: (item as any).reorder_level || 0,
+      serial_number: (item as any).serial_number || '',
+      barcode: (item as any).barcode || '',
     });
     setDialogOpen(true);
   };
