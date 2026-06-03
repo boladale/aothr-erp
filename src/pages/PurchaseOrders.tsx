@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, Vendor, Location, Item, POStatus } from '@/lib/supabase';
 import { POReawardPanel } from '@/components/purchase-orders/POReawardPanel';
+import { formatCurrency } from '@/lib/utils';
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
