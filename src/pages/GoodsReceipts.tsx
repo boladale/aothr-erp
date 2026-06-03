@@ -188,6 +188,15 @@ export default function GoodsReceipts() {
               </Button>
             </>
           )}
+          <DeleteDraftButton
+            table="goods_receipts"
+            childTable="goods_receipt_lines"
+            childKey="grn_id"
+            id={r.id}
+            status={r.status}
+            label={`GRN ${r.grn_number || ''}`.trim()}
+            onDeleted={() => qc.invalidateQueries({ queryKey: ['goods_receipts'] })}
+          />
         </div>
       )
     }
