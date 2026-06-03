@@ -401,6 +401,7 @@ export default function PurchaseOrderDetail() {
                   <TableHead className="text-right">Invoiced</TableHead>
                   <TableHead className="text-right">Unit Price</TableHead>
                   <TableHead className="text-right">Line Total</TableHead>
+                  {po.status === 'draft' && (po.created_by === user?.id || canApprove) && <TableHead></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
