@@ -220,7 +220,11 @@ export default function PurchaseOrders() {
   const deleteMutation = useMutation({
     mutationFn: async (po: POWithDetails) => {
       if (po.status !== 'draft') throw new Error('Only draft POs can be deleted');
-      await (supabase.from('po_line_requisition_lines' as any) as any).delete().eq('po_id', po.id);
+      const { data: poLines } = await (supabase.from('purchase_order_lines') as any).select('id').eq('po_id', po.id);
+      const lineIds = (poLines || []).map((l: any) => l.id);
+      if (lineIds.length) {
+        await (supabase.from('po_line_requisition_lines' as any) as any).delete().in('po_line_id', lineIds);
+      }
       await (supabase.from('purchase_order_lines') as any).delete().eq('po_id', po.id);
       const { error } = await (supabase.from('purchase_orders') as any).delete().eq('id', po.id);
       if (error) throw error;
