@@ -36,6 +36,9 @@ export default function Items() {
     unit_of_measure: 'EA',
     unit_cost: 0,
     default_location_id: 'none' as string,
+    reorder_level: 0,
+    serial_number: '',
+    barcode: '',
   });
 
   const locationsQ = useQuery<DbLocation[]>({
@@ -61,7 +64,7 @@ export default function Items() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none' });
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none', reorder_level: 0, serial_number: '', barcode: '' });
     setDialogOpen(true);
   };
 
@@ -75,6 +78,9 @@ export default function Items() {
       unit_of_measure: item.unit_of_measure,
       unit_cost: item.unit_cost || 0,
       default_location_id: (item as any).default_location_id || 'none',
+      reorder_level: (item as any).reorder_level || 0,
+      serial_number: (item as any).serial_number || '',
+      barcode: (item as any).barcode || '',
     });
     setDialogOpen(true);
   };
@@ -88,6 +94,9 @@ export default function Items() {
           description: form.description || null, category: form.category || null,
           unit_of_measure: form.unit_of_measure, unit_cost: form.unit_cost,
           default_location_id: locId,
+          reorder_level: form.reorder_level,
+          serial_number: form.serial_number || null,
+          barcode: form.barcode || null,
         } as any).eq('id', editItem.id);
         if (error) throw error;
         return 'updated';
@@ -311,6 +320,34 @@ export default function Items() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label>Re-order Level</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={form.reorder_level}
+                    onChange={e => setForm({ ...form, reorder_level: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Serial Number</Label>
+                  <Input
+                    value={form.serial_number}
+                    onChange={e => setForm({ ...form, serial_number: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Barcode</Label>
+                  <Input
+                    value={form.barcode}
+                    onChange={e => setForm({ ...form, barcode: e.target.value })}
+                    placeholder="Optional"
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>

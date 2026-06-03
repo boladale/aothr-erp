@@ -3353,6 +3353,7 @@ export type Database = {
       }
       items: {
         Row: {
+          barcode: string | null
           category: string | null
           code: string
           created_at: string
@@ -3362,11 +3363,14 @@ export type Database = {
           is_active: boolean | null
           name: string
           organization_id: string | null
+          reorder_level: number
+          serial_number: string | null
           unit_cost: number | null
           unit_of_measure: string
           updated_at: string
         }
         Insert: {
+          barcode?: string | null
           category?: string | null
           code: string
           created_at?: string
@@ -3376,11 +3380,14 @@ export type Database = {
           is_active?: boolean | null
           name: string
           organization_id?: string | null
+          reorder_level?: number
+          serial_number?: string | null
           unit_cost?: number | null
           unit_of_measure?: string
           updated_at?: string
         }
         Update: {
+          barcode?: string | null
           category?: string | null
           code?: string
           created_at?: string
@@ -3390,6 +3397,8 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           organization_id?: string | null
+          reorder_level?: number
+          serial_number?: string | null
           unit_cost?: number | null
           unit_of_measure?: string
           updated_at?: string
