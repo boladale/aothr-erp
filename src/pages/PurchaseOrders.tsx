@@ -217,6 +217,24 @@ export default function PurchaseOrders() {
     onError: () => toast.error('Failed to send'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (po: POWithDetails) => {
+      if (po.status !== 'draft') throw new Error('Only draft POs can be deleted');
+      await supabase.from('po_line_requisition_lines').delete().eq('po_id', po.id);
+      await supabase.from('purchase_order_lines').delete().eq('po_id', po.id);
+      const { error } = await supabase.from('purchase_orders').delete().eq('id', po.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success('Purchase order deleted'); invalidateOrders(); },
+    onError: (e: any) => toast.error(e?.message || 'Failed to delete PO'),
+  });
+
+  const handleDeletePO = (po: POWithDetails) => {
+    if (po.status !== 'draft') { toast.error('Only draft POs can be deleted'); return; }
+    if (!window.confirm(`Delete PO ${po.po_number}? This cannot be undone.`)) return;
+    deleteMutation.mutate(po);
+  };
+
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
