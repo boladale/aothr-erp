@@ -248,7 +248,27 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         throw traceError;
       }
 
-      toast.success(`PO ${poNumber} created from requisition`);
+      if (sendToVendor) {
+        try {
+          const { data: approveData, error: approveErr } = await supabase.functions.invoke('secure-action', {
+            body: { action: 'po_approve', payload: { ids: [po.id] } },
+          });
+          const errMsg = approveErr?.message || (approveData as any)?.error;
+          if (errMsg) throw new Error(errMsg);
+
+          const { error: sendErr } = await supabase
+            .from('purchase_orders')
+            .update({ status: 'sent', sent_at: new Date().toISOString() } as any)
+            .eq('id', po.id);
+          if (sendErr) throw sendErr;
+
+          toast.success(`PO ${poNumber} created, approved and sent to vendor`);
+        } catch (e: any) {
+          toast.warning(`PO ${poNumber} created but auto-send failed: ${e?.message || 'approval required'}`);
+        }
+      } else {
+        toast.success(`PO ${poNumber} created from requisition`);
+      }
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
