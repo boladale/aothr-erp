@@ -261,6 +261,7 @@ export default function RequisitionDetail() {
                   <TableHead className="text-right">Est. Total</TableHead>
                   <TableHead className="text-right">Converted</TableHead>
                   <TableHead>Specs</TableHead>
+                  {requisition.status === 'draft' && (requisition.requester_id === user?.id || canApprove) && <TableHead></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
