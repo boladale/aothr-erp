@@ -51,6 +51,7 @@ export default function RequisitionDetail() {
   const canApprove = hasRole('admin') || hasRole('procurement_manager');
   const queryClient = useQueryClient();
   const [convertOpen, setConvertOpen] = useState(false);
+  const [convertSendDirect, setConvertSendDirect] = useState(false);
   const [rfpOpen, setRfpOpen] = useState(false);
 
   const { data, isLoading: loading } = useQuery({
