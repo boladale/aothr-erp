@@ -139,7 +139,90 @@ export default function Vendors() {
     }
   };
 
-  const handleDelete = async (vendor: Vendor) => {
+  const openBlacklistDialog = (vendor: VendorWithBlacklist) => {
+    setBlacklistVendor(vendor);
+    setBlacklistReason('');
+  };
+
+  const submitBlacklistRequest = async () => {
+    if (!blacklistVendor) return;
+    const reason = blacklistReason.trim();
+    if (!reason) { toast.error('A reason is required to blacklist a vendor'); return; }
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        blacklist_status: 'pending',
+        blacklist_reason: reason,
+        blacklist_requested_by: user?.id,
+        blacklist_requested_at: new Date().toISOString(),
+        blacklist_rejection_reason: null,
+        blacklist_approved_by: null,
+        blacklist_approved_at: null,
+      }).eq('id', blacklistVendor.id);
+      if (error) throw error;
+      toast.success('Blacklist request submitted for manager approval');
+      setBlacklistVendor(null);
+      setBlacklistReason('');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to submit blacklist request');
+    }
+  };
+
+  const handleApproveBlacklist = async (vendor: VendorWithBlacklist) => {
+    if (!window.confirm(`Approve blacklist for "${vendor.name}"? This will block the vendor from any new transactions.`)) return;
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        status: 'blacklisted',
+        blacklist_status: 'approved',
+        blacklist_approved_by: user?.id,
+        blacklist_approved_at: new Date().toISOString(),
+      }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Vendor blacklisted');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to approve blacklist');
+    }
+  };
+
+  const handleRejectBlacklist = async (vendor: VendorWithBlacklist) => {
+    const reason = window.prompt('Reason for rejecting this blacklist request:');
+    if (reason === null) return;
+    if (!reason.trim()) { toast.error('A rejection reason is required'); return; }
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        blacklist_status: 'rejected',
+        blacklist_rejection_reason: reason,
+      }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Blacklist request rejected');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to reject blacklist request');
+    }
+  };
+
+  const handleRemoveBlacklist = async (vendor: VendorWithBlacklist) => {
+    if (!window.confirm(`Remove blacklist from "${vendor.name}" and reinstate as active?`)) return;
+    try {
+      const { error } = await (supabase.from('vendors') as any).update({
+        status: 'active',
+        blacklist_status: 'none',
+        blacklist_reason: null,
+        blacklist_requested_by: null,
+        blacklist_requested_at: null,
+        blacklist_approved_by: null,
+        blacklist_approved_at: null,
+        blacklist_rejection_reason: null,
+      }).eq('id', vendor.id);
+      if (error) throw error;
+      toast.success('Vendor reinstated');
+      fetchVendors();
+    } catch (e) {
+      toast.error('Failed to remove blacklist');
+    }
+  };
+
     if (!window.confirm(`Delete vendor "${vendor.name}"? This cannot be undone.`)) return;
     try {
       // Check for references in POs, invoices, bids, RFP responses
