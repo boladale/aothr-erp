@@ -432,6 +432,13 @@ export default function PurchaseOrderDetail() {
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(line.unit_price)}</TableCell>
                     <TableCell className="text-right font-medium">{formatCurrency(line.line_total)}</TableCell>
+                    {po.status === 'draft' && (po.created_by === user?.id || canApprove) && (
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDeleteLine(line.id)} title="Remove line">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
