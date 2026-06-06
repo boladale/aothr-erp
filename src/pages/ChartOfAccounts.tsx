@@ -290,9 +290,13 @@ export default function ChartOfAccounts() {
     else if (activeTab === 'inactive') filtered = accounts.filter(a => !a.is_active);
 
     if (search) {
+      const s = search.toLowerCase();
       return filtered.filter(a =>
-        a.account_code.toLowerCase().includes(search.toLowerCase()) ||
-        a.account_name.toLowerCase().includes(search.toLowerCase())
+        a.account_code.toLowerCase().includes(s) ||
+        a.account_name.toLowerCase().includes(s) ||
+        (a.account_type || '').toLowerCase().includes(s) ||
+        (a.normal_balance || '').toLowerCase().includes(s) ||
+        (a.description || '').toLowerCase().includes(s)
       );
     }
     return null; // use tree view
