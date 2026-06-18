@@ -3356,6 +3356,7 @@ export type Database = {
           barcode: string | null
           category: string | null
           code: string
+          costing_method: string
           created_at: string
           default_location_id: string | null
           description: string | null
@@ -3373,6 +3374,7 @@ export type Database = {
           barcode?: string | null
           category?: string | null
           code: string
+          costing_method?: string
           created_at?: string
           default_location_id?: string | null
           description?: string | null
@@ -3390,6 +3392,7 @@ export type Database = {
           barcode?: string | null
           category?: string | null
           code?: string
+          costing_method?: string
           created_at?: string
           default_location_id?: string | null
           description?: string | null
