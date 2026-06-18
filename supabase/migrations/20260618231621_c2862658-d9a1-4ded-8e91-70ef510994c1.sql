@@ -1,0 +1,2 @@
+ALTER TABLE public.inventory_issues DROP CONSTRAINT IF EXISTS inventory_issues_issue_number_key;
+ALTER TABLE public.inventory_issues ADD CONSTRAINT inventory_issues_org_issue_number_key UNIQUE (organization_id, issue_number);
