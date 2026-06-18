@@ -156,10 +156,11 @@ export default function InventoryIssues() {
           issue_date: form.issue_date,
           issued_to: form.issued_to || null,
           department: form.department || null,
+          project_id: form.project_id && form.project_id !== 'none' ? form.project_id : null,
           notes: form.notes || null,
           organization_id: organizationId,
           created_by: user?.id,
-        })
+        } as any)
         .select()
         .single();
       if (issueErr) throw issueErr;
