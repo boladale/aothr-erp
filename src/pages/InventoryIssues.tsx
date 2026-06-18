@@ -283,6 +283,17 @@ export default function InventoryIssues() {
                 <Input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} placeholder="e.g. IT, Finance" />
               </div>
               <div className="col-span-2 space-y-2">
+                <Label>Project (optional)</Label>
+                <Select value={form.project_id} onValueChange={v => setForm({ ...form, project_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="No project" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No project</SelectItem>
+                    {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.project_code} - {p.project_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">If set, the issue cost is recorded as a material cost on the project (feeds Project P&L).</p>
+              </div>
+              <div className="col-span-2 space-y-2">
                 <Label>Notes</Label>
                 <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} />
               </div>
