@@ -85,6 +85,7 @@ const AccountStatement = lazy(() => import("./pages/AccountStatement"));
 const Workflows = lazy(() => import("./pages/Workflows"));
 const RecurringEntries = lazy(() => import("./pages/RecurringEntries"));
 const InventoryTransfers = lazy(() => import("./pages/InventoryTransfers"));
+const StockMovements = lazy(() => import("./pages/StockMovements"));
 const VendorPaymentReport = lazy(() => import("./pages/VendorPaymentReport"));
 const RequisitionToPaymentReport = lazy(() => import("./pages/RequisitionToPaymentReport"));
 const ProcurementAudit = lazy(() => import("./pages/ProcurementAudit"));
@@ -252,6 +253,7 @@ const App = () => (
             <Route path="/workflows" element={<ProtectedRoute><Workflows /></ProtectedRoute>} />
             <Route path="/recurring-entries" element={<ProtectedRoute><RecurringEntries /></ProtectedRoute>} />
             <Route path="/inventory-transfers" element={<ProtectedRoute><InventoryTransfers /></ProtectedRoute>} />
+            <Route path="/stock-movements" element={<ProtectedRoute><StockMovements /></ProtectedRoute>} />
             <Route path="/vendor-payment-report" element={<ProtectedRoute><VendorPaymentReport /></ProtectedRoute>} />
             <Route path="/req-to-payment-report" element={<ProtectedRoute><RequisitionToPaymentReport /></ProtectedRoute>} />
             <Route path="/procurement-audit" element={<ProtectedRoute><ProcurementAudit /></ProtectedRoute>} />
