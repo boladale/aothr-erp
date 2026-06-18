@@ -54,9 +54,18 @@ interface IssueRow {
   department: string | null;
   status: string;
   location_id: string;
+  project_id: string | null;
   notes: string | null;
   created_at: string;
   locations: { name: string } | null;
+  projects: { project_code: string; project_name: string } | null;
+}
+
+interface Project {
+  id: string;
+  project_code: string;
+  project_name: string;
+  status: string;
 }
 
 export default function InventoryIssues() {
@@ -70,6 +79,7 @@ export default function InventoryIssues() {
     issue_date: new Date().toISOString().split('T')[0],
     issued_to: '',
     department: '',
+    project_id: 'none',
     notes: '',
   });
   const [lines, setLines] = useState<IssueLine[]>([
@@ -79,9 +89,9 @@ export default function InventoryIssues() {
   const issuesQ = useQuery({
     queryKey: ['inventory_issues'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('inventory_issues').select('*, locations(name)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('inventory_issues').select('*, locations(name), projects(project_code, project_name)').order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as IssueRow[];
+      return (data || []) as unknown as IssueRow[];
     },
   });
   const itemsQ = useQuery({
@@ -100,6 +110,14 @@ export default function InventoryIssues() {
       return (data || []) as Location[];
     },
   });
+  const projectsQ = useQuery({
+    queryKey: ['projects-active-min'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('projects').select('id, project_code, project_name, status').in('status', ['active', 'planning', 'on_hold']).order('project_name');
+      if (error) return [] as Project[];
+      return (data || []) as Project[];
+    },
+  });
   const glAccountsQ = useQuery({
     queryKey: ['gl_accounts-leaf-all'],
     queryFn: async () => {
@@ -111,6 +129,7 @@ export default function InventoryIssues() {
   const issues = issuesQ.data || [];
   const items = itemsQ.data || [];
   const locations = locationsQ.data || [];
+  const projects = projectsQ.data || [];
   const glAccounts = glAccountsQ.data || [];
   const loading = issuesQ.isLoading;
 
@@ -137,10 +156,11 @@ export default function InventoryIssues() {
           issue_date: form.issue_date,
           issued_to: form.issued_to || null,
           department: form.department || null,
+          project_id: form.project_id && form.project_id !== 'none' ? form.project_id : null,
           notes: form.notes || null,
           organization_id: organizationId,
           created_by: user?.id,
-        })
+        } as any)
         .select()
         .single();
       if (issueErr) throw issueErr;
@@ -188,7 +208,7 @@ export default function InventoryIssues() {
   const handlePost = (issue: IssueRow) => postMutation.mutate(issue);
 
   const resetForm = () => {
-    setForm({ location_id: '', issue_date: new Date().toISOString().split('T')[0], issued_to: '', department: '', notes: '' });
+    setForm({ location_id: '', issue_date: new Date().toISOString().split('T')[0], issued_to: '', department: '', project_id: 'none', notes: '' });
     setLines([{ item_id: '', quantity: 1, target_gl_account_id: '', description: '' }]);
   };
 
@@ -204,6 +224,7 @@ export default function InventoryIssues() {
     { key: 'location', header: 'Location', render: (row: IssueRow) => row.locations?.name || '-' },
     { key: 'issued_to', header: 'Issued To', render: (row: IssueRow) => row.issued_to || '-' },
     { key: 'department', header: 'Department', render: (row: IssueRow) => row.department || '-' },
+    { key: 'project', header: 'Project', render: (row: IssueRow) => row.projects ? `${row.projects.project_code} - ${row.projects.project_name}` : '-' },
     { key: 'status', header: 'Status', render: (row: IssueRow) => <StatusBadge status={row.status} /> },
     {
       key: 'actions', header: 'Actions',
@@ -260,6 +281,17 @@ export default function InventoryIssues() {
               <div className="space-y-2">
                 <Label>Department</Label>
                 <Input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} placeholder="e.g. IT, Finance" />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>Project (optional)</Label>
+                <Select value={form.project_id} onValueChange={v => setForm({ ...form, project_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="No project" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No project</SelectItem>
+                    {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.project_code} - {p.project_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">If set, the issue cost is recorded as a material cost on the project (feeds Project P&L).</p>
               </div>
               <div className="col-span-2 space-y-2">
                 <Label>Notes</Label>
