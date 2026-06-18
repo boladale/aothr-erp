@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, PackageMinus, Trash2 } from 'lucide-react';
+import { Plus, Search, PackageMinus, Trash2, Undo2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -212,6 +212,110 @@ export default function InventoryIssues() {
     setLines([{ item_id: '', quantity: 1, target_gl_account_id: '', description: '' }]);
   };
 
+  // ---- ISS-05: Return / Reverse ----
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnIssue, setReturnIssue] = useState<IssueRow | null>(null);
+  const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0]);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnLines, setReturnLines] = useState<Array<{
+    issue_line_id: string; item_id: string; item_label: string;
+    issued_qty: number; already_returned: number; return_qty: number;
+  }>>([]);
+
+  const openReturnDialog = (issue: IssueRow) => {
+    setReturnIssue(issue);
+    setReturnDate(new Date().toISOString().split('T')[0]);
+    setReturnReason('');
+    setReturnLines([]);
+    setReturnDialogOpen(true);
+  };
+
+  useEffect(() => {
+    if (!returnDialogOpen || !returnIssue) return;
+    (async () => {
+      const { data: issueLines } = await (supabase as any)
+        .from('inventory_issue_lines')
+        .select('id, item_id, quantity, items(code, name)')
+        .eq('issue_id', returnIssue.id);
+      const lineIds = (issueLines || []).map((l: any) => l.id);
+      let returnedMap: Record<string, number> = {};
+      if (lineIds.length) {
+        const { data: prevReturns } = await (supabase as any)
+          .from('inventory_issue_return_lines')
+          .select('issue_line_id, quantity, inventory_issue_returns!inner(status)')
+          .in('issue_line_id', lineIds)
+          .eq('inventory_issue_returns.status', 'posted');
+        (prevReturns || []).forEach((r: any) => {
+          returnedMap[r.issue_line_id] = (returnedMap[r.issue_line_id] || 0) + Number(r.quantity);
+        });
+      }
+      setReturnLines((issueLines || []).map((l: any) => ({
+        issue_line_id: l.id,
+        item_id: l.item_id,
+        item_label: `${l.items?.code || ''} - ${l.items?.name || ''}`,
+        issued_qty: Number(l.quantity),
+        already_returned: returnedMap[l.id] || 0,
+        return_qty: 0,
+      })));
+    })();
+  }, [returnDialogOpen, returnIssue]);
+
+  const returnMutation = useMutation({
+    mutationFn: async () => {
+      if (!returnIssue) throw new Error('No issue selected');
+      const toReturn = returnLines.filter(l => l.return_qty > 0);
+      if (toReturn.length === 0) throw new Error('Enter at least one return quantity');
+      for (const l of toReturn) {
+        const remaining = l.issued_qty - l.already_returned;
+        if (l.return_qty > remaining) {
+          throw new Error(`Cannot return more than ${remaining} for ${l.item_label}`);
+        }
+      }
+      const returnNumber = await getNextTransactionNumber(organizationId!, 'IRT', 'IRT');
+      const { data: ret, error: retErr } = await (supabase as any)
+        .from('inventory_issue_returns')
+        .insert({
+          return_number: returnNumber,
+          issue_id: returnIssue.id,
+          return_date: returnDate,
+          reason: returnReason || null,
+          organization_id: organizationId,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+      if (retErr) throw retErr;
+
+      const lineInserts = toReturn.map(l => ({
+        return_id: ret.id,
+        issue_line_id: l.issue_line_id,
+        item_id: l.item_id,
+        quantity: l.return_qty,
+      }));
+      const { error: linesErr } = await (supabase as any)
+        .from('inventory_issue_return_lines')
+        .insert(lineInserts);
+      if (linesErr) {
+        await (supabase as any).from('inventory_issue_returns').delete().eq('id', ret.id);
+        throw linesErr;
+      }
+
+      const { error: postErr } = await (supabase as any)
+        .from('inventory_issue_returns')
+        .update({ status: 'posted' })
+        .eq('id', ret.id);
+      if (postErr) throw postErr;
+      return returnNumber;
+    },
+    onSuccess: (num) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      toast.success(`Return ${num} posted — inventory restored & GL reversed`);
+      setReturnDialogOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to post return'),
+  });
+
+
   const filtered = issues.filter(i =>
     i.issue_number.toLowerCase().includes(search.toLowerCase()) ||
     (i.issued_to || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -230,7 +334,11 @@ export default function InventoryIssues() {
       key: 'actions', header: 'Actions',
       render: (row: IssueRow) => row.status === 'draft' ? (
         <Button size="sm" onClick={(e) => { e.stopPropagation(); handlePost(row); }}>Post</Button>
-      ) : <span className="text-xs text-muted-foreground">Posted</span>,
+      ) : (
+        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openReturnDialog(row); }}>
+          <Undo2 className="mr-1 h-3 w-3" /> Return
+        </Button>
+      ),
     },
   ];
 
@@ -346,7 +454,71 @@ export default function InventoryIssues() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Undo2 className="h-5 w-5" /> Return Items — {returnIssue?.issue_number}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Return Date</Label>
+                <Input type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Reason</Label>
+                <Input value={returnReason} onChange={e => setReturnReason(e.target.value)} placeholder="e.g. Unused, damaged" />
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label className="text-base font-semibold">Items to Return</Label>
+              {returnLines.length === 0 && (
+                <p className="text-sm text-muted-foreground">Loading issue lines…</p>
+              )}
+              {returnLines.map((l, idx) => {
+                const remaining = l.issued_qty - l.already_returned;
+                return (
+                  <div key={l.issue_line_id} className="grid grid-cols-12 gap-2 items-end border rounded-md p-3 bg-muted/30">
+                    <div className="col-span-6">
+                      <Label className="text-xs">Item</Label>
+                      <div className="text-sm font-medium">{l.item_label}</div>
+                    </div>
+                    <div className="col-span-3 text-xs">
+                      <div>Issued: <span className="font-medium">{l.issued_qty}</span></div>
+                      <div>Already returned: <span className="font-medium">{l.already_returned}</span></div>
+                      <div>Available: <span className="font-medium text-primary">{remaining}</span></div>
+                    </div>
+                    <div className="col-span-3 space-y-1">
+                      <Label className="text-xs">Return Qty</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={remaining}
+                        value={l.return_qty}
+                        disabled={remaining <= 0}
+                        onChange={e => {
+                          const v = Math.max(0, Math.min(remaining, Number(e.target.value) || 0));
+                          setReturnLines(prev => prev.map((p, i) => i === idx ? { ...p, return_qty: v } : p));
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-muted-foreground">Posting restores inventory, reverses the GL entry for the returned quantity, and refunds project material cost (if linked).</p>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setReturnDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => returnMutation.mutate()} disabled={returnMutation.isPending}>
+                {returnMutation.isPending ? 'Posting…' : 'Post Return'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
+
     </AppLayout>
   );
 }

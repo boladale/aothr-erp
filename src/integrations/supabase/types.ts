@@ -2945,6 +2945,120 @@ export type Database = {
           },
         ]
       }
+      inventory_issue_return_lines: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          issue_line_id: string
+          item_id: string
+          quantity: number
+          return_id: string
+          unit_cost: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_line_id: string
+          item_id: string
+          quantity: number
+          return_id: string
+          unit_cost?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          issue_line_id?: string
+          item_id?: string
+          quantity?: number
+          return_id?: string
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_issue_return_lines_issue_line_id_fkey"
+            columns: ["issue_line_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_issue_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_issue_return_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_issue_return_lines_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_issue_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_issue_returns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          gl_journal_entry_id: string | null
+          id: string
+          issue_id: string
+          notes: string | null
+          organization_id: string
+          posted_at: string | null
+          posted_by: string | null
+          reason: string | null
+          return_date: string
+          return_number: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          gl_journal_entry_id?: string | null
+          id?: string
+          issue_id: string
+          notes?: string | null
+          organization_id: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reason?: string | null
+          return_date?: string
+          return_number: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          gl_journal_entry_id?: string | null
+          id?: string
+          issue_id?: string
+          notes?: string | null
+          organization_id?: string
+          posted_at?: string | null
+          posted_by?: string | null
+          reason?: string | null
+          return_date?: string
+          return_number?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_issue_returns_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_issues: {
         Row: {
           created_at: string
