@@ -237,7 +237,6 @@ export default function StockMovements() {
         <PageHeader
           title="Stock Movement History"
           description="Unified history of all inventory movements: receipts, issues, transfers, deliveries, and adjustments."
-          icon={History}
         />
 
         <div className="flex flex-wrap items-center gap-3 mb-4">

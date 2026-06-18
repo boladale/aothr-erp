@@ -41,6 +41,7 @@ export default function Items() {
     reorder_level: 0,
     serial_number: '',
     barcode: '',
+    costing_method: 'fifo' as 'fifo' | 'weighted_average',
   });
 
   const locationsQ = useQuery<DbLocation[]>({
@@ -76,7 +77,7 @@ export default function Items() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none', reorder_level: 0, serial_number: '', barcode: '' });
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none', reorder_level: 0, serial_number: '', barcode: '', costing_method: 'fifo' });
     setDialogOpen(true);
   };
 
@@ -93,6 +94,7 @@ export default function Items() {
       reorder_level: (item as any).reorder_level || 0,
       serial_number: (item as any).serial_number || '',
       barcode: (item as any).barcode || '',
+      costing_method: ((item as any).costing_method as 'fifo' | 'weighted_average') || 'fifo',
     });
     setDialogOpen(true);
   };
@@ -109,6 +111,7 @@ export default function Items() {
           reorder_level: form.reorder_level,
           serial_number: form.serial_number || null,
           barcode: form.barcode || null,
+          costing_method: form.costing_method,
         } as any).eq('id', editItem.id);
         if (error) throw error;
         return 'updated';
