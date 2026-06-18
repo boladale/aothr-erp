@@ -207,7 +207,7 @@ export default function InventoryIssues() {
   const handlePost = (issue: IssueRow) => postMutation.mutate(issue);
 
   const resetForm = () => {
-    setForm({ location_id: '', issue_date: new Date().toISOString().split('T')[0], issued_to: '', department: '', notes: '' });
+    setForm({ location_id: '', issue_date: new Date().toISOString().split('T')[0], issued_to: '', department: '', project_id: 'none', notes: '' });
     setLines([{ item_id: '', quantity: 1, target_gl_account_id: '', description: '' }]);
   };
 
