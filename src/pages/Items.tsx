@@ -408,6 +408,22 @@ export default function Items() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>Costing Method</Label>
+                <Select
+                  value={form.costing_method}
+                  onValueChange={(v) => setForm({ ...form, costing_method: v as 'fifo' | 'weighted_average' })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fifo">FIFO (First-In, First-Out)</SelectItem>
+                    <SelectItem value="weighted_average">Weighted Average</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  FIFO: oldest stock consumed first at its original cost. Weighted Average: issues costed at the current average unit cost across all on-hand stock.
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>

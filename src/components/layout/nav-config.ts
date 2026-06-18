@@ -38,6 +38,7 @@ import {
   GitBranch,
   Repeat,
   PiggyBank,
+  History,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
@@ -61,6 +62,7 @@ export const pathToProgram: Record<string, string> = {
   '/inventory-valuation': 'inventory_valuation',
   '/inventory-issues': 'inventory_issues',
   '/goods-receipts': 'goods_receipts',
+  '/stock-movements': 'inventory',
   '/chart-of-accounts': 'chart_of_accounts',
   '/journal-entries': 'journal_entries',
   '/financial-reports': 'financial_reports',
@@ -164,6 +166,7 @@ export const navSections = [
       { path: '/inventory-issues', label: 'Inventory Issues', icon: PackageMinus },
       { path: '/inventory-transfers', label: 'Transfers', icon: ArrowRightLeft },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
+      { path: '/stock-movements', label: 'Stock Movements', icon: History },
     ],
   },
   {
