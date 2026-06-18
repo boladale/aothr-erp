@@ -89,9 +89,9 @@ export default function InventoryIssues() {
   const issuesQ = useQuery({
     queryKey: ['inventory_issues'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('inventory_issues').select('*, locations(name)').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('inventory_issues').select('*, locations(name), projects(project_code, project_name)').order('created_at', { ascending: false });
       if (error) throw error;
-      return (data || []) as IssueRow[];
+      return (data || []) as unknown as IssueRow[];
     },
   });
   const itemsQ = useQuery({
@@ -110,6 +110,14 @@ export default function InventoryIssues() {
       return (data || []) as Location[];
     },
   });
+  const projectsQ = useQuery({
+    queryKey: ['projects-active-min'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('projects').select('id, project_code, project_name, status').in('status', ['active', 'in_progress', 'planning', 'on_hold']).order('project_name');
+      if (error) return [] as Project[];
+      return (data || []) as Project[];
+    },
+  });
   const glAccountsQ = useQuery({
     queryKey: ['gl_accounts-leaf-all'],
     queryFn: async () => {
@@ -121,6 +129,7 @@ export default function InventoryIssues() {
   const issues = issuesQ.data || [];
   const items = itemsQ.data || [];
   const locations = locationsQ.data || [];
+  const projects = projectsQ.data || [];
   const glAccounts = glAccountsQ.data || [];
   const loading = issuesQ.isLoading;
 
