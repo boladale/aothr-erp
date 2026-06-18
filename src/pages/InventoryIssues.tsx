@@ -224,6 +224,7 @@ export default function InventoryIssues() {
     { key: 'location', header: 'Location', render: (row: IssueRow) => row.locations?.name || '-' },
     { key: 'issued_to', header: 'Issued To', render: (row: IssueRow) => row.issued_to || '-' },
     { key: 'department', header: 'Department', render: (row: IssueRow) => row.department || '-' },
+    { key: 'project', header: 'Project', render: (row: IssueRow) => row.projects ? `${row.projects.project_code} - ${row.projects.project_name}` : '-' },
     { key: 'status', header: 'Status', render: (row: IssueRow) => <StatusBadge status={row.status} /> },
     {
       key: 'actions', header: 'Actions',
