@@ -2959,6 +2959,7 @@ export type Database = {
           organization_id: string | null
           posted_at: string | null
           posted_by: string | null
+          project_id: string | null
           status: Database["public"]["Enums"]["issue_status"]
           updated_at: string
         }
@@ -2975,6 +2976,7 @@ export type Database = {
           organization_id?: string | null
           posted_at?: string | null
           posted_by?: string | null
+          project_id?: string | null
           status?: Database["public"]["Enums"]["issue_status"]
           updated_at?: string
         }
@@ -2991,6 +2993,7 @@ export type Database = {
           organization_id?: string | null
           posted_at?: string | null
           posted_by?: string | null
+          project_id?: string | null
           status?: Database["public"]["Enums"]["issue_status"]
           updated_at?: string
         }
@@ -3007,6 +3010,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_issues_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
