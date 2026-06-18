@@ -454,7 +454,71 @@ export default function InventoryIssues() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Undo2 className="h-5 w-5" /> Return Items — {returnIssue?.issue_number}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Return Date</Label>
+                <Input type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Reason</Label>
+                <Input value={returnReason} onChange={e => setReturnReason(e.target.value)} placeholder="e.g. Unused, damaged" />
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <Label className="text-base font-semibold">Items to Return</Label>
+              {returnLines.length === 0 && (
+                <p className="text-sm text-muted-foreground">Loading issue lines…</p>
+              )}
+              {returnLines.map((l, idx) => {
+                const remaining = l.issued_qty - l.already_returned;
+                return (
+                  <div key={l.issue_line_id} className="grid grid-cols-12 gap-2 items-end border rounded-md p-3 bg-muted/30">
+                    <div className="col-span-6">
+                      <Label className="text-xs">Item</Label>
+                      <div className="text-sm font-medium">{l.item_label}</div>
+                    </div>
+                    <div className="col-span-3 text-xs">
+                      <div>Issued: <span className="font-medium">{l.issued_qty}</span></div>
+                      <div>Already returned: <span className="font-medium">{l.already_returned}</span></div>
+                      <div>Available: <span className="font-medium text-primary">{remaining}</span></div>
+                    </div>
+                    <div className="col-span-3 space-y-1">
+                      <Label className="text-xs">Return Qty</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={remaining}
+                        value={l.return_qty}
+                        disabled={remaining <= 0}
+                        onChange={e => {
+                          const v = Math.max(0, Math.min(remaining, Number(e.target.value) || 0));
+                          setReturnLines(prev => prev.map((p, i) => i === idx ? { ...p, return_qty: v } : p));
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs text-muted-foreground">Posting restores inventory, reverses the GL entry for the returned quantity, and refunds project material cost (if linked).</p>
+            </div>
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setReturnDialogOpen(false)}>Cancel</Button>
+              <Button onClick={() => returnMutation.mutate()} disabled={returnMutation.isPending}>
+                {returnMutation.isPending ? 'Posting…' : 'Post Return'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
+
     </AppLayout>
   );
 }
