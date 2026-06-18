@@ -113,7 +113,7 @@ export default function InventoryIssues() {
   const projectsQ = useQuery({
     queryKey: ['projects-active-min'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('projects').select('id, project_code, project_name, status').in('status', ['active', 'in_progress', 'planning', 'on_hold']).order('project_name');
+      const { data, error } = await supabase.from('projects').select('id, project_code, project_name, status').in('status', ['active', 'planning', 'on_hold']).order('project_name');
       if (error) return [] as Project[];
       return (data || []) as Project[];
     },
