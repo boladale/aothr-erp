@@ -212,6 +212,110 @@ export default function InventoryIssues() {
     setLines([{ item_id: '', quantity: 1, target_gl_account_id: '', description: '' }]);
   };
 
+  // ---- ISS-05: Return / Reverse ----
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [returnIssue, setReturnIssue] = useState<IssueRow | null>(null);
+  const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0]);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnLines, setReturnLines] = useState<Array<{
+    issue_line_id: string; item_id: string; item_label: string;
+    issued_qty: number; already_returned: number; return_qty: number;
+  }>>([]);
+
+  const openReturnDialog = (issue: IssueRow) => {
+    setReturnIssue(issue);
+    setReturnDate(new Date().toISOString().split('T')[0]);
+    setReturnReason('');
+    setReturnLines([]);
+    setReturnDialogOpen(true);
+  };
+
+  useEffect(() => {
+    if (!returnDialogOpen || !returnIssue) return;
+    (async () => {
+      const { data: issueLines } = await (supabase as any)
+        .from('inventory_issue_lines')
+        .select('id, item_id, quantity, items(code, name)')
+        .eq('issue_id', returnIssue.id);
+      const lineIds = (issueLines || []).map((l: any) => l.id);
+      let returnedMap: Record<string, number> = {};
+      if (lineIds.length) {
+        const { data: prevReturns } = await (supabase as any)
+          .from('inventory_issue_return_lines')
+          .select('issue_line_id, quantity, inventory_issue_returns!inner(status)')
+          .in('issue_line_id', lineIds)
+          .eq('inventory_issue_returns.status', 'posted');
+        (prevReturns || []).forEach((r: any) => {
+          returnedMap[r.issue_line_id] = (returnedMap[r.issue_line_id] || 0) + Number(r.quantity);
+        });
+      }
+      setReturnLines((issueLines || []).map((l: any) => ({
+        issue_line_id: l.id,
+        item_id: l.item_id,
+        item_label: `${l.items?.code || ''} - ${l.items?.name || ''}`,
+        issued_qty: Number(l.quantity),
+        already_returned: returnedMap[l.id] || 0,
+        return_qty: 0,
+      })));
+    })();
+  }, [returnDialogOpen, returnIssue]);
+
+  const returnMutation = useMutation({
+    mutationFn: async () => {
+      if (!returnIssue) throw new Error('No issue selected');
+      const toReturn = returnLines.filter(l => l.return_qty > 0);
+      if (toReturn.length === 0) throw new Error('Enter at least one return quantity');
+      for (const l of toReturn) {
+        const remaining = l.issued_qty - l.already_returned;
+        if (l.return_qty > remaining) {
+          throw new Error(`Cannot return more than ${remaining} for ${l.item_label}`);
+        }
+      }
+      const returnNumber = await getNextTransactionNumber(organizationId!, 'IRT', 'IRT');
+      const { data: ret, error: retErr } = await (supabase as any)
+        .from('inventory_issue_returns')
+        .insert({
+          return_number: returnNumber,
+          issue_id: returnIssue.id,
+          return_date: returnDate,
+          reason: returnReason || null,
+          organization_id: organizationId,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+      if (retErr) throw retErr;
+
+      const lineInserts = toReturn.map(l => ({
+        return_id: ret.id,
+        issue_line_id: l.issue_line_id,
+        item_id: l.item_id,
+        quantity: l.return_qty,
+      }));
+      const { error: linesErr } = await (supabase as any)
+        .from('inventory_issue_return_lines')
+        .insert(lineInserts);
+      if (linesErr) {
+        await (supabase as any).from('inventory_issue_returns').delete().eq('id', ret.id);
+        throw linesErr;
+      }
+
+      const { error: postErr } = await (supabase as any)
+        .from('inventory_issue_returns')
+        .update({ status: 'posted' })
+        .eq('id', ret.id);
+      if (postErr) throw postErr;
+      return returnNumber;
+    },
+    onSuccess: (num) => {
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      toast.success(`Return ${num} posted — inventory restored & GL reversed`);
+      setReturnDialogOpen(false);
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to post return'),
+  });
+
+
   const filtered = issues.filter(i =>
     i.issue_number.toLowerCase().includes(search.toLowerCase()) ||
     (i.issued_to || '').toLowerCase().includes(search.toLowerCase()) ||
