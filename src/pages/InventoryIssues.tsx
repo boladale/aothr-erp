@@ -54,9 +54,18 @@ interface IssueRow {
   department: string | null;
   status: string;
   location_id: string;
+  project_id: string | null;
   notes: string | null;
   created_at: string;
   locations: { name: string } | null;
+  projects: { project_code: string; project_name: string } | null;
+}
+
+interface Project {
+  id: string;
+  project_code: string;
+  project_name: string;
+  status: string;
 }
 
 export default function InventoryIssues() {
@@ -70,6 +79,7 @@ export default function InventoryIssues() {
     issue_date: new Date().toISOString().split('T')[0],
     issued_to: '',
     department: '',
+    project_id: 'none',
     notes: '',
   });
   const [lines, setLines] = useState<IssueLine[]>([
