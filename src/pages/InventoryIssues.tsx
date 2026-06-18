@@ -230,7 +230,11 @@ export default function InventoryIssues() {
       key: 'actions', header: 'Actions',
       render: (row: IssueRow) => row.status === 'draft' ? (
         <Button size="sm" onClick={(e) => { e.stopPropagation(); handlePost(row); }}>Post</Button>
-      ) : <span className="text-xs text-muted-foreground">Posted</span>,
+      ) : (
+        <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openReturnDialog(row); }}>
+          <Undo2 className="mr-1 h-3 w-3" /> Return
+        </Button>
+      ),
     },
   ];
 
