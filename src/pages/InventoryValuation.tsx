@@ -25,14 +25,23 @@ interface CostingLayer {
   locations: { code: string; name: string } | null;
 }
 
+interface BalanceRow {
+  id: string;
+  item_id: string;
+  location_id: string;
+  quantity: number;
+  items: { code: string; name: string; unit_of_measure: string; unit_cost: number | null } | null;
+  locations: { code: string; name: string } | null;
+}
+
 interface ValuationSummary {
   id: string;
   item_code: string;
   item_name: string;
   location_name: string;
   total_qty: number;
+  unit_cost: number;
   total_value: number;
-  weighted_avg_cost: number;
   layer_count: number;
   uom: string;
 }
@@ -45,63 +54,80 @@ interface AgingBucket {
 
 export default function InventoryValuation() {
   const [layers, setLayers] = useState<CostingLayer[]>([]);
+  const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    fetchLayers();
+    fetchData();
   }, []);
 
-  const fetchLayers = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('inventory_costing_layers')
-        .select('*, items(code, name, unit_of_measure), locations(code, name)')
-        .gt('remaining_qty', 0)
-        .order('receipt_date', { ascending: true });
+      const [layersRes, balancesRes] = await Promise.all([
+        supabase
+          .from('inventory_costing_layers')
+          .select('*, items(code, name, unit_of_measure), locations(code, name)')
+          .gt('remaining_qty', 0)
+          .order('receipt_date', { ascending: true }),
+        supabase
+          .from('inventory_balances')
+          .select('*, items(code, name, unit_of_measure, unit_cost), locations(code, name)')
+          .gt('quantity', 0),
+      ]);
 
-      if (error) throw error;
-      setLayers((data || []) as CostingLayer[]);
+      if (layersRes.error) throw layersRes.error;
+      if (balancesRes.error) throw balancesRes.error;
+      setLayers((layersRes.data || []) as CostingLayer[]);
+      setBalances((balancesRes.data || []) as BalanceRow[]);
     } catch (error) {
-      console.error('Error fetching costing layers:', error);
+      console.error('Error fetching inventory valuation:', error);
       toast.error('Failed to load inventory valuation');
     } finally {
       setLoading(false);
     }
   };
 
-  // Build valuation summary grouped by item + location
-  const summaryMap = new Map<string, ValuationSummary>();
+  // Aggregate FIFO layers per item+location for weighted-avg cost + layer count
+  const layerAgg = new Map<string, { qty: number; value: number; count: number }>();
   layers.forEach(l => {
     const key = `${l.item_id}-${l.location_id}`;
-    const existing = summaryMap.get(key);
-    if (existing) {
-      existing.total_qty += l.remaining_qty;
-      existing.total_value += l.remaining_qty * l.unit_cost;
-      existing.layer_count += 1;
-      existing.weighted_avg_cost = existing.total_value / existing.total_qty;
-    } else {
-      summaryMap.set(key, {
-        id: key,
-        item_code: l.items?.code || '',
-        item_name: l.items?.name || '',
-        location_name: l.locations?.name || '',
-        total_qty: l.remaining_qty,
-        total_value: l.remaining_qty * l.unit_cost,
-        weighted_avg_cost: l.unit_cost,
-        layer_count: 1,
-        uom: l.items?.unit_of_measure || 'EA',
-      });
-    }
+    const existing = layerAgg.get(key) || { qty: 0, value: 0, count: 0 };
+    existing.qty += Number(l.remaining_qty);
+    existing.value += Number(l.remaining_qty) * Number(l.unit_cost);
+    existing.count += 1;
+    layerAgg.set(key, existing);
   });
 
-  const summaries = Array.from(summaryMap.values()).filter(s =>
+  // Build summary from balances (source of truth for qty), enriched with FIFO cost when present
+  const allSummaries: ValuationSummary[] = balances.map(b => {
+    const key = `${b.item_id}-${b.location_id}`;
+    const agg = layerAgg.get(key);
+    const qty = Number(b.quantity);
+    const unitCost = agg && agg.qty > 0
+      ? agg.value / agg.qty
+      : Number(b.items?.unit_cost || 0);
+    return {
+      id: key,
+      item_code: b.items?.code || '',
+      item_name: b.items?.name || '',
+      location_name: b.locations?.name || '',
+      total_qty: qty,
+      unit_cost: unitCost,
+      total_value: qty * unitCost,
+      layer_count: agg?.count || 0,
+      uom: b.items?.unit_of_measure || 'EA',
+    };
+  });
+
+  const summaries = allSummaries.filter(s =>
     s.item_name.toLowerCase().includes(search.toLowerCase()) ||
     s.item_code.toLowerCase().includes(search.toLowerCase()) ||
     s.location_name.toLowerCase().includes(search.toLowerCase())
   );
 
   const totalInventoryValue = summaries.reduce((sum, s) => sum + s.total_value, 0);
+  const totalQty = summaries.reduce((sum, s) => sum + s.total_qty, 0);
   const totalItems = summaries.length;
   const totalLayers = layers.length;
 
@@ -141,9 +167,9 @@ export default function InventoryValuation() {
       render: (s: ValuationSummary) => <span className="font-medium">{s.total_qty} {s.uom}</span>,
     },
     {
-      key: 'avg_cost',
-      header: 'Wtd. Avg Cost',
-      render: (s: ValuationSummary) => formatCurrency(s.weighted_avg_cost),
+      key: 'unit_cost',
+      header: 'Unit Cost',
+      render: (s: ValuationSummary) => formatCurrency(s.unit_cost),
     },
     {
       key: 'total_value',
@@ -235,8 +261,24 @@ export default function InventoryValuation() {
             columns={summaryColumns}
             data={summaries}
             loading={loading}
-            emptyMessage="No inventory costing layers found. Layers are created when goods receipts are posted."
+            emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock and cost into inventory."
           />
+
+          {summaries.length > 0 && (
+            <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+              <div className="font-semibold">Grand Total</div>
+              <div className="flex gap-8 text-sm">
+                <div>
+                  <span className="text-muted-foreground mr-2">Total Quantity:</span>
+                  <span className="font-semibold">{totalQty.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground mr-2">Total Value:</span>
+                  <span className="font-bold text-base">{formatCurrency(totalInventoryValue)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
