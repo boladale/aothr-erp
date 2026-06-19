@@ -167,9 +167,9 @@ export default function InventoryValuation() {
       render: (s: ValuationSummary) => <span className="font-medium">{s.total_qty} {s.uom}</span>,
     },
     {
-      key: 'avg_cost',
-      header: 'Wtd. Avg Cost',
-      render: (s: ValuationSummary) => formatCurrency(s.weighted_avg_cost),
+      key: 'unit_cost',
+      header: 'Unit Cost',
+      render: (s: ValuationSummary) => formatCurrency(s.unit_cost),
     },
     {
       key: 'total_value',
