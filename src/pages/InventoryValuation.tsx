@@ -261,8 +261,24 @@ export default function InventoryValuation() {
             columns={summaryColumns}
             data={summaries}
             loading={loading}
-            emptyMessage="No inventory costing layers found. Layers are created when goods receipts are posted."
+            emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock and cost into inventory."
           />
+
+          {summaries.length > 0 && (
+            <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+              <div className="font-semibold">Grand Total</div>
+              <div className="flex gap-8 text-sm">
+                <div>
+                  <span className="text-muted-foreground mr-2">Total Quantity:</span>
+                  <span className="font-semibold">{totalQty.toLocaleString()}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground mr-2">Total Value:</span>
+                  <span className="font-bold text-base">{formatCurrency(totalInventoryValue)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
