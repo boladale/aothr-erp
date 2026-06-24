@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Boxes, TrendingUp, AlertTriangle, MapPin, Clock } from 'lucide-react';
+import { Boxes, TrendingUp, AlertTriangle, MapPin, Clock, Skull } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -111,7 +111,28 @@ export default function WarehouseReports() {
         })
         .sort((a, b) => (b.days_idle ?? 99999) - (a.days_idle ?? 99999));
 
-      return { metrics, inventoryByLocation, grnsByMonth, topItems, slowMoving };
+      const ONE_EIGHTY = 180 * 24 * 60 * 60 * 1000;
+      const deadStock = Object.entries(itemBalMap)
+        .filter(([id, d]) => d.totalQty > 0 && (!lastMovementMap[id] || (now - lastMovementMap[id]) >= ONE_EIGHTY))
+        .map(([id, d]) => {
+          const last = lastMovementMap[id];
+          const daysIdle = last ? Math.floor((now - last) / (24 * 60 * 60 * 1000)) : null;
+          const value = d.totalQty * d.unit_cost;
+          return {
+            id,
+            name: d.name,
+            code: d.code,
+            locations: Array.from(d.locations).join(', ') || '—',
+            quantity: d.totalQty,
+            unit_cost: d.unit_cost,
+            value,
+            last_movement: last ? new Date(last).toISOString().slice(0, 10) : 'Never',
+            days_idle: daysIdle,
+          };
+        })
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+      return { metrics, inventoryByLocation, grnsByMonth, topItems, slowMoving, deadStock };
     },
   });
 
@@ -121,6 +142,9 @@ export default function WarehouseReports() {
   const topItems = data?.topItems || [];
   const slowMoving = data?.slowMoving || [];
   const slowMovingTotalValue = slowMoving.reduce((s: number, r: any) => s + (r.value || 0), 0);
+  const deadStock = data?.deadStock || [];
+  const deadStockTotalValue = deadStock.reduce((s: number, r: any) => s + (r.value || 0), 0);
+  const deadStockTotalQty = deadStock.reduce((s: number, r: any) => s + (r.quantity || 0), 0);
 
 
   return (
@@ -141,6 +165,7 @@ export default function WarehouseReports() {
             <TabsTrigger value="grn-trend">GRN Trends</TabsTrigger>
             <TabsTrigger value="top-items">Top Items</TabsTrigger>
             <TabsTrigger value="slow-moving">Slow Moving</TabsTrigger>
+            <TabsTrigger value="dead-stock">Dead Stock</TabsTrigger>
           </TabsList>
 
 
@@ -223,6 +248,41 @@ export default function WarehouseReports() {
                   ]}
                   data={slowMoving}
                   loading={loading}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="dead-stock">
+            <div className="grid gap-4 md:grid-cols-3 mb-4">
+              <MetricCard title="Dead Stock Items" value={deadStock.length} icon={Skull} />
+              <MetricCard title="Total Quantity Tied Up" value={deadStockTotalQty.toLocaleString()} icon={Boxes} />
+              <MetricCard title="Capital Tied Up" value={formatCurrency(deadStockTotalValue, baseCurrency)} icon={AlertTriangle} />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2"><Skull className="h-4 w-4" /> Dead Stock (zero movement in 180+ days)</span>
+                  <Badge variant="destructive">
+                    {deadStock.length} items · {formatCurrency(deadStockTotalValue, baseCurrency)} tied up
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={[
+                    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code || '—'}</span> },
+                    { key: 'name', header: 'Item', render: (r: any) => <span className="font-medium">{r.name}</span> },
+                    { key: 'locations', header: 'Location(s)' },
+                    { key: 'quantity', header: 'Quantity', render: (r: any) => r.quantity.toLocaleString() },
+                    { key: 'unit_cost', header: 'Unit Cost', render: (r: any) => formatCurrency(r.unit_cost, baseCurrency) },
+                    { key: 'value', header: 'Value Tied Up', render: (r: any) => <span className="font-bold text-destructive">{formatCurrency(r.value, baseCurrency)}</span> },
+                    { key: 'last_movement', header: 'Last Movement' },
+                    { key: 'days_idle', header: 'Days Idle', render: (r: any) => r.days_idle === null ? <Badge variant="destructive">Never</Badge> : <Badge variant="destructive">{r.days_idle}d</Badge> },
+                  ]}
+                  data={deadStock}
+                  loading={loading}
+                  emptyMessage="No dead stock — all items had movement within the last 180 days."
                 />
               </CardContent>
             </Card>
