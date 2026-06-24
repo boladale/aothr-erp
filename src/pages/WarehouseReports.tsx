@@ -18,13 +18,21 @@ const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)',
 export default function WarehouseReports() {
   const { data, isLoading: loading } = useQuery({
     queryKey: ['warehouse-reports'],
+export default function WarehouseReports() {
+  const { currency } = useOrgCurrency();
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['warehouse-reports'],
     queryFn: async () => {
-      const [balancesRes, grnsRes, locationsRes, itemsRes] = await Promise.all([
-        supabase.from('inventory_balances').select('*, items(name), locations(name)'),
+      const [balancesRes, grnsRes, locationsRes, itemsRes, issueLinesRes, transferLinesRes, grnLinesRes] = await Promise.all([
+        supabase.from('inventory_balances').select('*, items(name, unit_cost), locations(name)'),
         supabase.from('goods_receipts').select('id, receipt_date, status'),
         supabase.from('locations').select('id, name').eq('is_active', true),
-        supabase.from('items').select('id, name').eq('is_active', true),
+        supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true),
+        supabase.from('inventory_issue_lines').select('item_id, inventory_issues!inner(issue_date, status)').eq('inventory_issues.status', 'posted'),
+        supabase.from('inventory_transfer_lines').select('item_id, inventory_transfers!inner(transfer_date, status)').eq('inventory_transfers.status', 'posted'),
+        supabase.from('goods_receipt_lines').select('item_id, goods_receipts!inner(receipt_date, status)').eq('goods_receipts.status', 'posted'),
       ]);
+
 
       const balances = balancesRes.data || [];
       const grns = grnsRes.data || [];
