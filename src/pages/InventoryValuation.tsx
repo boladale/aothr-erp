@@ -631,6 +631,41 @@ export default function InventoryValuation() {
         <PageHeader
           title="Inventory Valuation"
           description="FIFO-based inventory costing and valuation report"
+          actions={
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (summaries.length === 0) {
+                  toast.error('Nothing to export');
+                  return;
+                }
+                const rows = summaries.map(s => ({
+                  'Item Code': s.item_code,
+                  'Item Name': s.item_name,
+                  'Category': s.category,
+                  'Location': s.location_name,
+                  'Quantity': s.total_qty,
+                  'UoM': s.uom,
+                  'Unit Cost': Number(s.unit_cost.toFixed(2)),
+                  'Total Value': Number(s.total_value.toFixed(2)),
+                }));
+                rows.push({
+                  'Item Code': '',
+                  'Item Name': 'GRAND TOTAL',
+                  'Category': '',
+                  'Location': '',
+                  'Quantity': totalQty,
+                  'UoM': '',
+                  'Unit Cost': '' as any,
+                  'Total Value': Number(totalInventoryValue.toFixed(2)),
+                });
+                exportToXLSX(rows, `inventory-valuation-${format(new Date(), 'yyyy-MM-dd')}`, 'Valuation');
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export Excel
+            </Button>
+          }
         />
 
         {/* Summary Cards */}
