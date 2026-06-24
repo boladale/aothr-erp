@@ -24,7 +24,7 @@ interface CostingLayer {
   unit_cost: number;
   total_cost: number;
   created_at: string;
-  items: { code: string; name: string; unit_of_measure: string } | null;
+  items: { code: string; name: string; unit_of_measure: string; category: string | null } | null;
   locations: { code: string; name: string } | null;
 }
 
