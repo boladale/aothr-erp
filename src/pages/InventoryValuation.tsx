@@ -916,6 +916,85 @@ export default function InventoryValuation() {
                 );
               })()}
             </TabsContent>
+
+            <TabsContent value="historical" className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-sm text-muted-foreground flex-1 min-w-[260px]">
+                  Inventory value as at a past date. Reconstructed from FIFO cost layers: receipts on or before the date, minus consumptions on or before the date.
+                </p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn('w-[240px] justify-start text-left font-normal')}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      As of {format(asOfDate, 'PPP')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={asOfDate}
+                      onSelect={d => d && setAsOfDate(d)}
+                      disabled={d => d > new Date()}
+                      initialFocus
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">As-Of Date</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{format(asOfDate, 'dd MMM yyyy')}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Quantity on Hand</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{historicalQty.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Historical Value</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(historicalValue)}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <DataTable
+                columns={historicalColumns}
+                data={historicalRows}
+                loading={loading}
+                emptyMessage="No inventory on hand as at the selected date."
+              />
+
+              {historicalRows.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+                  <div className="font-semibold">Total as at {format(asOfDate, 'dd MMM yyyy')}</div>
+                  <div className="flex gap-8 text-sm">
+                    <div>
+                      <span className="text-muted-foreground mr-2">Quantity:</span>
+                      <span className="font-semibold">{historicalQty.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground mr-2">Value:</span>
+                      <span className="font-bold text-base">{formatCurrency(historicalValue)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
 
         </div>
