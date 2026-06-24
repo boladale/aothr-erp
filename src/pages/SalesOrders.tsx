@@ -92,9 +92,9 @@ export default function SalesOrders() {
       } else {
         const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
         const { data: so, error } = await supabase.from('sales_orders').insert({
-          order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
+          order_number: soNumber, customer_id: form.customer_id, location_id: form.location_id || null, expected_date: form.expected_date || null,
           subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
-        }).select().single();
+        } as any).select().single();
         if (error) throw error;
         await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
           order_id: so.id, line_number: i + 1, item_id: l.item_id || null,
