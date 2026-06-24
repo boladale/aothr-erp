@@ -6,10 +6,14 @@ import { DataTable } from '@/components/ui/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, DollarSign, Layers, Package, Clock } from 'lucide-react';
+import { Search, DollarSign, Layers, Package, Clock, CalendarIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency } from '@/lib/currency';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -70,12 +74,15 @@ interface GLAccountBalance {
 
 export default function InventoryValuation() {
   const [layers, setLayers] = useState<CostingLayer[]>([]);
+  const [allLayers, setAllLayers] = useState<CostingLayer[]>([]);
+  const [consumptions, setConsumptions] = useState<Array<{ layer_id: string; quantity: number; consumed_at: string }>>([]);
   const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [glInventory, setGlInventory] = useState<GLAccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
+  const [asOfDate, setAsOfDate] = useState<Date>(new Date());
 
 
 
@@ -85,12 +92,19 @@ export default function InventoryValuation() {
 
   const fetchData = async () => {
     try {
-      const [layersRes, balancesRes, glAcctsRes] = await Promise.all([
+      const [layersRes, allLayersRes, consRes, balancesRes, glAcctsRes] = await Promise.all([
         supabase
           .from('inventory_costing_layers')
           .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
           .gt('remaining_qty', 0)
           .order('receipt_date', { ascending: true }),
+        supabase
+          .from('inventory_costing_layers')
+          .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
+          .order('receipt_date', { ascending: true }),
+        supabase
+          .from('inventory_costing_consumptions')
+          .select('layer_id, quantity, consumed_at'),
         supabase
           .from('inventory_balances')
           .select('*, items(code, name, unit_of_measure, unit_cost, category), locations(code, name)')
@@ -103,9 +117,13 @@ export default function InventoryValuation() {
       ]);
 
       if (layersRes.error) throw layersRes.error;
+      if (allLayersRes.error) throw allLayersRes.error;
+      if (consRes.error) throw consRes.error;
       if (balancesRes.error) throw balancesRes.error;
       if (glAcctsRes.error) throw glAcctsRes.error;
       setLayers((layersRes.data || []) as unknown as CostingLayer[]);
+      setAllLayers((allLayersRes.data || []) as unknown as CostingLayer[]);
+      setConsumptions((consRes.data || []) as any);
       setBalances((balancesRes.data || []) as unknown as BalanceRow[]);
 
       // Sum posted journal lines per inventory account
@@ -506,6 +524,105 @@ export default function InventoryValuation() {
     },
   ];
 
+  // ===== Historical Valuation (as-of date) =====
+  interface HistoricalRow {
+    id: string;
+    item_code: string;
+    item_name: string;
+    category: string;
+    location_id: string;
+    location_name: string;
+    uom: string;
+    quantity: number;
+    avg_cost: number;
+    total_value: number;
+  }
+  const asOfEnd = new Date(asOfDate);
+  asOfEnd.setHours(23, 59, 59, 999);
+  const asOfMs = asOfEnd.getTime();
+
+  // Sum consumptions per layer up to as-of date
+  const consumedByLayer = new Map<string, number>();
+  consumptions.forEach(c => {
+    if (new Date(c.consumed_at).getTime() <= asOfMs) {
+      consumedByLayer.set(c.layer_id, (consumedByLayer.get(c.layer_id) || 0) + Number(c.quantity));
+    }
+  });
+
+  const histAgg = new Map<string, HistoricalRow>();
+  allLayers.forEach(l => {
+    if (new Date(l.receipt_date).getTime() > asOfMs) return;
+    const consumedAtDate = consumedByLayer.get(l.id) || 0;
+    const remaining = Math.max(0, Number(l.original_qty) - consumedAtDate);
+    if (remaining <= 0) return;
+    const key = `${l.item_id}-${l.location_id}`;
+    const value = remaining * Number(l.unit_cost);
+    const existing = histAgg.get(key);
+    if (existing) {
+      existing.quantity += remaining;
+      existing.total_value += value;
+    } else {
+      histAgg.set(key, {
+        id: key,
+        item_code: l.items?.code || '',
+        item_name: l.items?.name || '',
+        category: l.items?.category || 'Uncategorized',
+        location_id: l.location_id,
+        location_name: l.locations?.name || '',
+        uom: l.items?.unit_of_measure || 'EA',
+        quantity: remaining,
+        avg_cost: 0,
+        total_value: value,
+      });
+    }
+  });
+  const historicalRows = Array.from(histAgg.values())
+    .map(h => ({ ...h, avg_cost: h.quantity > 0 ? h.total_value / h.quantity : 0 }))
+    .filter(h => {
+      const matchSearch =
+        h.item_name.toLowerCase().includes(searchLower) ||
+        h.item_code.toLowerCase().includes(searchLower) ||
+        h.location_name.toLowerCase().includes(searchLower);
+      const matchCategory = categoryFilter === 'all' || h.category === categoryFilter;
+      const matchLocation = locationFilter === 'all' || h.location_id === locationFilter;
+      return matchSearch && matchCategory && matchLocation;
+    })
+    .sort((a, b) => a.item_name.localeCompare(b.item_name));
+
+  const historicalQty = historicalRows.reduce((s, h) => s + h.quantity, 0);
+  const historicalValue = historicalRows.reduce((s, h) => s + h.total_value, 0);
+
+  const historicalColumns = [
+    {
+      key: 'item',
+      header: 'Item',
+      render: (h: HistoricalRow) => (
+        <div>
+          <p className="font-medium">{h.item_name}</p>
+          <p className="text-xs text-muted-foreground">{h.item_code}</p>
+        </div>
+      ),
+    },
+    { key: 'location', header: 'Location', render: (h: HistoricalRow) => h.location_name },
+    {
+      key: 'qty',
+      header: 'Quantity',
+      render: (h: HistoricalRow) => <span className="font-medium">{h.quantity.toLocaleString()} {h.uom}</span>,
+    },
+    {
+      key: 'avg_cost',
+      header: 'Avg Unit Cost',
+      render: (h: HistoricalRow) => formatCurrency(h.avg_cost),
+    },
+    {
+      key: 'total_value',
+      header: 'Total Value',
+      render: (h: HistoricalRow) => <span className="font-semibold">{formatCurrency(h.total_value)}</span>,
+    },
+  ];
+
+
+
   return (
     <AppLayout>
       <div className="page-container">
@@ -611,6 +728,7 @@ export default function InventoryValuation() {
               <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
               <TabsTrigger value="wavg">Weighted Average</TabsTrigger>
               <TabsTrigger value="gl">GL Reconciliation</TabsTrigger>
+              <TabsTrigger value="historical">Historical</TabsTrigger>
             </TabsList>
 
 
@@ -797,6 +915,85 @@ export default function InventoryValuation() {
                   </>
                 );
               })()}
+            </TabsContent>
+
+            <TabsContent value="historical" className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-sm text-muted-foreground flex-1 min-w-[260px]">
+                  Inventory value as at a past date. Reconstructed from FIFO cost layers: receipts on or before the date, minus consumptions on or before the date.
+                </p>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn('w-[240px] justify-start text-left font-normal')}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      As of {format(asOfDate, 'PPP')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={asOfDate}
+                      onSelect={d => d && setAsOfDate(d)}
+                      disabled={d => d > new Date()}
+                      initialFocus
+                      className={cn('p-3 pointer-events-auto')}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">As-Of Date</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{format(asOfDate, 'dd MMM yyyy')}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Quantity on Hand</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{historicalQty.toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Historical Value</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(historicalValue)}</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <DataTable
+                columns={historicalColumns}
+                data={historicalRows}
+                loading={loading}
+                emptyMessage="No inventory on hand as at the selected date."
+              />
+
+              {historicalRows.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+                  <div className="font-semibold">Total as at {format(asOfDate, 'dd MMM yyyy')}</div>
+                  <div className="flex gap-8 text-sm">
+                    <div>
+                      <span className="text-muted-foreground mr-2">Quantity:</span>
+                      <span className="font-semibold">{historicalQty.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground mr-2">Value:</span>
+                      <span className="font-bold text-base">{formatCurrency(historicalValue)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
 
