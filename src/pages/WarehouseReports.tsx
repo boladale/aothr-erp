@@ -252,6 +252,41 @@ export default function WarehouseReports() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="dead-stock">
+            <div className="grid gap-4 md:grid-cols-3 mb-4">
+              <MetricCard title="Dead Stock Items" value={deadStock.length} icon={Skull} />
+              <MetricCard title="Total Quantity Tied Up" value={deadStockTotalQty.toLocaleString()} icon={Boxes} />
+              <MetricCard title="Capital Tied Up" value={formatCurrency(deadStockTotalValue, baseCurrency)} icon={AlertTriangle} />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2"><Skull className="h-4 w-4" /> Dead Stock (zero movement in 180+ days)</span>
+                  <Badge variant="destructive">
+                    {deadStock.length} items · {formatCurrency(deadStockTotalValue, baseCurrency)} tied up
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={[
+                    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code || '—'}</span> },
+                    { key: 'name', header: 'Item', render: (r: any) => <span className="font-medium">{r.name}</span> },
+                    { key: 'locations', header: 'Location(s)' },
+                    { key: 'quantity', header: 'Quantity', render: (r: any) => r.quantity.toLocaleString() },
+                    { key: 'unit_cost', header: 'Unit Cost', render: (r: any) => formatCurrency(r.unit_cost, baseCurrency) },
+                    { key: 'value', header: 'Value Tied Up', render: (r: any) => <span className="font-bold text-destructive">{formatCurrency(r.value, baseCurrency)}</span> },
+                    { key: 'last_movement', header: 'Last Movement' },
+                    { key: 'days_idle', header: 'Days Idle', render: (r: any) => r.days_idle === null ? <Badge variant="destructive">Never</Badge> : <Badge variant="destructive">{r.days_idle}d</Badge> },
+                  ]}
+                  data={deadStock}
+                  loading={loading}
+                  emptyMessage="No dead stock — all items had movement within the last 180 days."
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
 
       </div>
