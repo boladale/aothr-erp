@@ -58,6 +58,7 @@ interface AgingBucket {
 }
 
 interface GLAccountBalance {
+  id: string;
   account_id: string;
   account_code: string;
   account_name: string;
@@ -65,6 +66,7 @@ interface GLAccountBalance {
   credit: number;
   balance: number;
 }
+
 
 export default function InventoryValuation() {
   const [layers, setLayers] = useState<CostingLayer[]>([]);
