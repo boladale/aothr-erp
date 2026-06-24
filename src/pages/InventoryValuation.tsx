@@ -220,6 +220,8 @@ export default function InventoryValuation() {
   });
 
   const totalInventoryValue = summaries.reduce((sum, s) => sum + s.total_value, 0);
+  // Unfiltered total for GL reconciliation so search/category/location filters don't affect the match
+  const totalInventoryValueAll = allSummaries.reduce((sum, s) => sum + s.total_value, 0);
   const totalQty = summaries.reduce((sum, s) => sum + s.total_qty, 0);
   const totalItems = summaries.length;
   const totalLayers = layers.length;
