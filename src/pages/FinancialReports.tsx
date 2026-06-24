@@ -35,36 +35,54 @@ export default function FinancialReports() {
   });
 
   const { data: balances = [], isLoading: loading } = useQuery<AccountBalance[]>({
-    queryKey: ['gl-account-balances', selectedPeriod],
+    queryKey: ['gl-balances-from-lines', selectedPeriod],
     queryFn: async () => {
-      let query = supabase.from('gl_account_balances').select('*, account:gl_accounts(account_code, account_name, account_type, is_header, parent_id, normal_balance)');
-      if (selectedPeriod !== 'all') query = query.eq('fiscal_period_id', selectedPeriod);
-      const { data } = await query;
+      // Load all active GL accounts so empty ones still appear
+      const { data: accts, error: acctsErr } = await supabase
+        .from('gl_accounts')
+        .select('id, account_code, account_name, account_type, is_header, parent_id, normal_balance')
+        .eq('is_active', true);
+      if (acctsErr) throw acctsErr;
 
-      const aggMap = new Map<string, AccountBalance>();
-      (data || []).forEach((b: any) => {
-        const key = b.account_id;
-        const existing = aggMap.get(key);
-        if (existing) {
-          existing.debit_total += b.debit_total;
-          existing.credit_total += b.credit_total;
-          existing.balance += b.balance;
-        } else {
-          aggMap.set(key, {
-            account_id: b.account_id,
-            account_code: b.account?.account_code || '',
-            account_name: b.account?.account_name || '',
-            account_type: b.account?.account_type || '',
-            is_header: b.account?.is_header || false,
-            parent_id: b.account?.parent_id || null,
-            normal_balance: b.account?.normal_balance || 'debit',
-            debit_total: b.debit_total,
-            credit_total: b.credit_total,
-            balance: b.balance,
-          });
-        }
+      // Sum posted journal lines directly so Balance Sheet matches sub-ledger reports
+      // (Inventory Valuation, AR/AP aging, etc.) instead of relying on a cached table.
+      let linesQuery = supabase
+        .from('gl_journal_lines')
+        .select('account_id, debit, credit, gl_journal_entries!inner(status, fiscal_period_id)')
+        .eq('gl_journal_entries.status', 'posted');
+      if (selectedPeriod !== 'all') {
+        linesQuery = linesQuery.eq('gl_journal_entries.fiscal_period_id', selectedPeriod);
+      }
+      const { data: lines, error: linesErr } = await linesQuery;
+      if (linesErr) throw linesErr;
+
+      const sums = new Map<string, { d: number; c: number }>();
+      (lines || []).forEach((l: any) => {
+        const s = sums.get(l.account_id) || { d: 0, c: 0 };
+        s.d += Number(l.debit || 0);
+        s.c += Number(l.credit || 0);
+        sums.set(l.account_id, s);
       });
-      return Array.from(aggMap.values()).sort((a, b) => a.account_code.localeCompare(b.account_code));
+
+      return (accts || [])
+        .map((a: any) => {
+          const s = sums.get(a.id) || { d: 0, c: 0 };
+          const normal = a.normal_balance || (['asset', 'expense'].includes(a.account_type) ? 'debit' : 'credit');
+          const balance = normal === 'debit' ? s.d - s.c : s.c - s.d;
+          return {
+            account_id: a.id,
+            account_code: a.account_code || '',
+            account_name: a.account_name || '',
+            account_type: a.account_type || '',
+            is_header: a.is_header || false,
+            parent_id: a.parent_id || null,
+            normal_balance: normal,
+            debit_total: s.d,
+            credit_total: s.c,
+            balance,
+          } as AccountBalance;
+        })
+        .sort((a, b) => a.account_code.localeCompare(b.account_code));
     },
   });
 
