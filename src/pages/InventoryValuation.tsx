@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, DollarSign, Layers, Package, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 interface CostingLayer {
   id: string;
@@ -22,7 +24,7 @@ interface CostingLayer {
   unit_cost: number;
   total_cost: number;
   created_at: string;
-  items: { code: string; name: string; unit_of_measure: string } | null;
+  items: { code: string; name: string; unit_of_measure: string; category: string | null } | null;
   locations: { code: string; name: string } | null;
 }
 
@@ -74,7 +76,7 @@ export default function InventoryValuation() {
       const [layersRes, balancesRes] = await Promise.all([
         supabase
           .from('inventory_costing_layers')
-          .select('*, items(code, name, unit_of_measure), locations(code, name)')
+          .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
           .gt('remaining_qty', 0)
           .order('receipt_date', { ascending: true }),
         supabase
@@ -201,6 +203,78 @@ export default function InventoryValuation() {
     },
   ];
 
+  // Filter FIFO layers (already sorted oldest-first by query)
+  const searchLower = search.toLowerCase();
+  const filteredLayers = layers.filter(l => {
+    const itemName = l.items?.name || '';
+    const itemCode = l.items?.code || '';
+    const locName = l.locations?.name || '';
+    const category = l.items?.category || 'Uncategorized';
+    const matchSearch =
+      itemName.toLowerCase().includes(searchLower) ||
+      itemCode.toLowerCase().includes(searchLower) ||
+      locName.toLowerCase().includes(searchLower);
+    const matchCategory = categoryFilter === 'all' || category === categoryFilter;
+    const matchLocation = locationFilter === 'all' || l.location_id === locationFilter;
+    return matchSearch && matchCategory && matchLocation;
+  });
+
+  const filteredLayersQty = filteredLayers.reduce((s, l) => s + Number(l.remaining_qty), 0);
+  const filteredLayersValue = filteredLayers.reduce(
+    (s, l) => s + Number(l.remaining_qty) * Number(l.unit_cost),
+    0
+  );
+
+  const layerColumns = [
+    {
+      key: 'receipt_date',
+      header: 'Receipt Date',
+      render: (l: CostingLayer) => (
+        <div>
+          <p className="font-medium">{format(new Date(l.receipt_date), 'dd MMM yyyy')}</p>
+          <p className="text-xs text-muted-foreground capitalize">{l.source_type?.replace(/_/g, ' ')}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'item',
+      header: 'Item',
+      render: (l: CostingLayer) => (
+        <div>
+          <p className="font-medium">{l.items?.name}</p>
+          <p className="text-xs text-muted-foreground">{l.items?.code}</p>
+        </div>
+      ),
+    },
+    { key: 'location', header: 'Location', render: (l: CostingLayer) => l.locations?.name || '-' },
+    {
+      key: 'original_qty',
+      header: 'Original Qty',
+      render: (l: CostingLayer) => `${Number(l.original_qty).toLocaleString()} ${l.items?.unit_of_measure || ''}`,
+    },
+    {
+      key: 'remaining_qty',
+      header: 'Remaining Qty',
+      render: (l: CostingLayer) => (
+        <span className="font-medium">{Number(l.remaining_qty).toLocaleString()} {l.items?.unit_of_measure || ''}</span>
+      ),
+    },
+    {
+      key: 'unit_cost',
+      header: 'Layer Unit Cost',
+      render: (l: CostingLayer) => formatCurrency(Number(l.unit_cost)),
+    },
+    {
+      key: 'remaining_value',
+      header: 'Remaining Value',
+      render: (l: CostingLayer) => (
+        <span className="font-semibold">
+          {formatCurrency(Number(l.remaining_qty) * Number(l.unit_cost))}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <AppLayout>
       <div className="page-container">
@@ -300,28 +374,64 @@ export default function InventoryValuation() {
           </div>
 
 
-          <DataTable
-            columns={summaryColumns}
-            data={summaries}
-            loading={loading}
-            emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock and cost into inventory."
-          />
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList>
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
+            </TabsList>
 
-          {summaries.length > 0 && (
-            <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
-              <div className="font-semibold">Grand Total</div>
-              <div className="flex gap-8 text-sm">
-                <div>
-                  <span className="text-muted-foreground mr-2">Total Quantity:</span>
-                  <span className="font-semibold">{totalQty.toLocaleString()}</span>
+            <TabsContent value="summary" className="space-y-4">
+              <DataTable
+                columns={summaryColumns}
+                data={summaries}
+                loading={loading}
+                emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock and cost into inventory."
+              />
+
+              {summaries.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+                  <div className="font-semibold">Grand Total</div>
+                  <div className="flex gap-8 text-sm">
+                    <div>
+                      <span className="text-muted-foreground mr-2">Total Quantity:</span>
+                      <span className="font-semibold">{totalQty.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground mr-2">Total Value:</span>
+                      <span className="font-bold text-base">{formatCurrency(totalInventoryValue)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground mr-2">Total Value:</span>
-                  <span className="font-bold text-base">{formatCurrency(totalInventoryValue)}</span>
+              )}
+            </TabsContent>
+
+            <TabsContent value="fifo" className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Oldest cost layers first. Remaining stock is valued at the unit cost of the layer it was received in (FIFO).
+              </p>
+              <DataTable
+                columns={layerColumns}
+                data={filteredLayers}
+                loading={loading}
+                emptyMessage="No active FIFO layers. Post a Goods Receipt to create cost layers."
+              />
+              {filteredLayers.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+                  <div className="font-semibold">FIFO Total</div>
+                  <div className="flex gap-8 text-sm">
+                    <div>
+                      <span className="text-muted-foreground mr-2">Remaining Qty:</span>
+                      <span className="font-semibold">{filteredLayersQty.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground mr-2">Remaining Value:</span>
+                      <span className="font-bold text-base">{formatCurrency(filteredLayersValue)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </AppLayout>
