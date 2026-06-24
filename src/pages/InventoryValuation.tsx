@@ -728,6 +728,7 @@ export default function InventoryValuation() {
               <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
               <TabsTrigger value="wavg">Weighted Average</TabsTrigger>
               <TabsTrigger value="gl">GL Reconciliation</TabsTrigger>
+              <TabsTrigger value="historical">Historical</TabsTrigger>
             </TabsList>
 
 
