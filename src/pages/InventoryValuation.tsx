@@ -129,7 +129,9 @@ export default function InventoryValuation() {
         gl = accts.map(a => {
           const s = sums.get(a.id) || { d: 0, c: 0 };
           return {
+            id: a.id,
             account_id: a.id,
+
             account_code: a.account_code,
             account_name: a.account_name,
             debit: s.d,
