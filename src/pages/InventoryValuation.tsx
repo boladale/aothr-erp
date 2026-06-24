@@ -31,7 +31,7 @@ interface BalanceRow {
   item_id: string;
   location_id: string;
   quantity: number;
-  items: { code: string; name: string; unit_of_measure: string; unit_cost: number | null } | null;
+  items: { code: string; name: string; unit_of_measure: string; unit_cost: number | null; category: string | null } | null;
   locations: { code: string; name: string } | null;
 }
 
@@ -39,6 +39,8 @@ interface ValuationSummary {
   id: string;
   item_code: string;
   item_name: string;
+  category: string;
+  location_id: string;
   location_name: string;
   total_qty: number;
   unit_cost: number;
