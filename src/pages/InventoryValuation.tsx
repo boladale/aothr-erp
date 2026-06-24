@@ -92,12 +92,19 @@ export default function InventoryValuation() {
 
   const fetchData = async () => {
     try {
-      const [layersRes, balancesRes, glAcctsRes] = await Promise.all([
+      const [layersRes, allLayersRes, consRes, balancesRes, glAcctsRes] = await Promise.all([
         supabase
           .from('inventory_costing_layers')
           .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
           .gt('remaining_qty', 0)
           .order('receipt_date', { ascending: true }),
+        supabase
+          .from('inventory_costing_layers')
+          .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
+          .order('receipt_date', { ascending: true }),
+        supabase
+          .from('inventory_costing_consumptions')
+          .select('layer_id, quantity, consumed_at'),
         supabase
           .from('inventory_balances')
           .select('*, items(code, name, unit_of_measure, unit_cost, category), locations(code, name)')
@@ -110,9 +117,13 @@ export default function InventoryValuation() {
       ]);
 
       if (layersRes.error) throw layersRes.error;
+      if (allLayersRes.error) throw allLayersRes.error;
+      if (consRes.error) throw consRes.error;
       if (balancesRes.error) throw balancesRes.error;
       if (glAcctsRes.error) throw glAcctsRes.error;
       setLayers((layersRes.data || []) as unknown as CostingLayer[]);
+      setAllLayers((allLayersRes.data || []) as unknown as CostingLayer[]);
+      setConsumptions((consRes.data || []) as any);
       setBalances((balancesRes.data || []) as unknown as BalanceRow[]);
 
       // Sum posted journal lines per inventory account
