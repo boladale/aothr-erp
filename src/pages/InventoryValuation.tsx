@@ -57,9 +57,19 @@ interface AgingBucket {
   qty: number;
 }
 
+interface GLAccountBalance {
+  account_id: string;
+  account_code: string;
+  account_name: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
 export default function InventoryValuation() {
   const [layers, setLayers] = useState<CostingLayer[]>([]);
   const [balances, setBalances] = useState<BalanceRow[]>([]);
+  const [glInventory, setGlInventory] = useState<GLAccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -73,7 +83,7 @@ export default function InventoryValuation() {
 
   const fetchData = async () => {
     try {
-      const [layersRes, balancesRes] = await Promise.all([
+      const [layersRes, balancesRes, glAcctsRes] = await Promise.all([
         supabase
           .from('inventory_costing_layers')
           .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
@@ -83,12 +93,50 @@ export default function InventoryValuation() {
           .from('inventory_balances')
           .select('*, items(code, name, unit_of_measure, unit_cost, category), locations(code, name)')
           .gt('quantity', 0),
+        supabase
+          .from('gl_accounts')
+          .select('id, account_code, account_name')
+          .like('account_code', '14%')
+          .eq('is_active', true),
       ]);
 
       if (layersRes.error) throw layersRes.error;
       if (balancesRes.error) throw balancesRes.error;
+      if (glAcctsRes.error) throw glAcctsRes.error;
       setLayers((layersRes.data || []) as unknown as CostingLayer[]);
       setBalances((balancesRes.data || []) as unknown as BalanceRow[]);
+
+      // Sum posted journal lines per inventory account
+      const accts = (glAcctsRes.data || []) as Array<{ id: string; account_code: string; account_name: string }>;
+      const acctIds = accts.map(a => a.id);
+      let gl: GLAccountBalance[] = [];
+      if (acctIds.length > 0) {
+        const { data: linesData, error: linesErr } = await supabase
+          .from('gl_journal_lines')
+          .select('account_id, debit, credit, gl_journal_entries!inner(status)')
+          .in('account_id', acctIds)
+          .eq('gl_journal_entries.status', 'posted');
+        if (linesErr) throw linesErr;
+        const sums = new Map<string, { d: number; c: number }>();
+        (linesData || []).forEach((l: any) => {
+          const s = sums.get(l.account_id) || { d: 0, c: 0 };
+          s.d += Number(l.debit || 0);
+          s.c += Number(l.credit || 0);
+          sums.set(l.account_id, s);
+        });
+        gl = accts.map(a => {
+          const s = sums.get(a.id) || { d: 0, c: 0 };
+          return {
+            account_id: a.id,
+            account_code: a.account_code,
+            account_name: a.account_name,
+            debit: s.d,
+            credit: s.c,
+            balance: s.d - s.c,
+          };
+        }).filter(g => g.debit !== 0 || g.credit !== 0);
+      }
+      setGlInventory(gl);
     } catch (error) {
       console.error('Error fetching inventory valuation:', error);
       toast.error('Failed to load inventory valuation');
@@ -96,6 +144,7 @@ export default function InventoryValuation() {
       setLoading(false);
     }
   };
+
 
   // Aggregate FIFO layers per item+location for weighted-avg cost + layer count
   const layerAgg = new Map<string, { qty: number; value: number; count: number }>();
