@@ -193,7 +193,7 @@ export default function InventoryIssues() {
       return issueNumber;
     },
     onSuccess: (issueNumber) => {
-      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Issue ${issueNumber} created as draft`);
       setDialogOpen(false);
       resetForm();
@@ -216,7 +216,7 @@ export default function InventoryIssues() {
       return issue.issue_number;
     },
     onSuccess: (num) => {
-      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Issue ${num} posted — inventory reduced & GL entries created`);
     },
     onError: (e: any) => toast.error(e.message || 'Failed to post issue'),
@@ -324,7 +324,7 @@ export default function InventoryIssues() {
       return returnNumber;
     },
     onSuccess: (num) => {
-      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Return ${num} posted — inventory restored & GL reversed`);
       setReturnDialogOpen(false);
     },
