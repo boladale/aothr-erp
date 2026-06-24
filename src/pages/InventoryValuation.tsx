@@ -220,6 +220,8 @@ export default function InventoryValuation() {
   });
 
   const totalInventoryValue = summaries.reduce((sum, s) => sum + s.total_value, 0);
+  // Unfiltered total for GL reconciliation so search/category/location filters don't affect the match
+  const totalInventoryValueAll = allSummaries.reduce((sum, s) => sum + s.total_value, 0);
   const totalQty = summaries.reduce((sum, s) => sum + s.total_qty, 0);
   const totalItems = summaries.length;
   const totalLayers = layers.length;
@@ -872,7 +874,7 @@ export default function InventoryValuation() {
               </p>
               {(() => {
                 const glTotal = glInventory.reduce((s, g) => s + g.balance, 0);
-                const diff = totalInventoryValue - glTotal;
+                const diff = totalInventoryValueAll - glTotal;
                 const reconciled = Math.abs(diff) < 0.01;
                 return (
                   <>
@@ -882,8 +884,8 @@ export default function InventoryValuation() {
                           <CardTitle className="text-sm font-medium">Inventory Valuation</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{formatCurrency(totalInventoryValue)}</div>
-                          <p className="text-xs text-muted-foreground">Stock on hand × cost</p>
+                          <div className="text-2xl font-bold">{formatCurrency(totalInventoryValueAll)}</div>
+                          <p className="text-xs text-muted-foreground">Stock on hand × cost (all items)</p>
                         </CardContent>
                       </Card>
                       <Card>
