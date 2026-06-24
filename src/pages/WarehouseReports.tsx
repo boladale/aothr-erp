@@ -111,7 +111,28 @@ export default function WarehouseReports() {
         })
         .sort((a, b) => (b.days_idle ?? 99999) - (a.days_idle ?? 99999));
 
-      return { metrics, inventoryByLocation, grnsByMonth, topItems, slowMoving };
+      const ONE_EIGHTY = 180 * 24 * 60 * 60 * 1000;
+      const deadStock = Object.entries(itemBalMap)
+        .filter(([id, d]) => d.totalQty > 0 && (!lastMovementMap[id] || (now - lastMovementMap[id]) >= ONE_EIGHTY))
+        .map(([id, d]) => {
+          const last = lastMovementMap[id];
+          const daysIdle = last ? Math.floor((now - last) / (24 * 60 * 60 * 1000)) : null;
+          const value = d.totalQty * d.unit_cost;
+          return {
+            id,
+            name: d.name,
+            code: d.code,
+            locations: Array.from(d.locations).join(', ') || '—',
+            quantity: d.totalQty,
+            unit_cost: d.unit_cost,
+            value,
+            last_movement: last ? new Date(last).toISOString().slice(0, 10) : 'Never',
+            days_idle: daysIdle,
+          };
+        })
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+      return { metrics, inventoryByLocation, grnsByMonth, topItems, slowMoving, deadStock };
     },
   });
 
@@ -121,6 +142,9 @@ export default function WarehouseReports() {
   const topItems = data?.topItems || [];
   const slowMoving = data?.slowMoving || [];
   const slowMovingTotalValue = slowMoving.reduce((s: number, r: any) => s + (r.value || 0), 0);
+  const deadStock = data?.deadStock || [];
+  const deadStockTotalValue = deadStock.reduce((s: number, r: any) => s + (r.value || 0), 0);
+  const deadStockTotalQty = deadStock.reduce((s: number, r: any) => s + (r.quantity || 0), 0);
 
 
   return (
