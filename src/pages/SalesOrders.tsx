@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Check, Truck, Pencil } from 'lucide-react';
+import { Plus, Check, Truck, Pencil, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -116,6 +116,16 @@ export default function SalesOrders() {
     onError: (err: any) => toast.error(err.message),
   });
 
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!confirm('Cancel this Sales Order? Reserved stock will be released.')) throw new Error('cancelled');
+      const { error } = await supabase.from('sales_orders').update({ status: 'cancelled' as any }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success('Order cancelled — reservation released'); },
+    onError: (err: any) => { if (err.message !== 'cancelled') toast.error(err.message); },
+  });
+
   const openDelivery = async (order: any) => {
     const { data: soLines } = await supabase.from('sales_order_lines').select('*, items(name)').eq('order_id', order.id);
     const deliverableLines = (soLines || []).filter((l: any) => l.qty_delivered < l.quantity);
@@ -203,7 +213,10 @@ export default function SalesOrders() {
                             </>
                           )}
                           {['confirmed', 'partially_delivered'].includes(o.status) && (
-                            <Button variant="outline" size="sm" onClick={() => openDelivery(o)}><Truck className="h-3 w-3 mr-1" /> Deliver</Button>
+                            <>
+                              <Button variant="outline" size="sm" onClick={() => openDelivery(o)}><Truck className="h-3 w-3 mr-1" /> Deliver</Button>
+                              <Button variant="outline" size="sm" onClick={() => cancelMutation.mutate(o.id)}><X className="h-3 w-3 mr-1" /> Cancel</Button>
+                            </>
                           )}
                           <DeleteDraftButton
                             table="sales_orders"
