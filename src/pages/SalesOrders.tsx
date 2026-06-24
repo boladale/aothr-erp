@@ -272,6 +272,13 @@ export default function SalesOrders() {
                 </Select>
               </div>
               <div><Label>Expected Date</Label><Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} /></div>
+              <div className="col-span-2">
+                <Label>Ship From Location <span className="text-xs text-muted-foreground">(required to confirm — reserves stock)</span></Label>
+                <Select value={form.location_id} onValueChange={v => setForm({ ...form, location_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select dispatch location" /></SelectTrigger>
+                  <SelectContent>{locations.map((l: any) => <SelectItem key={l.id} value={l.id}>{l.code} - {l.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2"><Label>Lines</Label><Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" /> Add Line</Button></div>
