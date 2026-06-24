@@ -275,6 +275,184 @@ export default function InventoryValuation() {
     },
   ];
 
+  // ===== Weighted Average Valuation =====
+  interface WavgSummary {
+    id: string;
+    item_id: string;
+    item_code: string;
+    item_name: string;
+    category: string;
+    location_id: string;
+    location_name: string;
+    uom: string;
+    total_qty: number;
+    total_value: number;
+    unit_cost: number;
+  }
+  const wavgMap = new Map<string, WavgSummary>();
+  layers.forEach(l => {
+    const key = `${l.item_id}-${l.location_id}`;
+    const existing = wavgMap.get(key);
+    const qty = Number(l.remaining_qty);
+    const val = qty * Number(l.unit_cost);
+    if (existing) {
+      existing.total_qty += qty;
+      existing.total_value += val;
+    } else {
+      wavgMap.set(key, {
+        id: key,
+        item_id: l.item_id,
+        item_code: l.items?.code || '',
+        item_name: l.items?.name || '',
+        category: l.items?.category || 'Uncategorized',
+        location_id: l.location_id,
+        location_name: l.locations?.name || '',
+        uom: l.items?.unit_of_measure || 'EA',
+        total_qty: qty,
+        total_value: val,
+        unit_cost: 0,
+      });
+    }
+  });
+  const wavgSummaries = Array.from(wavgMap.values())
+    .map(w => ({ ...w, unit_cost: w.total_qty > 0 ? w.total_value / w.total_qty : 0 }))
+    .filter(w => {
+      const matchSearch =
+        w.item_name.toLowerCase().includes(searchLower) ||
+        w.item_code.toLowerCase().includes(searchLower) ||
+        w.location_name.toLowerCase().includes(searchLower);
+      const matchCategory = categoryFilter === 'all' || w.category === categoryFilter;
+      const matchLocation = locationFilter === 'all' || w.location_id === locationFilter;
+      return matchSearch && matchCategory && matchLocation;
+    })
+    .sort((a, b) => a.item_name.localeCompare(b.item_name));
+
+  const wavgTotalQty = wavgSummaries.reduce((s, w) => s + w.total_qty, 0);
+  const wavgTotalValue = wavgSummaries.reduce((s, w) => s + w.total_value, 0);
+
+  const wavgColumns = [
+    {
+      key: 'item',
+      header: 'Item',
+      render: (w: WavgSummary) => (
+        <div>
+          <p className="font-medium">{w.item_name}</p>
+          <p className="text-xs text-muted-foreground">{w.item_code}</p>
+        </div>
+      ),
+    },
+    { key: 'location', header: 'Location', render: (w: WavgSummary) => w.location_name },
+    {
+      key: 'qty',
+      header: 'Quantity',
+      render: (w: WavgSummary) => <span className="font-medium">{w.total_qty.toLocaleString()} {w.uom}</span>,
+    },
+    {
+      key: 'unit_cost',
+      header: 'WAVG Unit Cost',
+      render: (w: WavgSummary) => formatCurrency(w.unit_cost),
+    },
+    {
+      key: 'total_value',
+      header: 'Total Value',
+      render: (w: WavgSummary) => <span className="font-semibold">{formatCurrency(w.total_value)}</span>,
+    },
+  ];
+
+  // Running WAVG history per item+location, recalculated after each receipt
+  interface WavgHistoryRow {
+    id: string;
+    receipt_date: string;
+    item_code: string;
+    item_name: string;
+    location_name: string;
+    uom: string;
+    receipt_qty: number;
+    receipt_unit_cost: number;
+    running_qty: number;
+    running_value: number;
+    running_avg_cost: number;
+  }
+  const runningMap = new Map<string, { qty: number; value: number }>();
+  const sortedLayers = [...layers].sort(
+    (a, b) => new Date(a.receipt_date).getTime() - new Date(b.receipt_date).getTime()
+  );
+  const wavgHistoryAll: WavgHistoryRow[] = sortedLayers.map(l => {
+    const key = `${l.item_id}-${l.location_id}`;
+    const prev = runningMap.get(key) || { qty: 0, value: 0 };
+    const rQty = Number(l.original_qty);
+    const rCost = Number(l.unit_cost);
+    const newQty = prev.qty + rQty;
+    const newValue = prev.value + rQty * rCost;
+    runningMap.set(key, { qty: newQty, value: newValue });
+    return {
+      id: l.id,
+      receipt_date: l.receipt_date,
+      item_code: l.items?.code || '',
+      item_name: l.items?.name || '',
+      location_name: l.locations?.name || '',
+      uom: l.items?.unit_of_measure || 'EA',
+      receipt_qty: rQty,
+      receipt_unit_cost: rCost,
+      running_qty: newQty,
+      running_value: newValue,
+      running_avg_cost: newQty > 0 ? newValue / newQty : 0,
+    };
+  });
+  const wavgHistory = wavgHistoryAll
+    .filter(r => {
+      const matchSearch =
+        r.item_name.toLowerCase().includes(searchLower) ||
+        r.item_code.toLowerCase().includes(searchLower) ||
+        r.location_name.toLowerCase().includes(searchLower);
+      return matchSearch;
+    })
+    .reverse();
+
+  const wavgHistoryColumns = [
+    {
+      key: 'receipt_date',
+      header: 'Receipt Date',
+      render: (r: WavgHistoryRow) => format(new Date(r.receipt_date), 'dd MMM yyyy'),
+    },
+    {
+      key: 'item',
+      header: 'Item',
+      render: (r: WavgHistoryRow) => (
+        <div>
+          <p className="font-medium">{r.item_name}</p>
+          <p className="text-xs text-muted-foreground">{r.item_code}</p>
+        </div>
+      ),
+    },
+    { key: 'location', header: 'Location', render: (r: WavgHistoryRow) => r.location_name },
+    {
+      key: 'receipt_qty',
+      header: 'Receipt Qty',
+      render: (r: WavgHistoryRow) => `${r.receipt_qty.toLocaleString()} ${r.uom}`,
+    },
+    {
+      key: 'receipt_unit_cost',
+      header: 'Receipt Unit Cost',
+      render: (r: WavgHistoryRow) => formatCurrency(r.receipt_unit_cost),
+    },
+    {
+      key: 'running_qty',
+      header: 'Running Qty',
+      render: (r: WavgHistoryRow) => r.running_qty.toLocaleString(),
+    },
+    {
+      key: 'running_avg_cost',
+      header: 'Running WAVG Cost',
+      render: (r: WavgHistoryRow) => <span className="font-semibold">{formatCurrency(r.running_avg_cost)}</span>,
+    },
+    {
+      key: 'running_value',
+      header: 'Running Value',
+      render: (r: WavgHistoryRow) => formatCurrency(r.running_value),
+    },
+  ];
+
   return (
     <AppLayout>
       <div className="page-container">
