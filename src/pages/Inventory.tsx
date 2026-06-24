@@ -109,15 +109,14 @@ export default function Inventory() {
 
       const adjNumber = await getNextTransactionNumber(organizationId!, 'ADJ', 'ADJ');
 
+      // Create as draft first so the GL posting trigger fires on draft->posted update
       const { data: adjustment, error: adjError } = await supabase
         .from('inventory_adjustments')
         .insert({
           adjustment_number: adjNumber,
           location_id: form.location_id,
           reason: form.reason,
-          status: 'posted',
-          posted_at: new Date().toISOString(),
-          posted_by: user?.id,
+          status: 'draft',
           created_by: user?.id,
         })
         .select()
@@ -132,11 +131,27 @@ export default function Inventory() {
           adjustment_type: form.adjustment_type,
           quantity: form.quantity,
         });
-      if (lineError) throw lineError;
+      if (lineError) {
+        // Roll back the header so we don't leave an orphan draft
+        await supabase.from('inventory_adjustments').delete().eq('id', adjustment.id);
+        throw lineError;
+      }
 
+      // Transition to posted -> fires gl_post_inventory_adjustment (FIFO + Dr Inv / Cr Variance)
+      const { error: postError } = await supabase
+        .from('inventory_adjustments')
+        .update({
+          status: 'posted',
+          posted_at: new Date().toISOString(),
+          posted_by: user?.id,
+        })
+        .eq('id', adjustment.id);
+      if (postError) throw postError;
+
+      // Update on-hand balance (trigger handles GL + FIFO layers, not balances)
       const newQty = form.adjustment_type === 'increase'
-        ? currentQty + form.quantity
-        : currentQty - form.quantity;
+        ? Number(currentQty) + Number(form.quantity)
+        : Number(currentQty) - Number(form.quantity);
 
       if (currentBalance) {
         const { error: updateError } = await supabase
@@ -158,7 +173,7 @@ export default function Inventory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory_balances'] });
-      toast.success('Inventory adjusted');
+      toast.success('Inventory adjusted and posted to GL (Dr Inventory / Cr Variance)');
       setDialogOpen(false);
       setForm({ item_id: '', location_id: '', adjustment_type: 'increase', quantity: 0, reason: '' });
     },
