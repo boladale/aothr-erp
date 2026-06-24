@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Boxes, TrendingUp, AlertTriangle, MapPin } from 'lucide-react';
+import { Boxes, TrendingUp, AlertTriangle, MapPin, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -7,20 +7,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MetricCard } from '@/components/ui/metric-card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/currency';
+import { useOrgCurrency } from '@/hooks/useOrgCurrency';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(199, 89%, 48%)'];
 
+
 export default function WarehouseReports() {
+  const { baseCurrency } = useOrgCurrency();
   const { data, isLoading: loading } = useQuery({
     queryKey: ['warehouse-reports'],
     queryFn: async () => {
-      const [balancesRes, grnsRes, locationsRes, itemsRes] = await Promise.all([
-        supabase.from('inventory_balances').select('*, items(name), locations(name)'),
+      const [balancesRes, grnsRes, locationsRes, itemsRes, issueLinesRes, transferLinesRes, grnLinesRes] = await Promise.all([
+        supabase.from('inventory_balances').select('*, items(name, unit_cost), locations(name)'),
         supabase.from('goods_receipts').select('id, receipt_date, status'),
         supabase.from('locations').select('id, name').eq('is_active', true),
-        supabase.from('items').select('id, name').eq('is_active', true),
+        supabase.from('items').select('id, name, code, unit_cost').eq('is_active', true),
+        supabase.from('inventory_issue_lines').select('item_id, inventory_issues!inner(issue_date, status)').eq('inventory_issues.status', 'posted'),
+        supabase.from('inventory_transfer_lines').select('item_id, inventory_transfers!inner(transfer_date, status)').eq('inventory_transfers.status', 'posted'),
+        supabase.from('goods_receipt_lines').select('item_id, goods_receipts!inner(receipt_date, status)').eq('goods_receipts.status', 'posted'),
       ]);
+
 
       const balances = balancesRes.data || [];
       const grns = grnsRes.data || [];
@@ -59,7 +68,50 @@ export default function WarehouseReports() {
       });
       const topItems = Object.entries(itemMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.totalQty - a.totalQty).slice(0, 15);
 
-      return { metrics, inventoryByLocation, grnsByMonth, topItems };
+      // Slow moving inventory: items with no movement in 90+ days
+      const lastMovementMap: Record<string, number> = {};
+      const recordMov = (item_id: string, dateStr?: string) => {
+        if (!item_id || !dateStr) return;
+        const t = new Date(dateStr).getTime();
+        if (!lastMovementMap[item_id] || t > lastMovementMap[item_id]) lastMovementMap[item_id] = t;
+      };
+      (issueLinesRes.data || []).forEach((r: any) => recordMov(r.item_id, r.inventory_issues?.issue_date));
+      (transferLinesRes.data || []).forEach((r: any) => recordMov(r.item_id, r.inventory_transfers?.transfer_date));
+      (grnLinesRes.data || []).forEach((r: any) => recordMov(r.item_id, r.goods_receipts?.receipt_date));
+
+      const itemBalMap: Record<string, { name: string; code: string; unit_cost: number; totalQty: number; locations: Set<string> }> = {};
+      const itemsById: Record<string, any> = {};
+      items.forEach((i: any) => { itemsById[i.id] = i; });
+      balances.forEach((b: any) => {
+        const it = itemsById[b.item_id] || { name: b.items?.name || 'Unknown', code: '', unit_cost: b.items?.unit_cost || 0 };
+        if (!itemBalMap[b.item_id]) itemBalMap[b.item_id] = { name: it.name, code: it.code || '', unit_cost: Number(it.unit_cost) || 0, totalQty: 0, locations: new Set() };
+        itemBalMap[b.item_id].totalQty += Number(b.quantity) || 0;
+        if (b.locations?.name) itemBalMap[b.item_id].locations.add(b.locations.name);
+      });
+
+      const now = Date.now();
+      const NINETY = 90 * 24 * 60 * 60 * 1000;
+      const slowMoving = Object.entries(itemBalMap)
+        .filter(([id, d]) => d.totalQty > 0 && (!lastMovementMap[id] || (now - lastMovementMap[id]) >= NINETY))
+        .map(([id, d]) => {
+          const last = lastMovementMap[id];
+          const daysIdle = last ? Math.floor((now - last) / (24 * 60 * 60 * 1000)) : null;
+          const value = d.totalQty * d.unit_cost;
+          return {
+            id,
+            name: d.name,
+            code: d.code,
+            locations: Array.from(d.locations).join(', ') || '—',
+            quantity: d.totalQty,
+            unit_cost: d.unit_cost,
+            value,
+            last_movement: last ? new Date(last).toISOString().slice(0, 10) : 'Never',
+            days_idle: daysIdle,
+          };
+        })
+        .sort((a, b) => (b.days_idle ?? 99999) - (a.days_idle ?? 99999));
+
+      return { metrics, inventoryByLocation, grnsByMonth, topItems, slowMoving };
     },
   });
 
@@ -67,6 +119,9 @@ export default function WarehouseReports() {
   const inventoryByLocation = data?.inventoryByLocation || [];
   const grnsByMonth = data?.grnsByMonth || [];
   const topItems = data?.topItems || [];
+  const slowMoving = data?.slowMoving || [];
+  const slowMovingTotalValue = slowMoving.reduce((s: number, r: any) => s + (r.value || 0), 0);
+
 
   return (
     <AppLayout>
@@ -85,7 +140,9 @@ export default function WarehouseReports() {
             <TabsTrigger value="by-location">By Location</TabsTrigger>
             <TabsTrigger value="grn-trend">GRN Trends</TabsTrigger>
             <TabsTrigger value="top-items">Top Items</TabsTrigger>
+            <TabsTrigger value="slow-moving">Slow Moving</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="by-location">
             <Card>
@@ -141,7 +198,37 @@ export default function WarehouseReports() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="slow-moving">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2"><Clock className="h-4 w-4" /> Slow Moving Inventory (no movement in 90+ days)</span>
+                  <Badge variant="secondary">
+                    {slowMoving.length} items · {formatCurrency(slowMovingTotalValue, baseCurrency)}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DataTable
+                  columns={[
+                    { key: 'code', header: 'Code', render: (r: any) => <span className="font-mono text-xs">{r.code || '—'}</span> },
+                    { key: 'name', header: 'Item', render: (r: any) => <span className="font-medium">{r.name}</span> },
+                    { key: 'locations', header: 'Location(s)' },
+                    { key: 'quantity', header: 'Quantity', render: (r: any) => r.quantity.toLocaleString() },
+                    { key: 'unit_cost', header: 'Unit Cost', render: (r: any) => formatCurrency(r.unit_cost, baseCurrency) },
+                    { key: 'value', header: 'Value', render: (r: any) => <span className="font-semibold">{formatCurrency(r.value, baseCurrency)}</span> },
+                    { key: 'last_movement', header: 'Last Movement' },
+                    { key: 'days_idle', header: 'Days Idle', render: (r: any) => r.days_idle === null ? <Badge variant="destructive">Never</Badge> : <Badge variant={r.days_idle >= 180 ? 'destructive' : 'secondary'}>{r.days_idle}d</Badge> },
+                  ]}
+                  data={slowMoving}
+                  loading={loading}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
+
       </div>
     </AppLayout>
   );
