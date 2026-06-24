@@ -30,7 +30,7 @@ export default function SalesOrders() {
   const [dnDialogOpen, setDnDialogOpen] = useState(false);
   const [dnLocationId, setDnLocationId] = useState('');
   const [dnLines, setDnLines] = useState<{ order_line_id: string; qty: string; item_name: string; max_qty: number }[]>([]);
-  const [form, setForm] = useState({ customer_id: '', expected_date: '', notes: '' });
+  const [form, setForm] = useState({ customer_id: '', location_id: '', expected_date: '', notes: '' });
   const [lines, setLines] = useState<{ item_id: string; description: string; quantity: string; unit_price: string }[]>([]);
 
   const { data: orders = [], isLoading: loading } = useQuery({
