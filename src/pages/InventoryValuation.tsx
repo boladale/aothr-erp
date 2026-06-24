@@ -556,6 +556,7 @@ export default function InventoryValuation() {
             <TabsList>
               <TabsTrigger value="summary">Summary</TabsTrigger>
               <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
+              <TabsTrigger value="wavg">Weighted Average</TabsTrigger>
             </TabsList>
 
             <TabsContent value="summary" className="space-y-4">
