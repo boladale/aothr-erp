@@ -68,7 +68,7 @@ export default function SalesOrders() {
 
   const resetForm = () => {
     setEditingOrder(null);
-    setForm({ customer_id: '', expected_date: '', notes: '' });
+    setForm({ customer_id: '', location_id: '', expected_date: '', notes: '' });
     setLines([]);
   };
 
