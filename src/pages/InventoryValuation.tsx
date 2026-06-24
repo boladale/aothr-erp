@@ -302,28 +302,64 @@ export default function InventoryValuation() {
           </div>
 
 
-          <DataTable
-            columns={summaryColumns}
-            data={summaries}
-            loading={loading}
-            emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock and cost into inventory."
-          />
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList>
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
+            </TabsList>
 
-          {summaries.length > 0 && (
-            <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
-              <div className="font-semibold">Grand Total</div>
-              <div className="flex gap-8 text-sm">
-                <div>
-                  <span className="text-muted-foreground mr-2">Total Quantity:</span>
-                  <span className="font-semibold">{totalQty.toLocaleString()}</span>
+            <TabsContent value="summary" className="space-y-4">
+              <DataTable
+                columns={summaryColumns}
+                data={summaries}
+                loading={loading}
+                emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock and cost into inventory."
+              />
+
+              {summaries.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+                  <div className="font-semibold">Grand Total</div>
+                  <div className="flex gap-8 text-sm">
+                    <div>
+                      <span className="text-muted-foreground mr-2">Total Quantity:</span>
+                      <span className="font-semibold">{totalQty.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground mr-2">Total Value:</span>
+                      <span className="font-bold text-base">{formatCurrency(totalInventoryValue)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground mr-2">Total Value:</span>
-                  <span className="font-bold text-base">{formatCurrency(totalInventoryValue)}</span>
+              )}
+            </TabsContent>
+
+            <TabsContent value="fifo" className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Oldest cost layers first. Remaining stock is valued at the unit cost of the layer it was received in (FIFO).
+              </p>
+              <DataTable
+                columns={layerColumns}
+                data={filteredLayers}
+                loading={loading}
+                emptyMessage="No active FIFO layers. Post a Goods Receipt to create cost layers."
+              />
+              {filteredLayers.length > 0 && (
+                <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border">
+                  <div className="font-semibold">FIFO Total</div>
+                  <div className="flex gap-8 text-sm">
+                    <div>
+                      <span className="text-muted-foreground mr-2">Remaining Qty:</span>
+                      <span className="font-semibold">{filteredLayersQty.toLocaleString()}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground mr-2">Remaining Value:</span>
+                      <span className="font-bold text-base">{formatCurrency(filteredLayersValue)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </AppLayout>
