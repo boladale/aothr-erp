@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { DataTable } from '@/components/ui/data-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, DollarSign, Layers, Package, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/currency';
@@ -30,7 +31,7 @@ interface BalanceRow {
   item_id: string;
   location_id: string;
   quantity: number;
-  items: { code: string; name: string; unit_of_measure: string; unit_cost: number | null } | null;
+  items: { code: string; name: string; unit_of_measure: string; unit_cost: number | null; category: string | null } | null;
   locations: { code: string; name: string } | null;
 }
 
@@ -38,6 +39,8 @@ interface ValuationSummary {
   id: string;
   item_code: string;
   item_name: string;
+  category: string;
+  location_id: string;
   location_name: string;
   total_qty: number;
   unit_cost: number;
@@ -57,6 +60,10 @@ export default function InventoryValuation() {
   const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
+
+
 
   useEffect(() => {
     fetchData();
@@ -72,14 +79,14 @@ export default function InventoryValuation() {
           .order('receipt_date', { ascending: true }),
         supabase
           .from('inventory_balances')
-          .select('*, items(code, name, unit_of_measure, unit_cost), locations(code, name)')
+          .select('*, items(code, name, unit_of_measure, unit_cost, category), locations(code, name)')
           .gt('quantity', 0),
       ]);
 
       if (layersRes.error) throw layersRes.error;
       if (balancesRes.error) throw balancesRes.error;
-      setLayers((layersRes.data || []) as CostingLayer[]);
-      setBalances((balancesRes.data || []) as BalanceRow[]);
+      setLayers((layersRes.data || []) as unknown as CostingLayer[]);
+      setBalances((balancesRes.data || []) as unknown as BalanceRow[]);
     } catch (error) {
       console.error('Error fetching inventory valuation:', error);
       toast.error('Failed to load inventory valuation');
@@ -111,6 +118,8 @@ export default function InventoryValuation() {
       id: key,
       item_code: b.items?.code || '',
       item_name: b.items?.name || '',
+      category: b.items?.category || 'Uncategorized',
+      location_id: b.location_id,
       location_name: b.locations?.name || '',
       total_qty: qty,
       unit_cost: unitCost,
@@ -120,11 +129,20 @@ export default function InventoryValuation() {
     };
   });
 
-  const summaries = allSummaries.filter(s =>
-    s.item_name.toLowerCase().includes(search.toLowerCase()) ||
-    s.item_code.toLowerCase().includes(search.toLowerCase()) ||
-    s.location_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const categories = Array.from(new Set(allSummaries.map(s => s.category))).sort();
+  const locationOptions = Array.from(
+    new Map(allSummaries.map(s => [s.location_id, s.location_name])).entries()
+  ).sort((a, b) => a[1].localeCompare(b[1]));
+
+  const summaries = allSummaries.filter(s => {
+    const matchSearch =
+      s.item_name.toLowerCase().includes(search.toLowerCase()) ||
+      s.item_code.toLowerCase().includes(search.toLowerCase()) ||
+      s.location_name.toLowerCase().includes(search.toLowerCase());
+    const matchCategory = categoryFilter === 'all' || s.category === categoryFilter;
+    const matchLocation = locationFilter === 'all' || s.location_id === locationFilter;
+    return matchSearch && matchCategory && matchLocation;
+  });
 
   const totalInventoryValue = summaries.reduce((sum, s) => sum + s.total_value, 0);
   const totalQty = summaries.reduce((sum, s) => sum + s.total_qty, 0);
@@ -247,15 +265,40 @@ export default function InventoryValuation() {
 
         {/* Valuation Table */}
         <div className="space-y-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search items or locations..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9"
-            />
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[220px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search items or locations..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locationOptions.map(([id, name]) => (
+                  <SelectItem key={id} value={id}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+
 
           <DataTable
             columns={summaryColumns}
