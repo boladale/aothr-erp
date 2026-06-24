@@ -55,6 +55,22 @@ export default function Inventory() {
       return (data || []) as BalanceWithDetails[];
     },
   });
+  const reservationsQ = useQuery({
+    queryKey: ['inventory_reservations_active'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('inventory_reservations')
+        .select('item_id, location_id, reserved_qty')
+        .eq('status', 'active');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+  const reservedMap = new Map<string, number>();
+  (reservationsQ.data || []).forEach((r: any) => {
+    const k = `${r.item_id}|${r.location_id}`;
+    reservedMap.set(k, (reservedMap.get(k) || 0) + Number(r.reserved_qty || 0));
+  });
   const itemsQ = useQuery({
     queryKey: ['items-active-full'],
     queryFn: async () => {
