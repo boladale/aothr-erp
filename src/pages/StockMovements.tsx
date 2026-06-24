@@ -96,13 +96,14 @@ export default function StockMovements() {
         });
       });
 
-      // Transfers (in + out)
+      // Transfers — source decreases at 'in_transit', destination increases at 'received'
       const { data: trLines } = await supabase
         .from('inventory_transfer_lines')
         .select('id, quantity, item_id, items(code, name), inventory_transfers!inner(transfer_number, transfer_date, status, from_location_id, to_location_id, from_loc:locations!inventory_transfers_from_location_id_fkey(name), to_loc:locations!inventory_transfers_to_location_id_fkey(name))')
-        .eq('inventory_transfers.status', 'posted');
+        .in('inventory_transfers.status', ['in_transit', 'received']);
       (trLines || []).forEach((l: any) => {
         const t = l.inventory_transfers;
+        // Source dispatch is logged once status reaches in_transit (or beyond)
         movements.push({
           id: `tr-out-${l.id}`,
           date: t.transfer_date,
@@ -116,20 +117,24 @@ export default function StockMovements() {
           qty_in: 0,
           qty_out: Number(l.quantity) || 0,
         });
-        movements.push({
-          id: `tr-in-${l.id}`,
-          date: t.transfer_date,
-          type: 'Transfer In',
-          reference: t.transfer_number,
-          item_id: l.item_id,
-          item_code: l.items?.code || '',
-          item_name: l.items?.name || '',
-          location_id: t.to_location_id,
-          location_name: t.to_loc?.name || '',
-          qty_in: Number(l.quantity) || 0,
-          qty_out: 0,
-        });
+        // Destination receipt is only logged once status is 'received'
+        if (t.status === 'received') {
+          movements.push({
+            id: `tr-in-${l.id}`,
+            date: t.transfer_date,
+            type: 'Transfer In',
+            reference: t.transfer_number,
+            item_id: l.item_id,
+            item_code: l.items?.code || '',
+            item_name: l.items?.name || '',
+            location_id: t.to_location_id,
+            location_name: t.to_loc?.name || '',
+            qty_in: Number(l.quantity) || 0,
+            qty_out: 0,
+          });
+        }
       });
+
 
       // Delivery Notes
       const { data: dnLines } = await supabase
