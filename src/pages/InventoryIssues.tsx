@@ -347,6 +347,19 @@ export default function InventoryIssues() {
     { key: 'project', header: 'Project', render: (row: IssueRow) => row.projects ? `${row.projects.project_code} - ${row.projects.project_name}` : '-' },
     { key: 'status', header: 'Status', render: (row: IssueRow) => <StatusBadge status={row.status} /> },
     {
+      key: 'gl',
+      header: 'GL Entry',
+      render: (row: IssueRow) => {
+        const je = jeByIssue[row.id];
+        if (!je) return <span className="text-muted-foreground text-xs">—</span>;
+        return (
+          <a href="/journal-entries" className="text-xs text-primary hover:underline" title={`Dr Expense / Cr Inventory ${je.total.toLocaleString(undefined,{minimumFractionDigits:2})}`}>
+            {je.entry_number} ({je.status})
+          </a>
+        );
+      },
+    },
+    {
       key: 'actions', header: 'Actions',
       render: (row: IssueRow) => row.status === 'draft' ? (
         <Button size="sm" onClick={(e) => { e.stopPropagation(); handlePost(row); }}>Post</Button>
