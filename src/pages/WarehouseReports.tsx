@@ -165,6 +165,7 @@ export default function WarehouseReports() {
             <TabsTrigger value="grn-trend">GRN Trends</TabsTrigger>
             <TabsTrigger value="top-items">Top Items</TabsTrigger>
             <TabsTrigger value="slow-moving">Slow Moving</TabsTrigger>
+            <TabsTrigger value="dead-stock">Dead Stock</TabsTrigger>
           </TabsList>
 
 
