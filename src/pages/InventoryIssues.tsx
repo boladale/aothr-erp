@@ -94,6 +94,22 @@ export default function InventoryIssues() {
       return (data || []) as unknown as IssueRow[];
     },
   });
+  const issueJEsQ = useQuery({
+    queryKey: ['inventory_issue_jes'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('gl_journal_entries')
+        .select('id, entry_number, source_id, status, gl_journal_lines(debit)')
+        .eq('source_module', 'inventory');
+      if (error) return [] as any[];
+      return data || [];
+    },
+  });
+  const jeByIssue: Record<string, { entry_number: string; total: number; status: string; id: string }> = {};
+  (issueJEsQ.data || []).forEach((je: any) => {
+    const total = (je.gl_journal_lines || []).reduce((s: number, l: any) => s + Number(l.debit || 0), 0);
+    jeByIssue[je.source_id] = { entry_number: je.entry_number, total, status: je.status, id: je.id };
+  });
   const itemsQ = useQuery({
     queryKey: ['items-active-min'],
     queryFn: async () => {
@@ -177,7 +193,7 @@ export default function InventoryIssues() {
       return issueNumber;
     },
     onSuccess: (issueNumber) => {
-      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Issue ${issueNumber} created as draft`);
       setDialogOpen(false);
       resetForm();
@@ -200,7 +216,7 @@ export default function InventoryIssues() {
       return issue.issue_number;
     },
     onSuccess: (num) => {
-      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Issue ${num} posted — inventory reduced & GL entries created`);
     },
     onError: (e: any) => toast.error(e.message || 'Failed to post issue'),
@@ -308,7 +324,7 @@ export default function InventoryIssues() {
       return returnNumber;
     },
     onSuccess: (num) => {
-      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Return ${num} posted — inventory restored & GL reversed`);
       setReturnDialogOpen(false);
     },
@@ -330,6 +346,19 @@ export default function InventoryIssues() {
     { key: 'department', header: 'Department', render: (row: IssueRow) => row.department || '-' },
     { key: 'project', header: 'Project', render: (row: IssueRow) => row.projects ? `${row.projects.project_code} - ${row.projects.project_name}` : '-' },
     { key: 'status', header: 'Status', render: (row: IssueRow) => <StatusBadge status={row.status} /> },
+    {
+      key: 'gl',
+      header: 'GL Entry',
+      render: (row: IssueRow) => {
+        const je = jeByIssue[row.id];
+        if (!je) return <span className="text-muted-foreground text-xs">—</span>;
+        return (
+          <a href="/journal-entries" className="text-xs text-primary hover:underline" title={`Dr Expense / Cr Inventory ${je.total.toLocaleString(undefined,{minimumFractionDigits:2})}`}>
+            {je.entry_number} ({je.status})
+          </a>
+        );
+      },
+    },
     {
       key: 'actions', header: 'Actions',
       render: (row: IssueRow) => row.status === 'draft' ? (
