@@ -192,12 +192,29 @@ export default function Inventory() {
       )
     },
     { key: 'location', header: 'Location', render: (b: BalanceWithDetails) => b.locations?.name || '-' },
-    { 
-      key: 'quantity', 
-      header: 'Quantity', 
+    {
+      key: 'quantity',
+      header: 'On Hand',
       render: (b: BalanceWithDetails) => (
         <span className="font-medium">{b.quantity} {b.items?.unit_of_measure}</span>
       )
+    },
+    {
+      key: 'reserved',
+      header: 'Reserved',
+      render: (b: BalanceWithDetails) => {
+        const r = reservedMap.get(`${b.item_id}|${b.location_id}`) || 0;
+        return <span className={r > 0 ? 'text-amber-600 font-medium' : 'text-muted-foreground'}>{r}</span>;
+      }
+    },
+    {
+      key: 'available',
+      header: 'Available',
+      render: (b: BalanceWithDetails) => {
+        const r = reservedMap.get(`${b.item_id}|${b.location_id}`) || 0;
+        const a = Number(b.quantity || 0) - r;
+        return <span className={a <= 0 ? 'text-destructive font-medium' : 'font-medium text-success'}>{a}</span>;
+      }
     },
     { 
       key: 'last_updated', 
