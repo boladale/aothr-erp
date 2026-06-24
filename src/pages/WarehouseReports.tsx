@@ -16,9 +16,6 @@ const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)',
 
 
 export default function WarehouseReports() {
-  const { data, isLoading: loading } = useQuery({
-    queryKey: ['warehouse-reports'],
-export default function WarehouseReports() {
   const { currency } = useOrgCurrency();
   const { data, isLoading: loading } = useQuery({
     queryKey: ['warehouse-reports'],
