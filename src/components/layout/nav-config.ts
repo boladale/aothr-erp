@@ -167,6 +167,7 @@ export const navSections = [
       { path: '/inventory-transfers', label: 'Transfers', icon: ArrowRightLeft },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
       { path: '/stock-movements', label: 'Stock Movements', icon: History },
+      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
     ],
   },
   {
