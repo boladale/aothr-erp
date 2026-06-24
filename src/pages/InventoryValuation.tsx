@@ -606,7 +606,9 @@ export default function InventoryValuation() {
               <TabsTrigger value="summary">Summary</TabsTrigger>
               <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
               <TabsTrigger value="wavg">Weighted Average</TabsTrigger>
+              <TabsTrigger value="gl">GL Reconciliation</TabsTrigger>
             </TabsList>
+
 
             <TabsContent value="summary" className="space-y-4">
               <DataTable
