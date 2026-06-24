@@ -874,7 +874,7 @@ export default function InventoryValuation() {
               </p>
               {(() => {
                 const glTotal = glInventory.reduce((s, g) => s + g.balance, 0);
-                const diff = totalInventoryValue - glTotal;
+                const diff = totalInventoryValueAll - glTotal;
                 const reconciled = Math.abs(diff) < 0.01;
                 return (
                   <>
@@ -884,8 +884,8 @@ export default function InventoryValuation() {
                           <CardTitle className="text-sm font-medium">Inventory Valuation</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold">{formatCurrency(totalInventoryValue)}</div>
-                          <p className="text-xs text-muted-foreground">Stock on hand × cost</p>
+                          <div className="text-2xl font-bold">{formatCurrency(totalInventoryValueAll)}</div>
+                          <p className="text-xs text-muted-foreground">Stock on hand × cost (all items)</p>
                         </CardContent>
                       </Card>
                       <Card>
