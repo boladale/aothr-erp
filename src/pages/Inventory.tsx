@@ -173,7 +173,7 @@ export default function Inventory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory_balances'] });
-      toast.success('Inventory adjusted');
+      toast.success('Inventory adjusted and posted to GL (Dr Inventory / Cr Variance)');
       setDialogOpen(false);
       setForm({ item_id: '', location_id: '', adjustment_type: 'increase', quantity: 0, reason: '' });
     },
