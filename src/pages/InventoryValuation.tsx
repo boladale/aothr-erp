@@ -524,6 +524,105 @@ export default function InventoryValuation() {
     },
   ];
 
+  // ===== Historical Valuation (as-of date) =====
+  interface HistoricalRow {
+    id: string;
+    item_code: string;
+    item_name: string;
+    category: string;
+    location_id: string;
+    location_name: string;
+    uom: string;
+    quantity: number;
+    avg_cost: number;
+    total_value: number;
+  }
+  const asOfEnd = new Date(asOfDate);
+  asOfEnd.setHours(23, 59, 59, 999);
+  const asOfMs = asOfEnd.getTime();
+
+  // Sum consumptions per layer up to as-of date
+  const consumedByLayer = new Map<string, number>();
+  consumptions.forEach(c => {
+    if (new Date(c.consumed_at).getTime() <= asOfMs) {
+      consumedByLayer.set(c.layer_id, (consumedByLayer.get(c.layer_id) || 0) + Number(c.quantity));
+    }
+  });
+
+  const histAgg = new Map<string, HistoricalRow>();
+  allLayers.forEach(l => {
+    if (new Date(l.receipt_date).getTime() > asOfMs) return;
+    const consumedAtDate = consumedByLayer.get(l.id) || 0;
+    const remaining = Math.max(0, Number(l.original_qty) - consumedAtDate);
+    if (remaining <= 0) return;
+    const key = `${l.item_id}-${l.location_id}`;
+    const value = remaining * Number(l.unit_cost);
+    const existing = histAgg.get(key);
+    if (existing) {
+      existing.quantity += remaining;
+      existing.total_value += value;
+    } else {
+      histAgg.set(key, {
+        id: key,
+        item_code: l.items?.code || '',
+        item_name: l.items?.name || '',
+        category: l.items?.category || 'Uncategorized',
+        location_id: l.location_id,
+        location_name: l.locations?.name || '',
+        uom: l.items?.unit_of_measure || 'EA',
+        quantity: remaining,
+        avg_cost: 0,
+        total_value: value,
+      });
+    }
+  });
+  const historicalRows = Array.from(histAgg.values())
+    .map(h => ({ ...h, avg_cost: h.quantity > 0 ? h.total_value / h.quantity : 0 }))
+    .filter(h => {
+      const matchSearch =
+        h.item_name.toLowerCase().includes(searchLower) ||
+        h.item_code.toLowerCase().includes(searchLower) ||
+        h.location_name.toLowerCase().includes(searchLower);
+      const matchCategory = categoryFilter === 'all' || h.category === categoryFilter;
+      const matchLocation = locationFilter === 'all' || h.location_id === locationFilter;
+      return matchSearch && matchCategory && matchLocation;
+    })
+    .sort((a, b) => a.item_name.localeCompare(b.item_name));
+
+  const historicalQty = historicalRows.reduce((s, h) => s + h.quantity, 0);
+  const historicalValue = historicalRows.reduce((s, h) => s + h.total_value, 0);
+
+  const historicalColumns = [
+    {
+      key: 'item',
+      header: 'Item',
+      render: (h: HistoricalRow) => (
+        <div>
+          <p className="font-medium">{h.item_name}</p>
+          <p className="text-xs text-muted-foreground">{h.item_code}</p>
+        </div>
+      ),
+    },
+    { key: 'location', header: 'Location', render: (h: HistoricalRow) => h.location_name },
+    {
+      key: 'qty',
+      header: 'Quantity',
+      render: (h: HistoricalRow) => <span className="font-medium">{h.quantity.toLocaleString()} {h.uom}</span>,
+    },
+    {
+      key: 'avg_cost',
+      header: 'Avg Unit Cost',
+      render: (h: HistoricalRow) => formatCurrency(h.avg_cost),
+    },
+    {
+      key: 'total_value',
+      header: 'Total Value',
+      render: (h: HistoricalRow) => <span className="font-semibold">{formatCurrency(h.total_value)}</span>,
+    },
+  ];
+
+
+
   return (
     <AppLayout>
       <div className="page-container">
