@@ -60,7 +60,7 @@ export default function SalesOrders() {
 
   const openEditDialog = async (order: any) => {
     setEditingOrder(order);
-    setForm({ customer_id: order.customer_id, expected_date: order.expected_date || '', notes: order.notes || '' });
+    setForm({ customer_id: order.customer_id, location_id: order.location_id || '', expected_date: order.expected_date || '', notes: order.notes || '' });
     const { data } = await supabase.from('sales_order_lines').select('*').eq('order_id', order.id).order('line_number');
     setLines((data || []).map((l: any) => ({ item_id: l.item_id || '', description: l.description, quantity: String(l.quantity), unit_price: String(l.unit_price) })));
     setDialogOpen(true);
