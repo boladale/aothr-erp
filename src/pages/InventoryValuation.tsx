@@ -79,14 +79,14 @@ export default function InventoryValuation() {
           .order('receipt_date', { ascending: true }),
         supabase
           .from('inventory_balances')
-          .select('*, items(code, name, unit_of_measure, unit_cost), locations(code, name)')
+          .select('*, items(code, name, unit_of_measure, unit_cost, category), locations(code, name)')
           .gt('quantity', 0),
       ]);
 
       if (layersRes.error) throw layersRes.error;
       if (balancesRes.error) throw balancesRes.error;
-      setLayers((layersRes.data || []) as CostingLayer[]);
-      setBalances((balancesRes.data || []) as BalanceRow[]);
+      setLayers((layersRes.data || []) as unknown as CostingLayer[]);
+      setBalances((balancesRes.data || []) as unknown as BalanceRow[]);
     } catch (error) {
       console.error('Error fetching inventory valuation:', error);
       toast.error('Failed to load inventory valuation');
