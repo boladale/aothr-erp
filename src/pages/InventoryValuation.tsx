@@ -16,6 +16,8 @@ import { formatCurrency } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { exportToXLSX } from '@/lib/export-utils';
+import { Download } from 'lucide-react';
 
 interface CostingLayer {
   id: string;
