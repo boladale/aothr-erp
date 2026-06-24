@@ -610,6 +610,50 @@ export default function InventoryValuation() {
                 </div>
               )}
             </TabsContent>
+
+            <TabsContent value="wavg" className="space-y-6">
+              <p className="text-sm text-muted-foreground">
+                Weighted Average Cost = Total Value / Total Quantity. Recalculated after each goods receipt.
+              </p>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Current Weighted Average per Item & Location</h3>
+                <DataTable
+                  columns={wavgColumns}
+                  data={wavgSummaries}
+                  loading={loading}
+                  emptyMessage="No inventory on hand. Post a Goods Receipt to bring stock into inventory."
+                />
+                {wavgSummaries.length > 0 && (
+                  <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border mt-2">
+                    <div className="font-semibold">Grand Total</div>
+                    <div className="flex gap-8 text-sm">
+                      <div>
+                        <span className="text-muted-foreground mr-2">Total Quantity:</span>
+                        <span className="font-semibold">{wavgTotalQty.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground mr-2">Total Value:</span>
+                        <span className="font-bold text-base">{formatCurrency(wavgTotalValue)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Running Weighted Average History</h3>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Most recent receipts first. Running WAVG is recalculated after every receipt per item & location.
+                </p>
+                <DataTable
+                  columns={wavgHistoryColumns}
+                  data={wavgHistory}
+                  loading={loading}
+                  emptyMessage="No receipts recorded yet."
+                />
+              </div>
+            </TabsContent>
           </Tabs>
         </div>
       </div>
