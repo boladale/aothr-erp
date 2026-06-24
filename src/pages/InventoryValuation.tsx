@@ -57,9 +57,21 @@ interface AgingBucket {
   qty: number;
 }
 
+interface GLAccountBalance {
+  id: string;
+  account_id: string;
+  account_code: string;
+  account_name: string;
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+
 export default function InventoryValuation() {
   const [layers, setLayers] = useState<CostingLayer[]>([]);
   const [balances, setBalances] = useState<BalanceRow[]>([]);
+  const [glInventory, setGlInventory] = useState<GLAccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -73,7 +85,7 @@ export default function InventoryValuation() {
 
   const fetchData = async () => {
     try {
-      const [layersRes, balancesRes] = await Promise.all([
+      const [layersRes, balancesRes, glAcctsRes] = await Promise.all([
         supabase
           .from('inventory_costing_layers')
           .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
@@ -83,12 +95,52 @@ export default function InventoryValuation() {
           .from('inventory_balances')
           .select('*, items(code, name, unit_of_measure, unit_cost, category), locations(code, name)')
           .gt('quantity', 0),
+        supabase
+          .from('gl_accounts')
+          .select('id, account_code, account_name')
+          .like('account_code', '14%')
+          .eq('is_active', true),
       ]);
 
       if (layersRes.error) throw layersRes.error;
       if (balancesRes.error) throw balancesRes.error;
+      if (glAcctsRes.error) throw glAcctsRes.error;
       setLayers((layersRes.data || []) as unknown as CostingLayer[]);
       setBalances((balancesRes.data || []) as unknown as BalanceRow[]);
+
+      // Sum posted journal lines per inventory account
+      const accts = (glAcctsRes.data || []) as Array<{ id: string; account_code: string; account_name: string }>;
+      const acctIds = accts.map(a => a.id);
+      let gl: GLAccountBalance[] = [];
+      if (acctIds.length > 0) {
+        const { data: linesData, error: linesErr } = await supabase
+          .from('gl_journal_lines')
+          .select('account_id, debit, credit, gl_journal_entries!inner(status)')
+          .in('account_id', acctIds)
+          .eq('gl_journal_entries.status', 'posted');
+        if (linesErr) throw linesErr;
+        const sums = new Map<string, { d: number; c: number }>();
+        (linesData || []).forEach((l: any) => {
+          const s = sums.get(l.account_id) || { d: 0, c: 0 };
+          s.d += Number(l.debit || 0);
+          s.c += Number(l.credit || 0);
+          sums.set(l.account_id, s);
+        });
+        gl = accts.map(a => {
+          const s = sums.get(a.id) || { d: 0, c: 0 };
+          return {
+            id: a.id,
+            account_id: a.id,
+
+            account_code: a.account_code,
+            account_name: a.account_name,
+            debit: s.d,
+            credit: s.c,
+            balance: s.d - s.c,
+          };
+        }).filter(g => g.debit !== 0 || g.credit !== 0);
+      }
+      setGlInventory(gl);
     } catch (error) {
       console.error('Error fetching inventory valuation:', error);
       toast.error('Failed to load inventory valuation');
@@ -96,6 +148,7 @@ export default function InventoryValuation() {
       setLoading(false);
     }
   };
+
 
   // Aggregate FIFO layers per item+location for weighted-avg cost + layer count
   const layerAgg = new Map<string, { qty: number; value: number; count: number }>();
@@ -557,7 +610,9 @@ export default function InventoryValuation() {
               <TabsTrigger value="summary">Summary</TabsTrigger>
               <TabsTrigger value="fifo">FIFO Layers ({filteredLayers.length})</TabsTrigger>
               <TabsTrigger value="wavg">Weighted Average</TabsTrigger>
+              <TabsTrigger value="gl">GL Reconciliation</TabsTrigger>
             </TabsList>
+
 
             <TabsContent value="summary" className="space-y-4">
               <DataTable
@@ -654,7 +709,97 @@ export default function InventoryValuation() {
                 />
               </div>
             </TabsContent>
+
+            <TabsContent value="gl" className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Inventory valuation (on-hand stock × cost) should equal the net balance of the Inventory GL account(s).
+                Any difference indicates posting gaps between goods receipts/issues and the General Ledger.
+              </p>
+              {(() => {
+                const glTotal = glInventory.reduce((s, g) => s + g.balance, 0);
+                const diff = totalInventoryValue - glTotal;
+                const reconciled = Math.abs(diff) < 0.01;
+                return (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Inventory Valuation</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{formatCurrency(totalInventoryValue)}</div>
+                          <p className="text-xs text-muted-foreground">Stock on hand × cost</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">GL Inventory Balance</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{formatCurrency(glTotal)}</div>
+                          <p className="text-xs text-muted-foreground">Posted journal entries</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Difference</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className={`text-2xl font-bold ${reconciled ? 'text-green-600' : 'text-destructive'}`}>
+                            {formatCurrency(diff)}
+                          </div>
+                          <Badge variant={reconciled ? 'default' : 'destructive'} className="mt-1">
+                            {reconciled ? 'Reconciled' : 'Out of balance'}
+                          </Badge>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">Inventory GL Accounts</h3>
+                      <DataTable
+                        columns={[
+                          { key: 'code', header: 'Account Code', render: (g: GLAccountBalance) => g.account_code },
+                          { key: 'name', header: 'Account Name', render: (g: GLAccountBalance) => g.account_name },
+                          { key: 'debit', header: 'Debit', render: (g: GLAccountBalance) => formatCurrency(g.debit) },
+                          { key: 'credit', header: 'Credit', render: (g: GLAccountBalance) => formatCurrency(g.credit) },
+                          {
+                            key: 'balance',
+                            header: 'Balance',
+                            render: (g: GLAccountBalance) => <span className="font-semibold">{formatCurrency(g.balance)}</span>,
+                          },
+                        ]}
+                        data={glInventory}
+                        loading={loading}
+                        emptyMessage="No inventory GL accounts (account code 14xx) with posted activity."
+                      />
+                      {glInventory.length > 0 && (
+                        <div className="flex justify-between items-center px-4 py-3 bg-muted/50 rounded-md border mt-2">
+                          <div className="font-semibold">GL Total</div>
+                          <div className="font-bold text-base">{formatCurrency(glTotal)}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {!reconciled && (
+                      <Card>
+                        <CardContent className="pt-4 text-sm space-y-1">
+                          <p className="font-semibold">Common causes of a difference</p>
+                          <ul className="list-disc pl-5 text-muted-foreground">
+                            <li>Goods receipts or inventory issues left in draft (not yet posted to GL).</li>
+                            <li>Manual journal entries against the inventory account outside of stock movements.</li>
+                            <li>Inventory adjustments or transfers not yet posted.</li>
+                            <li>Stock costed at zero (cost not captured on receipt).</li>
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                );
+              })()}
+            </TabsContent>
           </Tabs>
+
         </div>
       </div>
     </AppLayout>
