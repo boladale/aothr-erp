@@ -167,6 +167,7 @@ export const navSections = [
       { path: '/inventory-transfers', label: 'Transfers', icon: ArrowRightLeft },
       { path: '/goods-receipts', label: 'Goods Receipts', icon: Truck },
       { path: '/stock-movements', label: 'Stock Movements', icon: History },
+      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
     ],
   },
   {
@@ -189,7 +190,6 @@ export const navSections = [
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
       { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
-      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
     ],
   },
   {
