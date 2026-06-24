@@ -80,8 +80,8 @@ export default function SalesOrders() {
 
       if (editingOrder) {
         const { error } = await supabase.from('sales_orders').update({
-          customer_id: form.customer_id, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
-        }).eq('id', editingOrder.id);
+          customer_id: form.customer_id, location_id: form.location_id || null, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
+        } as any).eq('id', editingOrder.id);
         if (error) throw error;
         await supabase.from('sales_order_lines').delete().eq('order_id', editingOrder.id);
         await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
