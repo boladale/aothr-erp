@@ -68,7 +68,50 @@ export default function WarehouseReports() {
       });
       const topItems = Object.entries(itemMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.totalQty - a.totalQty).slice(0, 15);
 
-      return { metrics, inventoryByLocation, grnsByMonth, topItems };
+      // Slow moving inventory: items with no movement in 90+ days
+      const lastMovementMap: Record<string, number> = {};
+      const recordMov = (item_id: string, dateStr?: string) => {
+        if (!item_id || !dateStr) return;
+        const t = new Date(dateStr).getTime();
+        if (!lastMovementMap[item_id] || t > lastMovementMap[item_id]) lastMovementMap[item_id] = t;
+      };
+      (issueLinesRes.data || []).forEach((r: any) => recordMov(r.item_id, r.inventory_issues?.issue_date));
+      (transferLinesRes.data || []).forEach((r: any) => recordMov(r.item_id, r.inventory_transfers?.transfer_date));
+      (grnLinesRes.data || []).forEach((r: any) => recordMov(r.item_id, r.goods_receipts?.receipt_date));
+
+      const itemBalMap: Record<string, { name: string; code: string; unit_cost: number; totalQty: number; locations: Set<string> }> = {};
+      const itemsById: Record<string, any> = {};
+      items.forEach((i: any) => { itemsById[i.id] = i; });
+      balances.forEach((b: any) => {
+        const it = itemsById[b.item_id] || { name: b.items?.name || 'Unknown', code: '', unit_cost: b.items?.unit_cost || 0 };
+        if (!itemBalMap[b.item_id]) itemBalMap[b.item_id] = { name: it.name, code: it.code || '', unit_cost: Number(it.unit_cost) || 0, totalQty: 0, locations: new Set() };
+        itemBalMap[b.item_id].totalQty += Number(b.quantity) || 0;
+        if (b.locations?.name) itemBalMap[b.item_id].locations.add(b.locations.name);
+      });
+
+      const now = Date.now();
+      const NINETY = 90 * 24 * 60 * 60 * 1000;
+      const slowMoving = Object.entries(itemBalMap)
+        .filter(([id, d]) => d.totalQty > 0 && (!lastMovementMap[id] || (now - lastMovementMap[id]) >= NINETY))
+        .map(([id, d]) => {
+          const last = lastMovementMap[id];
+          const daysIdle = last ? Math.floor((now - last) / (24 * 60 * 60 * 1000)) : null;
+          const value = d.totalQty * d.unit_cost;
+          return {
+            id,
+            name: d.name,
+            code: d.code,
+            locations: Array.from(d.locations).join(', ') || '—',
+            quantity: d.totalQty,
+            unit_cost: d.unit_cost,
+            value,
+            last_movement: last ? new Date(last).toISOString().slice(0, 10) : 'Never',
+            days_idle: daysIdle,
+          };
+        })
+        .sort((a, b) => (b.days_idle ?? 99999) - (a.days_idle ?? 99999));
+
+      return { metrics, inventoryByLocation, grnsByMonth, topItems, slowMoving };
     },
   });
 
@@ -76,6 +119,9 @@ export default function WarehouseReports() {
   const inventoryByLocation = data?.inventoryByLocation || [];
   const grnsByMonth = data?.grnsByMonth || [];
   const topItems = data?.topItems || [];
+  const slowMoving = data?.slowMoving || [];
+  const slowMovingTotalValue = slowMoving.reduce((s: number, r: any) => s + (r.value || 0), 0);
+
 
   return (
     <AppLayout>
