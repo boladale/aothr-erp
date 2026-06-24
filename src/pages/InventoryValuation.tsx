@@ -118,6 +118,8 @@ export default function InventoryValuation() {
       id: key,
       item_code: b.items?.code || '',
       item_name: b.items?.name || '',
+      category: b.items?.category || 'Uncategorized',
+      location_id: b.location_id,
       location_name: b.locations?.name || '',
       total_qty: qty,
       unit_cost: unitCost,
@@ -127,11 +129,20 @@ export default function InventoryValuation() {
     };
   });
 
-  const summaries = allSummaries.filter(s =>
-    s.item_name.toLowerCase().includes(search.toLowerCase()) ||
-    s.item_code.toLowerCase().includes(search.toLowerCase()) ||
-    s.location_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const categories = Array.from(new Set(allSummaries.map(s => s.category))).sort();
+  const locationOptions = Array.from(
+    new Map(allSummaries.map(s => [s.location_id, s.location_name])).entries()
+  ).sort((a, b) => a[1].localeCompare(b[1]));
+
+  const summaries = allSummaries.filter(s => {
+    const matchSearch =
+      s.item_name.toLowerCase().includes(search.toLowerCase()) ||
+      s.item_code.toLowerCase().includes(search.toLowerCase()) ||
+      s.location_name.toLowerCase().includes(search.toLowerCase());
+    const matchCategory = categoryFilter === 'all' || s.category === categoryFilter;
+    const matchLocation = locationFilter === 'all' || s.location_id === locationFilter;
+    return matchSearch && matchCategory && matchLocation;
+  });
 
   const totalInventoryValue = summaries.reduce((sum, s) => sum + s.total_value, 0);
   const totalQty = summaries.reduce((sum, s) => sum + s.total_qty, 0);
