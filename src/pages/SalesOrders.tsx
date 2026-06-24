@@ -30,7 +30,7 @@ export default function SalesOrders() {
   const [dnDialogOpen, setDnDialogOpen] = useState(false);
   const [dnLocationId, setDnLocationId] = useState('');
   const [dnLines, setDnLines] = useState<{ order_line_id: string; qty: string; item_name: string; max_qty: number }[]>([]);
-  const [form, setForm] = useState({ customer_id: '', expected_date: '', notes: '' });
+  const [form, setForm] = useState({ customer_id: '', location_id: '', expected_date: '', notes: '' });
   const [lines, setLines] = useState<{ item_id: string; description: string; quantity: string; unit_price: string }[]>([]);
 
   const { data: orders = [], isLoading: loading } = useQuery({
@@ -60,7 +60,7 @@ export default function SalesOrders() {
 
   const openEditDialog = async (order: any) => {
     setEditingOrder(order);
-    setForm({ customer_id: order.customer_id, expected_date: order.expected_date || '', notes: order.notes || '' });
+    setForm({ customer_id: order.customer_id, location_id: order.location_id || '', expected_date: order.expected_date || '', notes: order.notes || '' });
     const { data } = await supabase.from('sales_order_lines').select('*').eq('order_id', order.id).order('line_number');
     setLines((data || []).map((l: any) => ({ item_id: l.item_id || '', description: l.description, quantity: String(l.quantity), unit_price: String(l.unit_price) })));
     setDialogOpen(true);
@@ -68,7 +68,7 @@ export default function SalesOrders() {
 
   const resetForm = () => {
     setEditingOrder(null);
-    setForm({ customer_id: '', expected_date: '', notes: '' });
+    setForm({ customer_id: '', location_id: '', expected_date: '', notes: '' });
     setLines([]);
   };
 
@@ -80,8 +80,8 @@ export default function SalesOrders() {
 
       if (editingOrder) {
         const { error } = await supabase.from('sales_orders').update({
-          customer_id: form.customer_id, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
-        }).eq('id', editingOrder.id);
+          customer_id: form.customer_id, location_id: form.location_id || null, expected_date: form.expected_date || null, subtotal, total_amount: subtotal,
+        } as any).eq('id', editingOrder.id);
         if (error) throw error;
         await supabase.from('sales_order_lines').delete().eq('order_id', editingOrder.id);
         await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
@@ -92,9 +92,9 @@ export default function SalesOrders() {
       } else {
         const soNumber = await getNextTransactionNumber(organizationId!, 'SO', 'SO');
         const { data: so, error } = await supabase.from('sales_orders').insert({
-          order_number: soNumber, customer_id: form.customer_id, expected_date: form.expected_date || null,
+          order_number: soNumber, customer_id: form.customer_id, location_id: form.location_id || null, expected_date: form.expected_date || null,
           subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
-        }).select().single();
+        } as any).select().single();
         if (error) throw error;
         await supabase.from('sales_order_lines').insert(lines.map((l, i) => ({
           order_id: so.id, line_number: i + 1, item_id: l.item_id || null,
@@ -272,6 +272,13 @@ export default function SalesOrders() {
                 </Select>
               </div>
               <div><Label>Expected Date</Label><Input type="date" value={form.expected_date} onChange={e => setForm({ ...form, expected_date: e.target.value })} /></div>
+              <div className="col-span-2">
+                <Label>Ship From Location <span className="text-xs text-muted-foreground">(required to confirm — reserves stock)</span></Label>
+                <Select value={form.location_id} onValueChange={v => setForm({ ...form, location_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select dispatch location" /></SelectTrigger>
+                  <SelectContent>{locations.map((l: any) => <SelectItem key={l.id} value={l.id}>{l.code} - {l.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <div className="flex items-center justify-between mb-2"><Label>Lines</Label><Button variant="outline" size="sm" onClick={addLine}><Plus className="h-3 w-3 mr-1" /> Add Line</Button></div>

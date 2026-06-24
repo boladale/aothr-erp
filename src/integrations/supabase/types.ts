@@ -3145,6 +3145,7 @@ export type Database = {
           location_id: string
           po_line_id: string | null
           reserved_qty: number
+          sales_order_id: string | null
           status: Database["public"]["Enums"]["reservation_status"]
         }
         Insert: {
@@ -3156,6 +3157,7 @@ export type Database = {
           location_id: string
           po_line_id?: string | null
           reserved_qty: number
+          sales_order_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
         }
         Update: {
@@ -3167,6 +3169,7 @@ export type Database = {
           location_id?: string
           po_line_id?: string | null
           reserved_qty?: number
+          sales_order_id?: string | null
           status?: Database["public"]["Enums"]["reservation_status"]
         }
         Relationships: [
@@ -3189,6 +3192,13 @@ export type Database = {
             columns: ["po_line_id"]
             isOneToOne: false
             referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_reservations_sales_order_id_fkey"
+            columns: ["sales_order_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -5856,6 +5866,7 @@ export type Database = {
           exchange_rate: number
           expected_date: string | null
           id: string
+          location_id: string | null
           notes: string | null
           order_date: string
           order_number: string
@@ -5876,6 +5887,7 @@ export type Database = {
           exchange_rate?: number
           expected_date?: string | null
           id?: string
+          location_id?: string | null
           notes?: string | null
           order_date?: string
           order_number: string
@@ -5896,6 +5908,7 @@ export type Database = {
           exchange_rate?: number
           expected_date?: string | null
           id?: string
+          location_id?: string | null
           notes?: string | null
           order_date?: string
           order_number?: string
@@ -5914,6 +5927,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
