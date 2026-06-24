@@ -203,6 +203,78 @@ export default function InventoryValuation() {
     },
   ];
 
+  // Filter FIFO layers (already sorted oldest-first by query)
+  const searchLower = search.toLowerCase();
+  const filteredLayers = layers.filter(l => {
+    const itemName = l.items?.name || '';
+    const itemCode = l.items?.code || '';
+    const locName = l.locations?.name || '';
+    const category = l.items?.category || 'Uncategorized';
+    const matchSearch =
+      itemName.toLowerCase().includes(searchLower) ||
+      itemCode.toLowerCase().includes(searchLower) ||
+      locName.toLowerCase().includes(searchLower);
+    const matchCategory = categoryFilter === 'all' || category === categoryFilter;
+    const matchLocation = locationFilter === 'all' || l.location_id === locationFilter;
+    return matchSearch && matchCategory && matchLocation;
+  });
+
+  const filteredLayersQty = filteredLayers.reduce((s, l) => s + Number(l.remaining_qty), 0);
+  const filteredLayersValue = filteredLayers.reduce(
+    (s, l) => s + Number(l.remaining_qty) * Number(l.unit_cost),
+    0
+  );
+
+  const layerColumns = [
+    {
+      key: 'receipt_date',
+      header: 'Receipt Date',
+      render: (l: CostingLayer) => (
+        <div>
+          <p className="font-medium">{format(new Date(l.receipt_date), 'dd MMM yyyy')}</p>
+          <p className="text-xs text-muted-foreground capitalize">{l.source_type?.replace(/_/g, ' ')}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'item',
+      header: 'Item',
+      render: (l: CostingLayer) => (
+        <div>
+          <p className="font-medium">{l.items?.name}</p>
+          <p className="text-xs text-muted-foreground">{l.items?.code}</p>
+        </div>
+      ),
+    },
+    { key: 'location', header: 'Location', render: (l: CostingLayer) => l.locations?.name || '-' },
+    {
+      key: 'original_qty',
+      header: 'Original Qty',
+      render: (l: CostingLayer) => `${Number(l.original_qty).toLocaleString()} ${l.items?.unit_of_measure || ''}`,
+    },
+    {
+      key: 'remaining_qty',
+      header: 'Remaining Qty',
+      render: (l: CostingLayer) => (
+        <span className="font-medium">{Number(l.remaining_qty).toLocaleString()} {l.items?.unit_of_measure || ''}</span>
+      ),
+    },
+    {
+      key: 'unit_cost',
+      header: 'Layer Unit Cost',
+      render: (l: CostingLayer) => formatCurrency(Number(l.unit_cost)),
+    },
+    {
+      key: 'remaining_value',
+      header: 'Remaining Value',
+      render: (l: CostingLayer) => (
+        <span className="font-semibold">
+          {formatCurrency(Number(l.remaining_qty) * Number(l.unit_cost))}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <AppLayout>
       <div className="page-container">
