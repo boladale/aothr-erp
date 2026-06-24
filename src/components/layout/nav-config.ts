@@ -190,7 +190,6 @@ export const navSections = [
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
       { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
-      { path: '/inventory-valuation', label: 'Inventory Valuation', icon: DollarSign },
     ],
   },
   {
