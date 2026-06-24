@@ -74,12 +74,15 @@ interface GLAccountBalance {
 
 export default function InventoryValuation() {
   const [layers, setLayers] = useState<CostingLayer[]>([]);
+  const [allLayers, setAllLayers] = useState<CostingLayer[]>([]);
+  const [consumptions, setConsumptions] = useState<Array<{ layer_id: string; quantity: number; consumed_at: string }>>([]);
   const [balances, setBalances] = useState<BalanceRow[]>([]);
   const [glInventory, setGlInventory] = useState<GLAccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
+  const [asOfDate, setAsOfDate] = useState<Date>(new Date());
 
 
 
