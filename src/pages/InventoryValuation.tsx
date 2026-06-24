@@ -76,7 +76,7 @@ export default function InventoryValuation() {
       const [layersRes, balancesRes] = await Promise.all([
         supabase
           .from('inventory_costing_layers')
-          .select('*, items(code, name, unit_of_measure), locations(code, name)')
+          .select('*, items(code, name, unit_of_measure, category), locations(code, name)')
           .gt('remaining_qty', 0)
           .order('receipt_date', { ascending: true }),
         supabase
