@@ -94,6 +94,22 @@ export default function InventoryIssues() {
       return (data || []) as unknown as IssueRow[];
     },
   });
+  const issueJEsQ = useQuery({
+    queryKey: ['inventory_issue_jes'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('gl_journal_entries')
+        .select('id, entry_number, source_id, status, gl_journal_lines(debit)')
+        .eq('source_module', 'inventory');
+      if (error) return [] as any[];
+      return data || [];
+    },
+  });
+  const jeByIssue: Record<string, { entry_number: string; total: number; status: string; id: string }> = {};
+  (issueJEsQ.data || []).forEach((je: any) => {
+    const total = (je.gl_journal_lines || []).reduce((s: number, l: any) => s + Number(l.debit || 0), 0);
+    jeByIssue[je.source_id] = { entry_number: je.entry_number, total, status: je.status, id: je.id };
+  });
   const itemsQ = useQuery({
     queryKey: ['items-active-min'],
     queryFn: async () => {
