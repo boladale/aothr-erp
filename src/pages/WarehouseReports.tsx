@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Boxes, TrendingUp, AlertTriangle, MapPin, Clock } from 'lucide-react';
+import { Boxes, TrendingUp, AlertTriangle, MapPin, Clock, Skull } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
