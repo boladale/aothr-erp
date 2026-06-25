@@ -154,6 +154,50 @@ export default function JournalEntries() {
   });
   const handlePost = (id: string) => postMutation.mutate(id);
 
+  const reverseMutation = useMutation({
+    mutationFn: async (entry: any) => {
+      const today = new Date().toISOString().split('T')[0];
+      const period = periods.find((p: any) => p.start_date <= today && p.end_date >= today) || periods[0];
+      if (!period) throw new Error('No open fiscal period available for reversal');
+      const { data: origLines, error: linesErr } = await supabase.from('gl_journal_lines').select('*').eq('journal_entry_id', entry.id).order('line_number');
+      if (linesErr) throw linesErr;
+      if (!origLines || origLines.length === 0) throw new Error('Original entry has no lines');
+      const entryNumber = await getNextTransactionNumber(organizationId!, 'JE', 'JE');
+      const { data: newEntry, error } = await supabase.from('gl_journal_entries').insert({
+        entry_number: entryNumber,
+        entry_date: today,
+        description: `Reversal of ${entry.entry_number}: ${entry.description || ''}`.slice(0, 500),
+        fiscal_period_id: period.id,
+        total_debit: entry.total_credit,
+        total_credit: entry.total_debit,
+        created_by: user?.id,
+        organization_id: organizationId,
+        source_module: 'reversal',
+        source_id: entry.id,
+      }).select().single();
+      if (error) throw error;
+      const reversed = origLines.map((l: any, i: number) => ({
+        journal_entry_id: newEntry.id, line_number: i + 1, account_id: l.account_id,
+        debit: l.credit || 0, credit: l.debit || 0,
+        description: `Reversal: ${l.description || ''}`.slice(0, 500),
+      }));
+      const { error: insErr } = await supabase.from('gl_journal_lines').insert(reversed);
+      if (insErr) throw insErr;
+      const { error: postErr } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).eq('id', newEntry.id);
+      if (postErr) throw postErr;
+      return entryNumber;
+    },
+    onSuccess: (num) => {
+      queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
+      toast.success(`Reversal entry ${num} posted`);
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+  const handleReverse = (entry: any) => {
+    if (!window.confirm(`Reverse posted entry ${entry.entry_number}? A new offsetting posted entry will be created dated today.`)) return;
+    reverseMutation.mutate(entry);
+  };
+
   const bulkPostMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { error } = await supabase.from('gl_journal_entries').update({ status: 'posted' }).in('id', ids);
@@ -259,6 +303,11 @@ export default function JournalEntries() {
                         )}
                         {e.status === 'draft' && canManage && e.source_module && (
                           <Button variant="outline" size="sm" onClick={() => handlePost(e.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
+                        )}
+                        {e.status === 'posted' && canManage && e.source_module !== 'reversal' && (
+                          <Button variant="outline" size="sm" disabled={reverseMutation.isPending} onClick={() => handleReverse(e)}>
+                            <Trash2 className="h-3 w-3 mr-1" /> Reverse
+                          </Button>
                         )}
                       </td>
                     </tr>
