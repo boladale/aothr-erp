@@ -325,7 +325,10 @@ export default function JournalEntries() {
                 </table>
               </div>
 
-              <Button onClick={handleSave} className="w-full" disabled={!isBalanced || saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingEntry ? 'Update Journal Entry' : 'Create Journal Entry')}</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleSave({ draft: true })} className="flex-1" disabled={saveMutation.isPending}>Save as Draft</Button>
+                <Button onClick={() => handleSave()} className="flex-1" disabled={!isBalanced || saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingEntry ? 'Update Journal Entry' : 'Create Journal Entry')}</Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
