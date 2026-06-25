@@ -15,7 +15,8 @@ import { Switch } from '@/components/ui/switch';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, ChevronRight, ChevronDown, Search, Sparkles, Pencil, Trash2, Ban, CheckCircle2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, Search, Sparkles, Pencil, Trash2, Ban, CheckCircle2, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
@@ -284,6 +285,25 @@ export default function ChartOfAccounts() {
     fetchAccounts();
   };
 
+  const handleExportExcel = () => {
+    const sorted = [...accounts].sort((a, b) => a.account_code.localeCompare(b.account_code));
+    const rows = sorted.map(a => ({
+      'Account Code': a.account_code,
+      'Account Name': a.account_name,
+      'Type': a.account_type,
+      'Normal Balance': a.normal_balance,
+      'Header': a.is_header ? 'Yes' : 'No',
+      'Status': a.status,
+      'Active': a.is_active ? 'Yes' : 'No',
+      'Description': a.description || '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Chart of Accounts');
+    XLSX.writeFile(wb, `chart-of-accounts-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success(`Exported ${rows.length} accounts`);
+  };
+
   const getFilteredAccounts = () => {
     let filtered = accounts;
     if (activeTab === 'draft') filtered = filtered.filter(a => a.status === 'draft');
@@ -334,6 +354,9 @@ export default function ChartOfAccounts() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={expandAll}>Expand All</Button>
               <Button variant="outline" size="sm" onClick={collapseAll}>Collapse All</Button>
+              <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <Download className="h-4 w-4 mr-1" /> Export Excel
+              </Button>
               {canManage && accounts.length === 0 && (
                 <Button variant="secondary" size="sm" onClick={handleSeedCOA} disabled={seeding}>
                   <Sparkles className="h-4 w-4 mr-1" /> {seeding ? 'Seeding...' : 'Seed Basic COA'}
