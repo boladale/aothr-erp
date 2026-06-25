@@ -33,6 +33,10 @@ export default function JournalEntries() {
     { account_id: '', debit: 0, credit: 0, description: '' },
   ]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
 
   const entriesQ = useQuery({
     queryKey: ['gl_journal_entries'],
