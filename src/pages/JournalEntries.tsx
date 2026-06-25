@@ -13,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import { Plus, Trash2, Send, Pencil, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Send, Pencil, CheckCircle, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { formatCurrency } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 import { BulkActionBar } from '@/components/ui/bulk-action-bar';
