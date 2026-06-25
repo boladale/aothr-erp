@@ -285,6 +285,25 @@ export default function ChartOfAccounts() {
     fetchAccounts();
   };
 
+  const handleExportExcel = () => {
+    const sorted = [...accounts].sort((a, b) => a.account_code.localeCompare(b.account_code));
+    const rows = sorted.map(a => ({
+      'Account Code': a.account_code,
+      'Account Name': a.account_name,
+      'Type': a.account_type,
+      'Normal Balance': a.normal_balance,
+      'Header': a.is_header ? 'Yes' : 'No',
+      'Status': a.status,
+      'Active': a.is_active ? 'Yes' : 'No',
+      'Description': a.description || '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Chart of Accounts');
+    XLSX.writeFile(wb, `chart-of-accounts-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success(`Exported ${rows.length} accounts`);
+  };
+
   const getFilteredAccounts = () => {
     let filtered = accounts;
     if (activeTab === 'draft') filtered = filtered.filter(a => a.status === 'draft');
