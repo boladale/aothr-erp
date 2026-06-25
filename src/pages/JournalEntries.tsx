@@ -224,7 +224,18 @@ export default function JournalEntries() {
     bulkPostMutation.mutate(draftIds);
   };
 
-  const draftEntries = entries.filter((e: any) => e.status === 'draft');
+  const filteredEntries = entries.filter((e: any) => {
+    if (dateFrom && e.entry_date < dateFrom) return false;
+    if (dateTo && e.entry_date > dateTo) return false;
+    if (statusFilter !== 'all' && e.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!(e.entry_number?.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q) || e.source_module?.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  });
+
+  const draftEntries = filteredEntries.filter((e: any) => e.status === 'draft');
   const allDraftSelected = draftEntries.length > 0 && draftEntries.every((e: any) => selectedIds.includes(e.id));
   const someDraftSelected = draftEntries.some((e: any) => selectedIds.includes(e.id));
 
