@@ -328,6 +328,17 @@ export default function JournalEntries() {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => handleSave({ draft: true })} className="flex-1" disabled={saveMutation.isPending}>Save as Draft</Button>
                 <Button onClick={() => handleSave()} className="flex-1" disabled={!isBalanced || saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingEntry ? 'Update Journal Entry' : 'Create Journal Entry')}</Button>
+                {editingEntry && editingEntry.status === 'draft' && (
+                  <Button
+                    variant="default"
+                    className="flex-1 bg-success hover:bg-success/90"
+                    disabled={!isBalanced || postMutation.isPending}
+                    onClick={async () => {
+                      await saveMutation.mutateAsync();
+                      handlePost(editingEntry.id);
+                    }}
+                  ><Send className="h-4 w-4 mr-1" /> Save & Post</Button>
+                )}
               </div>
             </div>
           </DialogContent>
