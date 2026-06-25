@@ -304,6 +304,11 @@ export default function JournalEntries() {
                         {e.status === 'draft' && canManage && e.source_module && (
                           <Button variant="outline" size="sm" onClick={() => handlePost(e.id)}><Send className="h-3 w-3 mr-1" /> Post</Button>
                         )}
+                        {e.status === 'posted' && canManage && e.source_module !== 'reversal' && (
+                          <Button variant="outline" size="sm" disabled={reverseMutation.isPending} onClick={() => handleReverse(e)}>
+                            <Trash2 className="h-3 w-3 mr-1" /> Reverse
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
