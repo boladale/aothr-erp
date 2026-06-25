@@ -33,6 +33,10 @@ export default function JournalEntries() {
     { account_id: '', debit: 0, credit: 0, description: '' },
   ]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
 
   const entriesQ = useQuery({
     queryKey: ['gl_journal_entries'],
@@ -220,7 +224,18 @@ export default function JournalEntries() {
     bulkPostMutation.mutate(draftIds);
   };
 
-  const draftEntries = entries.filter((e: any) => e.status === 'draft');
+  const filteredEntries = entries.filter((e: any) => {
+    if (dateFrom && e.entry_date < dateFrom) return false;
+    if (dateTo && e.entry_date > dateTo) return false;
+    if (statusFilter !== 'all' && e.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!(e.entry_number?.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q) || e.source_module?.toLowerCase().includes(q))) return false;
+    }
+    return true;
+  });
+
+  const draftEntries = filteredEntries.filter((e: any) => e.status === 'draft');
   const allDraftSelected = draftEntries.length > 0 && draftEntries.every((e: any) => selectedIds.includes(e.id));
   const someDraftSelected = draftEntries.some((e: any) => selectedIds.includes(e.id));
 
@@ -241,11 +256,42 @@ export default function JournalEntries() {
         )}
 
         <Card>
+          <CardContent className="p-4 border-b">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <Label className="text-xs">From</Label>
+                <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-40" />
+              </div>
+              <div>
+                <Label className="text-xs">To</Label>
+                <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-40" />
+              </div>
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="posted">Posted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-48">
+                <Label className="text-xs">Search</Label>
+                <Input placeholder="Entry #, description, source" value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              {(dateFrom || dateTo || statusFilter !== 'all' || search) && (
+                <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('all'); setSearch(''); }}>Clear</Button>
+              )}
+              <div className="text-xs text-muted-foreground ml-auto">{filteredEntries.length} of {entries.length}</div>
+            </div>
+          </CardContent>
           <CardContent className="p-0">
             {loading ? (
               <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
-            ) : entries.length === 0 ? (
-              <p className="text-center py-12 text-sm text-muted-foreground">No journal entries yet</p>
+            ) : filteredEntries.length === 0 ? (
+              <p className="text-center py-12 text-sm text-muted-foreground">{entries.length === 0 ? 'No journal entries yet' : 'No entries match the filters'}</p>
             ) : (
               <table className="w-full">
                 <thead>
@@ -272,7 +318,7 @@ export default function JournalEntries() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {entries.map((e: any) => (
+                  {filteredEntries.map((e: any) => (
                     <tr key={e.id} className={`hover:bg-muted/50 ${selectedIds.includes(e.id) ? 'bg-primary/5' : ''}`}>
                       {canManage && (
                         <td className="px-4 py-3">
