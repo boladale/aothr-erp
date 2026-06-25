@@ -132,12 +132,12 @@ export default function JournalEntries() {
     onError: (err: any) => toast.error(err.message),
   });
 
-  const handleSave = () => {
+  const handleSave = (opts?: { draft?: boolean }) => {
     if (!form.description) { toast.error('Description required'); return; }
     if (!form.fiscal_period_id) { toast.error('Select a fiscal period'); return; }
-    if (!isBalanced) { toast.error('Entry must be balanced'); return; }
+    if (!opts?.draft && !isBalanced) { toast.error('Entry must be balanced'); return; }
     const validLines = lines.filter(l => l.account_id && (l.debit > 0 || l.credit > 0));
-    if (validLines.length < 2) { toast.error('At least 2 lines required'); return; }
+    if (validLines.length < 1) { toast.error('Add at least one line'); return; }
     saveMutation.mutate();
   };
 
@@ -325,7 +325,10 @@ export default function JournalEntries() {
                 </table>
               </div>
 
-              <Button onClick={handleSave} className="w-full" disabled={!isBalanced || saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingEntry ? 'Update Journal Entry' : 'Create Journal Entry')}</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleSave({ draft: true })} className="flex-1" disabled={saveMutation.isPending}>Save as Draft</Button>
+                <Button onClick={() => handleSave()} className="flex-1" disabled={!isBalanced || saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingEntry ? 'Update Journal Entry' : 'Create Journal Entry')}</Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
