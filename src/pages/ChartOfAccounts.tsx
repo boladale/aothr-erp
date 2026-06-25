@@ -150,6 +150,7 @@ export default function ChartOfAccounts() {
   const [deleteAccount, setDeleteAccount] = useState<GLAccount | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [form, setForm] = useState(emptyForm);
 
   const accountsQ = useQuery({
