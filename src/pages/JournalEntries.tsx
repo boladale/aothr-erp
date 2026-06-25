@@ -132,12 +132,12 @@ export default function JournalEntries() {
     onError: (err: any) => toast.error(err.message),
   });
 
-  const handleSave = () => {
+  const handleSave = (opts?: { draft?: boolean }) => {
     if (!form.description) { toast.error('Description required'); return; }
     if (!form.fiscal_period_id) { toast.error('Select a fiscal period'); return; }
-    if (!isBalanced) { toast.error('Entry must be balanced'); return; }
+    if (!opts?.draft && !isBalanced) { toast.error('Entry must be balanced'); return; }
     const validLines = lines.filter(l => l.account_id && (l.debit > 0 || l.credit > 0));
-    if (validLines.length < 2) { toast.error('At least 2 lines required'); return; }
+    if (validLines.length < 1) { toast.error('Add at least one line'); return; }
     saveMutation.mutate();
   };
 
