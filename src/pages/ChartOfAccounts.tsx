@@ -286,9 +286,11 @@ export default function ChartOfAccounts() {
 
   const getFilteredAccounts = () => {
     let filtered = accounts;
-    if (activeTab === 'draft') filtered = accounts.filter(a => a.status === 'draft');
-    else if (activeTab === 'approved') filtered = accounts.filter(a => a.status === 'approved');
-    else if (activeTab === 'inactive') filtered = accounts.filter(a => !a.is_active);
+    if (activeTab === 'draft') filtered = filtered.filter(a => a.status === 'draft');
+    else if (activeTab === 'approved') filtered = filtered.filter(a => a.status === 'approved');
+    else if (activeTab === 'inactive') filtered = filtered.filter(a => !a.is_active);
+
+    if (typeFilter !== 'all') filtered = filtered.filter(a => a.account_type === typeFilter);
 
     if (search) {
       const s = search.toLowerCase();
@@ -300,7 +302,7 @@ export default function ChartOfAccounts() {
         (a.description || '').toLowerCase().includes(s)
       );
     }
-    return null; // use tree view
+    return typeFilter !== 'all' ? filtered : null;
   };
 
   const getFilteredTree = () => {
@@ -308,20 +310,18 @@ export default function ChartOfAccounts() {
     if (activeTab === 'draft') return accounts.filter(a => a.status === 'draft');
     if (activeTab === 'approved') filtered = accounts.filter(a => a.status === 'approved');
     if (activeTab === 'inactive') return accounts.filter(a => !a.is_active);
-    return null; // null means use full tree
+    return null;
   };
 
   const draftCount = accounts.filter(a => a.status === 'draft').length;
   const flatList = getFilteredAccounts();
-  const useFlat = !!search || activeTab === 'draft' || activeTab === 'inactive';
+  const useFlat = !!search || typeFilter !== 'all' || activeTab === 'draft' || activeTab === 'inactive';
   const displayAccounts = useFlat
-    ? (search
-        ? (flatList || [])
-        : activeTab === 'draft'
-          ? accounts.filter(a => a.status === 'draft')
-          : activeTab === 'inactive'
-            ? accounts.filter(a => !a.is_active)
-            : [])
+    ? (flatList || (activeTab === 'draft'
+        ? accounts.filter(a => a.status === 'draft')
+        : activeTab === 'inactive'
+          ? accounts.filter(a => !a.is_active)
+          : []))
     : [];
 
   return (
