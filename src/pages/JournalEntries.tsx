@@ -240,11 +240,47 @@ export default function JournalEntries() {
   const allDraftSelected = draftEntries.length > 0 && draftEntries.every((e: any) => selectedIds.includes(e.id));
   const someDraftSelected = draftEntries.some((e: any) => selectedIds.includes(e.id));
 
+  const handleExport = async () => {
+    if (!filteredEntries.length) { toast.error('No entries to export'); return; }
+    try {
+      const ids = filteredEntries.map((e: any) => e.id);
+      const { data: lines } = await supabase.from('gl_journal_lines')
+        .select('journal_entry_id, line_number, account_id, debit, credit, description')
+        .in('journal_entry_id', ids).order('line_number');
+      const acctMap = new Map(accounts.map((a: any) => [a.id, `${a.account_code} - ${a.account_name}`]));
+      const summary = filteredEntries.map((e: any) => ({
+        'Entry #': e.entry_number, Date: e.entry_date, Status: e.status,
+        Description: e.description || '', Source: e.source_module || '',
+        Debits: Number(e.total_debit || 0), Credits: Number(e.total_credit || 0),
+      }));
+      const entryMap = new Map(filteredEntries.map((e: any) => [e.id, e]));
+      const lineRows = (lines || []).map((l: any) => {
+        const e: any = entryMap.get(l.journal_entry_id) || {};
+        return {
+          'Entry #': e.entry_number, Date: e.entry_date, Status: e.status,
+          Line: l.line_number, Account: acctMap.get(l.account_id) || l.account_id,
+          Description: l.description || '', Debit: Number(l.debit || 0), Credit: Number(l.credit || 0),
+        };
+      });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Entries');
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lineRows), 'Lines');
+      XLSX.writeFile(wb, `journal-entries-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(`Exported ${summary.length} entries`);
+    } catch (err: any) {
+      toast.error(err.message || 'Export failed');
+    }
+  };
+
   return (
     <AppLayout>
       <div className="page-container">
         <PageHeader title="Journal Entries" description="Record and manage general ledger transactions"
-          actions={canManage ? <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New Entry</Button> : undefined} />
+          actions={<div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleExport}><Download className="h-4 w-4 mr-1" /> Export Excel</Button>
+            {canManage && <Button size="sm" onClick={() => { resetForm(); setDialogOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New Entry</Button>}
+          </div>} />
+
 
         {canManage && (
           <BulkActionBar
