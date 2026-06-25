@@ -335,6 +335,9 @@ export default function ChartOfAccounts() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={expandAll}>Expand All</Button>
               <Button variant="outline" size="sm" onClick={collapseAll}>Collapse All</Button>
+              <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <Download className="h-4 w-4 mr-1" /> Export Excel
+              </Button>
               {canManage && accounts.length === 0 && (
                 <Button variant="secondary" size="sm" onClick={handleSeedCOA} disabled={seeding}>
                   <Sparkles className="h-4 w-4 mr-1" /> {seeding ? 'Seeding...' : 'Seed Basic COA'}
