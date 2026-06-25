@@ -318,7 +318,7 @@ export default function JournalEntries() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {entries.map((e: any) => (
+                  {filteredEntries.map((e: any) => (
                     <tr key={e.id} className={`hover:bg-muted/50 ${selectedIds.includes(e.id) ? 'bg-primary/5' : ''}`}>
                       {canManage && (
                         <td className="px-4 py-3">
