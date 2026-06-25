@@ -150,6 +150,7 @@ export default function ChartOfAccounts() {
   const [deleteAccount, setDeleteAccount] = useState<GLAccount | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [form, setForm] = useState(emptyForm);
 
   const accountsQ = useQuery({
@@ -285,9 +286,11 @@ export default function ChartOfAccounts() {
 
   const getFilteredAccounts = () => {
     let filtered = accounts;
-    if (activeTab === 'draft') filtered = accounts.filter(a => a.status === 'draft');
-    else if (activeTab === 'approved') filtered = accounts.filter(a => a.status === 'approved');
-    else if (activeTab === 'inactive') filtered = accounts.filter(a => !a.is_active);
+    if (activeTab === 'draft') filtered = filtered.filter(a => a.status === 'draft');
+    else if (activeTab === 'approved') filtered = filtered.filter(a => a.status === 'approved');
+    else if (activeTab === 'inactive') filtered = filtered.filter(a => !a.is_active);
+
+    if (typeFilter !== 'all') filtered = filtered.filter(a => a.account_type === typeFilter);
 
     if (search) {
       const s = search.toLowerCase();
@@ -299,7 +302,7 @@ export default function ChartOfAccounts() {
         (a.description || '').toLowerCase().includes(s)
       );
     }
-    return null; // use tree view
+    return typeFilter !== 'all' ? filtered : null;
   };
 
   const getFilteredTree = () => {
@@ -307,20 +310,18 @@ export default function ChartOfAccounts() {
     if (activeTab === 'draft') return accounts.filter(a => a.status === 'draft');
     if (activeTab === 'approved') filtered = accounts.filter(a => a.status === 'approved');
     if (activeTab === 'inactive') return accounts.filter(a => !a.is_active);
-    return null; // null means use full tree
+    return null;
   };
 
   const draftCount = accounts.filter(a => a.status === 'draft').length;
   const flatList = getFilteredAccounts();
-  const useFlat = !!search || activeTab === 'draft' || activeTab === 'inactive';
+  const useFlat = !!search || typeFilter !== 'all' || activeTab === 'draft' || activeTab === 'inactive';
   const displayAccounts = useFlat
-    ? (search
-        ? (flatList || [])
-        : activeTab === 'draft'
-          ? accounts.filter(a => a.status === 'draft')
-          : activeTab === 'inactive'
-            ? accounts.filter(a => !a.is_active)
-            : [])
+    ? (flatList || (activeTab === 'draft'
+        ? accounts.filter(a => a.status === 'draft')
+        : activeTab === 'inactive'
+          ? accounts.filter(a => !a.is_active)
+          : []))
     : [];
 
   return (
@@ -358,9 +359,24 @@ export default function ChartOfAccounts() {
           </TabsList>
         </Tabs>
 
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search accounts..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 max-w-sm" />
+        <div className="flex gap-2 mb-4 items-center">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search accounts..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          </div>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="asset">Asset</SelectItem>
+              <SelectItem value="liability">Liability</SelectItem>
+              <SelectItem value="equity">Equity</SelectItem>
+              <SelectItem value="revenue">Revenue</SelectItem>
+              <SelectItem value="expense">Expense</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <Card>
