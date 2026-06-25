@@ -256,11 +256,42 @@ export default function JournalEntries() {
         )}
 
         <Card>
+          <CardContent className="p-4 border-b">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <Label className="text-xs">From</Label>
+                <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-40" />
+              </div>
+              <div>
+                <Label className="text-xs">To</Label>
+                <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-40" />
+              </div>
+              <div>
+                <Label className="text-xs">Status</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="posted">Posted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-48">
+                <Label className="text-xs">Search</Label>
+                <Input placeholder="Entry #, description, source" value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              {(dateFrom || dateTo || statusFilter !== 'all' || search) && (
+                <Button variant="ghost" size="sm" onClick={() => { setDateFrom(''); setDateTo(''); setStatusFilter('all'); setSearch(''); }}>Clear</Button>
+              )}
+              <div className="text-xs text-muted-foreground ml-auto">{filteredEntries.length} of {entries.length}</div>
+            </div>
+          </CardContent>
           <CardContent className="p-0">
             {loading ? (
               <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
-            ) : entries.length === 0 ? (
-              <p className="text-center py-12 text-sm text-muted-foreground">No journal entries yet</p>
+            ) : filteredEntries.length === 0 ? (
+              <p className="text-center py-12 text-sm text-muted-foreground">{entries.length === 0 ? 'No journal entries yet' : 'No entries match the filters'}</p>
             ) : (
               <table className="w-full">
                 <thead>
