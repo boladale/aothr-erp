@@ -99,7 +99,7 @@ export default function InvoiceInbox() {
     queryFn: async () => {
       const { data, error } = await (supabase
         .from('ap_invoices' as any) as any)
-        .select('*, vendors(name), purchase_orders(po_number)')
+        .select('*, vendors(name), purchase_orders(po_number, total_amount)')
         .eq('source', 'vendor')
         .order('created_at', { ascending: false });
       if (error) throw error;
