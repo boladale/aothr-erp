@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Inbox, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { Search, Inbox, CheckCircle2, XCircle, ArrowRight, Plus } from 'lucide-react';
+import { LogVendorInvoiceDialog } from '@/components/invoices/LogVendorInvoiceDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
