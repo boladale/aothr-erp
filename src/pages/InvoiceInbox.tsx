@@ -207,6 +207,7 @@ export default function InvoiceInbox() {
                   <div><span className="text-muted-foreground">Amount:</span> <span className="font-semibold">{formatCurrency(selected.total_amount)}</span></div>
                   <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={selected.status} /></div>
                 </div>
+                <ThreeWayMatchPanel invoice={selected} />
                 <AttachmentPanel entityType="ap_invoice" entityId={selected.id} />
               </div>
             )}
