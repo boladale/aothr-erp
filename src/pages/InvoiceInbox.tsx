@@ -24,9 +24,66 @@ interface VendorInvoice {
   status: string;
   payment_status: string;
   rejection_reason: string | null;
+  po_id: string | null;
   vendors: { name: string } | null;
-  purchase_orders: { po_number: string } | null;
+  purchase_orders: { po_number: string; total_amount: number } | null;
   created_at: string;
+}
+
+function ThreeWayMatchPanel({ invoice }: { invoice: VendorInvoice }) {
+  const matchQ = useQuery({
+    queryKey: ['three-way-match', invoice.id],
+    queryFn: async () => {
+      if (!invoice.po_id) return null;
+      const [{ data: poLines }, { data: grns }, { data: invLines }] = await Promise.all([
+        supabase.from('purchase_order_lines').select('quantity, unit_price, line_total').eq('po_id', invoice.po_id),
+        supabase.from('goods_receipts').select('id, status, goods_receipt_lines(qty_received, unit_cost)').eq('po_id', invoice.po_id),
+        supabase.from('ap_invoice_lines').select('quantity, unit_price, line_total').eq('invoice_id', invoice.id),
+      ]);
+      const poQty = (poLines || []).reduce((s: number, l: any) => s + Number(l.quantity || 0), 0);
+      const poAmt = (poLines || []).reduce((s: number, l: any) => s + Number(l.line_total || 0), 0);
+      const grnQty = (grns || []).filter((g: any) => g.status === 'posted')
+        .reduce((s: number, g: any) => s + (g.goods_receipt_lines || []).reduce((x: number, l: any) => x + Number(l.qty_received || 0), 0), 0);
+      const invQty = (invLines || []).reduce((s: number, l: any) => s + Number(l.quantity || 0), 0);
+      const invAmt = (invLines || []).reduce((s: number, l: any) => s + Number(l.line_total || 0), 0) || Number(invoice.total_amount || 0);
+      const tol = 0.01;
+      const poOk = poQty > 0;
+      const grnOk = poOk && Math.abs(grnQty - invQty) <= Math.max(tol, poQty * 0.001);
+      const invOk = poOk && Math.abs(invAmt - poAmt) <= Math.max(0.5, poAmt * 0.001);
+      return { poOk, grnOk, invOk, poQty, poAmt, grnQty, invQty, invAmt };
+    },
+  });
+  if (!invoice.po_id) {
+    return <div className="text-xs text-muted-foreground border rounded p-3">No PO linked — three-way match not applicable.</div>;
+  }
+  if (matchQ.isLoading || !matchQ.data) {
+    return <div className="text-xs text-muted-foreground border rounded p-3">Checking three-way match…</div>;
+  }
+  const { poOk, grnOk, invOk, poQty, poAmt, grnQty, invQty, invAmt } = matchQ.data;
+  const allOk = poOk && grnOk && invOk;
+  const Row = ({ label, ok, detail }: { label: string; ok: boolean; detail: string }) => (
+    <div className="flex items-center justify-between text-sm py-1">
+      <div className="flex items-center gap-2">
+        {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
+        <span className="font-medium">{label}</span>
+        <span className={ok ? 'text-success' : 'text-destructive'}>{ok ? '✓' : '✗'}</span>
+      </div>
+      <span className="text-xs text-muted-foreground">{detail}</span>
+    </div>
+  );
+  return (
+    <div className={`border rounded p-3 ${allOk ? 'border-success/30 bg-success/5' : 'border-warning/30 bg-warning/5'}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-semibold">Three-Way Match</span>
+        <span className={`text-xs font-medium ${allOk ? 'text-success' : 'text-warning'}`}>
+          {allOk ? 'Invoice matched' : 'Discrepancy detected'}
+        </span>
+      </div>
+      <Row label="PO" ok={poOk} detail={`Qty ${poQty} · ${formatCurrency(poAmt)}`} />
+      <Row label="GRN" ok={grnOk} detail={`Received ${grnQty} vs invoiced ${invQty}`} />
+      <Row label="Invoice" ok={invOk} detail={`${formatCurrency(invAmt)} vs PO ${formatCurrency(poAmt)}`} />
+    </div>
+  );
 }
 
 export default function InvoiceInbox() {
@@ -42,7 +99,7 @@ export default function InvoiceInbox() {
     queryFn: async () => {
       const { data, error } = await (supabase
         .from('ap_invoices' as any) as any)
-        .select('*, vendors(name), purchase_orders(po_number)')
+        .select('*, vendors(name), purchase_orders(po_number, total_amount)')
         .eq('source', 'vendor')
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -150,6 +207,7 @@ export default function InvoiceInbox() {
                   <div><span className="text-muted-foreground">Amount:</span> <span className="font-semibold">{formatCurrency(selected.total_amount)}</span></div>
                   <div><span className="text-muted-foreground">Status:</span> <StatusBadge status={selected.status} /></div>
                 </div>
+                <ThreeWayMatchPanel invoice={selected} />
                 <AttachmentPanel entityType="ap_invoice" entityId={selected.id} />
               </div>
             )}
