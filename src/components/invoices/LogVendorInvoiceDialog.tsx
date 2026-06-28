@@ -43,7 +43,7 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
   const vendorsQ = useQuery({
     queryKey: ['vendors-active-list'],
     queryFn: async () => {
-      const { data } = await supabase.from('vendors').select('id, name, status').eq('status', 'approved').order('name');
+      const { data } = await supabase.from('vendors').select('id, name, status').eq('status', 'active' as any).order('name');
       return data || [];
     },
     enabled: open,
