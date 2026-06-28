@@ -255,7 +255,10 @@ export default function Invoices() {
     <AppLayout>
       <div className="page-container">
         <PageHeader title="Invoices" description="Capture vendor invoices for PO matching"
-          actions={<Button onClick={() => { resetForm(); setDialogOpen(true); }} disabled={receivedPOs.length === 0}><Plus className="mr-2 h-4 w-4" /> Create Invoice</Button>} />
+          actions={<Button onClick={() => {
+            if (receivedPOs.length === 0) { toast.error('No received POs available. Receive goods on a PO first.'); return; }
+            resetForm(); setDialogOpen(true);
+          }}><Plus className="mr-2 h-4 w-4" /> Create Invoice</Button>} />
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
