@@ -117,7 +117,12 @@ export default function InvoiceInbox() {
       <div className="page-container">
         <PageHeader
           title="AP Invoice Inbox"
-          description={`Invoices submitted by vendors via the Vendor Portal — ${pending} awaiting review`}
+          description={`Invoices submitted by vendors (portal or logged by AP) — ${pending} awaiting review`}
+          actions={
+            <Button onClick={() => setLogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Log Vendor Invoice
+            </Button>
+          }
         />
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
@@ -125,6 +130,7 @@ export default function InvoiceInbox() {
             <Input placeholder="Search invoice, vendor, PO..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
           </div>
         </div>
+        <LogVendorInvoiceDialog open={logOpen} onOpenChange={setLogOpen} onCreated={invalidate} />
         <DataTable columns={columns} data={filtered} loading={loading} emptyMessage="No vendor-submitted invoices yet." />
 
         <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
