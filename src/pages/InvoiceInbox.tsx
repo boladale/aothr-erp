@@ -35,6 +35,7 @@ export default function InvoiceInbox() {
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<VendorInvoice | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
 
   const invoicesQ = useQuery({
     queryKey: ['ap_invoices', 'inbox'],
