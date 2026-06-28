@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Inbox, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { Search, Inbox, CheckCircle2, XCircle, ArrowRight, Plus } from 'lucide-react';
+import { LogVendorInvoiceDialog } from '@/components/invoices/LogVendorInvoiceDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -34,6 +35,7 @@ export default function InvoiceInbox() {
   const canApprove = hasRole('accounts_payable') || hasRole('admin');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<VendorInvoice | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
 
   const invoicesQ = useQuery({
     queryKey: ['ap_invoices', 'inbox'],
@@ -115,7 +117,12 @@ export default function InvoiceInbox() {
       <div className="page-container">
         <PageHeader
           title="AP Invoice Inbox"
-          description={`Invoices submitted by vendors via the Vendor Portal — ${pending} awaiting review`}
+          description={`Invoices submitted by vendors (portal or logged by AP) — ${pending} awaiting review`}
+          actions={
+            <Button onClick={() => setLogOpen(true)}>
+              <Plus className="h-4 w-4 mr-1" /> Log Vendor Invoice
+            </Button>
+          }
         />
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-sm">
@@ -123,6 +130,7 @@ export default function InvoiceInbox() {
             <Input placeholder="Search invoice, vendor, PO..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
           </div>
         </div>
+        <LogVendorInvoiceDialog open={logOpen} onOpenChange={setLogOpen} onCreated={invalidate} />
         <DataTable columns={columns} data={filtered} loading={loading} emptyMessage="No vendor-submitted invoices yet." />
 
         <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
