@@ -56,7 +56,7 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
       const { data } = await supabase.from('purchase_orders')
         .select('id, po_number, total_amount, status')
         .eq('vendor_id', vendorId)
-        .in('status', ['sent', 'approved', 'received', 'partially_received', 'partially_invoiced'])
+        .in('status', ['sent', 'approved', 'fully_received', 'partially_received'])
         .order('po_number');
       return data || [];
     },
