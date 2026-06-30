@@ -40,6 +40,25 @@ export default function APPayments() {
   const [vendorInvoices, setVendorInvoices] = useState<Invoice[]>([]);
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
+  const [outstandingMap, setOutstandingMap] = useState<Record<string, number>>({});
+
+  const loadOutstanding = async (invoiceIds: string[], excludePaymentId?: string) => {
+    if (invoiceIds.length === 0) { setOutstandingMap({}); return {} as Record<string, number>; }
+    let q = supabase.from('ap_payment_allocations')
+      .select('invoice_id, allocated_amount, payment:ap_payments!inner(id, status)')
+      .in('invoice_id', invoiceIds);
+    const { data } = await q;
+    const paidMap: Record<string, number> = {};
+    (data || []).forEach((r: any) => {
+      if (excludePaymentId && r.payment?.id === excludePaymentId) return;
+      paidMap[r.invoice_id] = (paidMap[r.invoice_id] || 0) + Number(r.allocated_amount || 0);
+    });
+    setOutstandingMap(paidMap);
+    return paidMap;
+  };
+
+  const getOutstanding = (inv: Invoice) =>
+    Math.max(0, Number(inv.total_amount || 0) - (outstandingMap[inv.id] || 0));
 
   const paymentsQ = useQuery({
     queryKey: ['ap_payments'],
