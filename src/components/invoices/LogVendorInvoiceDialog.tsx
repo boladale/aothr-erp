@@ -231,7 +231,18 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
                   ))}
                 </TableBody>
               </Table>
-              <div className="text-right font-semibold mt-2">Total: {formatCurrency(total)}</div>
+              <div className="pt-3 mt-2 border-t space-y-2">
+                <TaxSelector
+                  subtotal={total}
+                  value={taxGroupId}
+                  onChange={(gid, _pct, amt) => { setTaxGroupId(gid); setTaxAmount(amt); }}
+                />
+                <div className="flex justify-end gap-6 text-sm">
+                  <span className="text-muted-foreground">Subtotal: {formatCurrency(total)}</span>
+                  <span className="text-muted-foreground">VAT: {formatCurrency(taxAmount)}</span>
+                  <span className="font-semibold">Total: {formatCurrency(total + taxAmount)}</span>
+                </div>
+              </div>
             </div>
           )}
 
