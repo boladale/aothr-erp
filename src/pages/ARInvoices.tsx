@@ -92,7 +92,7 @@ export default function ARInvoices() {
 
   const resetForm = () => {
     setEditingInvoice(null);
-    setForm({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0' });
+    setForm({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0', tax_group_id: '' });
     setLines([{ description: '', item_id: '', quantity: '1', unit_price: '0', revenue_account_id: '' }]);
   };
 
