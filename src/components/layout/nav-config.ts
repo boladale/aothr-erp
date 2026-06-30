@@ -105,6 +105,7 @@ export const pathToProgram: Record<string, string> = {
   '/recurring-entries': 'recurring_entries',
   '/inventory-transfers': 'inventory_transfers',
   '/vendor-payment-report': 'vendor_payment_report',
+  '/vendor-statement': 'vendor_payment_report',
   '/req-to-payment-report': 'req_to_payment_report',
   '/procurement-audit': 'procurement_audit',
   '/admin': 'admin',
