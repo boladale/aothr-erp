@@ -312,9 +312,16 @@ export default function ARInvoices() {
               </Card>
 
               <div className="grid grid-cols-3 gap-4">
-                <div><Label>Tax Amount</Label><Input type="number" value={form.tax_amount} onChange={e => setForm(f => ({ ...f, tax_amount: e.target.value }))} /></div>
+                <TaxSelector
+                  subtotal={subtotal}
+                  value={form.tax_group_id}
+                  onChange={(gid, _pct, amt) => setForm(f => ({ ...f, tax_group_id: gid, tax_amount: String(amt) }))}
+                />
                 <div className="text-right pt-6"><span className="text-sm text-muted-foreground">Subtotal: {formatCurrency(subtotal)}</span></div>
-                <div className="text-right pt-6"><span className="font-semibold">Total: {formatCurrency(total)}</span></div>
+                <div className="text-right pt-6">
+                  <div className="text-xs text-muted-foreground">VAT: {formatCurrency(tax)}</div>
+                  <div className="font-semibold">Total: {formatCurrency(total)}</div>
+                </div>
               </div>
 
               <Button onClick={handleSave} className="w-full" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingInvoice ? 'Update Invoice' : 'Create Invoice')}</Button>
