@@ -32,6 +32,8 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
   const [lines, setLines] = useState<any[]>([]);
+  const [taxGroupId, setTaxGroupId] = useState('');
+  const [taxAmount, setTaxAmount] = useState(0);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
 
