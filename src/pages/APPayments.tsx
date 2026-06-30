@@ -95,9 +95,9 @@ export default function APPayments() {
     const { data: allocatedInvs } = existingAllocs && existingAllocs.length > 0
       ? await supabase.from('ap_invoices').select('id, invoice_number, total_amount, payment_status').in('id', existingAllocs.map((a: any) => a.invoice_id))
       : { data: [] };
-    const allInvs = new Map<string, Invoice>();
-    [...(invs || []), ...(allocatedInvs || [])].forEach((inv: any) => allInvs.set(inv.id, inv));
-    setVendorInvoices(Array.from(allInvs.values()));
+    const allList = Array.from(allInvs.values());
+    setVendorInvoices(allList);
+    await loadOutstanding(allList.map(i => i.id), payment.id);
 
     const newSelected = new Set<string>();
     const newAllocations: Record<string, number> = {};
