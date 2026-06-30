@@ -119,7 +119,9 @@ export default function APPayments() {
     setSelectedVendor(vendorId); setAllocations({}); setSelectedInvoices(new Set());
     const { data } = await supabase.from('ap_invoices').select('id, invoice_number, total_amount, payment_status')
       .eq('vendor_id', vendorId).eq('status', 'posted').in('payment_status', ['unpaid', 'partial']);
-    setVendorInvoices(data || []);
+    const list = (data || []) as Invoice[];
+    setVendorInvoices(list);
+    await loadOutstanding(list.map(i => i.id));
   };
 
   const toggleInvoice = (invoiceId: string, checked: boolean) => {
@@ -127,7 +129,7 @@ export default function APPayments() {
     if (checked) {
       next.add(invoiceId);
       const inv = vendorInvoices.find(i => i.id === invoiceId);
-      if (inv) setAllocations(prev => ({ ...prev, [invoiceId]: inv.total_amount || 0 }));
+      if (inv) setAllocations(prev => ({ ...prev, [invoiceId]: getOutstanding(inv) }));
     } else {
       next.delete(invoiceId);
       setAllocations(prev => { const n = { ...prev }; delete n[invoiceId]; return n; });
