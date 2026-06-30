@@ -245,6 +245,7 @@ export const navSections = [
       { path: '/cash-reports', label: 'Cash Reports', icon: BarChart3 },
       { path: '/po-closure', label: 'PO Closure Report', icon: ClipboardCheck },
       { path: '/vendor-payment-report', label: 'Vendor Payment Report', icon: CreditCard },
+      { path: '/vendor-statement', label: 'Vendor Statement', icon: FileText },
       { path: '/req-to-payment-report', label: 'PRN to Payment', icon: GitBranch },
       { path: '/procurement-audit', label: 'Procurement Audit', icon: FileSearch },
     ],
