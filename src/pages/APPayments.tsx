@@ -184,6 +184,16 @@ export default function APPayments() {
       toast({ title: 'Error', description: 'Select a vendor and at least one invoice.', variant: 'destructive' });
       return;
     }
+    for (const invId of selectedInvoices) {
+      const inv = vendorInvoices.find(i => i.id === invId);
+      if (!inv) continue;
+      const outstanding = getOutstanding(inv);
+      const alloc = allocations[invId] || 0;
+      if (alloc > outstanding + 0.001) {
+        toast({ title: 'Overpayment blocked', description: `Allocation for ${inv.invoice_number} (${formatCurrency(alloc)}) exceeds outstanding balance (${formatCurrency(outstanding)}).`, variant: 'destructive' });
+        return;
+      }
+    }
     saveMutation.mutate();
   };
 
