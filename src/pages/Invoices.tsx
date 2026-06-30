@@ -33,7 +33,7 @@ export default function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState<InvoiceWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [poLines, setPOLines] = useState<POLineWithItem[]>([]);
-  const [form, setForm] = useState({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '' });
+  const [form, setForm] = useState({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '', tax_group_id: '', tax_amount: 0 });
   const [lines, setLines] = useState<InvoiceLine[]>([]);
 
   const invoicesQ = useQuery({
