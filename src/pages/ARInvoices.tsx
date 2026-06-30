@@ -81,7 +81,7 @@ export default function ARInvoices() {
 
   const openEditDialog = async (inv: ARInvoice) => {
     setEditingInvoice(inv);
-    setForm({ customer_id: inv.customer_id, invoice_date: inv.invoice_date, notes: '', tax_amount: String(inv.tax_amount || 0) });
+    setForm({ customer_id: inv.customer_id, invoice_date: inv.invoice_date, notes: '', tax_amount: String(inv.tax_amount || 0), tax_group_id: '' });
     const { data: invLines } = await supabase.from('ar_invoice_lines').select('*').eq('invoice_id', inv.id);
     setLines((invLines || []).map((l: any) => ({
       description: l.description, item_id: l.item_id || '', quantity: String(l.quantity),
