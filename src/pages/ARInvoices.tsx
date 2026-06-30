@@ -38,7 +38,7 @@ export default function ARInvoices() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<ARInvoice | null>(null);
-  const [form, setForm] = useState({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0' });
+  const [form, setForm] = useState({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0', tax_group_id: '' });
   const [lines, setLines] = useState<InvoiceLine[]>([{ description: '', item_id: '', quantity: '1', unit_price: '0', revenue_account_id: '' }]);
 
   const invoicesQ = useQuery({
