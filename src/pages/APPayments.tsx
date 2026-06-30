@@ -40,6 +40,25 @@ export default function APPayments() {
   const [vendorInvoices, setVendorInvoices] = useState<Invoice[]>([]);
   const [allocations, setAllocations] = useState<Record<string, number>>({});
   const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
+  const [outstandingMap, setOutstandingMap] = useState<Record<string, number>>({});
+
+  const loadOutstanding = async (invoiceIds: string[], excludePaymentId?: string) => {
+    if (invoiceIds.length === 0) { setOutstandingMap({}); return {} as Record<string, number>; }
+    let q = supabase.from('ap_payment_allocations')
+      .select('invoice_id, allocated_amount, payment:ap_payments!inner(id, status)')
+      .in('invoice_id', invoiceIds);
+    const { data } = await q;
+    const paidMap: Record<string, number> = {};
+    (data || []).forEach((r: any) => {
+      if (excludePaymentId && r.payment?.id === excludePaymentId) return;
+      paidMap[r.invoice_id] = (paidMap[r.invoice_id] || 0) + Number(r.allocated_amount || 0);
+    });
+    setOutstandingMap(paidMap);
+    return paidMap;
+  };
+
+  const getOutstanding = (inv: Invoice) =>
+    Math.max(0, Number(inv.total_amount || 0) - (outstandingMap[inv.id] || 0));
 
   const paymentsQ = useQuery({
     queryKey: ['ap_payments'],
@@ -78,7 +97,9 @@ export default function APPayments() {
       : { data: [] };
     const allInvs = new Map<string, Invoice>();
     [...(invs || []), ...(allocatedInvs || [])].forEach((inv: any) => allInvs.set(inv.id, inv));
-    setVendorInvoices(Array.from(allInvs.values()));
+    const allList = Array.from(allInvs.values());
+    setVendorInvoices(allList);
+    await loadOutstanding(allList.map(i => i.id), payment.id);
 
     const newSelected = new Set<string>();
     const newAllocations: Record<string, number> = {};
@@ -98,7 +119,9 @@ export default function APPayments() {
     setSelectedVendor(vendorId); setAllocations({}); setSelectedInvoices(new Set());
     const { data } = await supabase.from('ap_invoices').select('id, invoice_number, total_amount, payment_status')
       .eq('vendor_id', vendorId).eq('status', 'posted').in('payment_status', ['unpaid', 'partial']);
-    setVendorInvoices(data || []);
+    const list = (data || []) as Invoice[];
+    setVendorInvoices(list);
+    await loadOutstanding(list.map(i => i.id));
   };
 
   const toggleInvoice = (invoiceId: string, checked: boolean) => {
@@ -106,7 +129,7 @@ export default function APPayments() {
     if (checked) {
       next.add(invoiceId);
       const inv = vendorInvoices.find(i => i.id === invoiceId);
-      if (inv) setAllocations(prev => ({ ...prev, [invoiceId]: inv.total_amount || 0 }));
+      if (inv) setAllocations(prev => ({ ...prev, [invoiceId]: getOutstanding(inv) }));
     } else {
       next.delete(invoiceId);
       setAllocations(prev => { const n = { ...prev }; delete n[invoiceId]; return n; });
@@ -160,6 +183,16 @@ export default function APPayments() {
     if (!selectedVendor || selectedInvoices.size === 0 || totalAmount <= 0) {
       toast({ title: 'Error', description: 'Select a vendor and at least one invoice.', variant: 'destructive' });
       return;
+    }
+    for (const invId of selectedInvoices) {
+      const inv = vendorInvoices.find(i => i.id === invId);
+      if (!inv) continue;
+      const outstanding = getOutstanding(inv);
+      const alloc = allocations[invId] || 0;
+      if (alloc > outstanding + 0.001) {
+        toast({ title: 'Overpayment blocked', description: `Allocation for ${inv.invoice_number} (${formatCurrency(alloc)}) exceeds outstanding balance (${formatCurrency(outstanding)}).`, variant: 'destructive' });
+        return;
+      }
     }
     saveMutation.mutate();
   };
@@ -260,18 +293,30 @@ export default function APPayments() {
                     <p className="text-sm text-muted-foreground py-4 text-center">No outstanding invoices for this vendor.</p>
                   ) : (
                     <div className="border rounded-lg divide-y">
-                      {vendorInvoices.map(inv => (
+                      {vendorInvoices.map(inv => {
+                        const outstanding = getOutstanding(inv);
+                        const alloc = allocations[inv.id] || 0;
+                        const over = alloc > outstanding + 0.001;
+                        return (
                         <div key={inv.id} className="flex items-center gap-4 p-3">
                           <Checkbox checked={selectedInvoices.has(inv.id)} onCheckedChange={(checked) => toggleInvoice(inv.id, !!checked)} />
                           <div className="flex-1">
                             <p className="text-sm font-medium">{inv.invoice_number}</p>
-                            <p className="text-xs text-muted-foreground">Total: {formatCurrency(inv.total_amount || 0)} • {inv.payment_status}</p>
+                            <p className="text-xs text-muted-foreground">Total: {formatCurrency(inv.total_amount || 0)} • Outstanding: {formatCurrency(outstanding)} • {inv.payment_status}</p>
                           </div>
                           {selectedInvoices.has(inv.id) && (
-                            <Input type="number" className="w-32" value={allocations[inv.id] || ''} onChange={e => setAllocations(prev => ({ ...prev, [inv.id]: parseFloat(e.target.value) || 0 }))} step="0.01" />
+                            <div className="flex flex-col items-end">
+                              <Input type="number" className={`w-32 ${over ? 'border-destructive' : ''}`} value={allocations[inv.id] || ''} max={outstanding} onChange={e => {
+                                const v = parseFloat(e.target.value) || 0;
+                                const capped = Math.min(v, outstanding);
+                                setAllocations(prev => ({ ...prev, [inv.id]: capped }));
+                              }} step="0.01" />
+                              {over && <span className="text-xs text-destructive mt-1">Exceeds outstanding</span>}
+                            </div>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                   {totalAmount > 0 && <p className="text-right font-semibold">Total: {formatCurrency(totalAmount)}</p>}
