@@ -197,7 +197,7 @@ export default function Invoices() {
 
   const resetForm = () => {
     setEditingInvoice(null); setSelectedPO(''); setPOLines([]); setLines([]);
-    setForm({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '' });
+    setForm({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '', tax_group_id: '', tax_amount: 0 });
   };
 
   const filtered = invoices.filter(i =>
