@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/utils';
+import { TaxSelector } from '@/components/tax/TaxSelector';
 
 interface Props {
   open: boolean;
@@ -31,6 +32,8 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
   const [lines, setLines] = useState<any[]>([]);
+  const [taxGroupId, setTaxGroupId] = useState('');
+  const [taxAmount, setTaxAmount] = useState(0);
   const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
   const [certFile, setCertFile] = useState<File | null>(null);
 
@@ -38,6 +41,7 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
     setVendorId(''); setPoId(''); setInvoiceNumber('');
     setInvoiceDate(new Date().toISOString().split('T')[0]);
     setDueDate(''); setLines([]); setInvoiceFile(null); setCertFile(null);
+    setTaxGroupId(''); setTaxAmount(0);
   };
 
   const vendorsQ = useQuery({
@@ -94,7 +98,8 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
         vendor_id: vendorId,
         po_id: poId,
         subtotal,
-        total_amount: subtotal,
+        tax_amount: taxAmount,
+        total_amount: subtotal + taxAmount,
         status: 'pending_approval',
         payment_status: 'unpaid',
         source: 'vendor',
@@ -226,7 +231,18 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
                   ))}
                 </TableBody>
               </Table>
-              <div className="text-right font-semibold mt-2">Total: {formatCurrency(total)}</div>
+              <div className="pt-3 mt-2 border-t space-y-2">
+                <TaxSelector
+                  subtotal={total}
+                  value={taxGroupId}
+                  onChange={(gid, _pct, amt) => { setTaxGroupId(gid); setTaxAmount(amt); }}
+                />
+                <div className="flex justify-end gap-6 text-sm">
+                  <span className="text-muted-foreground">Subtotal: {formatCurrency(total)}</span>
+                  <span className="text-muted-foreground">VAT: {formatCurrency(taxAmount)}</span>
+                  <span className="font-semibold">Total: {formatCurrency(total + taxAmount)}</span>
+                </div>
+              </div>
             </div>
           )}
 

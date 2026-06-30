@@ -18,6 +18,7 @@ import { Plus, Search, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { TaxSelector } from '@/components/tax/TaxSelector';
 
 interface Customer { id: string; code: string; name: string; payment_terms: number | null; }
 interface Item { id: string; code: string; name: string; unit_cost: number | null; }
@@ -37,7 +38,7 @@ export default function ARInvoices() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<ARInvoice | null>(null);
-  const [form, setForm] = useState({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0' });
+  const [form, setForm] = useState({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0', tax_group_id: '' });
   const [lines, setLines] = useState<InvoiceLine[]>([{ description: '', item_id: '', quantity: '1', unit_price: '0', revenue_account_id: '' }]);
 
   const invoicesQ = useQuery({
@@ -80,7 +81,7 @@ export default function ARInvoices() {
 
   const openEditDialog = async (inv: ARInvoice) => {
     setEditingInvoice(inv);
-    setForm({ customer_id: inv.customer_id, invoice_date: inv.invoice_date, notes: '', tax_amount: String(inv.tax_amount || 0) });
+    setForm({ customer_id: inv.customer_id, invoice_date: inv.invoice_date, notes: '', tax_amount: String(inv.tax_amount || 0), tax_group_id: '' });
     const { data: invLines } = await supabase.from('ar_invoice_lines').select('*').eq('invoice_id', inv.id);
     setLines((invLines || []).map((l: any) => ({
       description: l.description, item_id: l.item_id || '', quantity: String(l.quantity),
@@ -91,7 +92,7 @@ export default function ARInvoices() {
 
   const resetForm = () => {
     setEditingInvoice(null);
-    setForm({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0' });
+    setForm({ customer_id: '', invoice_date: new Date().toISOString().split('T')[0], notes: '', tax_amount: '0', tax_group_id: '' });
     setLines([{ description: '', item_id: '', quantity: '1', unit_price: '0', revenue_account_id: '' }]);
   };
 
@@ -311,9 +312,16 @@ export default function ARInvoices() {
               </Card>
 
               <div className="grid grid-cols-3 gap-4">
-                <div><Label>Tax Amount</Label><Input type="number" value={form.tax_amount} onChange={e => setForm(f => ({ ...f, tax_amount: e.target.value }))} /></div>
+                <TaxSelector
+                  subtotal={subtotal}
+                  value={form.tax_group_id}
+                  onChange={(gid, _pct, amt) => setForm(f => ({ ...f, tax_group_id: gid, tax_amount: String(amt) }))}
+                />
                 <div className="text-right pt-6"><span className="text-sm text-muted-foreground">Subtotal: {formatCurrency(subtotal)}</span></div>
-                <div className="text-right pt-6"><span className="font-semibold">Total: {formatCurrency(total)}</span></div>
+                <div className="text-right pt-6">
+                  <div className="text-xs text-muted-foreground">VAT: {formatCurrency(tax)}</div>
+                  <div className="font-semibold">Total: {formatCurrency(total)}</div>
+                </div>
               </div>
 
               <Button onClick={handleSave} className="w-full" disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving...' : (editingInvoice ? 'Update Invoice' : 'Create Invoice')}</Button>

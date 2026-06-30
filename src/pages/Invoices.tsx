@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { APInvoice, PurchaseOrder, Vendor, PurchaseOrderLine, Item } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { TaxSelector } from '@/components/tax/TaxSelector';
 
 interface InvoiceWithDetails extends APInvoice { vendors: Vendor | null; purchase_orders: { po_number: string } | null; }
 interface POWithVendor extends PurchaseOrder { vendors: { id: string; name: string } | null; }
@@ -32,7 +33,7 @@ export default function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState<InvoiceWithDetails | null>(null);
   const [selectedPO, setSelectedPO] = useState<string>('');
   const [poLines, setPOLines] = useState<POLineWithItem[]>([]);
-  const [form, setForm] = useState({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '' });
+  const [form, setForm] = useState({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '', tax_group_id: '', tax_amount: 0 });
   const [lines, setLines] = useState<InvoiceLine[]>([]);
 
   const invoicesQ = useQuery({
@@ -82,7 +83,7 @@ export default function Invoices() {
   const openEditDialog = async (invoice: InvoiceWithDetails) => {
     setEditingInvoice(invoice);
     setSelectedPO(invoice.po_id);
-    setForm({ invoice_number: invoice.invoice_number, invoice_date: invoice.invoice_date, due_date: invoice.due_date || '' });
+    setForm({ invoice_number: invoice.invoice_number, invoice_date: invoice.invoice_date, due_date: invoice.due_date || '', tax_group_id: '', tax_amount: Number(invoice.tax_amount || 0) });
     // Load existing lines
     const { data: invLines } = await supabase.from('ap_invoice_lines').select('*, items(name)').eq('invoice_id', invoice.id);
     const { data: poLinesData } = await supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', invoice.po_id).order('line_number');
@@ -107,11 +108,13 @@ export default function Invoices() {
       if (overInvoice) throw new Error(`Cannot invoice more than received for ${overInvoice.item_name}`);
 
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
+      const taxAmount = Number(form.tax_amount || 0);
+      const totalAmount = subtotal + taxAmount;
 
       if (editingInvoice) {
         const { error } = await supabase.from('ap_invoices').update({
           invoice_number: form.invoice_number, invoice_date: form.invoice_date, due_date: form.due_date || null,
-          subtotal, total_amount: subtotal,
+          subtotal, tax_amount: taxAmount, total_amount: totalAmount,
         }).eq('id', editingInvoice.id);
         if (error) throw error;
         await supabase.from('ap_invoice_lines').delete().eq('invoice_id', editingInvoice.id);
@@ -126,7 +129,7 @@ export default function Invoices() {
       const { data: invoice, error } = await supabase.from('ap_invoices').insert({
         invoice_number: form.invoice_number, vendor_id: po.vendors.id, po_id: selectedPO,
         invoice_date: form.invoice_date, due_date: form.due_date || null,
-        subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+        subtotal, tax_amount: taxAmount, total_amount: totalAmount, created_by: user?.id, organization_id: organizationId,
       }).select().single();
       if (error) throw error;
       await supabase.from('ap_invoice_lines').insert(validLines.map(l => ({
@@ -196,7 +199,7 @@ export default function Invoices() {
 
   const resetForm = () => {
     setEditingInvoice(null); setSelectedPO(''); setPOLines([]); setLines([]);
-    setForm({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '' });
+    setForm({ invoice_number: '', invoice_date: new Date().toISOString().split('T')[0], due_date: '', tax_group_id: '', tax_amount: 0 });
   };
 
   const filtered = invoices.filter(i =>
@@ -311,9 +314,23 @@ export default function Invoices() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-end pt-2 border-t">
-                    <span className="font-medium">Total: {formatCurrency(lines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0))}</span>
-                  </div>
+                  {(() => {
+                    const sub = lines.reduce((s, l) => s + (l.quantity * l.unit_price), 0);
+                    return (
+                      <div className="space-y-2 pt-2 border-t">
+                        <TaxSelector
+                          subtotal={sub}
+                          value={form.tax_group_id}
+                          onChange={(gid, _pct, amt) => setForm(f => ({ ...f, tax_group_id: gid, tax_amount: amt }))}
+                        />
+                        <div className="flex justify-end gap-6 text-sm">
+                          <span className="text-muted-foreground">Subtotal: {formatCurrency(sub)}</span>
+                          <span className="text-muted-foreground">VAT: {formatCurrency(form.tax_amount)}</span>
+                          <span className="font-semibold">Total: {formatCurrency(sub + form.tax_amount)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
