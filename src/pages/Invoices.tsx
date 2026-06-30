@@ -314,9 +314,23 @@ export default function Invoices() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-end pt-2 border-t">
-                    <span className="font-medium">Total: {formatCurrency(lines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0))}</span>
-                  </div>
+                  {(() => {
+                    const sub = lines.reduce((s, l) => s + (l.quantity * l.unit_price), 0);
+                    return (
+                      <div className="space-y-2 pt-2 border-t">
+                        <TaxSelector
+                          subtotal={sub}
+                          value={form.tax_group_id}
+                          onChange={(gid, _pct, amt) => setForm(f => ({ ...f, tax_group_id: gid, tax_amount: amt }))}
+                        />
+                        <div className="flex justify-end gap-6 text-sm">
+                          <span className="text-muted-foreground">Subtotal: {formatCurrency(sub)}</span>
+                          <span className="text-muted-foreground">VAT: {formatCurrency(form.tax_amount)}</span>
+                          <span className="font-semibold">Total: {formatCurrency(sub + form.tax_amount)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
