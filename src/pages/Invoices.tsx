@@ -108,11 +108,13 @@ export default function Invoices() {
       if (overInvoice) throw new Error(`Cannot invoice more than received for ${overInvoice.item_name}`);
 
       const subtotal = validLines.reduce((sum, l) => sum + (l.quantity * l.unit_price), 0);
+      const taxAmount = Number(form.tax_amount || 0);
+      const totalAmount = subtotal + taxAmount;
 
       if (editingInvoice) {
         const { error } = await supabase.from('ap_invoices').update({
           invoice_number: form.invoice_number, invoice_date: form.invoice_date, due_date: form.due_date || null,
-          subtotal, total_amount: subtotal,
+          subtotal, tax_amount: taxAmount, total_amount: totalAmount,
         }).eq('id', editingInvoice.id);
         if (error) throw error;
         await supabase.from('ap_invoice_lines').delete().eq('invoice_id', editingInvoice.id);
@@ -127,7 +129,7 @@ export default function Invoices() {
       const { data: invoice, error } = await supabase.from('ap_invoices').insert({
         invoice_number: form.invoice_number, vendor_id: po.vendors.id, po_id: selectedPO,
         invoice_date: form.invoice_date, due_date: form.due_date || null,
-        subtotal, total_amount: subtotal, created_by: user?.id, organization_id: organizationId,
+        subtotal, tax_amount: taxAmount, total_amount: totalAmount, created_by: user?.id, organization_id: organizationId,
       }).select().single();
       if (error) throw error;
       await supabase.from('ap_invoice_lines').insert(validLines.map(l => ({
