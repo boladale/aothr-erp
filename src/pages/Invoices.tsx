@@ -83,7 +83,7 @@ export default function Invoices() {
   const openEditDialog = async (invoice: InvoiceWithDetails) => {
     setEditingInvoice(invoice);
     setSelectedPO(invoice.po_id);
-    setForm({ invoice_number: invoice.invoice_number, invoice_date: invoice.invoice_date, due_date: invoice.due_date || '' });
+    setForm({ invoice_number: invoice.invoice_number, invoice_date: invoice.invoice_date, due_date: invoice.due_date || '', tax_group_id: '', tax_amount: Number(invoice.tax_amount || 0) });
     // Load existing lines
     const { data: invLines } = await supabase.from('ap_invoice_lines').select('*, items(name)').eq('invoice_id', invoice.id);
     const { data: poLinesData } = await supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', invoice.po_id).order('line_number');
