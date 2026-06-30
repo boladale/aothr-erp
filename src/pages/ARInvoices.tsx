@@ -18,6 +18,7 @@ import { Plus, Search, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { TaxSelector } from '@/components/tax/TaxSelector';
 
 interface Customer { id: string; code: string; name: string; payment_terms: number | null; }
 interface Item { id: string; code: string; name: string; unit_cost: number | null; }
