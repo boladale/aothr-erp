@@ -293,18 +293,30 @@ export default function APPayments() {
                     <p className="text-sm text-muted-foreground py-4 text-center">No outstanding invoices for this vendor.</p>
                   ) : (
                     <div className="border rounded-lg divide-y">
-                      {vendorInvoices.map(inv => (
+                      {vendorInvoices.map(inv => {
+                        const outstanding = getOutstanding(inv);
+                        const alloc = allocations[inv.id] || 0;
+                        const over = alloc > outstanding + 0.001;
+                        return (
                         <div key={inv.id} className="flex items-center gap-4 p-3">
                           <Checkbox checked={selectedInvoices.has(inv.id)} onCheckedChange={(checked) => toggleInvoice(inv.id, !!checked)} />
                           <div className="flex-1">
                             <p className="text-sm font-medium">{inv.invoice_number}</p>
-                            <p className="text-xs text-muted-foreground">Total: {formatCurrency(inv.total_amount || 0)} • {inv.payment_status}</p>
+                            <p className="text-xs text-muted-foreground">Total: {formatCurrency(inv.total_amount || 0)} • Outstanding: {formatCurrency(outstanding)} • {inv.payment_status}</p>
                           </div>
                           {selectedInvoices.has(inv.id) && (
-                            <Input type="number" className="w-32" value={allocations[inv.id] || ''} onChange={e => setAllocations(prev => ({ ...prev, [inv.id]: parseFloat(e.target.value) || 0 }))} step="0.01" />
+                            <div className="flex flex-col items-end">
+                              <Input type="number" className={`w-32 ${over ? 'border-destructive' : ''}`} value={allocations[inv.id] || ''} max={outstanding} onChange={e => {
+                                const v = parseFloat(e.target.value) || 0;
+                                const capped = Math.min(v, outstanding);
+                                setAllocations(prev => ({ ...prev, [inv.id]: capped }));
+                              }} step="0.01" />
+                              {over && <span className="text-xs text-destructive mt-1">Exceeds outstanding</span>}
+                            </div>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                   {totalAmount > 0 && <p className="text-right font-semibold">Total: {formatCurrency(totalAmount)}</p>}
