@@ -41,6 +41,7 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
     setVendorId(''); setPoId(''); setInvoiceNumber('');
     setInvoiceDate(new Date().toISOString().split('T')[0]);
     setDueDate(''); setLines([]); setInvoiceFile(null); setCertFile(null);
+    setTaxGroupId(''); setTaxAmount(0);
   };
 
   const vendorsQ = useQuery({
