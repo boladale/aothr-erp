@@ -43,6 +43,7 @@ const Customers = lazy(() => import("./pages/Customers"));
 const ARInvoices = lazy(() => import("./pages/ARInvoices"));
 const ARReceipts = lazy(() => import("./pages/ARReceipts"));
 const ARCreditNotes = lazy(() => import("./pages/ARCreditNotes"));
+const APCreditNotes = lazy(() => import("./pages/APCreditNotes"));
 const ARAging = lazy(() => import("./pages/ARAging"));
 const BankAccounts = lazy(() => import("./pages/BankAccounts"));
 const BankReconciliation = lazy(() => import("./pages/BankReconciliation"));
