@@ -225,6 +225,7 @@ const App = () => (
             <Route path="/ar-invoices" element={<ProtectedRoute><ARInvoices /></ProtectedRoute>} />
             <Route path="/ar-receipts" element={<ProtectedRoute><ARReceipts /></ProtectedRoute>} />
             <Route path="/ar-credit-notes" element={<ProtectedRoute><ARCreditNotes /></ProtectedRoute>} />
+            <Route path="/ap-credit-notes" element={<ProtectedRoute><APCreditNotes /></ProtectedRoute>} />
             <Route path="/ar-aging" element={<ProtectedRoute><ARAging /></ProtectedRoute>} />
             <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
             <Route path="/bank-reconciliation" element={<ProtectedRoute><BankReconciliation /></ProtectedRoute>} />
