@@ -43,6 +43,7 @@ const Customers = lazy(() => import("./pages/Customers"));
 const ARInvoices = lazy(() => import("./pages/ARInvoices"));
 const ARReceipts = lazy(() => import("./pages/ARReceipts"));
 const ARCreditNotes = lazy(() => import("./pages/ARCreditNotes"));
+const APCreditNotes = lazy(() => import("./pages/APCreditNotes"));
 const ARAging = lazy(() => import("./pages/ARAging"));
 const BankAccounts = lazy(() => import("./pages/BankAccounts"));
 const BankReconciliation = lazy(() => import("./pages/BankReconciliation"));
@@ -224,6 +225,7 @@ const App = () => (
             <Route path="/ar-invoices" element={<ProtectedRoute><ARInvoices /></ProtectedRoute>} />
             <Route path="/ar-receipts" element={<ProtectedRoute><ARReceipts /></ProtectedRoute>} />
             <Route path="/ar-credit-notes" element={<ProtectedRoute><ARCreditNotes /></ProtectedRoute>} />
+            <Route path="/ap-credit-notes" element={<ProtectedRoute><APCreditNotes /></ProtectedRoute>} />
             <Route path="/ar-aging" element={<ProtectedRoute><ARAging /></ProtectedRoute>} />
             <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
             <Route path="/bank-reconciliation" element={<ProtectedRoute><BankReconciliation /></ProtectedRoute>} />
