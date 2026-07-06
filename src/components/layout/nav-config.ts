@@ -78,6 +78,7 @@ export const pathToProgram: Record<string, string> = {
   '/ar-invoices': 'ar_invoices',
   '/ar-receipts': 'ar_receipts',
   '/ar-credit-notes': 'ar_credit_notes',
+  '/ap-credit-notes': 'invoices',
   '/ar-aging': 'ar_aging',
   '/bank-accounts': 'bank_accounts',
   '/fund-transfers': 'fund_transfers',
