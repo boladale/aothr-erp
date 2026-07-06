@@ -14,6 +14,136 @@ export type Database = {
   }
   public: {
     Tables: {
+      ap_credit_note_lines: {
+        Row: {
+          credit_note_id: string
+          description: string
+          id: string
+          item_id: string | null
+          line_total: number | null
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          credit_note_id: string
+          description: string
+          id?: string
+          item_id?: string | null
+          line_total?: number | null
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          credit_note_id?: string
+          description?: string
+          id?: string
+          item_id?: string | null
+          line_total?: number | null
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ap_credit_note_lines_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "ap_credit_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ap_credit_note_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ap_credit_notes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          credit_date: string
+          credit_note_number: string
+          currency: string
+          exchange_rate: number
+          id: string
+          invoice_id: string | null
+          organization_id: string | null
+          posted_at: string | null
+          posted_by: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["ap_credit_note_status"]
+          subtotal: number | null
+          tax_amount: number | null
+          total_amount: number | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          credit_note_number: string
+          currency?: string
+          exchange_rate?: number
+          id?: string
+          invoice_id?: string | null
+          organization_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["ap_credit_note_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          credit_note_number?: string
+          currency?: string
+          exchange_rate?: number
+          id?: string
+          invoice_id?: string | null
+          organization_id?: string | null
+          posted_at?: string | null
+          posted_by?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["ap_credit_note_status"]
+          subtotal?: number | null
+          tax_amount?: number | null
+          total_amount?: number | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ap_credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "ap_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ap_credit_notes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ap_credit_notes_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ap_invoice_lines: {
         Row: {
           expense_account_id: string | null
@@ -7135,6 +7265,7 @@ export type Database = {
     }
     Enums: {
       adjustment_type: "increase" | "decrease"
+      ap_credit_note_status: "draft" | "posted" | "void"
       app_role:
         | "admin"
         | "procurement_manager"
@@ -7373,6 +7504,7 @@ export const Constants = {
   public: {
     Enums: {
       adjustment_type: ["increase", "decrease"],
+      ap_credit_note_status: ["draft", "posted", "void"],
       app_role: [
         "admin",
         "procurement_manager",
