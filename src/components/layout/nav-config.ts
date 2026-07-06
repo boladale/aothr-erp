@@ -192,6 +192,7 @@ export const navSections = [
       { path: '/ap-payments', label: 'AP Payments', icon: CreditCard },
       { path: '/ap-aging', label: 'AP Aging', icon: Clock },
       { path: '/match-exceptions', label: 'Match Exceptions', icon: AlertTriangle },
+      { path: '/ap-credit-notes', label: 'Vendor Credit Notes', icon: FileX },
     ],
   },
   {
