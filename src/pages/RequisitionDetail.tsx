@@ -35,6 +35,7 @@ interface Requisition {
   req_number: string;
   requester_id: string;
   department: string | null;
+  requester_name: string | null;
   status: string;
   justification: string | null;
   needed_by_date: string | null;
