@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { ConvertToPODialog } from '@/components/requisitions/ConvertToPODialog';
 import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
+import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
 import { formatCurrency } from '@/lib/utils';
 
 interface RequisitionLine {
@@ -298,6 +299,21 @@ export default function RequisitionDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        {['approved', 'partially_converted'].includes(requisition.status) && (
+          <BidCollectionPanel
+            requisitionId={requisition.id}
+            lines={lines.map(l => ({
+              id: l.id,
+              line_number: l.line_number,
+              item_id: l.item_id,
+              quantity: l.quantity,
+              estimated_unit_cost: l.estimated_unit_cost,
+              items: l.items,
+            }))}
+          />
+        )}
+
 
 
         {canConvert && (
