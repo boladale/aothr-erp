@@ -4,6 +4,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMemo } from 'react';
 
+import { useState, useEffect } from 'react';
+
 export const PAYMENT_TERMS_PRESETS = [
   'Net 30',
   'Net 60',
@@ -32,27 +34,40 @@ export function PaymentTermsField({
   value,
   onChange,
   label = 'Payment Terms',
-  placeholder = 'e.g. Net 30 days after delivery',
+  placeholder = 'Type the negotiated payment terms…',
   className,
   multiline = false,
 }: Props) {
-  const selected = useMemo(() => {
-    if (!value) return '';
-    return PAYMENT_TERMS_PRESETS.includes(value) ? value : '__other__';
+  // Track whether user explicitly picked "Other/Custom" so the input shows
+  // even when the value is still empty.
+  const [otherMode, setOtherMode] = useState<boolean>(
+    !!value && !PAYMENT_TERMS_PRESETS.includes(value)
+  );
+
+  // Keep otherMode in sync if parent switches the value to a preset externally.
+  useEffect(() => {
+    if (value && PAYMENT_TERMS_PRESETS.includes(value)) {
+      setOtherMode(false);
+    } else if (value && !PAYMENT_TERMS_PRESETS.includes(value)) {
+      setOtherMode(true);
+    }
   }, [value]);
 
-  const isOther = selected === '__other__';
+  const selectValue = otherMode
+    ? '__other__'
+    : (PAYMENT_TERMS_PRESETS.includes(value) ? value : undefined);
 
   return (
     <div className={className}>
       <Label>{label}</Label>
       <Select
-        value={selected || undefined}
+        value={selectValue}
         onValueChange={(v) => {
           if (v === '__other__') {
-            // switch to custom without wiping any typed value
+            setOtherMode(true);
             if (PAYMENT_TERMS_PRESETS.includes(value)) onChange('');
           } else {
+            setOtherMode(false);
             onChange(v);
           }
         }}
@@ -67,10 +82,12 @@ export function PaymentTermsField({
           <SelectItem value="__other__">Other / Custom…</SelectItem>
         </SelectContent>
       </Select>
-      {isOther && (
+      {otherMode && (
         <div className="mt-2">
+          <Label className="text-xs text-muted-foreground">Enter custom payment terms</Label>
           {multiline ? (
             <Textarea
+              autoFocus
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
@@ -78,6 +95,7 @@ export function PaymentTermsField({
             />
           ) : (
             <Input
+              autoFocus
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
