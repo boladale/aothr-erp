@@ -173,8 +173,8 @@ export default function RFPDetail() {
   const fetchData = () => queryClient.invalidateQueries({ queryKey: ['rfp_detail', id] });
 
   const handlePublish = async () => {
-    if (!rfp || proposals.length === 0) {
-      toast.error('Invite at least one vendor before publishing');
+    if (!rfp || proposals.length < 3) {
+      toast.error('You must invite at least 3 vendors before publishing this RFQ');
       return;
     }
     const { error } = await supabase.from('rfps').update({ status: 'published' }).eq('id', rfp.id);
