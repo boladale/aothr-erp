@@ -50,6 +50,7 @@ interface ReqLine {
 interface EditRequisition {
   id: string;
   department: string | null;
+  requester_name?: string | null;
   justification: string | null;
   needed_by_date: string | null;
   notes: string | null;
