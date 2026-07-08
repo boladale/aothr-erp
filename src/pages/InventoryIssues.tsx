@@ -134,6 +134,14 @@ export default function InventoryIssues() {
       return (data || []) as Project[];
     },
   });
+  const departmentsQ = useQuery({
+    queryKey: ['departments-active-min'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('departments' as any) as any).select('id, name').eq('is_active', true).order('name');
+      if (error) return [] as { id: string; name: string }[];
+      return (data || []) as { id: string; name: string }[];
+    },
+  });
   const glAccountsQ = useQuery({
     queryKey: ['gl_accounts-leaf-all'],
     queryFn: async () => {
@@ -417,7 +425,13 @@ export default function InventoryIssues() {
               </div>
               <div className="space-y-2">
                 <Label>Department</Label>
-                <Input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} placeholder="e.g. IT, Finance" />
+                <Select value={form.department || 'none'} onValueChange={v => setForm({ ...form, department: v === 'none' ? '' : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {(departmentsQ.data || []).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="col-span-2 space-y-2">
                 <Label>Project (optional)</Label>
