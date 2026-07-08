@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
+import { PaymentTermsField } from '@/components/shared/PaymentTermsField';
 
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
@@ -234,10 +235,12 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
               <Label>Deadline</Label>
               <Input type="datetime-local" value={deadline} onChange={e => setDeadline(e.target.value)} />
             </div>
-            <div>
-              <Label>Expected Payment Terms</Label>
-              <Input value={paymentTerms} onChange={e => setPaymentTerms(e.target.value)} placeholder="e.g. Net 30 days after delivery" />
-            </div>
+            <PaymentTermsField
+              value={paymentTerms}
+              onChange={setPaymentTerms}
+              label="Expected Payment Terms"
+              placeholder="e.g. Net 30 days after delivery"
+            />
           </div>
 
           <div>
