@@ -722,7 +722,8 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </DialogHeader>
           <div className="py-3 space-y-2">
             <p className="text-sm text-muted-foreground">
-              Selected vendors will be notified and can submit their quotes from the Vendor Portal.
+              Policy requires at least <b>3 vendors</b> to be invited per requisition. Selected vendors will be notified and can submit quotes via the Vendor Portal.
+              {invitations.length > 0 && ` Already invited: ${invitations.length}.`}
             </p>
             <div className="border rounded-md divide-y max-h-[50vh] overflow-y-auto">
               {availableVendors.filter(v => !invitations.some(i => i.vendor_id === v.id)).map(v => (
