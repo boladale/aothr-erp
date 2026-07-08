@@ -186,8 +186,9 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
   };
 
   const handleSendInvites = async () => {
-    if (!bidRequest || inviteSelected.size === 0) {
-      toast.error('Select at least one vendor');
+    const totalAfter = invitations.length + inviteSelected.size;
+    if (!bidRequest || totalAfter < 3) {
+      toast.error(`At least 3 vendors must be invited (currently ${totalAfter}). Please select ${3 - totalAfter} more.`);
       return;
     }
     setInviting(true);
@@ -506,7 +507,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             {bidRequest.status === 'open' && (
               <>
                 <Button size="sm" variant="outline" onClick={openInviteDialog}>
-                  <Send className="mr-1 h-3 w-3" /> Invite Vendors
+                  <Send className="mr-1 h-3 w-3" /> Invite 3 Vendors
                 </Button>
                 <Button size="sm" variant="outline" onClick={openAddVendorBid}>
                   <Plus className="mr-1 h-3 w-3" /> Add Vendor Bid
@@ -721,7 +722,8 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </DialogHeader>
           <div className="py-3 space-y-2">
             <p className="text-sm text-muted-foreground">
-              Selected vendors will be notified and can submit their quotes from the Vendor Portal.
+              Policy requires at least <b>3 vendors</b> to be invited per requisition. Selected vendors will be notified and can submit quotes via the Vendor Portal.
+              {invitations.length > 0 && ` Already invited: ${invitations.length}.`}
             </p>
             <div className="border rounded-md divide-y max-h-[50vh] overflow-y-auto">
               {availableVendors.filter(v => !invitations.some(i => i.vendor_id === v.id)).map(v => (
@@ -747,7 +749,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSendInvites} disabled={inviting || inviteSelected.size === 0}>
+            <Button onClick={handleSendInvites} disabled={inviting || (invitations.length + inviteSelected.size) < 3}>
               <Send className="mr-1 h-4 w-4" /> {inviting ? 'Sending...' : `Invite ${inviteSelected.size || ''}`}
             </Button>
           </DialogFooter>
