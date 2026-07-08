@@ -500,6 +500,9 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             </Badge>
           </CardTitle>
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleDownloadPDF}>
+              <Printer className="mr-1 h-3 w-3" /> Print / Download RFQ PDF
+            </Button>
             {bidRequest.status === 'open' && (
               <>
                 <Button size="sm" variant="outline" onClick={openInviteDialog}>
