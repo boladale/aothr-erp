@@ -134,6 +134,14 @@ export default function InventoryIssues() {
       return (data || []) as Project[];
     },
   });
+  const departmentsQ = useQuery({
+    queryKey: ['departments-active-min'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('departments' as any) as any).select('id, name').eq('is_active', true).order('name');
+      if (error) return [] as { id: string; name: string }[];
+      return (data || []) as { id: string; name: string }[];
+    },
+  });
   const glAccountsQ = useQuery({
     queryKey: ['gl_accounts-leaf-all'],
     queryFn: async () => {
