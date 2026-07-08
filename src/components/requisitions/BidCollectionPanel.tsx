@@ -507,7 +507,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             {bidRequest.status === 'open' && (
               <>
                 <Button size="sm" variant="outline" onClick={openInviteDialog}>
-                  <Send className="mr-1 h-3 w-3" /> Invite Vendors
+                  <Send className="mr-1 h-3 w-3" /> Invite 3 Vendors
                 </Button>
                 <Button size="sm" variant="outline" onClick={openAddVendorBid}>
                   <Plus className="mr-1 h-3 w-3" /> Add Vendor Bid
