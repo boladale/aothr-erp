@@ -432,6 +432,7 @@ export default function InventoryIssues() {
                     {(departmentsQ.data || []).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
               <div className="col-span-2 space-y-2">
                 <Label>Project (optional)</Label>
                 <Select value={form.project_id} onValueChange={v => setForm({ ...form, project_id: v })}>
