@@ -300,6 +300,21 @@ export default function RequisitionDetail() {
           </CardContent>
         </Card>
 
+        {['approved', 'partially_converted'].includes(requisition.status) && (
+          <BidCollectionPanel
+            requisitionId={requisition.id}
+            lines={lines.map(l => ({
+              id: l.id,
+              line_number: l.line_number,
+              item_id: l.item_id,
+              quantity: l.quantity,
+              estimated_unit_cost: l.estimated_unit_cost,
+              items: l.items,
+            }))}
+          />
+        )}
+
+
 
         {canConvert && (
           <ConvertToPODialog
