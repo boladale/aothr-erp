@@ -186,8 +186,9 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
   };
 
   const handleSendInvites = async () => {
-    if (!bidRequest || inviteSelected.size === 0) {
-      toast.error('Select at least one vendor');
+    const totalAfter = invitations.length + inviteSelected.size;
+    if (!bidRequest || totalAfter < 3) {
+      toast.error(`At least 3 vendors must be invited (currently ${totalAfter}). Please select ${3 - totalAfter} more.`);
       return;
     }
     setInviting(true);
