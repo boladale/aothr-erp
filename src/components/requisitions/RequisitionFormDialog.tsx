@@ -201,6 +201,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
             req_number: reqNumber,
             requester_id: user?.id,
             department: form.department || null,
+            requester_name: form.requester_name || null,
             justification: form.justification || null,
             needed_by_date: form.needed_by_date || null,
             notes: form.notes || null,
