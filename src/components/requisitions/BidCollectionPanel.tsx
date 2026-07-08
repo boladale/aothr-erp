@@ -749,7 +749,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSendInvites} disabled={inviting || inviteSelected.size === 0}>
+            <Button onClick={handleSendInvites} disabled={inviting || (invitations.length + inviteSelected.size) < 3}>
               <Send className="mr-1 h-4 w-4" /> {inviting ? 'Sending...' : `Invite ${inviteSelected.size || ''}`}
             </Button>
           </DialogFooter>
