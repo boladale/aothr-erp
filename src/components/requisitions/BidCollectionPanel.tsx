@@ -246,7 +246,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
     try {
       const { data: req } = await supabase
         .from('requisitions')
-        .select('req_number, description, required_by, organization_id')
+        .select('req_number, justification, needed_by_date, organization_id')
         .eq('id', requisitionId)
         .single();
 
