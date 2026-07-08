@@ -140,12 +140,13 @@ export default function Requisitions() {
 
   const filtered = requisitions.filter(r =>
     r.req_number.toLowerCase().includes(search.toLowerCase()) ||
-    (r.department || '').toLowerCase().includes(search.toLowerCase())
+    (r.department || '').toLowerCase().includes(search.toLowerCase()) ||
+    (r.requester_name || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const columns = [
     { key: 'req_number', header: 'Req #', render: (r: RequisitionRow) => <span className="font-medium">{r.req_number}</span> },
-    { key: 'requester', header: 'Requester', render: (r: RequisitionRow) => r.profiles?.full_name || r.profiles?.email || '-' },
+    { key: 'requester', header: 'Requester', render: (r: RequisitionRow) => r.requester_name || r.profiles?.full_name || r.profiles?.email || '-' },
     { key: 'department', header: 'Department', render: (r: RequisitionRow) => r.department || '-' },
     { key: 'needed_by_date', header: 'Needed By', render: (r: RequisitionRow) => r.needed_by_date ? new Date(r.needed_by_date).toLocaleDateString() : '-' },
     { key: 'status', header: 'Status', render: (r: RequisitionRow) => (
