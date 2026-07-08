@@ -117,7 +117,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
             }
           });
       } else {
-        setForm({ department: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
+        setForm({ department: '', requester_name: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
         setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
       }
     }
@@ -228,7 +228,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       }
 
       onOpenChange(false);
-      setForm({ department: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
+      setForm({ department: '', requester_name: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
       setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
       onSuccess();
     } catch (error: unknown) {
