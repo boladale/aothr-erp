@@ -370,7 +370,7 @@ export default function RFPDetail() {
                     <Pencil className="mr-2 h-4 w-4" /> Edit RFQ
                   </Button>
                   <Button variant="outline" onClick={openInviteDialog}>
-                    <UserPlus className="mr-2 h-4 w-4" /> Invite Vendors
+                    <UserPlus className="mr-2 h-4 w-4" /> Invite 3 Vendors
                   </Button>
                   <Button onClick={handlePublish}>
                     <Send className="mr-2 h-4 w-4" /> Publish RFQ
