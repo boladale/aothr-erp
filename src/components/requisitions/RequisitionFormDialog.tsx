@@ -285,6 +285,15 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
           </div>
 
           <div className="space-y-2">
+            <Label>Requested By (Staff Name)</Label>
+            <Input
+              value={form.requester_name}
+              onChange={e => setForm({ ...form, requester_name: e.target.value })}
+              placeholder="Enter the name of the staff requesting"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Justification</Label>
             <Textarea
               value={form.justification}
