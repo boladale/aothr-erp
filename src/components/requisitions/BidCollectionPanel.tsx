@@ -269,7 +269,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       const deadlineStr = bidRequest?.deadline
         ? new Date(bidRequest.deadline).toLocaleDateString()
         : 'As soon as possible';
-      const requiredBy = req?.required_by ? new Date(req.required_by).toLocaleDateString() : '-';
+      const requiredBy = req?.needed_by_date ? new Date(req.required_by).toLocaleDateString() : '-';
       const today = new Date().toLocaleDateString();
 
       const rowsHtml = lines.map((l, i) => `
@@ -328,7 +328,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
     <div><b>Requisition No:</b> ${req?.req_number || '-'}</div>
     <div><b>Quote Deadline:</b> ${deadlineStr}</div>
     <div><b>Required By:</b> ${requiredBy}</div>
-    <div><b>Description:</b> ${req?.description || '-'}</div>
+    <div><b>Description:</b> ${req?.justification || '-'}</div>
   </div>
 
   <p>Dear Vendor,</p>
