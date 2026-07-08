@@ -18,6 +18,7 @@ interface RequisitionRow {
   id: string;
   req_number: string;
   requester_id: string;
+  requester_name: string | null;
   department: string | null;
   status: string;
   justification: string | null;
