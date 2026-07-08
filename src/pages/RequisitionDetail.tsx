@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { ConvertToPODialog } from '@/components/requisitions/ConvertToPODialog';
 import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
+import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
 import { formatCurrency } from '@/lib/utils';
 
 interface RequisitionLine {
