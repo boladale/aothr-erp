@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Plus, Trash2, Star, StarOff, FileText, Send, Users } from 'lucide-react';
+import { Plus, Trash2, Star, StarOff, FileText, Send, Users, Printer } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -242,6 +242,147 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const { data: req } = await supabase
+        .from('requisitions')
+        .select('req_number, justification, needed_by_date, organization_id')
+        .eq('id', requisitionId)
+        .single();
+
+      let orgName = 'Organization';
+      let orgLogo: string | null = null;
+      let orgAddress = '';
+      if (req?.organization_id) {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('name, logo_url, address')
+          .eq('id', req.organization_id)
+          .single();
+        if (org) {
+          orgName = org.name || orgName;
+          orgLogo = (org as any).logo_url || null;
+          orgAddress = (org as any).address || '';
+        }
+      }
+
+      const deadlineStr = bidRequest?.deadline
+        ? new Date(bidRequest.deadline).toLocaleDateString()
+        : 'As soon as possible';
+      const requiredBy = req?.needed_by_date ? new Date(req.needed_by_date).toLocaleDateString() : '-';
+      const today = new Date().toLocaleDateString();
+
+      const rowsHtml = lines.map((l, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td>${l.items?.code || ''}</td>
+          <td>${l.items?.name || ''}</td>
+          <td style="text-align:center;">${l.quantity}</td>
+          <td style="text-align:center;">${l.items?.unit_of_measure || ''}</td>
+          <td style="min-width:120px;"></td>
+          <td style="min-width:120px;"></td>
+        </tr>
+      `).join('');
+
+      const html = `<!doctype html>
+<html><head><meta charset="utf-8"/>
+<title>RFQ ${req?.req_number || ''}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; color: #111; padding: 24px; font-size: 12px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 16px; }
+  .org { font-size: 18px; font-weight: bold; color: #1e3a8a; }
+  .muted { color: #555; font-size: 11px; }
+  h1 { font-size: 20px; margin: 12px 0; text-align: center; color: #1e3a8a; letter-spacing: 1px; }
+  .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 20px; }
+  .meta div { padding: 4px 0; }
+  .meta b { display: inline-block; min-width: 120px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { border: 1px solid #999; padding: 6px 8px; font-size: 12px; }
+  th { background: #eef2ff; text-align: left; }
+  .notes { margin-top: 20px; font-size: 11px; line-height: 1.5; }
+  .sign { margin-top: 40px; display: flex; justify-content: space-between; }
+  .sign div { width: 45%; border-top: 1px solid #333; padding-top: 4px; text-align: center; font-size: 11px; }
+  @media print { body { padding: 0; } .noprint { display: none; } }
+  .btn { background:#1e3a8a; color:#fff; border:0; padding:8px 16px; border-radius:4px; cursor:pointer; }
+</style>
+</head><body>
+  <div class="noprint" style="text-align:right; margin-bottom:12px;">
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+  <div class="header">
+    <div>
+      ${orgLogo ? `<img src="${orgLogo}" style="max-height:60px; margin-bottom:6px;"/>` : ''}
+      <div class="org">${orgName}</div>
+      <div class="muted">${orgAddress}</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="muted">Date: ${today}</div>
+      <div class="muted">RFQ Ref: ${req?.req_number || '-'}</div>
+    </div>
+  </div>
+
+  <h1>REQUEST FOR QUOTATION</h1>
+
+  <div class="meta">
+    <div><b>Requisition No:</b> ${req?.req_number || '-'}</div>
+    <div><b>Quote Deadline:</b> ${deadlineStr}</div>
+    <div><b>Required By:</b> ${requiredBy}</div>
+    <div><b>Description:</b> ${req?.justification || '-'}</div>
+  </div>
+
+  <p>Dear Vendor,</p>
+  <p>You are invited to submit your best quotation for the items listed below. Please fill in your unit price and total, sign, and return this document by the quote deadline.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30px;">#</th>
+        <th>Item Code</th>
+        <th>Description</th>
+        <th style="width:60px;">Qty</th>
+        <th style="width:60px;">UoM</th>
+        <th>Unit Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+
+  <div class="notes">
+    <p><b>Instructions to Vendor:</b></p>
+    <ol>
+      <li>Quote all prices in your local currency inclusive of applicable taxes.</li>
+      <li>State payment terms, delivery lead time, and validity period of your quotation.</li>
+      <li>Submit your response on or before the quote deadline.</li>
+    </ol>
+    <p><b>Vendor Name: </b> ______________________________ &nbsp;&nbsp;
+       <b>Payment Terms: </b> ______________________________</p>
+    <p><b>Delivery Lead Time: </b> _____________________ &nbsp;&nbsp;
+       <b>Quote Validity: </b> _____________________</p>
+  </div>
+
+  <div class="sign">
+    <div>Authorized (Buyer)</div>
+    <div>Vendor Signature & Stamp</div>
+  </div>
+
+  <script>window.onload = () => setTimeout(() => window.print(), 300);</script>
+</body></html>`;
+
+      const w = window.open('', '_blank');
+      if (!w) {
+        toast.error('Please allow pop-ups to download the PDF');
+        return;
+      }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to generate PDF');
+    }
+  };
+
   const handleRecommend = async (vendorId: string) => {
     if (!bidRequest) return;
     try {
@@ -359,6 +500,9 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
             </Badge>
           </CardTitle>
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleDownloadPDF}>
+              <Printer className="mr-1 h-3 w-3" /> Print / Download RFQ PDF
+            </Button>
             {bidRequest.status === 'open' && (
               <>
                 <Button size="sm" variant="outline" onClick={openInviteDialog}>
