@@ -173,8 +173,8 @@ export default function RFPDetail() {
   const fetchData = () => queryClient.invalidateQueries({ queryKey: ['rfp_detail', id] });
 
   const handlePublish = async () => {
-    if (!rfp || proposals.length === 0) {
-      toast.error('Invite at least one vendor before publishing');
+    if (!rfp || proposals.length < 3) {
+      toast.error('You must invite at least 3 vendors before publishing this RFQ');
       return;
     }
     const { error } = await supabase.from('rfps').update({ status: 'published' }).eq('id', rfp.id);
@@ -370,7 +370,7 @@ export default function RFPDetail() {
                     <Pencil className="mr-2 h-4 w-4" /> Edit RFQ
                   </Button>
                   <Button variant="outline" onClick={openInviteDialog}>
-                    <UserPlus className="mr-2 h-4 w-4" /> Invite Vendors
+                    <UserPlus className="mr-2 h-4 w-4" /> Invite 3 Vendors
                   </Button>
                   <Button onClick={handlePublish}>
                     <Send className="mr-2 h-4 w-4" /> Publish RFQ
@@ -700,7 +700,10 @@ export default function RFPDetail() {
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Invite Vendors</DialogTitle>
+              <DialogTitle>Invite Vendors ({proposals.length}/3 minimum)</DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Policy: at least 3 vendors must be invited before this RFQ can be published.
+              </p>
             </DialogHeader>
             <div className="space-y-4">
               {qualifiedVendors.length > 0 && (
