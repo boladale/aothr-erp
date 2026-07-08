@@ -425,8 +425,13 @@ export default function InventoryIssues() {
               </div>
               <div className="space-y-2">
                 <Label>Department</Label>
-                <Input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} placeholder="e.g. IT, Finance" />
-              </div>
+                <Select value={form.department || 'none'} onValueChange={v => setForm({ ...form, department: v === 'none' ? '' : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— None —</SelectItem>
+                    {(departmentsQ.data || []).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               <div className="col-span-2 space-y-2">
                 <Label>Project (optional)</Label>
                 <Select value={form.project_id} onValueChange={v => setForm({ ...form, project_id: v })}>
