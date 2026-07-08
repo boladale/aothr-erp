@@ -71,6 +71,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     department: '',
+    requester_name: '',
     justification: '',
     needed_by_date: '',
     notes: '',
