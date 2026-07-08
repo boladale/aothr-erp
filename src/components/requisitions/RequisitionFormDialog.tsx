@@ -95,6 +95,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       if (editRequisition) {
         setForm({
           department: editRequisition.department || '',
+          requester_name: editRequisition.requester_name || '',
           justification: editRequisition.justification || '',
           needed_by_date: editRequisition.needed_by_date || '',
           notes: editRequisition.notes || '',
