@@ -700,7 +700,10 @@ export default function RFPDetail() {
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Invite Vendors</DialogTitle>
+              <DialogTitle>Invite Vendors ({proposals.length}/3 minimum)</DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Policy: at least 3 vendors must be invited before this RFQ can be published.
+              </p>
             </DialogHeader>
             <div className="space-y-4">
               {qualifiedVendors.length > 0 && (
