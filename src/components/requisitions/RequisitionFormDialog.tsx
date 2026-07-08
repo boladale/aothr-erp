@@ -50,6 +50,7 @@ interface ReqLine {
 interface EditRequisition {
   id: string;
   department: string | null;
+  requester_name?: string | null;
   justification: string | null;
   needed_by_date: string | null;
   notes: string | null;
@@ -70,6 +71,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     department: '',
+    requester_name: '',
     justification: '',
     needed_by_date: '',
     notes: '',
@@ -93,6 +95,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       if (editRequisition) {
         setForm({
           department: editRequisition.department || '',
+          requester_name: editRequisition.requester_name || '',
           justification: editRequisition.justification || '',
           needed_by_date: editRequisition.needed_by_date || '',
           notes: editRequisition.notes || '',
@@ -114,7 +117,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
             }
           });
       } else {
-        setForm({ department: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
+        setForm({ department: '', requester_name: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
         setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
       }
     }
@@ -158,6 +161,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
           .from('requisitions')
           .update({
             department: form.department || null,
+            requester_name: form.requester_name || null,
             justification: form.justification || null,
             needed_by_date: form.needed_by_date || null,
             notes: form.notes || null,
@@ -197,6 +201,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
             req_number: reqNumber,
             requester_id: user?.id,
             department: form.department || null,
+            requester_name: form.requester_name || null,
             justification: form.justification || null,
             needed_by_date: form.needed_by_date || null,
             notes: form.notes || null,
@@ -225,7 +230,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       }
 
       onOpenChange(false);
-      setForm({ department: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
+      setForm({ department: '', requester_name: '', justification: '', needed_by_date: '', notes: '', requisition_type: 'items' });
       setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
       onSuccess();
     } catch (error: unknown) {
@@ -277,6 +282,15 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
                 onChange={e => setForm({ ...form, needed_by_date: e.target.value })}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Requested By (Staff Name)</Label>
+            <Input
+              value={form.requester_name}
+              onChange={e => setForm({ ...form, requester_name: e.target.value })}
+              placeholder="Enter the name of the staff requesting"
+            />
           </div>
 
           <div className="space-y-2">

@@ -5321,6 +5321,7 @@ export type Database = {
           rejection_reason: string | null
           req_number: string
           requester_id: string
+          requester_name: string | null
           requisition_type: string
           status: Database["public"]["Enums"]["requisition_status"]
           submitted_at: string | null
@@ -5342,6 +5343,7 @@ export type Database = {
           rejection_reason?: string | null
           req_number: string
           requester_id: string
+          requester_name?: string | null
           requisition_type?: string
           status?: Database["public"]["Enums"]["requisition_status"]
           submitted_at?: string | null
@@ -5363,6 +5365,7 @@ export type Database = {
           rejection_reason?: string | null
           req_number?: string
           requester_id?: string
+          requester_name?: string | null
           requisition_type?: string
           status?: Database["public"]["Enums"]["requisition_status"]
           submitted_at?: string | null

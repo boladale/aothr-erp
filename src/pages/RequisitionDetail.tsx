@@ -35,6 +35,7 @@ interface Requisition {
   req_number: string;
   requester_id: string;
   department: string | null;
+  requester_name: string | null;
   status: string;
   justification: string | null;
   needed_by_date: string | null;
@@ -195,7 +196,10 @@ export default function RequisitionDetail() {
           </Button>
           <PageHeader
             title={requisition.req_number}
-            description={requisition.department ? `Department: ${requisition.department}` : undefined}
+            description={[
+              requisition.requester_name ? `Requested By: ${requisition.requester_name}` : null,
+              requisition.department ? `Department: ${requisition.department}` : null,
+            ].filter(Boolean).join(' • ') || undefined}
             actions={
               <div className="flex items-center gap-2">
                 <StatusBadge status={requisition.status} />
