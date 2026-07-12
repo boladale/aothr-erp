@@ -61,7 +61,7 @@ export default function BankStatement() {
           .from('bank_transactions')
           .select('transaction_type, amount, status')
           .eq('bank_account_id', accountId)
-          .eq('status', 'posted')
+          .neq('status', 'voided')
           .lt('transaction_date', fromDate);
         (prior || []).forEach((t: any) => {
           const amt = Number(t.amount || 0);
@@ -73,7 +73,7 @@ export default function BankStatement() {
         .from('bank_transactions')
         .select('id, transaction_date, transaction_type, amount, description, reference, payee, status')
         .eq('bank_account_id', accountId)
-        .eq('status', 'posted')
+        .neq('status', 'voided')
         .order('transaction_date', { ascending: true });
       if (fromDate) q = q.gte('transaction_date', fromDate);
       if (toDate) q = q.lte('transaction_date', toDate);
@@ -151,8 +151,8 @@ export default function BankStatement() {
     const subtitle = `Account: ${account.account_name} • ${account.bank_name || ''} • ${account.account_number || ''} • Period: ${fromDate || 'Opening'} → ${toDate || 'Today'}`;
     printReport('Bank Statement', headers, body, {
       subtitle,
-      orgName: branding?.name,
-      logoUrl: branding?.logoUrl,
+      orgName: appName,
+      logoUrl: logoUrl || undefined,
     });
   };
 
