@@ -150,11 +150,21 @@ export default function BankAccounts() {
                     <div><Label>Account Name</Label><Input value={form.account_name} onChange={e => setForm(f => ({ ...f, account_name: e.target.value }))} placeholder="e.g. Payroll Account" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><Label>Bank Name</Label><Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} /></div>
-                    <div><Label>Account Number</Label><Input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))} /></div>
+                    <div>
+                      <Label>Account Type</Label>
+                      <Select value={form.account_type} onValueChange={v => setForm(f => ({ ...f, account_type: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ACCOUNT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div><Label>Bank Name</Label><Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} placeholder={form.account_type === 'cash' ? 'Cash on Hand' : ''} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Account Number</Label><Input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))} /></div>
                     <div><Label>Currency</Label><Input value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} /></div>
+                  </div>
                     <div>
                       <Label>Opening Balance</Label>
                       <Input type="number" value={form.opening_balance} disabled={openingLocked} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} />
