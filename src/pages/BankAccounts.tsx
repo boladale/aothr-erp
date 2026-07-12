@@ -22,10 +22,20 @@ interface BankAccount {
   id: string; account_code: string; account_name: string; bank_name: string | null;
   account_number: string | null; currency: string; gl_account_id: string | null;
   opening_balance: number; current_balance: number; is_active: boolean;
+  account_type?: string | null;
   gl_accounts?: { account_code: string; account_name: string } | null;
 }
 
-const emptyForm = { account_code: '', account_name: '', bank_name: '', account_number: '', currency: 'USD', gl_account_id: '', opening_balance: '0' };
+const ACCOUNT_TYPES = [
+  { value: 'checking', label: 'Checking / Current' },
+  { value: 'savings', label: 'Savings' },
+  { value: 'cash', label: 'Cash / Petty Cash' },
+  { value: 'credit_card', label: 'Credit Card' },
+  { value: 'mobile_money', label: 'Mobile Money' },
+  { value: 'other', label: 'Other' },
+];
+
+const emptyForm = { account_code: '', account_name: '', bank_name: '', account_number: '', currency: 'NGN', gl_account_id: '', opening_balance: '0', account_type: 'checking' };
 
 export default function BankAccounts() {
   const { hasRole, organizationId } = useAuth();
@@ -72,6 +82,7 @@ export default function BankAccounts() {
       currency: acc.currency,
       gl_account_id: acc.gl_account_id || '',
       opening_balance: String(acc.opening_balance || 0),
+      account_type: acc.account_type || 'checking',
     });
     setDialogOpen(true);
   };
@@ -90,6 +101,7 @@ export default function BankAccounts() {
         account_number: form.account_number || null,
         currency: form.currency,
         gl_account_id: form.gl_account_id || null,
+        account_type: form.account_type,
       };
       if (!openingLocked) {
         const delta = opening - Number(editing.opening_balance || 0);
@@ -104,8 +116,9 @@ export default function BankAccounts() {
         account_code: form.account_code, account_name: form.account_name,
         bank_name: form.bank_name || null, account_number: form.account_number || null,
         currency: form.currency, gl_account_id: form.gl_account_id || null,
+        account_type: form.account_type,
         opening_balance: opening, current_balance: opening, organization_id: organizationId,
-      });
+      } as any);
       if (error) { toast.error(error.message); return; }
       toast.success('Bank account created');
     }
@@ -137,16 +150,25 @@ export default function BankAccounts() {
                     <div><Label>Account Name</Label><Input value={form.account_name} onChange={e => setForm(f => ({ ...f, account_name: e.target.value }))} placeholder="e.g. Payroll Account" /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><Label>Bank Name</Label><Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} /></div>
-                    <div><Label>Account Number</Label><Input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))} /></div>
+                    <div>
+                      <Label>Account Type</Label>
+                      <Select value={form.account_type} onValueChange={v => setForm(f => ({ ...f, account_type: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ACCOUNT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div><Label>Bank Name</Label><Input value={form.bank_name} onChange={e => setForm(f => ({ ...f, bank_name: e.target.value }))} placeholder={form.account_type === 'cash' ? 'Cash on Hand' : ''} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
+                    <div><Label>Account Number</Label><Input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))} /></div>
                     <div><Label>Currency</Label><Input value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} /></div>
-                    <div>
-                      <Label>Opening Balance</Label>
-                      <Input type="number" value={form.opening_balance} disabled={openingLocked} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} />
-                      {openingLocked && <p className="text-xs text-muted-foreground mt-1">Locked — opening balance already set. Post a journal entry to adjust.</p>}
-                    </div>
+                  </div>
+                  <div>
+                    <Label>Opening Balance</Label>
+                    <Input type="number" value={form.opening_balance} disabled={openingLocked} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} />
+                    {openingLocked && <p className="text-xs text-muted-foreground mt-1">Locked — opening balance already set. Post a journal entry to adjust.</p>}
                   </div>
                   <div>
                     <Label>Linked GL Account</Label>

@@ -1106,6 +1106,7 @@ export type Database = {
           account_code: string
           account_name: string
           account_number: string | null
+          account_type: string
           bank_name: string | null
           created_at: string
           currency: string
@@ -1121,6 +1122,7 @@ export type Database = {
           account_code: string
           account_name: string
           account_number?: string | null
+          account_type?: string
           bank_name?: string | null
           created_at?: string
           currency?: string
@@ -1136,6 +1138,7 @@ export type Database = {
           account_code?: string
           account_name?: string
           account_number?: string | null
+          account_type?: string
           bank_name?: string | null
           created_at?: string
           currency?: string
