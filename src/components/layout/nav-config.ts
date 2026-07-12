@@ -87,6 +87,7 @@ export const pathToProgram: Record<string, string> = {
   '/cash-flow-forecast': 'cash_flow_forecast',
   '/projects': 'projects',
   '/project-profitability': 'project_profitability',
+  '/fixed-assets': 'fixed_assets',
   '/po-closure': 'po_closure',
   '/procurement-reports': 'procurement_reports',
   '/warehouse-reports': 'warehouse_reports',
@@ -237,6 +238,7 @@ export const navSections = [
     items: [
       { path: '/projects', label: 'Projects', icon: FolderKanban },
       { path: '/project-profitability', label: 'Profitability', icon: TrendingUp },
+      { path: '/fixed-assets', label: 'Fixed Assets', icon: Landmark },
     ],
   },
   {
