@@ -22,10 +22,20 @@ interface BankAccount {
   id: string; account_code: string; account_name: string; bank_name: string | null;
   account_number: string | null; currency: string; gl_account_id: string | null;
   opening_balance: number; current_balance: number; is_active: boolean;
+  account_type?: string | null;
   gl_accounts?: { account_code: string; account_name: string } | null;
 }
 
-const emptyForm = { account_code: '', account_name: '', bank_name: '', account_number: '', currency: 'USD', gl_account_id: '', opening_balance: '0' };
+const ACCOUNT_TYPES = [
+  { value: 'checking', label: 'Checking / Current' },
+  { value: 'savings', label: 'Savings' },
+  { value: 'cash', label: 'Cash / Petty Cash' },
+  { value: 'credit_card', label: 'Credit Card' },
+  { value: 'mobile_money', label: 'Mobile Money' },
+  { value: 'other', label: 'Other' },
+];
+
+const emptyForm = { account_code: '', account_name: '', bank_name: '', account_number: '', currency: 'NGN', gl_account_id: '', opening_balance: '0', account_type: 'checking' };
 
 export default function BankAccounts() {
   const { hasRole, organizationId } = useAuth();
