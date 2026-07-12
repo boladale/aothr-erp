@@ -411,6 +411,16 @@ export default function FixedAssets() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>Department</Label>
+                <Select value={assetForm.department_id || 'none'} onValueChange={v => setAssetForm({ ...assetForm, department_id: v === 'none' ? '' : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- None --</SelectItem>
+                    {departments.map((d: any) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Custodian</Label><Input value={assetForm.custodian} onChange={e => setAssetForm({ ...assetForm, custodian: e.target.value })} placeholder="Person responsible" /></div>
               <div><Label>Serial Number</Label><Input value={assetForm.serial_number} onChange={e => setAssetForm({ ...assetForm, serial_number: e.target.value })} /></div>
               <div><Label>Acquisition Date</Label><Input type="date" value={assetForm.acquisition_date} onChange={e => setAssetForm({ ...assetForm, acquisition_date: e.target.value })} /></div>
