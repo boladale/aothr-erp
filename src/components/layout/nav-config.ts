@@ -238,6 +238,7 @@ export const navSections = [
     items: [
       { path: '/projects', label: 'Projects', icon: FolderKanban },
       { path: '/project-profitability', label: 'Profitability', icon: TrendingUp },
+      { path: '/fixed-assets', label: 'Fixed Assets', icon: Landmark },
     ],
   },
   {
