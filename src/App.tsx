@@ -89,6 +89,7 @@ const InventoryTransfers = lazy(() => import("./pages/InventoryTransfers"));
 const StockMovements = lazy(() => import("./pages/StockMovements"));
 const VendorPaymentReport = lazy(() => import("./pages/VendorPaymentReport"));
 const VendorStatement = lazy(() => import("./pages/VendorStatement"));
+const BankStatement = lazy(() => import("./pages/BankStatement"));
 const RequisitionToPaymentReport = lazy(() => import("./pages/RequisitionToPaymentReport"));
 const ProcurementAudit = lazy(() => import("./pages/ProcurementAudit"));
 const Departments = lazy(() => import("./pages/Departments"));
