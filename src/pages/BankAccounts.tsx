@@ -232,7 +232,12 @@ export default function BankAccounts() {
                         </Badge>
                       </td>
                       {canManage && (
-                        <td className="px-4 py-2.5 text-right">
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          {acc.account_type === 'cash' && (
+                            <Button size="sm" variant="ghost" onClick={() => setPettyCashAccount(acc)}>
+                              <Receipt className="h-3.5 w-3.5 mr-1" /> Expense
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" onClick={() => openEdit(acc)}>
                             <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
                           </Button>
