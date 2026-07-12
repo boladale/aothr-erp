@@ -337,7 +337,7 @@ export default function FixedAssets() {
               {catForm.depreciation_method === 'reducing_balance' && (
                 <div className="col-span-2"><Label>Annual Depr Rate (%)</Label><Input type="number" step="0.01" value={catForm.depreciation_rate} onChange={e => setCatForm({ ...catForm, depreciation_rate: Number(e.target.value) })} /></div>
               )}
-              {(['asset_gl_account_id','Asset GL Account'],['accum_depr_gl_account_id','Accumulated Depreciation GL'],['depr_expense_gl_account_id','Depreciation Expense GL'],['disposal_gain_gl_account_id','Gain on Disposal GL'],['disposal_loss_gl_account_id','Loss on Disposal GL']).map ? null : null}
+              
               {[
                 ['asset_gl_account_id','Asset GL Account (Fixed Asset)'],
                 ['accum_depr_gl_account_id','Accumulated Depreciation GL (Contra-asset)'],
