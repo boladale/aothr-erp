@@ -165,11 +165,10 @@ export default function BankAccounts() {
                     <div><Label>Account Number</Label><Input value={form.account_number} onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))} /></div>
                     <div><Label>Currency</Label><Input value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} /></div>
                   </div>
-                    <div>
-                      <Label>Opening Balance</Label>
-                      <Input type="number" value={form.opening_balance} disabled={openingLocked} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} />
-                      {openingLocked && <p className="text-xs text-muted-foreground mt-1">Locked — opening balance already set. Post a journal entry to adjust.</p>}
-                    </div>
+                  <div>
+                    <Label>Opening Balance</Label>
+                    <Input type="number" value={form.opening_balance} disabled={openingLocked} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} />
+                    {openingLocked && <p className="text-xs text-muted-foreground mt-1">Locked — opening balance already set. Post a journal entry to adjust.</p>}
                   </div>
                   <div>
                     <Label>Linked GL Account</Label>
