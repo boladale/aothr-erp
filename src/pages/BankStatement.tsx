@@ -33,7 +33,7 @@ export default function BankStatement() {
   const [accountId, setAccountId] = useState<string>('');
   const [fromDate, setFromDate] = useState<string>('');
   const [toDate, setToDate] = useState<string>('');
-  const { branding } = useOrgBranding();
+  const { appName, logoUrl } = useOrgBranding();
 
   const accountsQ = useQuery({
     queryKey: ['bank-accounts-stmt'],
