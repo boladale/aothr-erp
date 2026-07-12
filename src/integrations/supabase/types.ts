@@ -2428,6 +2428,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           custodian: string | null
+          department_id: string | null
           depreciation_method: string
           depreciation_rate: number | null
           description: string | null
@@ -2456,6 +2457,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custodian?: string | null
+          department_id?: string | null
           depreciation_method?: string
           depreciation_rate?: number | null
           description?: string | null
@@ -2484,6 +2486,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           custodian?: string | null
+          department_id?: string | null
           depreciation_method?: string
           depreciation_rate?: number | null
           description?: string | null
@@ -2509,6 +2512,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "fixed_asset_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_assets_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
             referencedColumns: ["id"]
           },
           {
