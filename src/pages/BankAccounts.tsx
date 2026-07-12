@@ -45,6 +45,7 @@ export default function BankAccounts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BankAccount | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [pettyCashAccount, setPettyCashAccount] = useState<BankAccount | null>(null);
 
   const accountsQ = useQuery({
     queryKey: ['bank_accounts'],
