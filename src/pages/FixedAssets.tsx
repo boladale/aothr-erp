@@ -33,7 +33,7 @@ export default function FixedAssets() {
     queryKey: ['fixed-assets'],
     queryFn: async () => {
       const { data, error } = await supabase.from('fixed_assets' as any)
-        .select('*, category:fixed_asset_categories(name), location:locations(name)')
+        .select('*, category:fixed_asset_categories(name), location:locations(name), department:departments(name)')
         .order('acquisition_date', { ascending: false });
       if (error) throw error; return data as any[];
     },
