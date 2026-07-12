@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MetricCard } from '@/components/ui/metric-card';
 import { toast } from 'sonner';
-import { Plus, Landmark, DollarSign, TrendingUp, Wallet } from 'lucide-react';
+import { Plus, Landmark, DollarSign, Wallet, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 
@@ -25,15 +25,15 @@ interface BankAccount {
   gl_accounts?: { account_code: string; account_name: string } | null;
 }
 
+const emptyForm = { account_code: '', account_name: '', bank_name: '', account_number: '', currency: 'USD', gl_account_id: '', opening_balance: '0' };
+
 export default function BankAccounts() {
   const { hasRole, organizationId } = useAuth();
   const qc = useQueryClient();
   const canManage = hasRole('admin') || hasRole('accounts_payable');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    account_code: '', account_name: '', bank_name: '', account_number: '',
-    currency: 'USD', gl_account_id: '', opening_balance: '0',
-  });
+  const [editing, setEditing] = useState<BankAccount | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   const accountsQ = useQuery({
     queryKey: ['bank_accounts'],
@@ -54,21 +54,64 @@ export default function BankAccounts() {
   const accounts = accountsQ.data || [];
   const glAccounts = glAccountsQ.data || [];
   const loading = accountsQ.isLoading;
-  const fetchAll = () => { qc.invalidateQueries({ queryKey: ['bank_accounts'] }); qc.invalidateQueries({ queryKey: ['gl_accounts', 'asset-postable'] }); };
+  const fetchAll = () => { qc.invalidateQueries({ queryKey: ['bank_accounts'] }); };
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (acc: BankAccount) => {
+    setEditing(acc);
+    setForm({
+      account_code: acc.account_code,
+      account_name: acc.account_name,
+      bank_name: acc.bank_name || '',
+      account_number: acc.account_number || '',
+      currency: acc.currency,
+      gl_account_id: acc.gl_account_id || '',
+      opening_balance: String(acc.opening_balance || 0),
+    });
+    setDialogOpen(true);
+  };
+
+  const openingLocked = !!editing && Number(editing.opening_balance) !== 0;
+
+  const handleSave = async () => {
     if (!form.account_code || !form.account_name) { toast.error('Code and name required'); return; }
     const opening = parseFloat(form.opening_balance) || 0;
-    const { error } = await supabase.from('bank_accounts').insert({
-      account_code: form.account_code, account_name: form.account_name,
-      bank_name: form.bank_name || null, account_number: form.account_number || null,
-      currency: form.currency, gl_account_id: form.gl_account_id || null,
-      opening_balance: opening, current_balance: opening, organization_id: organizationId,
-    });
-    if (error) { toast.error(error.message); return; }
-    toast.success('Bank account created');
+
+    if (editing) {
+      const patch: any = {
+        account_code: form.account_code,
+        account_name: form.account_name,
+        bank_name: form.bank_name || null,
+        account_number: form.account_number || null,
+        currency: form.currency,
+        gl_account_id: form.gl_account_id || null,
+      };
+      if (!openingLocked) {
+        const delta = opening - Number(editing.opening_balance || 0);
+        patch.opening_balance = opening;
+        patch.current_balance = Number(editing.current_balance || 0) + delta;
+      }
+      const { error } = await supabase.from('bank_accounts').update(patch).eq('id', editing.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success('Bank account updated');
+    } else {
+      const { error } = await supabase.from('bank_accounts').insert({
+        account_code: form.account_code, account_name: form.account_name,
+        bank_name: form.bank_name || null, account_number: form.account_number || null,
+        currency: form.currency, gl_account_id: form.gl_account_id || null,
+        opening_balance: opening, current_balance: opening, organization_id: organizationId,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success('Bank account created');
+    }
     setDialogOpen(false);
-    setForm({ account_code: '', account_name: '', bank_name: '', account_number: '', currency: 'USD', gl_account_id: '', opening_balance: '0' });
+    setEditing(null);
+    setForm(emptyForm);
     fetchAll();
   };
 
@@ -82,12 +125,12 @@ export default function BankAccounts() {
           title="Bank Accounts"
           description="Manage bank accounts and track balances"
           actions={canManage ? (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) { setEditing(null); setForm(emptyForm); } }}>
               <DialogTrigger asChild>
-                <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Bank Account</Button>
+                <Button size="sm" onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Add Bank Account</Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>New Bank Account</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>{editing ? 'Edit Bank Account' : 'New Bank Account'}</DialogTitle></DialogHeader>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div><Label>Account Code</Label><Input value={form.account_code} onChange={e => setForm(f => ({ ...f, account_code: e.target.value }))} placeholder="e.g. BANK-002" /></div>
@@ -99,7 +142,11 @@ export default function BankAccounts() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div><Label>Currency</Label><Input value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))} /></div>
-                    <div><Label>Opening Balance</Label><Input type="number" value={form.opening_balance} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} /></div>
+                    <div>
+                      <Label>Opening Balance</Label>
+                      <Input type="number" value={form.opening_balance} disabled={openingLocked} onChange={e => setForm(f => ({ ...f, opening_balance: e.target.value }))} />
+                      {openingLocked && <p className="text-xs text-muted-foreground mt-1">Locked — opening balance already set. Post a journal entry to adjust.</p>}
+                    </div>
                   </div>
                   <div>
                     <Label>Linked GL Account</Label>
@@ -111,7 +158,7 @@ export default function BankAccounts() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={handleCreate} className="w-full">Create Bank Account</Button>
+                  <Button onClick={handleSave} className="w-full">{editing ? 'Save Changes' : 'Create Bank Account'}</Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -137,8 +184,10 @@ export default function BankAccounts() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Bank</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">GL Account</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Currency</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Opening</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Balance</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                    {canManage && <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Actions</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -151,16 +200,24 @@ export default function BankAccounts() {
                         {acc.gl_accounts ? `${acc.gl_accounts.account_code} - ${acc.gl_accounts.account_name}` : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-sm">{acc.currency}</td>
+                      <td className="px-4 py-2.5 text-sm text-right">{formatCurrency(acc.opening_balance)}</td>
                       <td className="px-4 py-2.5 text-sm text-right font-semibold">{formatCurrency(acc.current_balance)}</td>
                       <td className="px-4 py-2.5">
                         <Badge variant="outline" className={acc.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted text-muted-foreground'}>
                           {acc.is_active ? 'Active' : 'Inactive'}
                         </Badge>
                       </td>
+                      {canManage && (
+                        <td className="px-4 py-2.5 text-right">
+                          <Button size="sm" variant="ghost" onClick={() => openEdit(acc)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                          </Button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                   {accounts.length === 0 && (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No bank accounts found</td></tr>
+                    <tr><td colSpan={canManage ? 9 : 8} className="px-4 py-8 text-center text-muted-foreground">No bank accounts found</td></tr>
                   )}
                 </tbody>
               </table>
