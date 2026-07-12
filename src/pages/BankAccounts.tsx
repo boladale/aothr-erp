@@ -82,6 +82,7 @@ export default function BankAccounts() {
       currency: acc.currency,
       gl_account_id: acc.gl_account_id || '',
       opening_balance: String(acc.opening_balance || 0),
+      account_type: acc.account_type || 'checking',
     });
     setDialogOpen(true);
   };
