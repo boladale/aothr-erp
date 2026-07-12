@@ -227,6 +227,7 @@ export const navSections = [
       { path: '/bank-accounts', label: 'Bank Accounts', icon: Landmark },
       { path: '/fund-transfers', label: 'Fund Transfers', icon: ArrowRightLeft },
       { path: '/bank-reconciliation', label: 'Reconciliation', icon: Scale },
+      { path: '/bank-statement', label: 'Bank Statement', icon: FileText },
       { path: '/cash-flow-forecast', label: 'Cash Forecast', icon: TrendingUp },
     ],
   },
