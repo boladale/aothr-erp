@@ -215,6 +215,7 @@ export default function FixedAssets() {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead>Code</TableHead><TableHead>Name</TableHead><TableHead>Category</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Location</TableHead><TableHead>Acq Date</TableHead>
                   <TableHead className="text-right">Cost</TableHead><TableHead className="text-right">Accum. Depr</TableHead>
                   <TableHead className="text-right">NBV</TableHead><TableHead>Status</TableHead>
@@ -222,9 +223,9 @@ export default function FixedAssets() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : assets.length === 0 ? (
-                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No assets registered</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">No assets registered</TableCell></TableRow>
                   ) : assets.map((a: any) => {
                     const nbv = Number(a.acquisition_cost) - Number(a.accumulated_depreciation);
                     return (
