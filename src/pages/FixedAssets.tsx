@@ -127,6 +127,7 @@ export default function FixedAssets() {
     setAssetForm({
       asset_code: a.asset_code, name: a.name, description: a.description || '',
       category_id: a.category_id || '', location_id: a.location_id || '',
+      department_id: a.department_id || '',
       custodian: a.custodian || '', serial_number: a.serial_number || '',
       acquisition_date: a.acquisition_date, acquisition_cost: a.acquisition_cost,
       salvage_value: a.salvage_value, useful_life_years: a.useful_life_years,
