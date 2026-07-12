@@ -13,9 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MetricCard } from '@/components/ui/metric-card';
 import { toast } from 'sonner';
-import { Plus, Landmark, DollarSign, Wallet, Pencil } from 'lucide-react';
+import { Plus, Landmark, DollarSign, Wallet, Pencil, Receipt } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { PettyCashExpenseDialog } from '@/components/bank/PettyCashExpenseDialog';
 
 interface GLAccount { id: string; account_code: string; account_name: string; }
 interface BankAccount {
