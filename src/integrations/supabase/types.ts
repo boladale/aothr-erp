@@ -2271,6 +2271,255 @@ export type Database = {
           },
         ]
       }
+      fixed_asset_categories: {
+        Row: {
+          accum_depr_gl_account_id: string | null
+          asset_gl_account_id: string | null
+          code: string
+          created_at: string
+          depr_expense_gl_account_id: string | null
+          depreciation_method: string
+          depreciation_rate: number | null
+          disposal_gain_gl_account_id: string | null
+          disposal_loss_gl_account_id: string | null
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string | null
+          updated_at: string
+          useful_life_years: number
+        }
+        Insert: {
+          accum_depr_gl_account_id?: string | null
+          asset_gl_account_id?: string | null
+          code: string
+          created_at?: string
+          depr_expense_gl_account_id?: string | null
+          depreciation_method?: string
+          depreciation_rate?: number | null
+          disposal_gain_gl_account_id?: string | null
+          disposal_loss_gl_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id?: string | null
+          updated_at?: string
+          useful_life_years?: number
+        }
+        Update: {
+          accum_depr_gl_account_id?: string | null
+          asset_gl_account_id?: string | null
+          code?: string
+          created_at?: string
+          depr_expense_gl_account_id?: string | null
+          depreciation_method?: string
+          depreciation_rate?: number | null
+          disposal_gain_gl_account_id?: string | null
+          disposal_loss_gl_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string | null
+          updated_at?: string
+          useful_life_years?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_asset_categories_accum_depr_gl_account_id_fkey"
+            columns: ["accum_depr_gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_asset_categories_asset_gl_account_id_fkey"
+            columns: ["asset_gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_asset_categories_depr_expense_gl_account_id_fkey"
+            columns: ["depr_expense_gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_asset_categories_disposal_gain_gl_account_id_fkey"
+            columns: ["disposal_gain_gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_asset_categories_disposal_loss_gl_account_id_fkey"
+            columns: ["disposal_loss_gl_account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fixed_asset_depreciation: {
+        Row: {
+          asset_id: string
+          created_at: string
+          depreciation_amount: number
+          id: string
+          journal_entry_id: string | null
+          nbv_after: number
+          organization_id: string | null
+          period_date: string
+          posted: boolean
+          posted_at: string | null
+          posted_by: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          depreciation_amount: number
+          id?: string
+          journal_entry_id?: string | null
+          nbv_after: number
+          organization_id?: string | null
+          period_date: string
+          posted?: boolean
+          posted_at?: string | null
+          posted_by?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          depreciation_amount?: number
+          id?: string
+          journal_entry_id?: string | null
+          nbv_after?: number
+          organization_id?: string | null
+          period_date?: string
+          posted?: boolean
+          posted_at?: string | null
+          posted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_asset_depreciation_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "fixed_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_asset_depreciation_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fixed_assets: {
+        Row: {
+          accumulated_depreciation: number
+          acquisition_cost: number
+          acquisition_date: string
+          asset_code: string
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          custodian: string | null
+          depreciation_method: string
+          depreciation_rate: number | null
+          description: string | null
+          disposal_date: string | null
+          disposal_notes: string | null
+          disposal_proceeds: number | null
+          id: string
+          invoice_id: string | null
+          last_depreciation_date: string | null
+          location_id: string | null
+          name: string
+          organization_id: string | null
+          po_id: string | null
+          salvage_value: number
+          serial_number: string | null
+          status: string
+          updated_at: string
+          useful_life_years: number
+        }
+        Insert: {
+          accumulated_depreciation?: number
+          acquisition_cost?: number
+          acquisition_date: string
+          asset_code: string
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custodian?: string | null
+          depreciation_method?: string
+          depreciation_rate?: number | null
+          description?: string | null
+          disposal_date?: string | null
+          disposal_notes?: string | null
+          disposal_proceeds?: number | null
+          id?: string
+          invoice_id?: string | null
+          last_depreciation_date?: string | null
+          location_id?: string | null
+          name: string
+          organization_id?: string | null
+          po_id?: string | null
+          salvage_value?: number
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+          useful_life_years?: number
+        }
+        Update: {
+          accumulated_depreciation?: number
+          acquisition_cost?: number
+          acquisition_date?: string
+          asset_code?: string
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          custodian?: string | null
+          depreciation_method?: string
+          depreciation_rate?: number | null
+          description?: string | null
+          disposal_date?: string | null
+          disposal_notes?: string | null
+          disposal_proceeds?: number | null
+          id?: string
+          invoice_id?: string | null
+          last_depreciation_date?: string | null
+          location_id?: string | null
+          name?: string
+          organization_id?: string | null
+          po_id?: string | null
+          salvage_value?: number
+          serial_number?: string | null
+          status?: string
+          updated_at?: string
+          useful_life_years?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_assets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "fixed_asset_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fixed_assets_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fund_transfers: {
         Row: {
           amount: number
@@ -7215,6 +7464,16 @@ export type Database = {
         }
         Returns: number
       }
+      dispose_fixed_asset: {
+        Args: {
+          p_asset_id: string
+          p_cash_account_id: string
+          p_disposal_date: string
+          p_notes: string
+          p_proceeds: number
+        }
+        Returns: string
+      }
       generate_employee_salary_from_grade: {
         Args: { p_employee_id: string }
         Returns: undefined
@@ -7256,6 +7515,10 @@ export type Database = {
       is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
       next_transaction_number: {
         Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
+        Returns: string
+      }
+      post_asset_depreciation: {
+        Args: { p_asset_id: string; p_period_date: string }
         Returns: string
       }
       recalc_budget_line_totals: {
