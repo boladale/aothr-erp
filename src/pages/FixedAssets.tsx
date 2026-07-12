@@ -100,7 +100,7 @@ export default function FixedAssets() {
   const [assetOpen, setAssetOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<any>(null);
   const emptyAsset = {
-    asset_code: '', name: '', description: '', category_id: '', location_id: '', custodian: '', serial_number: '',
+    asset_code: '', name: '', description: '', category_id: '', location_id: '', department_id: '', custodian: '', serial_number: '',
     acquisition_date: new Date().toISOString().slice(0, 10), acquisition_cost: 0, salvage_value: 0,
     useful_life_years: 5, depreciation_method: 'straight_line', depreciation_rate: 0,
   };
@@ -109,7 +109,7 @@ export default function FixedAssets() {
   const saveAsset = useMutation({
     mutationFn: async () => {
       const payload: any = { ...assetForm, organization_id: organizationId };
-      ['category_id','location_id'].forEach(k => { if (!payload[k]) payload[k] = null; });
+      ['category_id','location_id','department_id'].forEach(k => { if (!payload[k]) payload[k] = null; });
       if (editingAsset) {
         const { error } = await supabase.from('fixed_assets' as any).update(payload).eq('id', editingAsset.id);
         if (error) throw error;
