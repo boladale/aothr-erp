@@ -1,0 +1,1 @@
+ALTER TABLE public.fixed_assets ADD COLUMN IF NOT EXISTS department_id UUID REFERENCES public.departments(id) ON DELETE SET NULL;

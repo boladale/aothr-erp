@@ -33,7 +33,7 @@ export default function FixedAssets() {
     queryKey: ['fixed-assets'],
     queryFn: async () => {
       const { data, error } = await supabase.from('fixed_assets' as any)
-        .select('*, category:fixed_asset_categories(name), location:locations(name)')
+        .select('*, category:fixed_asset_categories(name), location:locations(name), department:departments(name)')
         .order('acquisition_date', { ascending: false });
       if (error) throw error; return data as any[];
     },
@@ -43,6 +43,13 @@ export default function FixedAssets() {
     queryFn: async () => {
       const { data, error } = await supabase.from('locations').select('*').eq('is_active', true).order('name');
       if (error) throw error; return data;
+    },
+  });
+  const { data: departments = [] } = useQuery({
+    queryKey: ['fa-departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments' as any).select('*').eq('is_active', true).order('name');
+      if (error) throw error; return data as any[];
     },
   });
   const { data: glAccounts = [] } = useQuery({
@@ -93,7 +100,7 @@ export default function FixedAssets() {
   const [assetOpen, setAssetOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<any>(null);
   const emptyAsset = {
-    asset_code: '', name: '', description: '', category_id: '', location_id: '', custodian: '', serial_number: '',
+    asset_code: '', name: '', description: '', category_id: '', location_id: '', department_id: '', custodian: '', serial_number: '',
     acquisition_date: new Date().toISOString().slice(0, 10), acquisition_cost: 0, salvage_value: 0,
     useful_life_years: 5, depreciation_method: 'straight_line', depreciation_rate: 0,
   };
@@ -102,7 +109,7 @@ export default function FixedAssets() {
   const saveAsset = useMutation({
     mutationFn: async () => {
       const payload: any = { ...assetForm, organization_id: organizationId };
-      ['category_id','location_id'].forEach(k => { if (!payload[k]) payload[k] = null; });
+      ['category_id','location_id','department_id'].forEach(k => { if (!payload[k]) payload[k] = null; });
       if (editingAsset) {
         const { error } = await supabase.from('fixed_assets' as any).update(payload).eq('id', editingAsset.id);
         if (error) throw error;
@@ -120,6 +127,7 @@ export default function FixedAssets() {
     setAssetForm({
       asset_code: a.asset_code, name: a.name, description: a.description || '',
       category_id: a.category_id || '', location_id: a.location_id || '',
+      department_id: a.department_id || '',
       custodian: a.custodian || '', serial_number: a.serial_number || '',
       acquisition_date: a.acquisition_date, acquisition_cost: a.acquisition_cost,
       salvage_value: a.salvage_value, useful_life_years: a.useful_life_years,
@@ -207,6 +215,7 @@ export default function FixedAssets() {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead>Code</TableHead><TableHead>Name</TableHead><TableHead>Category</TableHead>
+                  <TableHead>Department</TableHead>
                   <TableHead>Location</TableHead><TableHead>Acq Date</TableHead>
                   <TableHead className="text-right">Cost</TableHead><TableHead className="text-right">Accum. Depr</TableHead>
                   <TableHead className="text-right">NBV</TableHead><TableHead>Status</TableHead>
@@ -214,9 +223,9 @@ export default function FixedAssets() {
                 </TableRow></TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                   ) : assets.length === 0 ? (
-                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No assets registered</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">No assets registered</TableCell></TableRow>
                   ) : assets.map((a: any) => {
                     const nbv = Number(a.acquisition_cost) - Number(a.accumulated_depreciation);
                     return (
@@ -224,6 +233,7 @@ export default function FixedAssets() {
                         <TableCell className="font-mono">{a.asset_code}</TableCell>
                         <TableCell className="font-medium">{a.name}</TableCell>
                         <TableCell>{a.category?.name || '-'}</TableCell>
+                        <TableCell>{a.department?.name || '-'}</TableCell>
                         <TableCell>{a.location?.name || '-'}</TableCell>
                         <TableCell>{a.acquisition_date}</TableCell>
                         <TableCell className="text-right">{formatCurrency(a.acquisition_cost)}</TableCell>
@@ -398,6 +408,16 @@ export default function FixedAssets() {
                   <SelectContent>
                     <SelectItem value="none">-- None --</SelectItem>
                     {locations.map((l: any) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Department</Label>
+                <Select value={assetForm.department_id || 'none'} onValueChange={v => setAssetForm({ ...assetForm, department_id: v === 'none' ? '' : v })}>
+                  <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">-- None --</SelectItem>
+                    {departments.map((d: any) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
