@@ -89,6 +89,7 @@ const InventoryTransfers = lazy(() => import("./pages/InventoryTransfers"));
 const StockMovements = lazy(() => import("./pages/StockMovements"));
 const VendorPaymentReport = lazy(() => import("./pages/VendorPaymentReport"));
 const VendorStatement = lazy(() => import("./pages/VendorStatement"));
+const BankStatement = lazy(() => import("./pages/BankStatement"));
 const RequisitionToPaymentReport = lazy(() => import("./pages/RequisitionToPaymentReport"));
 const ProcurementAudit = lazy(() => import("./pages/ProcurementAudit"));
 const Departments = lazy(() => import("./pages/Departments"));
@@ -229,6 +230,7 @@ const App = () => (
             <Route path="/ar-aging" element={<ProtectedRoute><ARAging /></ProtectedRoute>} />
             <Route path="/bank-accounts" element={<ProtectedRoute><BankAccounts /></ProtectedRoute>} />
             <Route path="/bank-reconciliation" element={<ProtectedRoute><BankReconciliation /></ProtectedRoute>} />
+            <Route path="/bank-statement" element={<ProtectedRoute><BankStatement /></ProtectedRoute>} />
             <Route path="/fund-transfers" element={<ProtectedRoute><FundTransfers /></ProtectedRoute>} />
             <Route path="/cash-flow-forecast" element={<ProtectedRoute><CashFlowForecast /></ProtectedRoute>} />
             <Route path="/inventory-valuation" element={<ProtectedRoute><InventoryValuation /></ProtectedRoute>} />
