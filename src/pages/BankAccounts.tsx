@@ -13,9 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MetricCard } from '@/components/ui/metric-card';
 import { toast } from 'sonner';
-import { Plus, Landmark, DollarSign, Wallet, Pencil } from 'lucide-react';
+import { Plus, Landmark, DollarSign, Wallet, Pencil, Receipt } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { PettyCashExpenseDialog } from '@/components/bank/PettyCashExpenseDialog';
 
 interface GLAccount { id: string; account_code: string; account_name: string; }
 interface BankAccount {
@@ -44,6 +45,7 @@ export default function BankAccounts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BankAccount | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [pettyCashAccount, setPettyCashAccount] = useState<BankAccount | null>(null);
 
   const accountsQ = useQuery({
     queryKey: ['bank_accounts'],
@@ -230,7 +232,12 @@ export default function BankAccounts() {
                         </Badge>
                       </td>
                       {canManage && (
-                        <td className="px-4 py-2.5 text-right">
+                        <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                          {acc.account_type === 'cash' && (
+                            <Button size="sm" variant="ghost" onClick={() => setPettyCashAccount(acc)}>
+                              <Receipt className="h-3.5 w-3.5 mr-1" /> Expense
+                            </Button>
+                          )}
                           <Button size="sm" variant="ghost" onClick={() => openEdit(acc)}>
                             <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
                           </Button>
@@ -246,6 +253,16 @@ export default function BankAccounts() {
             )}
           </CardContent>
         </Card>
+
+        {pettyCashAccount && (
+          <PettyCashExpenseDialog
+            open={!!pettyCashAccount}
+            onOpenChange={(o) => { if (!o) setPettyCashAccount(null); }}
+            bankAccount={pettyCashAccount}
+            organizationId={organizationId}
+            onSaved={fetchAll}
+          />
+        )}
       </div>
     </AppLayout>
   );
