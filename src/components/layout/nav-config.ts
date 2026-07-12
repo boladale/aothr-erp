@@ -83,6 +83,7 @@ export const pathToProgram: Record<string, string> = {
   '/bank-accounts': 'bank_accounts',
   '/fund-transfers': 'fund_transfers',
   '/bank-reconciliation': 'bank_reconciliation',
+  '/bank-statement': 'bank_accounts',
   '/cash-flow-forecast': 'cash_flow_forecast',
   '/projects': 'projects',
   '/project-profitability': 'project_profitability',
