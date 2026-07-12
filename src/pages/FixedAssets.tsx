@@ -45,6 +45,13 @@ export default function FixedAssets() {
       if (error) throw error; return data;
     },
   });
+  const { data: departments = [] } = useQuery({
+    queryKey: ['fa-departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments' as any).select('*').eq('is_active', true).order('name');
+      if (error) throw error; return data as any[];
+    },
+  });
   const { data: glAccounts = [] } = useQuery({
     queryKey: ['fa-gl-accounts'],
     queryFn: async () => {
