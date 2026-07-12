@@ -233,6 +233,7 @@ export default function FixedAssets() {
                         <TableCell className="font-mono">{a.asset_code}</TableCell>
                         <TableCell className="font-medium">{a.name}</TableCell>
                         <TableCell>{a.category?.name || '-'}</TableCell>
+                        <TableCell>{a.department?.name || '-'}</TableCell>
                         <TableCell>{a.location?.name || '-'}</TableCell>
                         <TableCell>{a.acquisition_date}</TableCell>
                         <TableCell className="text-right">{formatCurrency(a.acquisition_cost)}</TableCell>
