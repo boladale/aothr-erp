@@ -253,6 +253,16 @@ export default function BankAccounts() {
             )}
           </CardContent>
         </Card>
+
+        {pettyCashAccount && (
+          <PettyCashExpenseDialog
+            open={!!pettyCashAccount}
+            onOpenChange={(o) => { if (!o) setPettyCashAccount(null); }}
+            bankAccount={pettyCashAccount}
+            organizationId={organizationId}
+            onSaved={fetchAll}
+          />
+        )}
       </div>
     </AppLayout>
   );
