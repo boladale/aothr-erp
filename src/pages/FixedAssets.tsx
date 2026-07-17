@@ -202,7 +202,9 @@ export default function FixedAssets() {
             <TabsTrigger value="register">Asset Register</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="depreciation">Depreciation History</TabsTrigger>
+            <TabsTrigger value="disposals">Disposals</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="register" className="space-y-4">
             <div className="flex justify-end gap-2">
@@ -324,7 +326,74 @@ export default function FixedAssets() {
               </Table>
             </div>
           </TabsContent>
+
+          <TabsContent value="disposals" className="space-y-4">
+            {(() => {
+              const disposed = assets.filter((a: any) => a.status === 'disposed');
+              const totalProceeds = disposed.reduce((s: number, a: any) => s + Number(a.disposal_proceeds || 0), 0);
+              const totalNbvAtDisposal = disposed.reduce((s: number, a: any) => s + (Number(a.acquisition_cost) - Number(a.accumulated_depreciation)), 0);
+              const totalGainLoss = totalProceeds - totalNbvAtDisposal;
+              return (
+                <>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Assets Disposed</CardTitle></CardHeader>
+                      <CardContent><div className="text-2xl font-semibold">{disposed.length}</div></CardContent></Card>
+                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Proceeds</CardTitle></CardHeader>
+                      <CardContent><div className="text-2xl font-semibold">{formatCurrency(totalProceeds)}</div></CardContent></Card>
+                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Net Gain / (Loss)</CardTitle></CardHeader>
+                      <CardContent><div className={`text-2xl font-semibold ${totalGainLoss >= 0 ? 'text-primary' : 'text-destructive'}`}>{formatCurrency(totalGainLoss)}</div></CardContent></Card>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={() => {
+                      const active = assets.filter((a: any) => a.status === 'active');
+                      if (active.length === 0) { toast.error('No active assets to dispose'); return; }
+                      setDispAsset(active[0]);
+                      setDispForm({ disposal_date: new Date().toISOString().slice(0,10), proceeds: 0, cash_account_id: '', notes: '' });
+                      setDispOpen(true);
+                    }}><PackageX className="h-4 w-4 mr-2" />New Disposal</Button>
+                  </div>
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader><TableRow>
+                        <TableHead>Code</TableHead><TableHead>Name</TableHead><TableHead>Category</TableHead>
+                        <TableHead>Disposal Date</TableHead>
+                        <TableHead className="text-right">Cost</TableHead>
+                        <TableHead className="text-right">Accum. Depr</TableHead>
+                        <TableHead className="text-right">NBV at Disposal</TableHead>
+                        <TableHead className="text-right">Proceeds</TableHead>
+                        <TableHead className="text-right">Gain / (Loss)</TableHead>
+                        <TableHead>Notes</TableHead>
+                      </TableRow></TableHeader>
+                      <TableBody>
+                        {disposed.length === 0 ? (
+                          <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No disposed assets yet</TableCell></TableRow>
+                        ) : disposed.map((a: any) => {
+                          const nbv = Number(a.acquisition_cost) - Number(a.accumulated_depreciation);
+                          const gl = Number(a.disposal_proceeds || 0) - nbv;
+                          return (
+                            <TableRow key={a.id}>
+                              <TableCell className="font-mono">{a.asset_code}</TableCell>
+                              <TableCell className="font-medium">{a.name}</TableCell>
+                              <TableCell>{a.category?.name || '-'}</TableCell>
+                              <TableCell>{a.disposal_date || '-'}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(a.acquisition_cost)}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(a.accumulated_depreciation)}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(nbv)}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(a.disposal_proceeds || 0)}</TableCell>
+                              <TableCell className={`text-right font-medium ${gl >= 0 ? 'text-primary' : 'text-destructive'}`}>{formatCurrency(gl)}</TableCell>
+                              <TableCell className="max-w-[220px] truncate" title={a.disposal_notes || ''}>{a.disposal_notes || '-'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
+              );
+            })()}
+          </TabsContent>
         </Tabs>
+
 
         {/* Category dialog */}
         <Dialog open={catOpen} onOpenChange={setCatOpen}>
