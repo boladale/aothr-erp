@@ -202,7 +202,9 @@ export default function FixedAssets() {
             <TabsTrigger value="register">Asset Register</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="depreciation">Depreciation History</TabsTrigger>
+            <TabsTrigger value="disposals">Disposals</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="register" className="space-y-4">
             <div className="flex justify-end gap-2">
