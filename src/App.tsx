@@ -117,6 +117,7 @@ const FixedAssets = lazy(() => import("./pages/FixedAssets"));
 const OpeningBalances = lazy(() => import("./pages/OpeningBalances"));
 const SystemHealthCheck = lazy(() => import("./pages/SystemHealthCheck"));
 const CreatorHandbook = lazy(() => import("./pages/CreatorHandbook"));
+const FlowDiagrams = lazy(() => import("./pages/FlowDiagrams"));
 
 const queryClient = new QueryClient();
 
