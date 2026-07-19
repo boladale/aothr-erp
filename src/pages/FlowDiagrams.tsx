@@ -253,20 +253,27 @@ export default function FlowDiagrams() {
   }, []);
 
   useEffect(() => {
-    const d = diagrams.find((x) => x.id === active);
-    if (!d || rendered.current.has(d.id)) return;
-    const el = document.getElementById(`mmd-${d.id}`);
-    if (!el) return;
-    mermaid
-      .render(`svg-${d.id}`, d.code)
-      .then(({ svg }) => {
-        el.innerHTML = svg;
-        rendered.current.add(d.id);
-      })
-      .catch(() => {
-        el.innerHTML = `<pre class="text-xs">${d.code}</pre>`;
-      });
-  }, [active]);
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+      flowchart: { htmlLabels: true, curve: "basis" },
+    });
+    // Pre-render all diagrams so print includes them.
+    diagrams.forEach(async (d) => {
+      if (rendered.current.has(d.id)) return;
+      try {
+        const { svg } = await mermaid.render(`svg-${d.id}`, d.code);
+        const el = document.getElementById(`mmd-${d.id}`);
+        if (el) {
+          el.innerHTML = svg;
+          rendered.current.add(d.id);
+        }
+      } catch {
+        /* ignore */
+      }
+    });
+  }, []);
 
   const handlePrint = () => window.print();
 
