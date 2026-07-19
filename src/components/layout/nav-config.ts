@@ -39,6 +39,7 @@ import {
   Repeat,
   PiggyBank,
   History,
+  ShieldCheck,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
