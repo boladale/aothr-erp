@@ -301,6 +301,7 @@ export const navSections = [
       { path: '/user-management', label: 'User Management', icon: Shield },
       { path: '/vendor-registrations', label: 'Vendor Registrations', icon: Building2 },
       { path: '/opening-balances', label: 'Opening Balances', icon: Scale },
+      { path: '/system-health', label: 'System Health Check', icon: ShieldCheck },
       { path: '/admin', label: 'Admin', icon: Settings },
       { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },
     ],
