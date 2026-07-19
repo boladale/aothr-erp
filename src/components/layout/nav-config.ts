@@ -304,6 +304,7 @@ export const navSections = [
       { path: '/opening-balances', label: 'Opening Balances', icon: Scale },
       { path: '/system-health', label: 'System Health Check', icon: ShieldCheck },
       { path: '/admin', label: 'Admin', icon: Settings },
+      { path: '/creator-handbook', label: "Creator's Handbook", icon: BookOpen },
       { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },
     ],
   },
