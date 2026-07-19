@@ -7535,6 +7535,7 @@ export type Database = {
           id: string
           used_at: string
           vendor_id: string
+          vendor_name: string
         }[]
       }
       next_transaction_number: {
