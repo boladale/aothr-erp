@@ -114,6 +114,7 @@ const VendorRegistrations = lazy(() => import("./pages/VendorRegistrations"));
 const StaffPortalLogin = lazy(() => import("./pages/StaffPortalLogin"));
 const VendorPortalLogin = lazy(() => import("./pages/VendorPortalLogin"));
 const FixedAssets = lazy(() => import("./pages/FixedAssets"));
+const OpeningBalances = lazy(() => import("./pages/OpeningBalances"));
 
 const queryClient = new QueryClient();
 
