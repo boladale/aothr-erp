@@ -67,17 +67,13 @@ export default function VendorPortalLogin() {
 
   useEffect(() => {
     if (inviteToken) {
-      supabase
-        .from('vendor_invite_tokens' as any)
-        .select('*, vendors(name)')
-        .eq('token', inviteToken)
-        .is('used_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setInviteData(data);
-            setRegForm(prev => ({ ...prev, email: (data as any).email || '', companyName: (data as any).vendors?.name || '' }));
+      (supabase as any)
+        .rpc('lookup_vendor_invite_token', { p_token: inviteToken })
+        .then(({ data }: any) => {
+          const row = Array.isArray(data) ? data[0] : data;
+          if (row) {
+            setInviteData(row);
+            setRegForm(prev => ({ ...prev, email: row.email || '', companyName: row.vendor_name || '' }));
           } else {
             toast.error('Invalid or expired invite link');
           }
