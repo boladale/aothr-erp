@@ -116,6 +116,7 @@ const VendorPortalLogin = lazy(() => import("./pages/VendorPortalLogin"));
 const FixedAssets = lazy(() => import("./pages/FixedAssets"));
 const OpeningBalances = lazy(() => import("./pages/OpeningBalances"));
 const SystemHealthCheck = lazy(() => import("./pages/SystemHealthCheck"));
+const CreatorHandbook = lazy(() => import("./pages/CreatorHandbook"));
 
 const queryClient = new QueryClient();
 
