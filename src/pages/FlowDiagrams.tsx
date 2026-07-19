@@ -243,14 +243,6 @@ export default function FlowDiagrams() {
   const [active, setActive] = useState(diagrams[0].id);
   const rendered = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "default",
-      securityLevel: "loose",
-      flowchart: { htmlLabels: true, curve: "basis" },
-    });
-  }, []);
 
   useEffect(() => {
     mermaid.initialize({
