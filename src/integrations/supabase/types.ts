@@ -7526,6 +7526,10 @@ export type Database = {
       }
       is_hr_or_admin: { Args: never; Returns: boolean }
       is_hr_user: { Args: { _user_id: string }; Returns: boolean }
+      is_period_closed: {
+        Args: { _entry_date: string; _org_id: string }
+        Returns: boolean
+      }
       is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
       lookup_vendor_invite_token: {
         Args: { p_token: string }
