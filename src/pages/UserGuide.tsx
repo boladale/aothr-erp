@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
@@ -10,12 +11,14 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import {
-  LayoutDashboard, Building2, Package, MapPin, ClipboardList, FileText,
-  Boxes, DollarSign, Truck, BookOpen, Calculator, PieChart, Calendar,
-  Receipt, CreditCard, Clock, AlertTriangle, Users, ArrowDownToLine,
-  FileX, Landmark, ArrowRightLeft, Scale, TrendingUp, FolderKanban,
-  ShoppingCart, FileCheck, Percent, Shield, Settings, Bell, BarChart3,
-  FileSearch, HelpCircle, Lightbulb, ArrowRight, CheckCircle2,
+  Building2, Package, MapPin, ClipboardList, FileText,
+  Boxes, DollarSign, Truck, BookOpen, Calculator,
+  Receipt, CreditCard, Users, Landmark, ArrowRightLeft,
+  TrendingUp, FolderKanban, ShoppingCart, FileCheck,
+  Shield, Settings, BarChart3, FileSearch, HelpCircle,
+  Lightbulb, ArrowRight, CheckCircle2, UserCog, Wallet,
+  Briefcase, Percent, HardDrive, Printer, Store, Activity,
+  Banknote, Building,
 } from 'lucide-react';
 
 const Step = ({ number, children }: { number: number; children: React.ReactNode }) => (
@@ -29,7 +32,7 @@ const Step = ({ number, children }: { number: number; children: React.ReactNode 
 
 const Tip = ({ children }: { children: React.ReactNode }) => (
   <div className="flex gap-2 items-start p-3 rounded-lg bg-accent/50 border border-accent">
-    <Lightbulb className="h-4 w-4 text-primaryex-shrink-0 mt-0.5" />
+    <Lightbulb className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
     <p className="text-xs text-muted-foreground">{children}</p>
   </div>
 );
@@ -45,44 +48,87 @@ const Flow = ({ steps }: { steps: string[] }) => (
   </div>
 );
 
+const Sub = ({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: any;
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div className="space-y-2">
+    <h4 className="font-semibold flex items-center gap-2">
+      <Icon className="h-4 w-4" /> {title}
+    </h4>
+    {children}
+  </div>
+);
+
 export default function UserGuide() {
   return (
     <AppLayout>
-      <div className="page-container space-y-8 max-w-4xl mx-auto pb-16">
-        <PageHeader
-          title="User Guide"
-          description="Everything you need to know about using BizOps — explained simply."
-        />
+      <div className="page-container space-y-8 max-w-4xl mx-auto pb-16 print:p-0">
+        <div className="flex items-start justify-between gap-4 print:hidden">
+          <PageHeader
+            title="User Guide"
+            description="Complete walkthrough of every module — plain-language, click-by-click."
+          />
+          <Button onClick={() => window.print()} variant="outline">
+            <Printer className="h-4 w-4 mr-2" /> Print / Save PDF
+          </Button>
+        </div>
 
-        {/* Quick Overview */}
+        {/* Overview */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <HelpCircle className="h-5 w-5 text-primary" />
-              What is BizOps?
+              What this system does
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              BizOps is your all-in-one business operations system. Think of it like a <strong>super-organized notebook</strong> that keeps track of everything your company buys, sells, and owns — plus all the money coming in and going out.
+              A complete ERP covering <strong>Procurement, Warehouse & Inventory, Sales,
+              Finance (GL / AP / AR / Cash / Fixed Assets), Projects, Budgets, HR & Payroll,</strong>
+              and self-service <strong>Staff & Vendor portals</strong>. Default currency is Naira (₦).
+              Every organization's data is isolated — you only see your own.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
-                <ShoppingCart className="h-8 w-8 mx-auto text-primary" />
-                <p className="text-sm font-medium">Buy Things</p>
-                <p className="text-xs text-muted-foreground">Requisitions → POs → Receive → Pay</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
-                <FileCheck className="h-8 w-8 mx-auto text-primary" />
-                <p className="text-sm font-medium">Sell Things</p>
-                <p className="text-xs text-muted-foreground">Quotes → Orders → Deliver → Invoice</p>
-              </div>
-              <div className="p-4 rounded-lg bg-muted/50 text-center space-y-2">
-                <DollarSign className="h-8 w-8 mx-auto text-primary" />
-                <p className="text-sm font-medium">Track Money</p>
-                <p className="text-xs text-muted-foreground">GL → Bank → Reports → Reconcile</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { icon: ShoppingCart, label: 'Procurement' },
+                { icon: Boxes, label: 'Inventory' },
+                { icon: FileCheck, label: 'Sales' },
+                { icon: BookOpen, label: 'Finance / GL' },
+                { icon: Wallet, label: 'Cash & Bank' },
+                { icon: HardDrive, label: 'Fixed Assets' },
+                { icon: FolderKanban, label: 'Projects & Budgets' },
+                { icon: Users, label: 'HR & Payroll' },
+              ].map((m) => (
+                <div key={m.label} className="p-3 rounded-lg bg-muted/50 text-center space-y-1">
+                  <m.icon className="h-6 w-6 mx-auto text-primary" />
+                  <p className="text-xs font-medium">{m.label}</p>
+                </div>
+              ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Golden Rules */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" /> Golden rules (memorize these)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>• You can only <strong>edit or delete a transaction while it is in Draft</strong>.</p>
+            <p>• Every posting produces a <strong>balanced journal entry</strong> (debits = credits).</p>
+            <p>• <strong>Inventory can never go negative</strong> — the system blocks it.</p>
+            <p>• Master data with history can only be <strong>deactivated</strong>, not deleted.</p>
+            <p>• Postings to a <strong>locked fiscal period</strong> are rejected.</p>
+            <p>• Blacklisting a vendor needs a <strong>reason + manager approval</strong>.</p>
+            <p>• Document numbers (PR-, PO-, GRN-, INV-, etc.) are generated automatically.</p>
           </CardContent>
         </Card>
 
@@ -90,144 +136,87 @@ export default function UserGuide() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              Getting Started (First 5 Minutes)
+              <CheckCircle2 className="h-5 w-5 text-primary" /> Getting started
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Step number={1}>
-              <strong>Sign Up:</strong> Go to the login page, click "Sign Up", fill in your name, email, and password. Check your email for a verification link.
-            </Step>
-            <Step number={2}>
-              <strong>Sign In:</strong> After verifying your email, sign in with your email and password. You'll land on the <strong>Dashboard</strong>.
-            </Step>
-            <Step number={3}>
-              <strong>Look at the Sidebar:</strong> On the left side, you'll see a menu with sections like Procurement, Warehouse, Finance, etc. Click any item to navigate.
-            </Step>
-            <Step number={4}>
-              <strong>Check Your Dashboard:</strong> The Dashboard shows you a summary of what's happening — pending orders, upcoming payments, low stock alerts, and recent notifications.
-            </Step>
-            <Tip>
-              You can collapse the sidebar by clicking the ✕ button at the top. Click the ☰ menu button to expand it again.
-            </Tip>
+          <CardContent className="space-y-3">
+            <Step number={1}><strong>Sign in</strong> at the login page. You land on the Dashboard for your role.</Step>
+            <Step number={2}><strong>Left sidebar</strong> holds every module — grouped as Procurement, Warehouse, Sales, Finance, HR, Admin.</Step>
+            <Step number={3}><strong>Notifications bell</strong> (top-right) shows approvals waiting for you.</Step>
+            <Step number={4}><strong>Your role</strong> controls which menus you see. Admins configure this under Administration → User Management.</Step>
+            <Tip>Before real use, an Admin must complete: Chart of Accounts → Fiscal Periods → Tax Config → Departments & Locations → Users & Roles → Opening Balances → System Health Check.</Tip>
           </CardContent>
         </Card>
 
         <Separator />
 
-        {/* Module-by-Module Guide */}
-        <h2 className="text-xl font-bold text-foreground">Module-by-Module Guide</h2>
+        <h2 className="text-xl font-bold text-foreground">Module-by-module guide</h2>
 
         <Accordion type="multiple" className="space-y-2">
           {/* PROCUREMENT */}
           <AccordionItem value="procurement" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-primary" />
-                🛒 Procurement (Buying Stuff)
+                <ClipboardList className="h-5 w-5 text-primary" /> Procurement (buying)
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-6 pb-4">
-              {/* Vendors */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Building2 className="h-4 w-4" /> Vendors
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Vendors are the companies or people you buy things from. Think of them as your <strong>"shopping stores."</strong>
-                </p>
-                <Step number={1}>Go to <strong>Vendors</strong> in the sidebar.</Step>
-                <Step number={2}>Click <strong>"Add Vendor"</strong> and fill in their name, contact info, and payment terms (how many days you have to pay them).</Step>
-                <Step number={3}>Save. Now this vendor is available when you create purchase orders.</Step>
-                <Tip>Payment terms of "30" means you have 30 days after receiving an invoice to pay them.</Tip>
-              </div>
+              <Flow steps={['Requisition', 'RFQ (3 vendors)', 'Award', 'PO', 'GRN', 'Vendor Invoice', '3-Way Match', 'Payment']} />
+
+              <Sub icon={Building2} title="Vendors">
+                <p className="text-sm text-muted-foreground">Companies you buy from. Store bank details, RC number, category, payment terms.</p>
+                <Step number={1}>Vendors → <strong>Add Vendor</strong> → fill KYC → Save.</Step>
+                <Step number={2}>To blacklist: open vendor → <strong>Blacklist</strong> → enter reason → manager approves.</Step>
+                <Step number={3}>Export list via <strong>Export CSV</strong>.</Step>
+              </Sub>
 
               <Separator />
-
-              {/* Vendor Performance */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" /> Vendor Performance
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  See a <strong>report card</strong> for each vendor — are they delivering on time? Is the quality good? This helps you decide who to buy from.
-                </p>
-              </div>
+              <Sub icon={FileSearch} title="Requisitions">
+                <p className="text-sm text-muted-foreground">A staff request to buy something. Requires the requester's name and department.</p>
+                <Step number={1}>Requisitions → <strong>New</strong> → enter Requested By, department, lines, quantities.</Step>
+                <Step number={2}>Submit for approval. Approver gets a bell notification.</Step>
+                <Step number={3}>Once approved, either invite vendors for quotes OR convert directly to PO.</Step>
+              </Sub>
 
               <Separator />
-
-              {/* RFPs */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileSearch className="h-4 w-4" /> Requests for Proposal (RFQs)
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When you want to buy something big, you ask multiple vendors to <strong>"give me your best price."</strong> That's an RFQ!
-                </p>
-                <Step number={1}>Create an RFQ with a title and description of what you need.</Step>
-                <Step number={2}>Add the items you want and invite vendors to submit their prices.</Step>
-                <Step number={3}>Compare responses and pick the best one.</Step>
-              </div>
+              <Sub icon={FileText} title="RFQs (Request for Quotation)">
+                <p className="text-sm text-muted-foreground">Ask multiple vendors for prices. <strong>Minimum 3 vendors</strong> must be invited.</p>
+                <Step number={1}>From an approved requisition → <strong>Invite 3 Vendors</strong>.</Step>
+                <Step number={2}>Vendors log bids manually OR via the Vendor Portal.</Step>
+                <Step number={3}>Compare in Bid Collection panel → <strong>Award</strong> the winner → auto-creates PO.</Step>
+              </Sub>
 
               <Separator />
-
-              {/* Items */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Package className="h-4 w-4" /> Items
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Items are all the things your company buys, sells, or keeps in the warehouse. Like a <strong>catalog of everything</strong>.
-                </p>
-                <Step number={1}>Go to <strong>Items</strong> and click <strong>"Add Item"</strong>.</Step>
-                <Step number={2}>Give it a code (like "PEN-001"), a name, unit of measure (each, box, kg), and the price.</Step>
-                <Tip>Set a "reorder level" — when stock drops below this number, you'll get a reminder to buy more.</Tip>
-              </div>
+              <Sub icon={FileText} title="Purchase Orders">
+                <p className="text-sm text-muted-foreground">The official order sent to a vendor.</p>
+                <Step number={1}>PO created from award (or directly). Payment terms support Advance, Partial, Net-30, or custom text.</Step>
+                <Step number={2}>Approve → optionally tick <strong>"send directly to vendor after creation"</strong> to auto-dispatch.</Step>
+                <Step number={3}>Printing an Approved PO auto-moves it to Sent.</Step>
+                <Tip>Draft POs and draft lines can be deleted. Once posted, only reverse or credit-note.</Tip>
+              </Sub>
 
               <Separator />
-
-              {/* Locations */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <MapPin className="h-4 w-4" /> Locations
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Locations are the <strong>places where you keep your stuff</strong> — warehouses, offices, or storage rooms.
-                </p>
-              </div>
+              <Sub icon={Truck} title="Goods Receipt Notes (GRN)">
+                <p className="text-sm text-muted-foreground">Confirm what physically arrived.</p>
+                <Step number={1}>PO → <strong>Create GRN</strong> → enter received quantity (may be less than ordered) → attach weigh-bill.</Step>
+                <Step number={2}>Post. Inventory increases; DR Inventory / CR GR-IR Accrual is posted automatically.</Step>
+              </Sub>
 
               <Separator />
-
-              {/* Requisitions */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4" /> Requisitions
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  A requisition is like <strong>raising your hand and saying "I need to buy something!"</strong> It goes through an approval process before becoming a purchase order.
-                </p>
-                <Flow steps={['Create Requisition', 'Submit for Approval', 'Approved', 'Convert to PO']} />
-                <Step number={1}>Click <strong>"New Requisition"</strong> and add the items you need with quantities.</Step>
-                <Step number={2}>Submit it. Your manager (or whoever has approval authority) will review it.</Step>
-                <Step number={3}>Once approved, you can convert it into a Purchase Order with one click!</Step>
-              </div>
+              <Sub icon={Receipt} title="Vendor Invoices & 3-Way Match">
+                <p className="text-sm text-muted-foreground">The vendor's bill. Must match PO and GRN quantities.</p>
+                <Step number={1}>Vendors submit via portal, OR AP Clerk uses <strong>Log Vendor Invoice</strong>.</Step>
+                <Step number={2}>VAT is calculated from active Tax Configuration.</Step>
+                <Step number={3}>Three-Way Match panel shows PO ✓ GRN ✓ Invoice ✓. Mismatches go to <strong>Match Exceptions</strong>.</Step>
+                <Step number={4}>Post when clean.</Step>
+              </Sub>
 
               <Separator />
-
-              {/* Purchase Orders */}
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4" /> Purchase Orders (POs)
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  A Purchase Order is your <strong>official "shopping list"</strong> that you send to a vendor. It says: "Please send us these items at these prices."
-                </p>
-                <Flow steps={['Create PO', 'Send to Vendor', 'Receive Goods', 'Receive Invoice', 'Pay']} />
-                <Step number={1}>Create a PO (or convert from a requisition). Select a vendor and add items with quantities and prices.</Step>
-                <Step number={2}>Approve and send it to the vendor.</Step>
-                <Step number={3}>When items arrive, create a <strong>Goods Receipt</strong>. When the vendor sends a bill, create an <strong>Invoice</strong>.</Step>
-                <Tip>You can attach files to POs — like signed contracts or quotes from the vendor.</Tip>
-              </div>
+              <Sub icon={CreditCard} title="AP Payments & AP Credit Notes">
+                <Step number={1}>AP Payments → select vendor → tick invoices to pay → allocate amounts (full or partial, cannot overpay).</Step>
+                <Step number={2}>Post → cash decreases, AP decreases, bank transaction logged.</Step>
+                <Step number={3}>For refunds/returns use <strong>AP Credit Notes</strong>.</Step>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
@@ -235,47 +224,43 @@ export default function UserGuide() {
           <AccordionItem value="warehouse" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <Boxes className="h-5 w-5 text-primary" />
-                📦 Warehouse (Your Stuff)
+                <Boxes className="h-5 w-5 text-primary" /> Warehouse & Inventory
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-6 pb-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Boxes className="h-4 w-4" /> Inventory
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  See <strong>how much of each item</strong> you have, at which location. It's like looking inside all your warehouses at once.
-                </p>
-                <Tip>If numbers don't look right, you can do an "inventory adjustment" to correct the count — like when you physically count items on the shelf.</Tip>
-              </div>
+              <Sub icon={Package} title="Items & Locations">
+                <p className="text-sm text-muted-foreground">Items = catalogue. Locations = where stock is held (warehouses, offices).</p>
+                <Step number={1}>Items → add code, name, UoM, reorder level, category.</Step>
+                <Step number={2}>Locations → add warehouses/offices. Each is a stock-holding point.</Step>
+              </Sub>
 
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" /> Inventory Valuation
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Shows the <strong>dollar value</strong> of everything in your warehouse. Uses FIFO (First In, First Out) — the oldest items are valued and used first.
-                </p>
-              </div>
+              <Sub icon={Boxes} title="Inventory & Stock Movements">
+                <p className="text-sm text-muted-foreground">Every in/out is logged. Costed by <strong>FIFO layers</strong> and Weighted Average.</p>
+                <Step number={1}>Inventory page → current qty per item per location.</Step>
+                <Step number={2}>Stock Movements → full audit trail (GRN in, Issue out, Transfer, Delivery, Return, Adjustment).</Step>
+              </Sub>
 
               <Separator />
+              <Sub icon={ArrowRightLeft} title="Inventory Issues (to Dept / Project)">
+                <p className="text-sm text-muted-foreground">Consuming stock internally.</p>
+                <Step number={1}>Inventory Issues → New → select Department (dropdown), optional Project, items, qty.</Step>
+                <Step number={2}>Post → DR Expense (or Project Cost) / CR Inventory; FIFO consumed.</Step>
+                <Step number={3}>To reverse: open issue → <strong>Return</strong> → restores stock, reverses GL and project cost.</Step>
+              </Sub>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Truck className="h-4 w-4" /> Goods Receipts (GRNs)
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When a delivery truck arrives with items you ordered, you create a Goods Receipt to say <strong>"Yes, we got these items!"</strong>
-                </p>
-                <Step number={1}>Go to <strong>Goods Receipts</strong> and click <strong>"New Receipt"</strong>.</Step>
-                <Step number={2}>Select the Purchase Order the delivery belongs to.</Step>
-                <Step number={3}>Enter how many of each item you actually received (it might be less than ordered!).</Step>
-                <Step number={4}>Post it. Your inventory numbers will automatically go up.</Step>
-                <Tip>You can attach a photo of the delivery note or packing slip for your records.</Tip>
-              </div>
+              <Separator />
+              <Sub icon={ArrowRightLeft} title="Inventory Transfers">
+                <Step number={1}>Transfers → New → source location, destination, items.</Step>
+                <Step number={2}>Post → source decreases, destination increases; both events appear in Stock Movements.</Step>
+              </Sub>
+
+              <Separator />
+              <Sub icon={DollarSign} title="Inventory Valuation & Warehouse Reports">
+                <p className="text-sm text-muted-foreground">Value of stock always reconciles to GL Inventory account.</p>
+                <Step number={1}>Inventory Valuation → filter by location/category/as-of date → export Excel → check <strong>GL Reconciliation</strong> tab.</Step>
+                <Step number={2}>Warehouse Reports → Slow Moving (&gt;90d), Dead Stock (&gt;180d).</Step>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
@@ -283,346 +268,286 @@ export default function UserGuide() {
           <AccordionItem value="sales" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-primary" />
-                💰 Sales (Selling Stuff)
+                <ShoppingCart className="h-5 w-5 text-primary" /> Sales (Order-to-Cash)
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-6 pb-4">
-              <Flow steps={['Quotation', 'Sales Order', 'Delivery Note', 'AR Invoice', 'Receive Payment']} />
-
+              <Flow steps={['Quotation', 'Sales Order', 'Delivery Note', 'AR Invoice', 'AR Receipt']} />
+              <Sub icon={FileCheck} title="Quotations & Sales Orders">
+                <Step number={1}>Sales Quotations → New → customer, items, prices, VAT auto-applied.</Step>
+                <Step number={2}>Convert accepted quote to Sales Order → stock is <strong>reserved</strong> (cannot be oversold).</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileCheck className="h-4 w-4" /> Quotations
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  A quotation is like telling a customer <strong>"Here's what it'll cost"</strong> before they agree to buy. If they say yes, you convert it to a Sales Order!
-                </p>
-                <Step number={1}>Create a quotation, select the customer, and add items with prices.</Step>
-                <Step number={2}>Send it to the customer.</Step>
-                <Step number={3}>If they accept, click <strong>"Convert to Sales Order"</strong>.</Step>
-              </div>
-
+              <Sub icon={Truck} title="Delivery Notes">
+                <Step number={1}>SO → Create Delivery Note → enter dispatch location and quantities.</Step>
+                <Step number={2}>Post → inventory drops at dispatch location; COGS posted (DR COGS / CR Inventory).</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4" /> Sales Orders
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  A confirmed agreement with a customer: <strong>"Yes, we will sell you these items."</strong> From here, you create delivery notes to ship items.
-                </p>
-              </div>
-
+              <Sub icon={Receipt} title="AR Invoices, Receipts, Credit Notes">
+                <Step number={1}>Invoices → New/AR Invoice → VAT calculated from Tax Configuration.</Step>
+                <Step number={2}>AR Receipts → allocate customer payment (partial allowed, overpayment blocked).</Step>
+                <Step number={3}>Returns handled via <strong>AR Credit Notes</strong>.</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Truck className="h-4 w-4" /> Delivery Notes
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When you physically send items to a customer, you create a Delivery Note. It's proof that <strong>"we shipped these items to you."</strong> Posting a delivery note automatically reduces your inventory.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Receipt className="h-4 w-4" /> Returns &amp; Credit Notes
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  If a customer returns items or there's a problem, you create a <strong>Credit Note</strong> — it's like saying "We owe you money back." You can link it to the original invoice.
-                </p>
-              </div>
+              <Sub icon={Users} title="Customers">
+                <p className="text-sm text-muted-foreground">Master file with contact, tax, credit terms. Statement of Account & AR Aging available under Finance Reports.</p>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
-          {/* GENERAL LEDGER */}
+          {/* FINANCE / GL */}
           <AccordionItem value="gl" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                📒 General Ledger (The Big Book of Money)
+                <BookOpen className="h-5 w-5 text-primary" /> Finance — General Ledger
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-6 pb-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" /> Chart of Accounts
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Think of this as a <strong>big list of piggy banks</strong>, each one labeled for a different purpose: "Cash", "Office Supplies Expense", "Sales Revenue", etc. Every dollar in your business sits in one of these accounts.
-                </p>
-                <Tip>Accounts are organized into types: Assets (things you own), Liabilities (things you owe), Revenue (money coming in), and Expenses (money going out).</Tip>
-              </div>
-
+              <Sub icon={BookOpen} title="Chart of Accounts (COA)">
+                <p className="text-sm text-muted-foreground">All GL accounts organized by type. Search filters by name, code, type, or description.</p>
+                <Step number={1}>Chart of Accounts → search or filter by account type → export Excel.</Step>
+                <Step number={2}>Accounts with transactions cannot be deleted (only deactivated).</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Calculator className="h-4 w-4" /> Journal Entries
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Every time money moves, you record it in a journal entry. It has at least two lines: one account gets a <strong>Debit</strong> (money in) and another gets a <strong>Credit</strong> (money out). They must always balance!
-                </p>
-                <Step number={1}>Click <strong>"New Entry"</strong>, add a description like "Bought office chairs".</Step>
-                <Step number={2}>Add lines: Debit "Office Furniture" ₦500, Credit "Cash" ₦500.</Step>
-                <Step number={3}>Post the entry. Account balances update automatically.</Step>
-              </div>
-
+              <Sub icon={FileText} title="Journal Entries">
+                <Step number={1}>Journal Entries → New → add debit/credit lines. System rejects unbalanced entries.</Step>
+                <Step number={2}>Save as Draft to finish later, or Post immediately.</Step>
+                <Step number={3}>Posted entries can be <strong>Reversed</strong> — creates opposite JE with audit trail.</Step>
+                <Step number={4}>Filter by date/status/account → export Excel.</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <PieChart className="h-4 w-4" /> Financial Reports
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  The big picture reports: <strong>Balance Sheet</strong> (what you own vs what you owe), <strong>Income Statement</strong> (did you make or lose money?), and <strong>Trial Balance</strong> (are all accounts in balance?).
-                </p>
-              </div>
-
+              <Sub icon={Calculator} title="Recurring Entries">
+                <p className="text-sm text-muted-foreground">Set once, system creates JE monthly (rent, subscriptions, depreciation templates).</p>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Calendar className="h-4 w-4" /> Fiscal Periods
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Your financial year is divided into periods (usually months). You <strong>open</strong> a period to allow transactions, and <strong>close</strong> it when the month is done to lock the books.
-                </p>
-              </div>
+              <Sub icon={Percent} title="Tax Configuration">
+                <p className="text-sm text-muted-foreground">Define VAT rates and the GL accounts they post to. All AR/AP invoice posting reads this automatically.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={BarChart3} title="Financial Reports">
+                <p className="text-sm text-muted-foreground">Trial Balance, P&amp;L, Balance Sheet, Cash Flow — all derived from posted JEs.</p>
+                <Step number={1}>Financial Reports → pick date range → drill into any account.</Step>
+                <Step number={2}>Balance Sheet Inventory line matches the Inventory Valuation total.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={CheckCircle2} title="Fiscal Periods & Year-End Close">
+                <Step number={1}>Fiscal Periods → Generate 12 monthly periods per year.</Step>
+                <Step number={2}>Lock a period once reconciled — postings to it are then rejected.</Step>
+                <Step number={3}>Year-End Close wizard rolls Revenue &amp; Expense into Retained Earnings.</Step>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
-          {/* FINANCE - AP */}
-          <AccordionItem value="ap" className="border rounded-lg px-4">
-            <AccordionTrigger className="text-base font-semibold">
-              <span className="flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-primary" />
-                💳 Accounts Payable (Money You Owe)
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-6 pb-4">
-              <p className="text-sm text-muted-foreground">
-                AP is about tracking <strong>bills you need to pay</strong> to vendors.
-              </p>
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Receipt className="h-4 w-4" /> AP Invoices
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When a vendor sends you a bill, enter it here. The system does <strong>3-way matching</strong>: it checks the PO (what you ordered), the GRN (what you received), and the invoice (what they're charging) — all three should agree!
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" /> AP Payments
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When it's time to pay, create a payment and <strong>allocate</strong> it to one or more invoices. The payment method can be cheque, bank transfer, or cash.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> AP Aging
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Shows how old your unpaid bills are: current, 30 days, 60 days, 90+ days. The older a bill, the more <strong>urgently</strong> you need to pay it!
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4" /> Match Exceptions
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When the PO, GRN, and invoice <strong>don't match</strong> (e.g., the vendor charged more than expected), it shows up here so you can investigate.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* FINANCE - AR */}
-          <AccordionItem value="ar" className="border rounded-lg px-4">
-            <AccordionTrigger className="text-base font-semibold">
-              <span className="flex items-center gap-2">
-                <ArrowDownToLine className="h-5 w-5 text-primary" />
-                🤑 Accounts Receivable (Money Owed to You)
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-6 pb-4">
-              <p className="text-sm text-muted-foreground">
-                AR is about tracking <strong>money customers owe you</strong>.
-              </p>
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Users className="h-4 w-4" /> Customers
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Add people or companies that buy from you. Set their credit limit and payment terms.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Receipt className="h-4 w-4" /> AR Invoices
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Bills you send to customers saying <strong>"Please pay us $X for these items/services."</strong> Can be auto-generated from Delivery Notes!
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <ArrowDownToLine className="h-4 w-4" /> AR Receipts
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  When a customer pays, record it here and allocate the payment to the right invoices.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FileX className="h-4 w-4" /> Credit Notes
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  If you need to give money back or reduce what a customer owes (wrong items, returns, etc.), use a credit note.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> AR Aging
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Shows how long customers have owed you money. Follow up on the old ones!
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* CASH MANAGEMENT */}
+          {/* CASH & BANK */}
           <AccordionItem value="cash" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <Landmark className="h-5 w-5 text-primary" />
-                🏦 Cash Management (Your Bank Accounts)
+                <Wallet className="h-5 w-5 text-primary" /> Cash & Bank
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-6 pb-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Landmark className="h-4 w-4" /> Bank Accounts
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Add all your company's bank accounts. Track the balance of each one.
-                </p>
-              </div>
-
+              <Sub icon={Landmark} title="Bank Accounts">
+                <Step number={1}>Bank Accounts → Add → pick <strong>Type</strong>: Checking, Savings, or Cash/Petty Cash.</Step>
+                <Step number={2}>Edit an account to set the opening balance <em>only while it is still zero</em>.</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <ArrowRightLeft className="h-4 w-4" /> Fund Transfers
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Move money from one bank account to another — like from your main account to a payroll account.
-                </p>
-              </div>
-
+              <Sub icon={Banknote} title="Petty Cash">
+                <p className="text-sm text-muted-foreground">Cash-type accounts get a one-click Expense button.</p>
+                <Step number={1}>Open a Cash account → <strong>Record Expense</strong> → choose expense account, amount, note.</Step>
+                <Step number={2}>Post → balanced JE (DR Expense / CR Cash).</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Scale className="h-4 w-4" /> Bank Reconciliation
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Compare your bank statement with what's in BizOps. <strong>If they match, great!</strong> If not, find and fix the differences.
-                </p>
-                <Step number={1}>Enter your bank statement's ending balance and date range.</Step>
-                <Step number={2}>Check off each transaction that appears on both the statement and in BizOps.</Step>
-                <Step number={3}>When the difference is ₦0, you're reconciled!</Step>
-              </div>
-
+              <Sub icon={ArrowRightLeft} title="Fund Transfers">
+                <p className="text-sm text-muted-foreground">Move money between two of your bank accounts. One JE, two bank movements.</p>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" /> Cash Flow Forecast
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Predicts how much cash you'll have in the future based on upcoming payments and expected receipts. Helps you avoid running out of money!
-                </p>
-              </div>
+              <Sub icon={FileText} title="Bank Statement">
+                <p className="text-sm text-muted-foreground">Any bank account → <strong>Statement</strong> → running balance, filter by date, export PDF or Excel.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={CheckCircle2} title="Bank Reconciliation">
+                <Step number={1}>Bank Reconciliation → pick account and statement date.</Step>
+                <Step number={2}>Match system transactions to bank statement manually, via AI, or by importing CSV.</Step>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
-          {/* PROJECT ACCOUNTING */}
+          {/* FIXED ASSETS */}
+          <AccordionItem value="assets" className="border rounded-lg px-4">
+            <AccordionTrigger className="text-base font-semibold">
+              <span className="flex items-center gap-2">
+                <HardDrive className="h-5 w-5 text-primary" /> Fixed Assets
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-6 pb-4">
+              <p className="text-sm text-muted-foreground">Track buildings, vehicles, equipment. System handles depreciation and disposal.</p>
+              <Sub icon={FolderKanban} title="Asset Categories">
+                <Step number={1}>Fixed Assets → Categories tab → define useful life, depreciation method, GL accounts (Asset, Accum Depr, Depr Expense).</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={HardDrive} title="Asset Register">
+                <Step number={1}>Add Asset → tag number, category, department, acquisition date &amp; cost.</Step>
+                <Step number={2}>System calculates monthly depreciation automatically.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={Calculator} title="Monthly Depreciation">
+                <Step number={1}>Depreciation tab → <strong>Run for period</strong> → JE posts: DR Depreciation Expense / CR Accumulated Depreciation.</Step>
+                <Step number={2}>Net Book Value updates on the register.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={FileText} title="Disposal">
+                <Step number={1}>Asset → <strong>Dispose</strong> → enter proceeds &amp; date.</Step>
+                <Step number={2}>JE recognizes Gain or Loss on Disposal and removes the asset.</Step>
+              </Sub>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* PROJECTS & BUDGETS */}
           <AccordionItem value="projects" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <FolderKanban className="h-5 w-5 text-primary" />
-                📁 Project Accounting
+                <FolderKanban className="h-5 w-5 text-primary" /> Projects & Budgets
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-6 pb-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <FolderKanban className="h-4 w-4" /> Projects
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Create projects and assign costs to them. Every purchase order or invoice can be tagged to a project so you know <strong>exactly how much each project is costing</strong>.
-                </p>
-              </div>
-
+              <Sub icon={FolderKanban} title="Projects">
+                <Step number={1}>Projects → New → code, name, manager, budget, dates.</Step>
+                <Step number={2}>Tag Inventory Issues and AP Invoices to the project — cost flows into <strong>Project Costs</strong>.</Step>
+                <Step number={3}>Project Profitability report shows revenue vs actual cost.</Step>
+              </Sub>
               <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" /> Project Profitability
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  See if your projects are making or losing money. Compare budgeted costs vs actual costs.
-                </p>
-              </div>
+              <Sub icon={TrendingUp} title="Budgets">
+                <Step number={1}>Budgets → New → period, department, account-level amounts.</Step>
+                <Step number={2}>Approving a PO creates a <strong>Commitment</strong>; posting an AP Invoice creates <strong>Consumption</strong>.</Step>
+                <Step number={3}>Budget Reports show Budget vs Commitment vs Actual vs Variance.</Step>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
-          {/* TAX */}
-          <AccordionItem value="tax" className="border rounded-lg px-4">
+          {/* HR */}
+          <AccordionItem value="hr" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <Percent className="h-5 w-5 text-primary" />
-                🧾 Tax Configuration
+                <Users className="h-5 w-5 text-primary" /> HR (Human Resources)
               </span>
             </AccordionTrigger>
-            <AccordionContent className="space-y-4 pb-4">
-              <p className="text-sm text-muted-foreground">
-                Set up <strong>tax groups</strong> with different rates. For example, a "Standard VAT" group might have a 15% rate, while an "Exempt" group has 0%. Each rate can be linked to a GL account so tax amounts are automatically posted to the right place.
-              </p>
-              <Step number={1}>Go to <strong>Tax Configuration</strong> under Administration.</Step>
-              <Step number={2}>Create a Tax Group (e.g., "Standard VAT").</Step>
-              <Step number={3}>Add rates within that group (e.g., "VAT 15%" at 15%, linked to account 2300).</Step>
+            <AccordionContent className="space-y-6 pb-4">
+              <Sub icon={Building} title="Departments & Job Roles">
+                <Step number={1}>Departments → Add (e.g. Finance, Ops, Sales).</Step>
+                <Step number={2}>Job Roles → define role titles with default pay grade.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={Users} title="Employees">
+                <Step number={1}>Employees → Add → personal, contact, employment date, department, role, pay grade.</Step>
+                <Step number={2}>Open an employee → assign current salary (creates an <em>employee salary</em> record used by payroll).</Step>
+                <Step number={3}>Employees can be Active or Inactive — payroll only picks up Active.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={Activity} title="Attendance">
+                <p className="text-sm text-muted-foreground">Daily attendance log per employee — used for reports and (optionally) pay adjustments.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={Briefcase} title="Leave Management">
+                <Step number={1}>Employees or Managers file leave requests in <strong>Leave Management</strong> (or via Staff Portal).</Step>
+                <Step number={2}>Manager approves/rejects → balance updates.</Step>
+              </Sub>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* PAYROLL */}
+          <AccordionItem value="payroll" className="border rounded-lg px-4">
+            <AccordionTrigger className="text-base font-semibold">
+              <span className="flex items-center gap-2">
+                <Banknote className="h-5 w-5 text-primary" /> Payroll
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-6 pb-4">
+              <Flow steps={['Pay Grades', 'Salary Components', 'Employee Salary', 'Payroll Run', 'Approve', 'Payslips', 'GL Posted']} />
+              <Sub icon={DollarSign} title="Pay Grades & Salary Components">
+                <Step number={1}>Pay Grades → define bands (e.g. G1–G10) with min/mid/max.</Step>
+                <Step number={2}>Salary Components → define earnings (Basic, Housing, Transport) and deductions (PAYE, Pension, Loans) with formulas.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={Users} title="Employee Salary Assignment">
+                <p className="text-sm text-muted-foreground">Each active employee must have a <em>current</em> gross/net salary record before payroll runs.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={Calculator} title="Payroll Runs">
+                <Step number={1}>Payroll Runs → <strong>New</strong> → pick month &amp; year → Generate.</Step>
+                <Step number={2}>System auto-creates payroll lines for every active employee with a current salary — gross, deductions, net.</Step>
+                <Step number={3}>Review lines in the run detail page.</Step>
+                <Step number={4}><strong>Approve</strong> → JE posts (DR Salary Expense / CR Salaries Payable, PAYE Payable, Pension Payable), payslips are generated.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={FileText} title="Payslips">
+                <p className="text-sm text-muted-foreground">One payslip per employee per approved run — viewable in Payslips page and downloadable by staff via Staff Portal.</p>
+              </Sub>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* PORTALS */}
+          <AccordionItem value="portals" className="border rounded-lg px-4">
+            <AccordionTrigger className="text-base font-semibold">
+              <span className="flex items-center gap-2">
+                <Store className="h-5 w-5 text-primary" /> Vendor & Staff Portals
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-6 pb-4">
+              <Sub icon={Store} title="Vendor Portal (/vendor-portal)">
+                <p className="text-sm text-muted-foreground">Separate login for vendors.</p>
+                <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+                  <li>Self-register (Admin approves under Vendor Registrations).</li>
+                  <li>Accept purchase orders.</li>
+                  <li>Submit quotes to RFQ invitations.</li>
+                  <li>Drop invoices directly against POs.</li>
+                </ul>
+              </Sub>
+              <Separator />
+              <Sub icon={UserCog} title="Staff Portal (/staff-portal)">
+                <p className="text-sm text-muted-foreground">Separate login for employees.</p>
+                <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+                  <li>View and download payslips.</li>
+                  <li>Submit leave requests.</li>
+                  <li>Submit expense claims.</li>
+                  <li>Update profile.</li>
+                </ul>
+              </Sub>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* ADMIN */}
+          <AccordionItem value="admin" className="border rounded-lg px-4">
+            <AccordionTrigger className="text-base font-semibold">
+              <span className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary" /> Administration
+              </span>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-6 pb-4">
+              <Sub icon={UserCog} title="Users, Roles & Permissions">
+                <Step number={1}>User Management → invite users, assign roles.</Step>
+                <Step number={2}>Roles map to permissions in <em>app_role_permissions</em> — control which menus each role sees.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={CheckCircle2} title="Approval Rules & Workflows">
+                <p className="text-sm text-muted-foreground">Define who approves what and at what threshold. Supports sequential and parallel approvers.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={Building2} title="Organization Setup & Branding">
+                <p className="text-sm text-muted-foreground">Company name, logo, address, tax IDs, currency, signatures. Appears on printed PO/Invoice/GRN.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={FileText} title="Opening Balances / Go-Live">
+                <p className="text-sm text-muted-foreground">One-time cutover wizard: Trial Balance, Open AP, Open AR, Inventory, Fixed Assets.</p>
+              </Sub>
+              <Separator />
+              <Sub icon={Shield} title="Backups & System Health">
+                <Step number={1}>Backup Management → Run backup → Verify integrity.</Step>
+                <Step number={2}>System Health Check runs 20+ diagnostics — expect all green before go-live.</Step>
+              </Sub>
+              <Separator />
+              <Sub icon={BookOpen} title="Creator's Handbook, Flow Diagrams, Trainer's Script">
+                <p className="text-sm text-muted-foreground">Admin menu contains three training resources — read them before onboarding users.</p>
+              </Sub>
             </AccordionContent>
           </AccordionItem>
 
@@ -630,325 +555,41 @@ export default function UserGuide() {
           <AccordionItem value="reports" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                📊 Reports
+                <BarChart3 className="h-5 w-5 text-primary" /> Reports (where to find what)
               </span>
             </AccordionTrigger>
-            <AccordionContent className="space-y-4 pb-4">
-              <p className="text-sm text-muted-foreground">
-                Every module has reports you can view, filter, and export:
-              </p>
-              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li><strong>Procurement Reports:</strong> PO spending, vendor analysis, lead times</li>
-                <li><strong>Warehouse Reports:</strong> Stock levels, slow-moving items, turnover</li>
-                <li><strong>AP Reports:</strong> Payment history, aging summary, vendor balances</li>
-                <li><strong>AR Reports:</strong> Customer balances, aging, collection rates</li>
-                <li><strong>Cash Reports:</strong> Cash position, flow analysis, forecasts</li>
-                <li><strong>PO Closure Report:</strong> Which POs are fully received, invoiced, and closed</li>
-              </ul>
-              <Tip>
-                Use the <strong>Export</strong> buttons on any report to download as CSV (for Excel) or PDF (for printing). You can also use the Print View for a clean printable layout.
-              </Tip>
+            <AccordionContent className="space-y-3 pb-4 text-sm text-muted-foreground">
+              <p>• <strong>Trial Balance / P&amp;L / Balance Sheet / Cash Flow</strong> → Financial Reports.</p>
+              <p>• <strong>AR / AP Aging</strong> → Finance AR / AP Reports.</p>
+              <p>• <strong>Vendor Statement</strong> → invoices + payments + running balance per vendor.</p>
+              <p>• <strong>Customer Statement</strong> → Account Statement page.</p>
+              <p>• <strong>Inventory Valuation</strong> → matches Balance Sheet Inventory line.</p>
+              <p>• <strong>Slow Moving / Dead Stock</strong> → Warehouse Reports.</p>
+              <p>• <strong>Procurement / PO Closure / Requisition-to-Payment</strong> → Procurement Reports.</p>
+              <p>• <strong>Project Profitability & Budget Variance</strong> → Projects / Budget Reports.</p>
+              <p>• <strong>Bank Statement</strong> → per bank account, PDF or Excel.</p>
+              <p>• <strong>Audit Report</strong> → who did what, when.</p>
             </AccordionContent>
           </AccordionItem>
 
-          {/* ADMINISTRATION */}
-          <AccordionItem value="admin" className="border rounded-lg px-4">
+          {/* TROUBLESHOOT */}
+          <AccordionItem value="trouble" className="border rounded-lg px-4">
             <AccordionTrigger className="text-base font-semibold">
               <span className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-primary" />
-                ⚙️ Administration
+                <HelpCircle className="h-5 w-5 text-primary" /> Troubleshooting
               </span>
             </AccordionTrigger>
-            <AccordionContent className="space-y-6 pb-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Shield className="h-4 w-4" /> User Management
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Add users, assign them <strong>roles</strong> (like Admin, Procurement Officer, Warehouse Manager), and control which parts of the app they can see and use.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Shield className="h-4 w-4" /> Approval Rules &amp; Separation of Duties
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  Approval rules decide <strong>who reviews and who approves</strong> each transaction. The system also blocks the same person from approving a Purchase Order they created — this is called <strong>Separation of Duties</strong> and is required for clean audits.
-                </p>
-
-                <div className="rounded-md border bg-muted/30 p-3 mt-2 space-y-2">
-                  <p className="text-sm font-semibold">📋 How a PO flows through 3 people</p>
-                  <Flow steps={['Officer creates', 'Manager reviews', 'Finance approves', 'PO sent to vendor']} />
-                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li><strong>Procurement Officer</strong> creates the PO and submits it for approval.</li>
-                    <li><strong>Procurement Manager</strong> reviews and forwards it.</li>
-                    <li><strong>Finance Manager</strong> (or Admin) gives the final approval.</li>
-                    <li>A creator can <strong>never</strong> approve their own PO — the system will block it.</li>
-                  </ul>
-                </div>
-
-                <div className="rounded-md border bg-muted/30 p-3 mt-2 space-y-2">
-                  <p className="text-sm font-semibold">⚙️ One-time setup (Admin)</p>
-                  <Step number={1}>Go to <strong>User Management</strong>. For each person, assign the right role:
-                    <ul className="text-xs text-muted-foreground mt-1 ml-4 list-disc list-inside">
-                      <li>Person who <em>raises</em> POs → <strong>Procurement Officer</strong></li>
-                      <li>Person who <em>reviews</em> POs → <strong>Procurement Manager</strong></li>
-                      <li>Person who gives <em>final approval</em> → <strong>Finance Manager</strong> (or Admin)</li>
-                    </ul>
-                  </Step>
-                  <Step number={2}>Go to <strong>Approval Rules</strong>. The system ships with a default <strong>"Default PO Approval (Manager → Finance)"</strong> rule already active for every organization.</Step>
-                  <Step number={3}>(Optional) Click the rule to add a money threshold — e.g. only POs over ₦500,000 require 2 levels; smaller ones only need the Manager.</Step>
-                  <Step number={4}>Repeat the same pattern for Invoices, Payments, and Payroll if you want multi-level approvals there too.</Step>
-                </div>
-
-                <div className="rounded-md border bg-muted/30 p-3 mt-2 space-y-1">
-                  <p className="text-sm font-semibold">🚫 What users will see if they try to self-approve</p>
-                  <p className="text-xs text-muted-foreground italic">
-                    "Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver."
-                  </p>
-                  <p className="text-xs text-muted-foreground">This is enforced by the server, so it cannot be bypassed from the screen.</p>
-                </div>
-              </div>
-
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Bell className="h-4 w-4" /> Notifications
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  View all your notifications in one place. You'll get notified when something needs your attention — like a requisition waiting for approval or a payment that's overdue.
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Settings className="h-4 w-4" /> Admin Settings
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  System-wide settings, data management, and configuration. Only accessible to Admin users.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* ATTACHMENTS & EXPORTS */}
-          <AccordionItem value="features" className="border rounded-lg px-4">
-            <AccordionTrigger className="text-base font-semibold">
-              <span className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                📎 Attachments &amp; Exports
-              </span>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-6 pb-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold">Attaching Files</h4>
-                <p className="text-sm text-muted-foreground">
-                  On most transaction detail pages (Purchase Orders, Invoices, Goods Receipts, etc.), you'll see an <strong>Attachments</strong> section at the bottom. You can:
-                </p>
-                <Step number={1}>Click <strong>"Upload"</strong> or drag and drop files.</Step>
-                <Step number={2}>Attach PDFs, images, spreadsheets — anything up to 10MB.</Step>
-                <Step number={3}>Download or delete attachments anytime.</Step>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <h4 className="font-semibold">Exporting Data</h4>
-                <p className="text-sm text-muted-foreground">
-                  Look for the export buttons on any list or report page:
-                </p>
-                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                  <li><strong>CSV:</strong> Downloads a file you can open in Excel or Google Sheets.</li>
-                  <li><strong>PDF:</strong> Creates a nicely formatted document for printing or emailing.</li>
-                  <li><strong>Print View:</strong> Opens a clean, printer-friendly version right in your browser.</li>
-                </ul>
-              </div>
+            <AccordionContent className="space-y-2 pb-4 text-sm text-muted-foreground">
+              <p><strong>"Cannot post"</strong> → Fiscal period locked, or JE not balanced.</p>
+              <p><strong>"Invoice on hold"</strong> → check Match Exceptions.</p>
+              <p><strong>"Inventory won't decrease"</strong> → wrong location, or reservation exists.</p>
+              <p><strong>"Cannot edit / delete"</strong> → transaction is no longer in Draft.</p>
+              <p><strong>"Menu missing"</strong> → your role lacks permission — see Admin.</p>
+              <p><strong>"Report doesn't match GL"</strong> → check Inventory Valuation reconciliation tab, then Trial Balance.</p>
+              <p><strong>Anything else</strong> → run <strong>System Health Check</strong>.</p>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-
-        <Separator />
-
-        {/* Common Workflows */}
-        <Card>
-          <CardHeader>
-            <CardTitle>🔄 Common Workflows (Step-by-Step)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Buying Something (Procure to Pay)</h4>
-              <Flow steps={['Requisition', 'Approval', 'Purchase Order', 'Goods Receipt', 'AP Invoice', '3-Way Match', 'Payment']} />
-              <p className="text-xs text-muted-foreground">
-                Someone requests items → Manager approves → PO sent to vendor → Items arrive → Vendor sends bill → System checks everything matches → You pay.
-              </p>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Selling Something (Order to Cash)</h4>
-              <Flow steps={['Quotation', 'Sales Order', 'Delivery Note', 'AR Invoice', 'Receipt']} />
-              <p className="text-xs text-muted-foreground">
-                You quote a price → Customer agrees → You ship items → You send a bill → Customer pays you.
-              </p>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Month-End Close</h4>
-              <Flow steps={['Reconcile Banks', 'Review Aging', 'Post Adjustments', 'Run Reports', 'Close Period']} />
-              <p className="text-xs text-muted-foreground">
-                Match your bank statements → Check overdue invoices → Make any corrections → Generate financial reports → Lock the month.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* FAQ */}
-        <Card>
-          <CardHeader>
-            <CardTitle>❓ Frequently Asked Questions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="multiple" className="space-y-1">
-              <AccordionItem value="faq1">
-                <AccordionTrigger className="text-sm">I can't see certain menu items. Why?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Your admin has assigned you a specific role that only shows modules you need. Ask your admin to update your permissions if you need access to more features.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq2">
-                <AccordionTrigger className="text-sm">What's the difference between "Draft" and "Posted"?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  <strong>Draft</strong> means you're still working on it — you can edit or delete it freely. <strong>Posted</strong> means it's final and has been recorded in the books. Posted transactions affect inventory, account balances, and reports. You usually can't delete posted items (but you can reverse them).
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq3">
-                <AccordionTrigger className="text-sm">What does "3-way matching" mean?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  It's a safety check! The system compares three things: (1) what you ordered (PO), (2) what you received (GRN), and (3) what the vendor charged (Invoice). If quantities or prices don't match, it creates a "Match Exception" so you can investigate.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq4">
-                <AccordionTrigger className="text-sm">I forgot my password. What do I do?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  On the login page, click <strong>"Forgot your password?"</strong> Enter your email, and you'll receive a link to reset it.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq5">
-                <AccordionTrigger className="text-sm">Can I undo a posted transaction?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  You can't delete posted transactions, but you can <strong>reverse</strong> them by creating a new journal entry that does the opposite. This keeps a complete audit trail.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq6">
-                <AccordionTrigger className="text-sm">How do I create a Purchase Order from a Requisition?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Once a requisition is approved, open it and click <strong>"Convert to PO"</strong>. The system will copy all the items and quantities into a new Purchase Order for you to review and send to the vendor.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq7">
-                <AccordionTrigger className="text-sm">What happens when I "post" a Goods Receipt?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Posting a Goods Receipt increases your inventory quantities automatically. The items become available in the Inventory module, and the PO status updates to reflect partial or full receipt.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq8">
-                <AccordionTrigger className="text-sm">Can I partially receive a Purchase Order?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Yes! When creating a Goods Receipt, you can enter fewer items than ordered. The PO will show as <strong>"Partially Received"</strong> and you can create additional receipts later for the remaining items.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq9">
-                <AccordionTrigger className="text-sm">What is FIFO and why does it matter for inventory?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  FIFO stands for <strong>"First In, First Out"</strong>. It means the oldest items you bought are used (or valued) first. This is important for accurate costing — if you bought pens at ₦1 last month and ₦1.50 this month, the ₦1 pens are counted first.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq10">
-                <AccordionTrigger className="text-sm">How do I convert a Quotation to a Sales Order?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Open the quotation you want to convert and click <strong>"Convert to Sales Order"</strong>. All items, quantities, and prices will be copied to a new Sales Order. The quotation status will change to "Accepted."
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq11">
-                <AccordionTrigger className="text-sm">How does bank reconciliation work?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Enter your bank statement's ending balance and date range, then match each transaction in BizOps with your bank statement. When all items are checked off and the difference shows <strong>₦0</strong>, you're reconciled! This ensures your books match what the bank says.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq12">
-                <AccordionTrigger className="text-sm">What are approval rules and how do I set them up?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Approval rules define who needs to approve transactions before they proceed. Go to <strong>Administration → Approval Rules</strong>, create a rule (e.g., "POs over ₦5,000"), set conditions, and add approval steps with the required approver role or specific user. You can create multi-step chains where multiple people approve in sequence.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq13">
-                <AccordionTrigger className="text-sm">How do I set up taxes for my invoices?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Go to <strong>Administration → Tax Configuration</strong>. Create a Tax Group (e.g., "Standard VAT"), then add rates within it (e.g., 15%). Each rate can be linked to a GL account so tax amounts are automatically posted to the correct ledger account.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq14">
-                <AccordionTrigger className="text-sm">Can multiple users work in the system at the same time?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Yes! BizOps supports multiple simultaneous users. Each person signs in with their own account and sees only the modules their role allows. Changes are saved in real-time.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq15">
-                <AccordionTrigger className="text-sm">What file types can I attach to transactions?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  You can attach most common file types: <strong>PDFs, images (JPG, PNG), spreadsheets (XLS, XLSX, CSV), and documents (DOC, DOCX)</strong>. The maximum file size is 10MB per attachment.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq16">
-                <AccordionTrigger className="text-sm">How do I export a report to Excel?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  On any list or report page, look for the <strong>Export</strong> buttons (usually at the top). Click <strong>"CSV"</strong> to download a file you can open directly in Microsoft Excel or Google Sheets. Use "PDF" for a printable version.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq17">
-                <AccordionTrigger className="text-sm">What does "aging" mean in AP Aging or AR Aging?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Aging means <strong>how old an unpaid invoice is</strong>. Invoices are grouped into buckets: Current (not yet due), 1-30 days past due, 31-60 days, 61-90 days, and 90+ days. The older the invoice, the more urgent it is to collect or pay.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq18">
-                <AccordionTrigger className="text-sm">What's the difference between a Debit and a Credit?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  In double-entry accounting: <strong>Debits</strong> increase asset and expense accounts, while <strong>Credits</strong> increase liability, equity, and revenue accounts. Every journal entry must have equal debits and credits — this keeps the books balanced.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq19">
-                <AccordionTrigger className="text-sm">How do I close a fiscal period?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  Go to <strong>General Ledger → Fiscal Periods</strong>. Make sure all transactions for the month are posted and reconciled, then click <strong>"Close Period"</strong>. Once closed, no new transactions can be posted to that period, keeping your financial records locked and accurate.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="faq20">
-                <AccordionTrigger className="text-sm">What is a Match Exception?</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">
-                  A Match Exception occurs when the Purchase Order, Goods Receipt, and Invoice don't agree — for example, the vendor charged ₦110 but the PO says ₦100, or you received 8 items but the invoice says 10. These are flagged for review so you can resolve the discrepancy before paying.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center text-xs text-muted-foreground py-4">
-          <p>BizOps User Guide • Last updated March 2026</p>
-          <p className="mt-1">Need more help? Contact your system administrator.</p>
-        </div>
       </div>
     </AppLayout>
   );
