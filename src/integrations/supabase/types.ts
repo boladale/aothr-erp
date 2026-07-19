@@ -216,9 +216,10 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_number: string
+          is_opening_balance: boolean
           organization_id: string | null
           payment_status: string
-          po_id: string
+          po_id: string | null
           posted_at: string | null
           posted_by: string | null
           rejection_reason: string | null
@@ -238,9 +239,10 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number: string
+          is_opening_balance?: boolean
           organization_id?: string | null
           payment_status?: string
-          po_id: string
+          po_id?: string | null
           posted_at?: string | null
           posted_by?: string | null
           rejection_reason?: string | null
@@ -260,9 +262,10 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number?: string
+          is_opening_balance?: boolean
           organization_id?: string | null
           payment_status?: string
-          po_id?: string
+          po_id?: string | null
           posted_at?: string | null
           posted_by?: string | null
           rejection_reason?: string | null
@@ -829,6 +832,7 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_number: string
+          is_opening_balance: boolean
           notes: string | null
           organization_id: string | null
           payment_status: Database["public"]["Enums"]["ar_payment_status"]
@@ -850,6 +854,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number: string
+          is_opening_balance?: boolean
           notes?: string | null
           organization_id?: string | null
           payment_status?: Database["public"]["Enums"]["ar_payment_status"]
@@ -871,6 +876,7 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number?: string
+          is_opening_balance?: boolean
           notes?: string | null
           organization_id?: string | null
           payment_status?: Database["public"]["Enums"]["ar_payment_status"]
@@ -2437,6 +2443,7 @@ export type Database = {
           disposal_proceeds: number | null
           id: string
           invoice_id: string | null
+          is_opening_balance: boolean
           last_depreciation_date: string | null
           location_id: string | null
           name: string
@@ -2466,6 +2473,7 @@ export type Database = {
           disposal_proceeds?: number | null
           id?: string
           invoice_id?: string | null
+          is_opening_balance?: boolean
           last_depreciation_date?: string | null
           location_id?: string | null
           name: string
@@ -2495,6 +2503,7 @@ export type Database = {
           disposal_proceeds?: number | null
           id?: string
           invoice_id?: string | null
+          is_opening_balance?: boolean
           last_depreciation_date?: string | null
           location_id?: string | null
           name?: string
@@ -3081,6 +3090,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_opening_balance: boolean
           location_id: string
           organization_id: string | null
           posted_at: string | null
@@ -3094,6 +3104,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_opening_balance?: boolean
           location_id: string
           organization_id?: string | null
           posted_at?: string | null
@@ -3107,6 +3118,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_opening_balance?: boolean
           location_id?: string
           organization_id?: string | null
           posted_at?: string | null
@@ -7516,6 +7528,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_opening_ap_invoices: { Args: { _rows: Json }; Returns: number }
+      import_opening_ar_invoices: { Args: { _rows: Json }; Returns: number }
+      import_opening_fixed_assets: {
+        Args: { _cutover: string; _rows: Json }
+        Returns: number
+      }
+      import_opening_inventory: {
+        Args: { _cutover: string; _rows: Json }
+        Returns: number
+      }
       is_current_vendor_invited_to_rfp: {
         Args: { _rfp_id: string }
         Returns: boolean
@@ -7531,6 +7553,7 @@ export type Database = {
         Returns: boolean
       }
       is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
+      lock_pre_cutover_periods: { Args: { _cutover: string }; Returns: number }
       lookup_vendor_invite_token: {
         Args: { p_token: string }
         Returns: {
@@ -7548,6 +7571,10 @@ export type Database = {
       }
       post_asset_depreciation: {
         Args: { p_asset_id: string; p_period_date: string }
+        Returns: string
+      }
+      post_opening_trial_balance: {
+        Args: { _cutover: string; _lines: Json }
         Returns: string
       }
       recalc_budget_line_totals: {

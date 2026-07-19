@@ -114,6 +114,7 @@ const VendorRegistrations = lazy(() => import("./pages/VendorRegistrations"));
 const StaffPortalLogin = lazy(() => import("./pages/StaffPortalLogin"));
 const VendorPortalLogin = lazy(() => import("./pages/VendorPortalLogin"));
 const FixedAssets = lazy(() => import("./pages/FixedAssets"));
+const OpeningBalances = lazy(() => import("./pages/OpeningBalances"));
 
 const queryClient = new QueryClient();
 
@@ -240,6 +241,7 @@ const App = () => (
             <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/project-profitability" element={<ProtectedRoute><ProjectProfitability /></ProtectedRoute>} />
             <Route path="/fixed-assets" element={<ProtectedRoute><FixedAssets /></ProtectedRoute>} />
+            <Route path="/opening-balances" element={<ProtectedRoute><OpeningBalances /></ProtectedRoute>} />
             <Route path="/procurement-reports" element={<ProtectedRoute><ProcurementReports /></ProtectedRoute>} />
             <Route path="/warehouse-reports" element={<ProtectedRoute><WarehouseReports /></ProtectedRoute>} />
             <Route path="/ap-reports" element={<ProtectedRoute><FinanceAPReports /></ProtectedRoute>} />

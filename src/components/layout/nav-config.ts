@@ -300,6 +300,7 @@ export const navSections = [
       { path: '/workflows', label: 'Workflows', icon: GitBranch },
       { path: '/user-management', label: 'User Management', icon: Shield },
       { path: '/vendor-registrations', label: 'Vendor Registrations', icon: Building2 },
+      { path: '/opening-balances', label: 'Opening Balances', icon: Scale },
       { path: '/admin', label: 'Admin', icon: Settings },
       { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },
     ],
