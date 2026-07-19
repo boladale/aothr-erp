@@ -118,6 +118,7 @@ const OpeningBalances = lazy(() => import("./pages/OpeningBalances"));
 const SystemHealthCheck = lazy(() => import("./pages/SystemHealthCheck"));
 const CreatorHandbook = lazy(() => import("./pages/CreatorHandbook"));
 const FlowDiagrams = lazy(() => import("./pages/FlowDiagrams"));
+const TrainersScript = lazy(() => import("./pages/TrainersScript"));
 
 const queryClient = new QueryClient();
 
@@ -248,6 +249,7 @@ const App = () => (
             <Route path="/system-health" element={<ProtectedRoute><SystemHealthCheck /></ProtectedRoute>} />
             <Route path="/creator-handbook" element={<ProtectedRoute><CreatorHandbook /></ProtectedRoute>} />
             <Route path="/flow-diagrams" element={<ProtectedRoute><FlowDiagrams /></ProtectedRoute>} />
+            <Route path="/trainers-script" element={<ProtectedRoute><TrainersScript /></ProtectedRoute>} />
             <Route path="/procurement-reports" element={<ProtectedRoute><ProcurementReports /></ProtectedRoute>} />
             <Route path="/warehouse-reports" element={<ProtectedRoute><WarehouseReports /></ProtectedRoute>} />
             <Route path="/ap-reports" element={<ProtectedRoute><FinanceAPReports /></ProtectedRoute>} />

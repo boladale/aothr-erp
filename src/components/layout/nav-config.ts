@@ -40,6 +40,7 @@ import {
   PiggyBank,
   History,
   ShieldCheck,
+  GraduationCap,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
@@ -306,6 +307,7 @@ export const navSections = [
       { path: '/admin', label: 'Admin', icon: Settings },
       { path: '/creator-handbook', label: "Creator's Handbook", icon: BookOpen },
       { path: '/flow-diagrams', label: 'Flow Diagrams', icon: GitBranch },
+      { path: '/trainers-script', label: "Trainer's Script", icon: GraduationCap },
       { path: '/user-guide', label: 'User Guide', icon: BookOpenCheck },
     ],
   },
