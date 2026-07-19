@@ -7474,6 +7474,10 @@ export type Database = {
         }
         Returns: number
       }
+      consume_vendor_invite_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
       dispose_fixed_asset: {
         Args: {
           p_asset_id: string
@@ -7523,6 +7527,16 @@ export type Database = {
       is_hr_or_admin: { Args: never; Returns: boolean }
       is_hr_user: { Args: { _user_id: string }; Returns: boolean }
       is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
+      lookup_vendor_invite_token: {
+        Args: { p_token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          id: string
+          used_at: string
+          vendor_id: string
+        }[]
+      }
       next_transaction_number: {
         Args: { p_doc_type: string; p_org_id: string; p_prefix?: string }
         Returns: string
