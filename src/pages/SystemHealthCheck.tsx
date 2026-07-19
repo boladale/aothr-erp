@@ -232,12 +232,12 @@ export default function SystemHealthCheck() {
       else update('backups', 'warn', 'No backup in last 30 days.', 'Admin → Backup & Restore → Create Backup.');
 
       // Opening trial balance (only warn — cutover is optional)
-      const { data: openingJE } = await supabase
+      const { data: openingJE } = await (supabase as any)
         .from('gl_journal_entries')
-        .select('id, is_opening_balance, status')
+        .select('id')
         .eq('organization_id', organizationId)
-        .eq('is_opening_balance', true as any)
-        .limit(1) as any;
+        .eq('is_opening_balance', true)
+        .limit(1);
       if ((openingJE?.length || 0) > 0) update('opening_bal', 'pass', 'Opening trial balance posted.');
       else update('opening_bal', 'warn', 'No opening trial balance posted.', 'If migrating from another system, use Opening Balances.');
 
