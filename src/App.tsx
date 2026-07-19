@@ -117,6 +117,7 @@ const FixedAssets = lazy(() => import("./pages/FixedAssets"));
 const OpeningBalances = lazy(() => import("./pages/OpeningBalances"));
 const SystemHealthCheck = lazy(() => import("./pages/SystemHealthCheck"));
 const CreatorHandbook = lazy(() => import("./pages/CreatorHandbook"));
+const FlowDiagrams = lazy(() => import("./pages/FlowDiagrams"));
 
 const queryClient = new QueryClient();
 
@@ -246,6 +247,7 @@ const App = () => (
             <Route path="/opening-balances" element={<ProtectedRoute><OpeningBalances /></ProtectedRoute>} />
             <Route path="/system-health" element={<ProtectedRoute><SystemHealthCheck /></ProtectedRoute>} />
             <Route path="/creator-handbook" element={<ProtectedRoute><CreatorHandbook /></ProtectedRoute>} />
+            <Route path="/flow-diagrams" element={<ProtectedRoute><FlowDiagrams /></ProtectedRoute>} />
             <Route path="/procurement-reports" element={<ProtectedRoute><ProcurementReports /></ProtectedRoute>} />
             <Route path="/warehouse-reports" element={<ProtectedRoute><WarehouseReports /></ProtectedRoute>} />
             <Route path="/ap-reports" element={<ProtectedRoute><FinanceAPReports /></ProtectedRoute>} />
