@@ -1,7 +1,4 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const BACKUP_TABLES = [
@@ -26,20 +23,17 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // User client for auth check
     const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: authErr } = await userClient.auth.getUser();
     if (authErr || !user) throw new Error('Not authenticated');
 
-    // Check admin role
     const adminClient = createClient(supabaseUrl, serviceKey);
     const { data: roles } = await adminClient.from('user_roles').select('role').eq('user_id', user.id);
     const isAdmin = roles?.some(r => r.role === 'admin');
     if (!isAdmin) throw new Error('Admin access required');
 
-    // Get org
     const { data: profile } = await adminClient.from('profiles').select('organization_id').eq('user_id', user.id).single();
     if (!profile?.organization_id) throw new Error('No organization');
 
@@ -57,7 +51,6 @@ Deno.serve(async (req) => {
           .limit(10000);
         
         if (error) {
-          // Try without org filter for tables without organization_id
           const { data: allData } = await adminClient.from(table).select('*').limit(10000);
           backupData[table] = allData || [];
         } else {
@@ -117,6 +110,110 @@ Deno.serve(async (req) => {
       
       const text = await fileData.text();
       return new Response(JSON.stringify({ success: true, data: JSON.parse(text) }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'verify' && backup_id) {
+      const { data: backup } = await adminClient.from('data_backups').select('*').eq('id', backup_id).single();
+      if (!backup?.file_url) throw new Error('Backup not found');
+
+      const parts = backup.file_url.split('/data-backups/');
+      if (!parts[1]) throw new Error('Invalid backup URL');
+
+      // 1. File retrievable
+      const { data: fileData, error: dlErr } = await adminClient.storage
+        .from('data-backups')
+        .download(decodeURIComponent(parts[1]));
+      if (dlErr) throw new Error(`File not retrievable: ${dlErr.message}`);
+
+      const text = await fileData.text();
+
+      // 2. Parses as JSON
+      let parsed: Record<string, any[]>;
+      try {
+        parsed = JSON.parse(text);
+      } catch (e: any) {
+        throw new Error(`Backup file is corrupt (not valid JSON): ${e.message}`);
+      }
+
+      // 3. Row counts vs live DB
+      const tableResults: Array<{ table: string; backup_count: number; live_count: number; status: 'match' | 'drift' | 'missing' }> = [];
+      let totalBackupRows = 0;
+      let totalLiveRows = 0;
+
+      for (const table of backup.tables_included as string[]) {
+        const backupRows = Array.isArray(parsed[table]) ? parsed[table].length : 0;
+        totalBackupRows += backupRows;
+
+        let liveCount = 0;
+        const { count, error: cErr } = await adminClient
+          .from(table)
+          .select('*', { count: 'exact', head: true })
+          .eq('organization_id', profile.organization_id);
+
+        if (cErr) {
+          const { count: allCount } = await adminClient
+            .from(table)
+            .select('*', { count: 'exact', head: true });
+          liveCount = allCount || 0;
+        } else {
+          liveCount = count || 0;
+        }
+        totalLiveRows += liveCount;
+
+        let status: 'match' | 'drift' | 'missing' = 'match';
+        if (!(table in parsed)) status = 'missing';
+        else if (backupRows !== liveCount) status = 'drift';
+
+        tableResults.push({ table, backup_count: backupRows, live_count: liveCount, status });
+      }
+
+      const drift = tableResults.filter(r => r.status !== 'match');
+      const ok = drift.length === 0;
+
+      return new Response(JSON.stringify({
+        success: true,
+        ok,
+        file_size: text.length,
+        table_count: (backup.tables_included as string[]).length,
+        total_backup_rows: totalBackupRows,
+        total_live_rows: totalLiveRows,
+        drift_count: drift.length,
+        tables: tableResults,
+        message: ok
+          ? `Backup verified: ${totalBackupRows} rows across ${tableResults.length} tables match live data.`
+          : `Backup readable, but ${drift.length} of ${tableResults.length} tables have drifted since this backup was taken.`,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'restore' && backup_id) {
+      const { dry_run } = await req.json().catch(() => ({ dry_run: true }));
+      const { data: backup } = await adminClient.from('data_backups').select('*').eq('id', backup_id).single();
+      if (!backup?.file_url) throw new Error('Backup not found');
+
+      const parts = backup.file_url.split('/data-backups/');
+      if (!parts[1]) throw new Error('Invalid backup URL');
+
+      const { data: fileData, error: dlErr } = await adminClient.storage
+        .from('data-backups')
+        .download(decodeURIComponent(parts[1]));
+      if (dlErr) throw dlErr;
+
+      const parsed = JSON.parse(await fileData.text());
+      const preview = Object.entries(parsed).map(([t, rows]) => ({ table: t, rows: (rows as any[]).length }));
+
+      // Dry-run only. Full restore is intentionally disabled from the UI: restoring
+      // rows into a live tenant risks FK conflicts and audit-trail corruption.
+      // Admins should download the JSON and coordinate a supervised restore.
+      return new Response(JSON.stringify({
+        success: true,
+        dry_run: true,
+        message: 'Restore preview generated. Download the JSON file for supervised restore — in-place restore is disabled to protect referential integrity.',
+        preview,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
