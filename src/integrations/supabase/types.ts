@@ -1919,6 +1919,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_event_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          event_key: string
+          event_label: string
+          extra_emails: Json
+          id: string
+          module: string
+          organization_id: string | null
+          recipient_roles: Json
+          template_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          event_key: string
+          event_label: string
+          extra_emails?: Json
+          id?: string
+          module: string
+          organization_id?: string | null
+          recipient_roles?: Json
+          template_name?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          event_key?: string
+          event_label?: string
+          extra_emails?: Json
+          id?: string
+          module?: string
+          organization_id?: string | null
+          recipient_roles?: Json
+          template_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
