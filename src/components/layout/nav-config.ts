@@ -41,6 +41,8 @@ import {
   History,
   ShieldCheck,
   GraduationCap,
+  Mail,
+  MailCheck,
 } from 'lucide-react';
 
 // Map each nav path to a program code in the permissions table
@@ -131,6 +133,8 @@ export const pathToProgram: Record<string, string> = {
   '/self-service/profile': 'self_service',
   '/vendor-portal': 'vendor_portal',
   '/vendor-registrations': 'vendor_registrations',
+  '/email-monitor': 'admin',
+  '/email-events': 'admin',
 };
 
 export const navSections = [
@@ -304,6 +308,8 @@ export const navSections = [
       { path: '/vendor-registrations', label: 'Vendor Registrations', icon: Building2 },
       { path: '/opening-balances', label: 'Opening Balances', icon: Scale },
       { path: '/system-health', label: 'System Health Check', icon: ShieldCheck },
+      { path: '/email-events', label: 'Email Events', icon: MailCheck },
+      { path: '/email-monitor', label: 'Email Monitor', icon: Mail },
       { path: '/admin', label: 'Admin', icon: Settings },
       { path: '/creator-handbook', label: "Creator's Handbook", icon: BookOpen },
       { path: '/flow-diagrams', label: 'Flow Diagrams', icon: GitBranch },
