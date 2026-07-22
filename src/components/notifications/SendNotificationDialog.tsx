@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Profile {
   id: string;
@@ -42,6 +43,8 @@ export function SendNotificationDialog({ open, onOpenChange, onSent }: SendNotif
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [alsoEmail, setAlsoEmail] = useState(true);
+  const [senderName, setSenderName] = useState('');
 
   useEffect(() => {
     if (open) {
@@ -49,8 +52,13 @@ export function SendNotificationDialog({ open, onOpenChange, onSent }: SendNotif
       setRecipientId('');
       setTitle('');
       setMessage('');
+      setAlsoEmail(true);
+      if (user) {
+        supabase.from('profiles').select('full_name,email').eq('user_id', user.id).maybeSingle()
+          .then(({ data }: any) => setSenderName(data?.full_name || data?.email || ''));
+      }
     }
-  }, [open]);
+  }, [open, user]);
 
   const fetchUsers = async () => {
     const { data } = await supabase
@@ -75,7 +83,33 @@ export function SendNotificationDialog({ open, onOpenChange, onSent }: SendNotif
 
       if (error) throw error;
 
-      toast({ title: 'Notification sent', description: 'Your notification has been delivered.' });
+      let emailNote = '';
+      if (alsoEmail) {
+        const recipient = users.find(u => u.user_id === recipientId);
+        if (recipient?.email) {
+          const origin = typeof window !== 'undefined' ? window.location.origin : '';
+          const { error: emailErr } = await supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'notification',
+              recipientEmail: recipient.email,
+              idempotencyKey: `notif-${user?.id}-${Date.now()}`,
+              templateData: {
+                recipientName: recipient.full_name || undefined,
+                senderName: senderName || undefined,
+                title: title.trim(),
+                message: message.trim() || undefined,
+                actionUrl: `${origin}/notifications`,
+                actionLabel: 'Open in ERP',
+              },
+            },
+          });
+          emailNote = emailErr ? ' (in-app only — email failed)' : ' + email';
+        } else {
+          emailNote = ' (in-app only — no email on file)';
+        }
+      }
+
+      toast({ title: 'Notification sent', description: `Delivered${emailNote}.` });
       onOpenChange(false);
       onSent?.();
     } catch (error: any) {
@@ -125,6 +159,16 @@ export function SendNotificationDialog({ open, onOpenChange, onSent }: SendNotif
               rows={3}
               maxLength={500}
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="also-email"
+              checked={alsoEmail}
+              onCheckedChange={(v) => setAlsoEmail(v === true)}
+            />
+            <Label htmlFor="also-email" className="text-sm font-normal cursor-pointer">
+              Also send an email to the recipient
+            </Label>
           </div>
         </div>
         <DialogFooter>

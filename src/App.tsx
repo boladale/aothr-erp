@@ -81,6 +81,8 @@ const SalesDashboardPage = lazy(() => import("./pages/SalesDashboardPage"));
 const CashDashboardPage = lazy(() => import("./pages/CashDashboardPage"));
 const OrganizationSetup = lazy(() => import("./pages/OrganizationSetup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
+const EmailMonitor = lazy(() => import("./pages/EmailMonitor"));
 const AuditReport = lazy(() => import("./pages/AuditReport"));
 const AccountStatement = lazy(() => import("./pages/AccountStatement"));
 const Workflows = lazy(() => import("./pages/Workflows"));
@@ -191,6 +193,8 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/email-monitor" element={<ProtectedRoute><EmailMonitor /></ProtectedRoute>} />
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
