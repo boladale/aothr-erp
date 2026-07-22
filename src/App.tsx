@@ -83,6 +83,7 @@ const OrganizationSetup = lazy(() => import("./pages/OrganizationSetup"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const EmailMonitor = lazy(() => import("./pages/EmailMonitor"));
+const EmailEvents = lazy(() => import("./pages/EmailEvents"));
 const AuditReport = lazy(() => import("./pages/AuditReport"));
 const AccountStatement = lazy(() => import("./pages/AccountStatement"));
 const Workflows = lazy(() => import("./pages/Workflows"));
@@ -195,6 +196,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-monitor" element={<ProtectedRoute><EmailMonitor /></ProtectedRoute>} />
+            <Route path="/email-events" element={<ProtectedRoute><EmailEvents /></ProtectedRoute>} />
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
