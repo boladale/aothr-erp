@@ -1,15 +1,15 @@
 project_id = "mbtykleryxxxlkiqopgq"
 
-[functions.admin-create-user]
-verify_jwt = false
-
-[functions.admin-manage-user]
-verify_jwt = false
-
-[functions.ai-reconcile]
-verify_jwt = false
-[functions.vendor-accept-invite]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.admin-create-user]
+    verify_jwt = false
+  [functions.admin-manage-user]
+    verify_jwt = false
+  [functions.ai-reconcile]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.vendor-accept-invite]
+    verify_jwt = false
