@@ -121,7 +121,6 @@ export default function EmailEvents() {
       <PageHeader
         title="Email Event Settings"
         description="Choose which business events send automatic emails"
-        icon={Mail}
       />
 
       <Card className="mb-4">
