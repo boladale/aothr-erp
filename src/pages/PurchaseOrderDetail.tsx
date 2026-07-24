@@ -77,12 +77,41 @@ export default function PurchaseOrderDetail() {
         .eq('id', po.id);
       if (error) throw error;
       toast.success('Submitted for approval');
+      notifyApproversOfPOSubmission(po).catch((e) => console.error('po_submitted email failed', e));
       fetchPO();
     } catch (error) {
       toast.error('Failed to submit');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const notifyApproversOfPOSubmission = async (poRow: POWithDetails) => {
+    const { data: approverRoles } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['admin', 'procurement_manager'] as any);
+    const ids = Array.from(new Set((approverRoles || []).map((r: any) => r.user_id))).filter(Boolean);
+    if (ids.length === 0) return;
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('email')
+      .in('user_id', ids);
+    const emails = (profiles || []).map((p: any) => p.email).filter(Boolean);
+    if (emails.length === 0) return;
+    const { triggerEmailEvent } = await import('@/lib/emailEvents');
+    await triggerEmailEvent('po_submitted', {
+      recipientEmails: emails,
+      subject: `PO ${poRow.po_number} submitted for approval`,
+      message: `Purchase Order ${poRow.po_number} for ${poRow.vendors?.name || 'vendor'} totalling ${formatCurrency(poRow.total_amount || 0)} has been submitted and is awaiting your approval.`,
+      actionUrl: `${window.location.origin}/purchase-orders/${poRow.id}`,
+      idempotencyKey: `po-submit-${poRow.id}`,
+      templateData: {
+        poNumber: poRow.po_number,
+        vendorName: poRow.vendors?.name,
+        totalAmount: poRow.total_amount,
+      },
+    });
   };
 
   const handleApprove = async () => {

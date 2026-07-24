@@ -182,6 +182,25 @@ export default function PurchaseOrders() {
     mutationFn: async (po: POWithDetails) => {
       const { error } = await supabase.from('purchase_orders').update({ status: 'pending_approval' as POStatus, rejection_reason: null }).eq('id', po.id);
       if (error) throw error;
+      try {
+        const { data: approverRoles } = await supabase
+          .from('user_roles').select('user_id').in('role', ['admin', 'procurement_manager'] as any);
+        const ids = Array.from(new Set((approverRoles || []).map((r: any) => r.user_id))).filter(Boolean);
+        if (ids.length) {
+          const { data: profiles } = await supabase.from('profiles').select('email').in('user_id', ids);
+          const emails = (profiles || []).map((p: any) => p.email).filter(Boolean);
+          if (emails.length) {
+            const { triggerEmailEvent } = await import('@/lib/emailEvents');
+            await triggerEmailEvent('po_submitted', {
+              recipientEmails: emails,
+              subject: `PO ${po.po_number} submitted for approval`,
+              message: `Purchase Order ${po.po_number} for ${po.vendors?.name || 'vendor'} totalling ${formatCurrency(po.total_amount || 0)} has been submitted and is awaiting your approval.`,
+              actionUrl: `${window.location.origin}/purchase-orders/${po.id}`,
+              idempotencyKey: `po-submit-${po.id}`,
+            });
+          }
+        }
+      } catch (e) { console.error('po_submitted email failed', e); }
     },
     onSuccess: () => { toast.success('Submitted for approval'); invalidateOrders(); },
     onError: () => toast.error('Failed to submit'),
