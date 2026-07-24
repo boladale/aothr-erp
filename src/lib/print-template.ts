@@ -64,11 +64,12 @@ const BASE_STYLES = `
   }
 `;
 
-export function printBrandedDocument(bodyHtml: string, meta: PrintBrandingMeta) {
+/** Build the branded document HTML string (without auto-print script). */
+export function buildBrandedHtml(bodyHtml: string, meta: PrintBrandingMeta, opts: { autoPrint?: boolean } = {}): string {
   const contactLines = [meta.address, meta.phone, meta.email, meta.website]
     .filter(Boolean).join('\n');
-
-  const html = `
+  const autoPrint = opts.autoPrint !== false;
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -95,12 +96,16 @@ export function printBrandedDocument(bodyHtml: string, meta: PrintBrandingMeta) 
     <span>${meta.footerNote || `Generated ${new Date().toLocaleString()}`}</span>
     <span>${meta.preparedBy ? `Prepared by: ${meta.preparedBy}` : ''}</span>
   </div>
-  <script>window.onload = () => setTimeout(() => window.print(), 400);</script>
+  ${autoPrint ? `<script>window.onload = () => setTimeout(() => window.print(), 400);</script>` : ''}
 </body>
 </html>`;
+}
 
+export function printBrandedDocument(bodyHtml: string, meta: PrintBrandingMeta) {
+  const html = buildBrandedHtml(bodyHtml, meta, { autoPrint: true });
   const w = window.open('', '_blank');
   if (!w) return;
   w.document.write(html);
   w.document.close();
 }
+
