@@ -14,9 +14,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle, ShoppingCart, PenLine } from 'lucide-react';
 import { RFPEditDialog } from '@/components/rfp/RFPEditDialog';
 import { CreatePOFromRFPDialog } from '@/components/rfp/CreatePOFromRFPDialog';
+import { SendForSignatureDialog } from '@/components/signatures/SendForSignatureDialog';
+import { SignatureHistoryPanel } from '@/components/signatures/SignatureHistoryPanel';
+import { buildBrandedHtml } from '@/lib/print-template';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
