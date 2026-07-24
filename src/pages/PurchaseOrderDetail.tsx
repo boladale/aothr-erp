@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2, PenLine } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
+import { SendForSignatureDialog } from '@/components/signatures/SendForSignatureDialog';
+import { SignatureHistoryPanel } from '@/components/signatures/SignatureHistoryPanel';
+import { buildBrandedHtml } from '@/lib/print-template';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -41,6 +45,8 @@ export default function PurchaseOrderDetail() {
   const [actionLoading, setActionLoading] = useState(false);
   const [signDialog, setSignDialog] = useState(false);
   const [managerSig, setManagerSig] = useState<string | null>(null);
+  const [signOpen, setSignOpen] = useState(false);
+  const branding = useOrgBranding();
 
   useEffect(() => {
     if (!user?.id) return;
