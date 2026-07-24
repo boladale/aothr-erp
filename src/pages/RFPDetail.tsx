@@ -94,6 +94,8 @@ export default function RFPDetail() {
   const [rfpItems, setRfpItems] = useState<RFPItem[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [rfp, setRfp] = useState<RFPData | null>(null);
+  const [signOpen, setSignOpen] = useState(false);
+  const branding = useOrgBranding();
 
   // Invite dialog state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -394,6 +396,11 @@ export default function RFPDetail() {
               {rfp.status === 'awarded' && !existingPOId && (
                 <Button onClick={() => setCreatePOOpen(true)}>
                   <ShoppingCart className="mr-2 h-4 w-4" /> Create Purchase Order
+                </Button>
+              )}
+              {['published', 'evaluating', 'awarded'].includes(rfp.status as string) && (
+                <Button variant="outline" onClick={() => setSignOpen(true)}>
+                  <PenLine className="mr-2 h-4 w-4" /> Send for Signature
                 </Button>
               )}
             </div>
@@ -819,6 +826,35 @@ export default function RFPDetail() {
             />
           );
         })()}
+
+        {id && rfp && (
+          <>
+            <SignatureHistoryPanel documentType="rfq" documentId={id} />
+            <SendForSignatureDialog
+              open={signOpen}
+              onOpenChange={setSignOpen}
+              documentType="rfq"
+              documentId={id}
+              documentNumber={rfp.rfp_number}
+              title={`RFQ ${rfp.rfp_number} — ${rfp.title}`}
+              html={buildBrandedHtml(
+                `<h2>Request for Quotation</h2>
+                 <p><strong>Title:</strong> ${rfp.title}</p>
+                 <p><strong>Description:</strong> ${rfp.description || ''}</p>
+                 ${rfp.deadline ? `<p><strong>Deadline:</strong> ${format(new Date(rfp.deadline), 'dd MMM yyyy HH:mm')}</p>` : ''}
+                 <p style="margin-top:32px;color:#555;font-size:11px">By signing below, the vendor confirms receipt and acceptance of this RFQ terms.</p>`,
+                {
+                  orgName: branding.appName,
+                  logoUrl: branding.logoUrl || undefined,
+                  documentTitle: 'Request for Quotation',
+                  documentNumber: rfp.rfp_number,
+                  status: (rfp.status || '').toUpperCase(),
+                },
+                { autoPrint: false },
+              )}
+            />
+          </>
+        )}
       </div>
     </AppLayout>
   );
