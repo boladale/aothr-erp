@@ -67,7 +67,10 @@ Deno.serve(async (req) => {
     const { data: permOk, error: permErr } = await userClient.rpc('has_permission', {
       p_code: PERM[action],
     })
-    if (permErr) return jsonResponse({ error: 'Permission check failed' }, 500)
+    if (permErr) {
+      console.error('has_permission rpc failed', permErr)
+      return jsonResponse({ error: 'Permission check failed', detail: permErr.message }, 500)
+    }
     if (!permOk) return jsonResponse({ error: 'Forbidden: missing permission ' + PERM[action] }, 403)
 
     // Privileged client for the actual write. Triggers enforce business rules.
