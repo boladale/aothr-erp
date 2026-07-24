@@ -554,12 +554,12 @@ export default function PurchaseOrderDetail() {
                   <strong>Payment terms:</strong> ${(po as any).payment_terms || 'As agreed'}</p>
                <table><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
                <tbody>
-                 ${lines.map((l, i) => `<tr>
+                 ${lines.map((l: any, i) => `<tr>
                    <td>${i + 1}</td>
                    <td>${l.items?.name || l.description || ''}</td>
-                   <td>${l.qty_ordered ?? ''}</td>
+                   <td>${l.quantity ?? l.qty_ordered ?? ''}</td>
                    <td>${formatCurrency(Number(l.unit_price || 0))}</td>
-                   <td>${formatCurrency(Number(l.qty_ordered || 0) * Number(l.unit_price || 0))}</td>
+                   <td>${formatCurrency(Number((l.quantity ?? l.qty_ordered) || 0) * Number(l.unit_price || 0))}</td>
                  </tr>`).join('')}
                </tbody></table>
                <p style="margin-top:24px"><strong>Total:</strong> ${formatCurrency(Number(po.total_amount || 0))}</p>
