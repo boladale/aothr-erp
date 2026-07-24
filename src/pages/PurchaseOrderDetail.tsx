@@ -344,6 +344,11 @@ export default function PurchaseOrderDetail() {
                 Mark as Sent
               </Button>
             )}
+            {['approved', 'sent', 'partially_received', 'closed'].includes(po.status as string) && canSend && po.vendors?.email && (
+              <Button variant="outline" onClick={() => setSignOpen(true)}>
+                <PenLine className="h-4 w-4 mr-1" /> Send for Signature
+              </Button>
+            )}
             {(po as any).acceptance_status === 'vendor_accepted' && canApprove && (
               <Button onClick={() => setSignDialog(true)} disabled={actionLoading}>
                 <PenTool className="h-4 w-4 mr-1" /> Counter-sign & Finalize
