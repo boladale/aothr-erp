@@ -524,6 +524,8 @@ export default function PurchaseOrderDetail() {
           </CardContent>
         </Card>
 
+        <SignatureHistoryPanel documentType="purchase_order" documentId={id!} />
+
         {id && (
           <PODocumentDialog
             open={showDocument}
@@ -531,6 +533,47 @@ export default function PurchaseOrderDetail() {
             poId={id}
             poStatus={po.status}
             onStatusChange={fetchPO}
+          />
+        )}
+
+        {id && po && (
+          <SendForSignatureDialog
+            open={signOpen}
+            onOpenChange={setSignOpen}
+            documentType="purchase_order"
+            documentId={id}
+            documentNumber={po.po_number || undefined}
+            title={`Purchase Order ${po.po_number || ''}`.trim()}
+            defaultSignerName={po.vendors?.name || ''}
+            defaultSignerEmail={po.vendors?.email || ''}
+            html={buildBrandedHtml(
+              `<h2 style="margin-bottom:8px">Purchase Order</h2>
+               <p><strong>Vendor:</strong> ${po.vendors?.name || ''}<br/>
+                  <strong>Delivery to:</strong> ${po.locations?.name || ''}<br/>
+                  <strong>Order date:</strong> ${po.order_date || ''}<br/>
+                  <strong>Payment terms:</strong> ${(po as any).payment_terms || 'As agreed'}</p>
+               <table><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+               <tbody>
+                 ${lines.map((l, i) => `<tr>
+                   <td>${i + 1}</td>
+                   <td>${l.items?.name || l.description || ''}</td>
+                   <td>${l.qty_ordered ?? ''}</td>
+                   <td>${formatCurrency(Number(l.unit_price || 0))}</td>
+                   <td>${formatCurrency(Number(l.qty_ordered || 0) * Number(l.unit_price || 0))}</td>
+                 </tr>`).join('')}
+               </tbody></table>
+               <p style="margin-top:24px"><strong>Total:</strong> ${formatCurrency(Number(po.total_amount || 0))}</p>
+               <p style="margin-top:48px;color:#555;font-size:11px">By signing below, the vendor accepts the terms of this purchase order.</p>`,
+              {
+                orgName: branding.appName,
+                logoUrl: branding.logoUrl || undefined,
+                documentTitle: 'Purchase Order',
+                documentNumber: po.po_number || undefined,
+                documentDate: po.order_date || undefined,
+                status: (po.status || '').toUpperCase(),
+              },
+              { autoPrint: false },
+            )}
           />
         )}
 
