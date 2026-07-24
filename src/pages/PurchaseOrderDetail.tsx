@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2, PenLine } from 'lucide-react';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
+import { SendForSignatureDialog } from '@/components/signatures/SendForSignatureDialog';
+import { SignatureHistoryPanel } from '@/components/signatures/SignatureHistoryPanel';
+import { buildBrandedHtml } from '@/lib/print-template';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -41,6 +45,8 @@ export default function PurchaseOrderDetail() {
   const [actionLoading, setActionLoading] = useState(false);
   const [signDialog, setSignDialog] = useState(false);
   const [managerSig, setManagerSig] = useState<string | null>(null);
+  const [signOpen, setSignOpen] = useState(false);
+  const branding = useOrgBranding();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -338,6 +344,11 @@ export default function PurchaseOrderDetail() {
                 Mark as Sent
               </Button>
             )}
+            {['approved', 'sent', 'partially_received', 'closed'].includes(po.status as string) && canSend && po.vendors?.email && (
+              <Button variant="outline" onClick={() => setSignOpen(true)}>
+                <PenLine className="h-4 w-4 mr-1" /> Send for Signature
+              </Button>
+            )}
             {(po as any).acceptance_status === 'vendor_accepted' && canApprove && (
               <Button onClick={() => setSignDialog(true)} disabled={actionLoading}>
                 <PenTool className="h-4 w-4 mr-1" /> Counter-sign & Finalize
@@ -513,6 +524,8 @@ export default function PurchaseOrderDetail() {
           </CardContent>
         </Card>
 
+        <SignatureHistoryPanel documentType="purchase_order" documentId={id!} />
+
         {id && (
           <PODocumentDialog
             open={showDocument}
@@ -520,6 +533,47 @@ export default function PurchaseOrderDetail() {
             poId={id}
             poStatus={po.status}
             onStatusChange={fetchPO}
+          />
+        )}
+
+        {id && po && (
+          <SendForSignatureDialog
+            open={signOpen}
+            onOpenChange={setSignOpen}
+            documentType="purchase_order"
+            documentId={id}
+            documentNumber={po.po_number || undefined}
+            title={`Purchase Order ${po.po_number || ''}`.trim()}
+            defaultSignerName={po.vendors?.name || ''}
+            defaultSignerEmail={po.vendors?.email || ''}
+            html={buildBrandedHtml(
+              `<h2 style="margin-bottom:8px">Purchase Order</h2>
+               <p><strong>Vendor:</strong> ${po.vendors?.name || ''}<br/>
+                  <strong>Delivery to:</strong> ${po.locations?.name || ''}<br/>
+                  <strong>Order date:</strong> ${po.order_date || ''}<br/>
+                  <strong>Payment terms:</strong> ${(po as any).payment_terms || 'As agreed'}</p>
+               <table><thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+               <tbody>
+                 ${lines.map((l: any, i) => `<tr>
+                   <td>${i + 1}</td>
+                   <td>${l.items?.name || l.description || ''}</td>
+                   <td>${l.quantity ?? l.qty_ordered ?? ''}</td>
+                   <td>${formatCurrency(Number(l.unit_price || 0))}</td>
+                   <td>${formatCurrency(Number((l.quantity ?? l.qty_ordered) || 0) * Number(l.unit_price || 0))}</td>
+                 </tr>`).join('')}
+               </tbody></table>
+               <p style="margin-top:24px"><strong>Total:</strong> ${formatCurrency(Number(po.total_amount || 0))}</p>
+               <p style="margin-top:48px;color:#555;font-size:11px">By signing below, the vendor accepts the terms of this purchase order.</p>`,
+              {
+                orgName: branding.appName,
+                logoUrl: branding.logoUrl || undefined,
+                documentTitle: 'Purchase Order',
+                documentNumber: po.po_number || undefined,
+                documentDate: po.order_date || undefined,
+                status: (po.status || '').toUpperCase(),
+              },
+              { autoPrint: false },
+            )}
           />
         )}
 

@@ -4499,6 +4499,8 @@ export type Database = {
           address: string | null
           app_name: string | null
           base_currency: string
+          boldsign_api_key: string | null
+          boldsign_enabled: boolean
           city: string | null
           code: string
           country: string | null
@@ -4517,6 +4519,8 @@ export type Database = {
           address?: string | null
           app_name?: string | null
           base_currency?: string
+          boldsign_api_key?: string | null
+          boldsign_enabled?: boolean
           city?: string | null
           code: string
           country?: string | null
@@ -4535,6 +4539,8 @@ export type Database = {
           address?: string | null
           app_name?: string | null
           base_currency?: string
+          boldsign_api_key?: string | null
+          boldsign_enabled?: boolean
           city?: string | null
           code?: string
           country?: string | null
@@ -6667,6 +6673,77 @@ export type Database = {
         }
         Relationships: []
       }
+      signature_requests: {
+        Row: {
+          boldsign_document_id: string | null
+          created_at: string
+          declined_at: string | null
+          document_id: string
+          document_number: string | null
+          document_type: string
+          error_message: string | null
+          id: string
+          organization_id: string
+          sent_at: string
+          sent_by: string | null
+          signed_at: string | null
+          signed_pdf_url: string | null
+          signer_email: string
+          signer_name: string
+          status: string
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          boldsign_document_id?: string | null
+          created_at?: string
+          declined_at?: string | null
+          document_id: string
+          document_number?: string | null
+          document_type: string
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          sent_at?: string
+          sent_by?: string | null
+          signed_at?: string | null
+          signed_pdf_url?: string | null
+          signer_email: string
+          signer_name: string
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          boldsign_document_id?: string | null
+          created_at?: string
+          declined_at?: string | null
+          document_id?: string
+          document_number?: string | null
+          document_type?: string
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          sent_at?: string
+          sent_by?: string | null
+          signed_at?: string | null
+          signed_pdf_url?: string | null
+          signer_email?: string
+          signer_name?: string
+          status?: string
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -7669,6 +7746,13 @@ export type Database = {
         Args: { p_employee_id: string }
         Returns: undefined
       }
+      get_org_boldsign_settings: {
+        Args: { _org_id: string }
+        Returns: {
+          boldsign_enabled: boolean
+          has_api_key: boolean
+        }[]
+      }
       get_user_org_id: { Args: never; Returns: string }
       get_user_programs: { Args: { p_user_id: string }; Returns: string[] }
       get_user_roles: {
@@ -7769,6 +7853,10 @@ export type Database = {
       }
       run_three_way_match: { Args: { p_invoice_id: string }; Returns: string }
       select_rfp_runner_up: { Args: { p_rfp_id: string }; Returns: string }
+      set_org_boldsign_settings: {
+        Args: { _api_key: string; _enabled: boolean; _org_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       adjustment_type: "increase" | "decrease"

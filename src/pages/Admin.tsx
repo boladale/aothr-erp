@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
 import { BulkUploadPanel } from '@/components/admin/BulkUploadPanel';
 import { BackupManagementPanel } from '@/components/admin/BackupManagementPanel';
+import { BoldSignSettingsPanel } from '@/components/admin/BoldSignSettingsPanel';
 import { CurrencySettingsPanel } from '@/components/admin/CurrencySettingsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -388,6 +389,7 @@ export default function Admin() {
           {isAdmin && (
             <TabsContent value="branding" className="space-y-4">
               <OrganizationBranding />
+              <BoldSignSettingsPanel />
             </TabsContent>
           )}
           {isAdmin && (
