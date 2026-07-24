@@ -21,3 +21,5 @@ project_id = "mbtykleryxxxlkiqopgq"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.boldsign-webhook]
+    verify_jwt = false
