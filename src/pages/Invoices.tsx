@@ -154,16 +154,42 @@ export default function Invoices() {
     mutationFn: async (invoice: InvoiceWithDetails) => {
       const { error } = await supabase.from('ap_invoices').update({ status: 'pending_approval', rejection_reason: null }).eq('id', invoice.id);
       if (error) throw error;
+      return invoice;
     },
-    onSuccess: () => { toast.success('Invoice submitted for approval'); invalidateInvoices(); },
+    onSuccess: (invoice: any) => {
+      toast.success('Invoice submitted for approval');
+      import('@/lib/procurement-emails').then(({ notifyInternal, FINANCE_STAFF }) =>
+        notifyInternal('invoice_logged', {
+          roles: FINANCE_STAFF,
+          subject: `Vendor invoice ${invoice.invoice_number} submitted for approval`,
+          message: `Vendor invoice ${invoice.invoice_number} from ${invoice.vendors?.name || 'vendor'} totalling ${formatCurrency(invoice.total_amount || 0)} is awaiting review and approval.`,
+          path: '/invoices',
+          idempotencyKey: `inv-submitted-${invoice.id}`,
+        }),
+      ).catch(() => {});
+      invalidateInvoices();
+    },
     onError: () => toast.error('Failed to submit'),
   });
   const approveMutation = useMutation({
     mutationFn: async (invoice: InvoiceWithDetails) => {
       const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', invoice.id);
       if (error) throw error;
+      return invoice;
     },
-    onSuccess: () => { toast.success('Invoice approved'); invalidateInvoices(); },
+    onSuccess: (invoice: any) => {
+      toast.success('Invoice approved');
+      import('@/lib/procurement-emails').then(({ notifyInternal, FINANCE_STAFF, PROCUREMENT_TEAM }) =>
+        notifyInternal('invoice_approved', {
+          roles: Array.from(new Set([...FINANCE_STAFF, ...PROCUREMENT_TEAM])),
+          subject: `Invoice ${invoice.invoice_number} approved`,
+          message: `Vendor invoice ${invoice.invoice_number} from ${invoice.vendors?.name || 'vendor'} totalling ${formatCurrency(invoice.total_amount || 0)} has been approved and is ready for posting/payment.`,
+          path: '/invoices',
+          idempotencyKey: `inv-approved-${invoice.id}`,
+        }),
+      ).catch(() => {});
+      invalidateInvoices();
+    },
     onError: () => toast.error('Failed to approve'),
   });
   const rejectMutation = useMutation({

@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { RequisitionFormDialog } from '@/components/requisitions/RequisitionFormDialog';
-import { notifyApproversOfPRSubmission } from '@/lib/requisition-emails';
+import { notifyApproversOfPRSubmission, notifyPRApproved, notifyPRRejected } from '@/lib/requisition-emails';
 
 interface RequisitionRow {
   id: string;
@@ -71,8 +71,13 @@ export default function Requisitions() {
       if (req.status !== 'pending_approval') throw new Error('Only pending requisitions can be approved');
       const { error } = await supabase.from('requisitions').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id }).eq('id', req.id).eq('status', 'pending_approval');
       if (error) throw error;
+      return req;
     },
-    onSuccess: () => { toast.success('Requisition approved'); invalidate(); },
+    onSuccess: (req) => {
+      toast.success('Requisition approved');
+      notifyPRApproved(req).catch(() => {});
+      invalidate();
+    },
     onError: (e: any) => toast.error(e?.message || 'Failed to approve'),
   });
   const rejectMutation = useMutation({
@@ -81,8 +86,13 @@ export default function Requisitions() {
         status: 'draft', rejection_reason: reason, rejected_at: new Date().toISOString(), rejected_by: user?.id, submitted_at: null
       }).eq('id', req.id);
       if (error) throw error;
+      return { req, reason };
     },
-    onSuccess: () => { toast.success('Requisition returned to draft for corrections'); invalidate(); },
+    onSuccess: ({ req, reason }) => {
+      toast.success('Requisition returned to draft for corrections');
+      notifyPRRejected(req, reason).catch(() => {});
+      invalidate();
+    },
     onError: (e: any) => toast.error(e?.message || 'Failed to reject'),
   });
   const deleteMutation = useMutation({
@@ -100,9 +110,17 @@ export default function Requisitions() {
         status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id
       }).in('id', ids);
       if (error) throw error;
-      return ids.length;
+      return ids;
     },
-    onSuccess: (n) => { toast.success(`${n} requisitions approved`); setSelectedIds([]); invalidate(); },
+    onSuccess: (ids) => {
+      toast.success(`${ids.length} requisitions approved`);
+      ids.forEach((rid) => {
+        const r = requisitions.find((x) => x.id === rid);
+        if (r) notifyPRApproved(r).catch(() => {});
+      });
+      setSelectedIds([]);
+      invalidate();
+    },
     onError: (e: any) => toast.error(e?.message),
   });
   const bulkRejectMutation = useMutation({
@@ -111,9 +129,17 @@ export default function Requisitions() {
         status: 'draft', rejection_reason: reason, rejected_at: new Date().toISOString(), rejected_by: user?.id, submitted_at: null
       }).in('id', ids);
       if (error) throw error;
-      return ids.length;
+      return { ids, reason };
     },
-    onSuccess: (n) => { toast.success(`${n} requisitions rejected`); setSelectedIds([]); invalidate(); },
+    onSuccess: ({ ids, reason }) => {
+      toast.success(`${ids.length} requisitions rejected`);
+      ids.forEach((rid) => {
+        const r = requisitions.find((x) => x.id === rid);
+        if (r) notifyPRRejected(r, reason).catch(() => {});
+      });
+      setSelectedIds([]);
+      invalidate();
+    },
     onError: (e: any) => toast.error(e?.message),
   });
   const bulkProcessing = bulkApproveMutation.isPending || bulkRejectMutation.isPending;

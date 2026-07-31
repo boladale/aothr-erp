@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, Vendor, Location, Item, POStatus } from '@/lib/supabase';
 import { POReawardPanel } from '@/components/purchase-orders/POReawardPanel';
 import { formatCurrency } from '@/lib/utils';
+import { notifyPOApproved } from '@/lib/po-emails';
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
@@ -213,8 +214,13 @@ export default function PurchaseOrders() {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
+      return po;
     },
-    onSuccess: () => { toast.success('PO approved'); invalidateOrders(); },
+    onSuccess: (po) => {
+      toast.success('PO approved');
+      notifyPOApproved(po).catch(() => {});
+      invalidateOrders();
+    },
     onError: (e: any) => toast.error(e?.message || 'Failed to approve'),
   });
 
