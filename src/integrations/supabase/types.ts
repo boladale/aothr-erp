@@ -7804,6 +7804,10 @@ export type Database = {
         Args: { _entry_date: string; _org_id: string }
         Returns: boolean
       }
+      is_vendor_invited_to_requisition: {
+        Args: { _requisition_id: string }
+        Returns: boolean
+      }
       is_vendor_user_for: { Args: { _vendor_id: string }; Returns: boolean }
       lock_pre_cutover_periods: { Args: { _cutover: string }; Returns: number }
       lookup_vendor_invite_token: {
@@ -7861,6 +7865,7 @@ export type Database = {
         Args: { _api_key: string; _enabled: boolean; _org_id: string }
         Returns: undefined
       }
+      vendor_in_user_org: { Args: { _vendor_id: string }; Returns: boolean }
     }
     Enums: {
       adjustment_type: "increase" | "decrease"
