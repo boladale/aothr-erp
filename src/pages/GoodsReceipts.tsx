@@ -147,8 +147,21 @@ export default function GoodsReceipts() {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
+      return grn;
     },
-    onSuccess: () => { toast.success('GRN posted and inventory updated'); invalidateReceipts(); },
+    onSuccess: (grn: any) => {
+      toast.success('GRN posted and inventory updated');
+      import('@/lib/procurement-emails').then(({ notifyInternal, WAREHOUSE_STAFF, FINANCE_STAFF }) =>
+        notifyInternal('grn_posted', {
+          roles: Array.from(new Set([...WAREHOUSE_STAFF, ...FINANCE_STAFF])),
+          subject: `Goods Receipt ${grn.grn_number || ''} posted`,
+          message: `Goods Receipt ${grn.grn_number || ''}${grn.purchase_orders?.po_number ? ` against PO ${grn.purchase_orders.po_number}` : ''} has been posted and inventory has been updated.`,
+          path: '/goods-receipts',
+          idempotencyKey: `grn-posted-${grn.id}`,
+        }),
+      ).catch(() => {});
+      invalidateReceipts();
+    },
     onError: (e: any) => toast.error(e?.message || 'Failed to post GRN'),
   });
   const postingId = postMutation.isPending ? (postMutation.variables as GRNWithDetails | undefined)?.id ?? null : null;

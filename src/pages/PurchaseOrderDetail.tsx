@@ -131,6 +131,7 @@ export default function PurchaseOrderDetail() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success('PO approved');
+      notifyPOApproved(po).catch(() => {});
       fetchPO();
     } catch (error: any) {
       toast.error(error?.message || 'Failed to approve');
