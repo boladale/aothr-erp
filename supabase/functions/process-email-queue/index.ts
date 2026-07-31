@@ -64,6 +64,7 @@ async function moveToDlq(
     message_id: payload.message_id,
     template_name: (payload.label || queue) as string,
     recipient_email: payload.to,
+    organization_id: (payload.organization_id as string | null) ?? null,
     status: 'dlq',
     error_message: reason,
   })
@@ -275,6 +276,7 @@ Deno.serve(async (req) => {
           message_id: payload.message_id,
           template_name: payload.label || queue,
           recipient_email: payload.to,
+          organization_id: (payload.organization_id as string | null) ?? null,
           status: 'sent',
         })
 
@@ -302,6 +304,7 @@ Deno.serve(async (req) => {
             message_id: payload.message_id,
             template_name: payload.label || queue,
             recipient_email: payload.to,
+            organization_id: (payload.organization_id as string | null) ?? null,
             status: 'rate_limited',
             error_message: errorMsg.slice(0, 1000),
           })
@@ -339,6 +342,7 @@ Deno.serve(async (req) => {
           message_id: payload.message_id,
           template_name: payload.label || queue,
           recipient_email: payload.to,
+          organization_id: (payload.organization_id as string | null) ?? null,
           status: 'failed',
           error_message: errorMsg.slice(0, 1000),
         })

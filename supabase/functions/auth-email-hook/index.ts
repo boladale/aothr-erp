@@ -244,11 +244,25 @@ async function handleWebhook(req: Request): Promise<Response> {
 
   const messageId = crypto.randomUUID()
 
+  // Resolve the recipient's organization so email logs stay tenant-isolated
+  let organizationId: string | null = null
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('organization_id')
+      .eq('email', payload.data.email)
+      .maybeSingle()
+    organizationId = (profile as { organization_id: string | null } | null)?.organization_id ?? null
+  } catch (_e) {
+    organizationId = null
+  }
+
   // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: emailType,
     recipient_email: payload.data.email,
+    organization_id: organizationId,
     status: 'pending',
   })
 
@@ -266,6 +280,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       purpose: 'transactional',
       label: emailType,
       queued_at: new Date().toISOString(),
+      organization_id: organizationId,
     },
   })
 
@@ -275,6 +290,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       message_id: messageId,
       template_name: emailType,
       recipient_email: payload.data.email,
+      organization_id: organizationId,
       status: 'failed',
       error_message: 'Failed to enqueue email',
     })
