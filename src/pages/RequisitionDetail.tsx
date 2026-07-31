@@ -15,7 +15,7 @@ import { ConvertToPODialog } from '@/components/requisitions/ConvertToPODialog';
 import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
 import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
 import { formatCurrency } from '@/lib/utils';
-import { notifyApproversOfPRSubmission } from '@/lib/requisition-emails';
+import { notifyApproversOfPRSubmission, notifyPRApproved, notifyPRRejected } from '@/lib/requisition-emails';
 
 interface RequisitionLine {
   id: string;
@@ -108,6 +108,7 @@ export default function RequisitionDetail() {
         .eq('status', 'pending_approval');
       if (error) throw error;
       toast.success('Requisition approved');
+      if (requisition) notifyPRApproved(requisition).catch(() => {});
       fetchData();
       if (sendDirect) {
         setConvertSendDirect(true);
@@ -138,6 +139,7 @@ export default function RequisitionDetail() {
         .eq('status', 'pending_approval');
       if (error) throw error;
       toast.success('Requisition returned to draft for corrections');
+      if (requisition) notifyPRRejected(requisition, reason || 'Returned for corrections').catch(() => {});
       fetchData();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to reject');
