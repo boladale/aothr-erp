@@ -71,9 +71,21 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
           await supabase.from('vendor_users' as any).update({ signature_url: signatureUrl }).eq('user_id', userId);
         }
       }
+      return { poId, action };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success('Purchase order response recorded.');
+      if (res?.action === 'accepted') {
+        import('@/lib/procurement-emails').then(({ notifyInternal, PROCUREMENT_TEAM }) =>
+          notifyInternal('po_acknowledged', {
+            roles: PROCUREMENT_TEAM,
+            subject: 'Purchase order acknowledged by vendor',
+            message: 'A vendor has accepted and signed a purchase order in the vendor portal.',
+            path: `/purchase-orders/${res.poId}`,
+            idempotencyKey: `po-ack-${res.poId}`,
+          }),
+        ).catch(() => {});
+      }
       setActionDialog({ open: false, po: null, action: 'accepted' });
       setNotes('');
       queryClient.invalidateQueries({ queryKey: ['vendor-po-acks'] });
