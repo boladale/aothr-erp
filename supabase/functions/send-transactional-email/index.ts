@@ -170,6 +170,7 @@ Deno.serve(async (req) => {
       message_id: messageId,
       template_name: templateName,
       recipient_email: effectiveRecipient,
+      organization_id: organizationId,
       status: 'suppressed',
     })
 
@@ -203,6 +204,7 @@ Deno.serve(async (req) => {
       message_id: messageId,
       template_name: templateName,
       recipient_email: effectiveRecipient,
+      organization_id: organizationId,
       status: 'failed',
       error_message: 'Failed to look up unsubscribe token',
     })
@@ -287,6 +289,7 @@ Deno.serve(async (req) => {
       message_id: messageId,
       template_name: templateName,
       recipient_email: effectiveRecipient,
+      organization_id: organizationId,
       status: 'suppressed',
       error_message:
         'Unsubscribe token used but email missing from suppressed list',
@@ -323,6 +326,7 @@ Deno.serve(async (req) => {
     message_id: messageId,
     template_name: templateName,
     recipient_email: effectiveRecipient,
+    organization_id: organizationId,
     status: 'pending',
   })
 
@@ -341,6 +345,7 @@ Deno.serve(async (req) => {
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      organization_id: organizationId,
     },
   })
 
@@ -355,6 +360,7 @@ Deno.serve(async (req) => {
       message_id: messageId,
       template_name: templateName,
       recipient_email: effectiveRecipient,
+      organization_id: organizationId,
       status: 'failed',
       error_message: 'Failed to enqueue email',
     })
