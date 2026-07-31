@@ -1929,7 +1929,7 @@ export type Database = {
           extra_emails: Json
           id: string
           module: string
-          organization_id: string | null
+          organization_id: string
           recipient_roles: Json
           template_name: string
           updated_at: string
@@ -1943,7 +1943,7 @@ export type Database = {
           extra_emails?: Json
           id?: string
           module: string
-          organization_id?: string | null
+          organization_id: string
           recipient_roles?: Json
           template_name?: string
           updated_at?: string
@@ -1957,7 +1957,7 @@ export type Database = {
           extra_emails?: Json
           id?: string
           module?: string
-          organization_id?: string | null
+          organization_id?: string
           recipient_roles?: Json
           template_name?: string
           updated_at?: string
