@@ -32,6 +32,7 @@ export default function EmailEvents() {
   const [dirty, setDirty] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [emailDrafts, setEmailDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!user) return;
@@ -169,13 +170,22 @@ export default function EmailEvents() {
                     <div className="mt-2">
                       <Input
                         placeholder="Additional recipients (comma-separated emails)"
-                        value={(r.extra_emails || []).join(', ')}
-                        onChange={(e) =>
+                        value={emailDrafts[r.id] ?? (r.extra_emails || []).join(', ')}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          setEmailDrafts((d) => ({ ...d, [r.id]: raw }));
                           update(r.id, {
-                            extra_emails: e.target.value
+                            extra_emails: raw
                               .split(',')
                               .map((x) => x.trim())
                               .filter(Boolean),
+                          });
+                        }}
+                        onBlur={() =>
+                          setEmailDrafts((d) => {
+                            const next = { ...d };
+                            delete next[r.id];
+                            return next;
                           })
                         }
                         disabled={!r.enabled}
