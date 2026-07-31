@@ -120,6 +120,29 @@ Deno.serve(async (req) => {
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+  // Resolve the organization that triggered this email so the Email Monitor
+  // stays isolated per tenant. Derived from the caller's JWT — never trusted
+  // from the request body.
+  let organizationId: string | null = null
+  try {
+    const authHeader = req.headers.get('Authorization') || ''
+    const jwt = authHeader.replace(/^Bearer\s+/i, '')
+    if (jwt) {
+      const { data: userData } = await supabase.auth.getUser(jwt)
+      if (userData?.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', userData.user.id)
+          .maybeSingle()
+        organizationId = profile?.organization_id ?? null
+      }
+    }
+  } catch (_e) {
+    organizationId = null
+  }
+
+
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
     .from('suppressed_emails')
