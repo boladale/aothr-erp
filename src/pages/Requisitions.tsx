@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { RequisitionFormDialog } from '@/components/requisitions/RequisitionFormDialog';
+import { notifyApproversOfPRSubmission } from '@/lib/requisition-emails';
 
 interface RequisitionRow {
   id: string;
@@ -56,8 +57,13 @@ export default function Requisitions() {
     mutationFn: async (req: RequisitionRow) => {
       const { error } = await supabase.from('requisitions').update({ status: 'pending_approval', submitted_at: new Date().toISOString() }).eq('id', req.id);
       if (error) throw error;
+      return req;
     },
-    onSuccess: () => { toast.success('Submitted for approval'); invalidate(); },
+    onSuccess: (req) => {
+      toast.success('Submitted for approval');
+      notifyApproversOfPRSubmission(req).catch((e) => console.error('pr_submitted email failed', e));
+      invalidate();
+    },
     onError: (e: any) => toast.error(e?.message || 'Failed to submit'),
   });
   const approveMutation = useMutation({

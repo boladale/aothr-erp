@@ -15,6 +15,7 @@ import { ConvertToPODialog } from '@/components/requisitions/ConvertToPODialog';
 import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
 import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
 import { formatCurrency } from '@/lib/utils';
+import { notifyApproversOfPRSubmission } from '@/lib/requisition-emails';
 
 interface RequisitionLine {
   id: string;
@@ -86,6 +87,9 @@ export default function RequisitionDetail() {
         .eq('id', id!);
       if (error) throw error;
       toast.success('Submitted for approval');
+      if (requisition) {
+        notifyApproversOfPRSubmission(requisition).catch((e) => console.error('pr_submitted email failed', e));
+      }
       fetchData();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to submit');
