@@ -7855,6 +7855,7 @@ export type Database = {
         Returns: undefined
       }
       run_three_way_match: { Args: { p_invoice_id: string }; Returns: string }
+      seed_default_email_events: { Args: { p_org_id: string }; Returns: number }
       select_rfp_runner_up: { Args: { p_rfp_id: string }; Returns: string }
       set_org_boldsign_settings: {
         Args: { _api_key: string; _enabled: boolean; _org_id: string }
