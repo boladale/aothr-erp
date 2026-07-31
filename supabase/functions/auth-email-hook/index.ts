@@ -290,6 +290,7 @@ async function handleWebhook(req: Request): Promise<Response> {
       message_id: messageId,
       template_name: emailType,
       recipient_email: payload.data.email,
+      organization_id: organizationId,
       status: 'failed',
       error_message: 'Failed to enqueue email',
     })
