@@ -51,3 +51,34 @@ export async function notifyApproversOfPRSubmission(req: ReqLike) {
     },
   });
 }
+
+/** Notify the requester (and procurement team) that a requisition was approved. */
+export async function notifyPRApproved(req: ReqLike & { requester_id?: string | null }) {
+  const { notifyInternal, PROCUREMENT_TEAM } = await import('@/lib/procurement-emails');
+  return notifyInternal('pr_approved', {
+    roles: PROCUREMENT_TEAM,
+    userIds: [req.requester_id],
+    subject: `Requisition ${req.req_number} approved`,
+    message: `Purchase Requisition ${req.req_number}${req.department ? ` (${req.department})` : ''} has been approved and can now be converted to an RFQ or Purchase Order.`,
+    path: `/requisitions/${req.id}`,
+    idempotencyKey: `pr-approved-${req.id}`,
+    templateData: { reqNumber: req.req_number },
+  });
+}
+
+/** Notify the requester that a requisition was returned/rejected. */
+export async function notifyPRRejected(
+  req: ReqLike & { requester_id?: string | null },
+  reason: string,
+) {
+  const { notifyInternal, PROCUREMENT_TEAM } = await import('@/lib/procurement-emails');
+  return notifyInternal('pr_rejected', {
+    roles: PROCUREMENT_TEAM,
+    userIds: [req.requester_id],
+    subject: `Requisition ${req.req_number} returned for corrections`,
+    message: `Purchase Requisition ${req.req_number} was not approved. Reason: ${reason || 'Returned for corrections'}. Please review and resubmit.`,
+    path: `/requisitions/${req.id}`,
+    idempotencyKey: `pr-rejected-${req.id}-${Date.now()}`,
+    templateData: { reqNumber: req.req_number, reason },
+  });
+}
