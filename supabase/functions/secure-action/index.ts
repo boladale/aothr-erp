@@ -98,7 +98,10 @@ Deno.serve(async (req) => {
           .in('id', ids)
           .eq('status', 'pending_approval')
           .select('id')
-        if (error) return jsonResponse({ error: error.message }, 400)
+        if (error) {
+          console.error('po_approve update failed', JSON.stringify(error))
+          return jsonResponse({ error: error.message, details: error.details, hint: error.hint }, 400)
+        }
         if (!data?.length) return jsonResponse({ error: 'No POs in pending_approval status' }, 409)
         // Record approval log entries
         await admin.from('po_approvals').insert(
