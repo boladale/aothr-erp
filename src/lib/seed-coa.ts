@@ -55,7 +55,18 @@ const BASIC_COA: SeedAccount[] = [
   { account_code: '5900', account_name: 'Other Expenses', account_type: 'expense', is_header: false, normal_balance: 'debit', description: null, parent_code: '5000' },
 ];
 
+/** Seeds the standard set of email notification events for an organization. */
+export async function seedDefaultEmailEvents(organizationId: string): Promise<string | null> {
+  const { error } = await (supabase as any).rpc('seed_default_email_events', {
+    p_org_id: organizationId,
+  });
+  return error ? error.message : null;
+}
+
 export async function seedBasicChartOfAccounts(organizationId: string): Promise<string | null> {
+  // Default email notification events are part of initial setup
+  await seedDefaultEmailEvents(organizationId);
+
   // Check if COA already exists for this org
   const { count } = await supabase
     .from('gl_accounts')
@@ -65,6 +76,7 @@ export async function seedBasicChartOfAccounts(organizationId: string): Promise<
   if (count && count > 0) {
     return 'Chart of Accounts already exists for this organization.';
   }
+
 
   // Insert in order: headers first (no parent), then children
   // We need to resolve parent_code -> parent_id
