@@ -7842,6 +7842,18 @@ export type Database = {
         Args: { _cutover: string; _lines: Json }
         Returns: string
       }
+      queue_event_email: {
+        Args: {
+          p_action_url: string
+          p_event_key: string
+          p_message: string
+          p_org: string
+          p_roles?: string[]
+          p_subject: string
+          p_user_ids?: string[]
+        }
+        Returns: number
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
