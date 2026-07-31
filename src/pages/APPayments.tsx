@@ -208,6 +208,15 @@ export default function APPayments() {
     onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ['ap_payments'] });
       toast({ title: 'Payment posted', description: `${vars.number} posted and GL entry created.` });
+      import('@/lib/procurement-emails').then(({ notifyInternal, FINANCE_STAFF, PROCUREMENT_TEAM }) =>
+        notifyInternal('payment_made', {
+          roles: Array.from(new Set([...FINANCE_STAFF, ...PROCUREMENT_TEAM])),
+          subject: `Vendor payment ${vars.number} posted`,
+          message: `Vendor payment ${vars.number} has been posted and the general ledger entry created.`,
+          path: '/ap-payments',
+          idempotencyKey: `payment-posted-${vars.id}`,
+        }),
+      ).catch(() => {});
     },
     onError: (err: any) => toast({ title: 'Post failed', description: err.message, variant: 'destructive' }),
   });
