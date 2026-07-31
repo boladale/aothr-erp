@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
         const { data: profile } = await supabase
           .from('profiles')
           .select('organization_id')
-          .eq('id', userData.user.id)
+          .eq('user_id', userData.user.id)
           .maybeSingle()
         organizationId = profile?.organization_id ?? null
       }
