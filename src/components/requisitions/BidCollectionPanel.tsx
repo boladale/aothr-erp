@@ -171,6 +171,15 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       if (error) throw error;
 
       toast.success('Vendor bid saved');
+      import('@/lib/procurement-emails').then(({ notifyInternal, PROCUREMENT_TEAM }) =>
+        notifyInternal('bid_received', {
+          roles: PROCUREMENT_TEAM,
+          subject: 'Vendor bid received',
+          message: 'A vendor bid has been recorded for a requisition under bid collection. Review the bids and recommend a vendor.',
+          path: `/requisitions/${requisitionId}`,
+          idempotencyKey: `bid-received-${bidRequest.id}-${selectedVendorId}`,
+        }),
+      ).catch(() => {});
       setAddDialogOpen(false);
       fetchData();
     } catch (err: unknown) {
