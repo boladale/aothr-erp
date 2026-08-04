@@ -157,10 +157,15 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("admin-manage-user error:", err.message);
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error("admin-manage-user error:", err?.message);
+    const raw = String(err?.message || "");
+    const msg = /foreign key|still referenced/i.test(raw)
+      ? "This user is still linked to documents in the system, so the account cannot be removed. Use \"Deactivate\" instead to block sign-in while keeping the records intact."
+      : raw || "The user could not be updated. Please refresh and try again.";
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
+
