@@ -146,7 +146,7 @@ export default function FixedAssets() {
       let ok = 0, fail = 0; const errs: string[] = [];
       for (const a of active) {
         const { error } = await supabase.rpc('post_asset_depreciation' as any, { p_asset_id: a.id, p_period_date: depDate });
-        if (error) { fail++; errs.push(`${a.asset_code}: ${error.message}`); } else ok++;
+        if (error) { fail++; errs.push(`${a.asset_code}: ${friendlyError(error)}`); } else ok++;
       }
       return { ok, fail, errs };
     },

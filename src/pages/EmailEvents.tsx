@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { friendlyError } from "@/lib/friendly-error";
 
 type Setting = {
   id: string;
@@ -108,7 +109,7 @@ export default function EmailEvents() {
         },
       },
     });
-    if (error) toast.error(`Test failed: ${error.message}`);
+    if (error) toast.error(`Test email could not be sent: ${friendlyError(error, "the email service did not respond. Check the email settings and try again.")}`);
     else toast.success(`Test email queued to ${testEmail}`);
   };
 

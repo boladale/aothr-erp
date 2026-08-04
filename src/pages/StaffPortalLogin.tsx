@@ -45,7 +45,7 @@ export default function StaffPortalLogin() {
     const { error } = await signIn(form.email, form.password);
     setLoading(false);
     if (error) {
-      toast.error(error.message === 'Invalid login credentials' ? 'Invalid email or password' : error.message);
+      toast.error(friendlyError(error, 'Sign-in failed. Please check your email and password and try again.'));
     }
   };
 

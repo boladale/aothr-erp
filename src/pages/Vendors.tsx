@@ -17,6 +17,7 @@ import type { Vendor, VendorStatus } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { VendorFormDialog } from '@/components/vendors/VendorFormDialog';
 import { VendorInviteDialog } from '@/components/vendors/VendorInviteDialog';
+import { friendlyError } from "@/lib/friendly-error";
 
 type VendorWithBlacklist = Vendor & {
   blacklist_status?: 'none' | 'pending' | 'approved' | 'rejected';
@@ -246,8 +247,7 @@ export default function Vendors() {
       toast.success('Vendor deleted');
       fetchVendors();
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Failed to delete vendor';
-      toast.error(msg);
+      toast.error(friendlyError(error, 'The vendor could not be deleted. It may still be linked to purchase orders or invoices.'));
     }
   };
 

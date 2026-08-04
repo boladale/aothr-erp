@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
 import { toast } from 'sonner';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface Props {
   userId: string;
@@ -20,7 +21,7 @@ export function VendorProfilePanel({ userId, vendorUser, onUpdated }: Props) {
       .update({ signature_url: url } as any)
       .eq('user_id', userId);
     if (error) {
-      toast.error('Failed to save signature: ' + error.message);
+      toast.error(friendlyError(error, "Your signature could not be saved. Please try uploading it again."));
       return;
     }
     setSigUrl(url);

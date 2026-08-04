@@ -88,7 +88,7 @@ export default function SystemHealthCheck() {
         if (error) throw error;
         update('db', 'pass', 'Database responds.');
       } catch (e: any) {
-        update('db', 'fail', `DB error: ${e.message}`, 'Check Cloud status in Backend panel.');
+        update('db', 'fail', friendlyError(e, 'The database could not be reached.'), 'Check Cloud status in Backend panel.');
       }
 
       // Auth
