@@ -13,6 +13,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus, Check, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { friendlyError } from '@/lib/friendly-error';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -86,7 +87,7 @@ export default function PayrollRuns() {
       setOpen(false);
       toast.success('Payroll run created with employee lines');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const approveMutation = useMutation({
@@ -101,7 +102,7 @@ export default function PayrollRuns() {
       queryClient.invalidateQueries({ queryKey: ['payroll-runs'] });
       toast.success('Payroll approved');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   return (

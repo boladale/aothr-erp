@@ -15,6 +15,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { format, differenceInBusinessDays } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function SelfServiceLeave() {
   const { user, organizationId } = useAuth();
@@ -62,7 +63,7 @@ export default function SelfServiceLeave() {
       setForm({ leave_type_id: '', start_date: '', end_date: '', reason: '' });
       toast.success('Leave request submitted');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   if (!employee) return <AppLayout><div className="page-container py-8 text-center text-muted-foreground">No employee record linked to your account.</div></AppLayout>;

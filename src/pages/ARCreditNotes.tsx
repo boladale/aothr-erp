@@ -18,6 +18,7 @@ import { Plus, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Customer { id: string; code: string; name: string; }
 interface ARInvoice { id: string; invoice_number: string; total_amount: number; }
@@ -90,7 +91,7 @@ export default function ARCreditNotes() {
         customer_id: form.customer_id, invoice_id: form.invoice_id || null,
         credit_date: form.credit_date, subtotal, total_amount: subtotal, reason: form.reason || null,
       }).eq('id', editingCN.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       await supabase.from('ar_credit_note_lines').delete().eq('credit_note_id', editingCN.id);
       await supabase.from('ar_credit_note_lines').insert(lines.map(l => ({
         credit_note_id: editingCN.id, description: l.description,
@@ -103,7 +104,7 @@ export default function ARCreditNotes() {
         credit_note_number: cnNum, customer_id: form.customer_id, invoice_id: form.invoice_id || null,
         credit_date: form.credit_date, subtotal, total_amount: subtotal, reason: form.reason || null, organization_id: organizationId,
       }).select().single();
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       await supabase.from('ar_credit_note_lines').insert(lines.map(l => ({
         credit_note_id: cn.id, description: l.description,
         quantity: parseFloat(l.quantity) || 1, unit_price: parseFloat(l.unit_price) || 0,
@@ -117,7 +118,7 @@ export default function ARCreditNotes() {
 
   const handlePost = async (id: string) => {
     const { error } = await supabase.from('ar_credit_notes').update({ status: 'posted' }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success('Credit note posted to GL');
     fetchAll();
   };

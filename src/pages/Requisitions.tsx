@@ -122,7 +122,7 @@ export default function Requisitions() {
       setSelectedIds([]);
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
   const bulkRejectMutation = useMutation({
     mutationFn: async ({ ids, reason }: { ids: string[]; reason: string }) => {
@@ -141,7 +141,7 @@ export default function Requisitions() {
       setSelectedIds([]);
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
   const bulkProcessing = bulkApproveMutation.isPending || bulkRejectMutation.isPending;
 

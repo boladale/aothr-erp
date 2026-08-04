@@ -24,6 +24,7 @@ import { useOrgBranding } from '@/hooks/useOrgBranding';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface RFPData {
   id: string;
@@ -184,7 +185,7 @@ export default function RFPDetail() {
       return;
     }
     const { error } = await supabase.from('rfps').update({ status: 'published' }).eq('id', rfp.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success('RFQ published and vendors notified');
     fetchData();
   };
@@ -192,7 +193,7 @@ export default function RFPDetail() {
   const handleStartEvaluation = async () => {
     if (!rfp) return;
     const { error } = await supabase.from('rfps').update({ status: 'evaluating' }).eq('id', rfp.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success('Evaluation phase started');
     fetchData();
   };
@@ -222,7 +223,7 @@ export default function RFPDetail() {
       vendor_id: vendorId,
       status: 'invited',
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
 
     // Notify vendor portal users for this vendor
     try {
@@ -265,7 +266,7 @@ export default function RFPDetail() {
         delivery_timeline_days: daysVal,
       })
       .eq('id', proposal.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success('Proposal recorded with quoted amount');
     fetchData();
   };
@@ -277,7 +278,7 @@ export default function RFPDetail() {
       .update({ total_amount: amount, delivery_timeline_days: daysVal })
       .eq('id', proposalId);
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error));
     } else {
       toast.success('Amount saved');
       fetchData();

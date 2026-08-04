@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Loader2, Store, Upload, X, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { friendlyError } from '@/lib/friendly-error';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -172,7 +173,7 @@ export default function VendorPortalLogin() {
 
     // Self-registration
     const { error: signUpError } = await signUp(regForm.email, regForm.password, regForm.contactName);
-    if (signUpError) { setLoading(false); toast.error(signUpError.message); return; }
+    if (signUpError) { setLoading(false); toast.error(friendlyError(signUpError)); return; }
 
     const { error: signInError } = await signIn(regForm.email, regForm.password);
     if (signInError) {
@@ -217,7 +218,7 @@ export default function VendorPortalLogin() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
-    if (error) toast.error(error.message);
+    if (error) toast.error(friendlyError(error));
     else { toast.success('Password reset email sent!'); setForgotMode(false); }
   };
 

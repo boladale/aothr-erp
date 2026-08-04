@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function Attendance() {
   const { organizationId } = useAuth();
@@ -55,7 +56,7 @@ export default function Attendance() {
       setOpen(false);
       toast.success('Attendance recorded');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   return (

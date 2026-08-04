@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Upload, FileText, Loader2, Download } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface ParsedRow {
   date: string;
@@ -131,7 +132,7 @@ export function BankStatementImport({ bankAccountId, bankAccountName, onImported
 
     const { error } = await supabase.from('bank_transactions').insert(inserts as any);
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error));
     } else {
       toast.success(`${rows.length} transactions imported`);
       setOpen(false);

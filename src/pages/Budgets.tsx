@@ -17,6 +17,7 @@ import { formatCurrency } from '@/lib/currency';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function Budgets() {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ export default function Budgets() {
       setForm({ name: '', fiscal_year: new Date().getFullYear() });
       navigate(`/budgets/${b.id}`);
     },
-    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Error', description: friendlyError(e), variant: 'destructive' }),
   });
 
   return (

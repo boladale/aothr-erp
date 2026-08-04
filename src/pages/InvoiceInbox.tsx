@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface VendorInvoice {
   id: string;
@@ -116,7 +117,7 @@ export default function InvoiceInbox() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('Invoice approved — ready to post'); setSelected(null); invalidate(); },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
   const rejectMutation = useMutation({
     mutationFn: async ({ inv, reason }: { inv: VendorInvoice; reason: string }) => {
@@ -124,7 +125,7 @@ export default function InvoiceInbox() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('Invoice returned to vendor'); setSelected(null); invalidate(); },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
   const postMutation = useMutation({
     mutationFn: async (inv: VendorInvoice) => {
@@ -132,7 +133,7 @@ export default function InvoiceInbox() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('Invoice posted to GL'); setSelected(null); invalidate(); },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const approve = (inv: VendorInvoice) => approveMutation.mutate(inv);

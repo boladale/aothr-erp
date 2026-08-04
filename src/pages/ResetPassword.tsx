@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, Building2, KeyRound } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export default function ResetPassword() {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error));
     } else {
       toast.success('Password updated successfully!');
       navigate('/');

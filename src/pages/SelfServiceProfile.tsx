@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Save } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function SelfServiceProfile() {
   const { user } = useAuth();
@@ -55,7 +56,7 @@ export default function SelfServiceProfile() {
       queryClient.invalidateQueries({ queryKey: ['my-employee-full'] });
       toast.success('Profile updated');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   if (!employee) return <AppLayout><div className="page-container py-8 text-center text-muted-foreground">No employee record linked to your account.</div></AppLayout>;

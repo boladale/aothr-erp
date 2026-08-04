@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function LeaveManagement() {
   const { user, organizationId } = useAuth();
@@ -50,7 +51,7 @@ export default function LeaveManagement() {
       setTypeForm({ name: '', default_days: '20', is_paid: true });
       toast.success('Leave type created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const actionMutation = useMutation({
@@ -89,7 +90,7 @@ export default function LeaveManagement() {
       queryClient.invalidateQueries({ queryKey: ['all-leave-requests'] });
       toast.success('Leave request updated');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const pending = leaveRequests.filter((r: any) => r.status === 'pending');

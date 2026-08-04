@@ -72,7 +72,7 @@ export default function FiscalPeriods() {
       status: newStatus as any,
       ...(newStatus === 'closed' ? { closed_at: new Date().toISOString() } : {}),
     }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Period ${newStatus}`);
     fetchPeriods();
   };

@@ -7,6 +7,7 @@ import { RefreshCw, Download, PenLine, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { downloadSignedPdf, refreshSignatureStatus, SignableDocumentType } from '@/lib/boldsign';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   documentType: SignableDocumentType;
@@ -45,13 +46,13 @@ export function SignatureHistoryPanel({ documentType, documentId }: Props) {
   const refresh = async (id: string) => {
     setRefreshing(id);
     try { await refreshSignatureStatus(id); await load(); toast.success('Status refreshed'); }
-    catch (err: any) { toast.error(err.message); }
+    catch (err: any) { toast.error(friendlyError(err)); }
     finally { setRefreshing(null); }
   };
 
   const download = async (path: string, number?: string) => {
     try { await downloadSignedPdf(path, `signed-${number || 'document'}.pdf`); }
-    catch (err: any) { toast.error(err.message); }
+    catch (err: any) { toast.error(friendlyError(err)); }
   };
 
   if (loading) return null;

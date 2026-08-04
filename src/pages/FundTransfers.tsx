@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Plus, Send, ArrowRightLeft, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface BankAccount { id: string; account_code: string; account_name: string; current_balance: number; }
 interface FundTransfer {
@@ -81,7 +82,7 @@ export default function FundTransfers() {
         from_bank_account_id: form.from_bank_account_id, to_bank_account_id: form.to_bank_account_id,
         amount, transfer_date: form.transfer_date, reference: form.reference || null, notes: form.notes || null,
       }).eq('id', editingTransfer.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       toast.success('Transfer updated');
     } else {
       const txNum = await getNextTransactionNumber(organizationId!, 'FT', 'FT');
@@ -90,7 +91,7 @@ export default function FundTransfers() {
         to_bank_account_id: form.to_bank_account_id, amount,
         transfer_date: form.transfer_date, reference: form.reference || null, notes: form.notes || null, organization_id: organizationId,
       });
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       toast.success('Transfer created');
     }
     setDialogOpen(false); resetForm(); fetchAll();
@@ -98,7 +99,7 @@ export default function FundTransfers() {
 
   const handlePost = async (id: string) => {
     const { error } = await supabase.from('fund_transfers').update({ status: 'posted' }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success('Transfer posted to GL'); fetchAll();
   };
 

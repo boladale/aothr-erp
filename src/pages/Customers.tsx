@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { Plus, Search, Users } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Customer {
   id: string;
@@ -66,7 +67,7 @@ export default function Customers() {
       setDialogOpen(false);
       setForm({ code: '', name: '', email: '', phone: '', address: '', city: '', country: '', payment_terms: '30', credit_limit: '0' });
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const filtered = customers.filter(c =>

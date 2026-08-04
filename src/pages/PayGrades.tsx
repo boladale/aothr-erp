@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Settings, Trash2 } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function PayGrades() {
   const { organizationId } = useAuth();
@@ -58,7 +59,7 @@ export default function PayGrades() {
       setForm({ grade_name: '', basic_salary: '', description: '' });
       toast.success('Pay grade created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const addComp = useMutation({
@@ -72,7 +73,7 @@ export default function PayGrades() {
       if (error) throw error;
     },
     onSuccess: () => { setNewComp({ salary_component_id: '', rate: '' }); refetchGC(); toast.success('Component added'); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const removeComp = useMutation({

@@ -143,7 +143,7 @@ export default function BankReconciliation() {
       organization_id: organizationId,
     }).select().single();
 
-    if (recErr) { toast.error(recErr.message); return; }
+    if (recErr) { toast.error(friendlyError(recErr)); return; }
 
     // Mark checked transactions as reconciled
     if (checkedTxns.size > 0) {

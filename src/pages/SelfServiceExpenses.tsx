@@ -14,6 +14,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus, Send } from 'lucide-react';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function SelfServiceExpenses() {
   const { user, organizationId } = useAuth();
@@ -69,7 +70,7 @@ export default function SelfServiceExpenses() {
       setForm({ description: '', lines: [{ description: '', amount: '', category: '', expense_date: new Date().toISOString().split('T')[0] }] });
       toast.success('Expense claim submitted');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const addLine = () => setForm(f => ({ ...f, lines: [...f.lines, { description: '', amount: '', category: '', expense_date: new Date().toISOString().split('T')[0] }] }));

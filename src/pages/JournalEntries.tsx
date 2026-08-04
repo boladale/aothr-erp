@@ -135,7 +135,7 @@ export default function JournalEntries() {
       resetForm();
       toast.success(msg);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const handleSave = (opts?: { draft?: boolean }) => {
@@ -156,7 +156,7 @@ export default function JournalEntries() {
       queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
       toast.success('Journal entry posted');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const handlePost = (id: string) => postMutation.mutate(id);
 
@@ -197,7 +197,7 @@ export default function JournalEntries() {
       queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
       toast.success(`Reversal entry ${num} posted`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const handleReverse = (entry: any) => {
     if (!window.confirm(`Reverse posted entry ${entry.entry_number}? A new offsetting posted entry will be created dated today.`)) return;
@@ -215,7 +215,7 @@ export default function JournalEntries() {
       setSelectedIds([]);
       toast.success(`${count} entries posted`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const bulkProcessing = bulkPostMutation.isPending;
 

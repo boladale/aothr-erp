@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
 import {
+import { friendlyError } from '@/lib/friendly-error';
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -226,7 +227,7 @@ export default function ChartOfAccounts() {
         description: form.description || null,
         normal_balance: form.normal_balance,
       }).eq('id', editingAccount.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       toast.success('Account updated');
     } else {
       const { error } = await supabase.from('gl_accounts').insert({
@@ -239,7 +240,7 @@ export default function ChartOfAccounts() {
         normal_balance: form.normal_balance,
         status: 'draft',
       });
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       toast.success('Account created as draft');
     }
     setDialogOpen(false);
@@ -248,7 +249,7 @@ export default function ChartOfAccounts() {
 
   const handleApprove = async (account: GLAccount) => {
     const { error } = await supabase.from('gl_accounts').update({ status: 'approved' }).eq('id', account.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Account ${account.account_code} approved`);
     fetchAccounts();
   };
@@ -256,7 +257,7 @@ export default function ChartOfAccounts() {
   const handleToggleActive = async (account: GLAccount) => {
     const newActive = !account.is_active;
     const { error } = await supabase.from('gl_accounts').update({ is_active: newActive }).eq('id', account.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Account ${account.account_code} ${newActive ? 'enabled' : 'disabled'}`);
     fetchAccounts();
   };
@@ -265,7 +266,7 @@ export default function ChartOfAccounts() {
     if (!deleteAccount) return;
     // Check for transactions via RPC
     const { data: hasTxns, error: rpcErr } = await supabase.rpc('gl_account_has_transactions', { p_account_id: deleteAccount.id });
-    if (rpcErr) { toast.error(rpcErr.message); return; }
+    if (rpcErr) { toast.error(friendlyError(rpcErr)); return; }
     if (hasTxns) {
       toast.error(`Cannot delete account ${deleteAccount.account_code}: it has existing transactions. You can disable it instead.`);
       setDeleteAccount(null);
@@ -279,7 +280,7 @@ export default function ChartOfAccounts() {
       return;
     }
     const { error } = await supabase.from('gl_accounts').delete().eq('id', deleteAccount.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Account ${deleteAccount.account_code} deleted`);
     setDeleteAccount(null);
     fetchAccounts();
