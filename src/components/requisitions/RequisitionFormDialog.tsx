@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ClipboardList } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface Item {
   id: string;
@@ -234,7 +235,7 @@ export function RequisitionFormDialog({ open, onOpenChange, onSuccess, editRequi
       setLines([{ item_id: '', quantity: 1, estimated_unit_cost: 0, specifications: '' }]);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : `Failed to ${isEdit ? 'update' : 'create'} requisition`);
+      toast.error(friendlyError(error, `Failed to ${isEdit ? 'update' : 'create'} requisition`));
     } finally {
       setSaving(false);
     }

@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Award, Package, Clock, Truck } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface RFPItem {
   id: string;
@@ -191,7 +192,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       if (createdPoIdForRollback) {
         await supabase.from('purchase_orders').delete().eq('id', createdPoIdForRollback);
       }
-      toast.error(error instanceof Error ? error.message : 'Failed to create PO');
+      toast.error(friendlyError(error, 'Failed to create PO'));
     } finally {
       setSaving(false);
     }

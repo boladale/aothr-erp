@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface ReqLine {
   id: string;
@@ -134,7 +135,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       setBidRequest(data as BidRequest);
       toast.success('Bid collection started');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to start bid collection');
+      toast.error(friendlyError(err, 'Failed to start bid collection'));
     }
   };
 
@@ -183,7 +184,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       setAddDialogOpen(false);
       fetchData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save bid');
+      toast.error(friendlyError(err, 'Failed to save bid'));
     } finally {
       setSaving(false);
     }
@@ -246,7 +247,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       setInviteDialogOpen(false);
       fetchData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to send invites');
+      toast.error(friendlyError(err, 'Failed to send invites'));
     } finally {
       setInviting(false);
     }
@@ -389,7 +390,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       w.document.write(html);
       w.document.close();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to generate PDF');
+      toast.error(friendlyError(err, 'Failed to generate PDF'));
     }
   };
 
@@ -412,7 +413,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       onRecommendedVendor?.(vendorId);
       fetchData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to recommend');
+      toast.error(friendlyError(err, 'Failed to recommend'));
     }
   };
 
@@ -428,7 +429,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       toast.success('Vendor bid removed');
       fetchData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to remove');
+      toast.error(friendlyError(err, 'Failed to remove'));
     }
   };
 
@@ -443,7 +444,7 @@ export function BidCollectionPanel({ requisitionId, lines, onRecommendedVendor }
       toast.success('Bidding closed');
       fetchData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to close bidding');
+      toast.error(friendlyError(err, 'Failed to close bidding'));
     }
   };
 

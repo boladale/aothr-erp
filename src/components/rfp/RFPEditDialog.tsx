@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
@@ -155,7 +156,7 @@ export function RFPEditDialog({
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update RFQ');
+      toast.error(friendlyError(error, 'Failed to update RFQ'));
     } finally {
       setSubmitting(false);
     }

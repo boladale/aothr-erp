@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { friendlyError } from "@/lib/friendly-error";
 
 export interface DraftDeleteOptions {
   /** Parent table name (cast to any internally to bypass type narrowing). */
@@ -43,7 +44,7 @@ export async function deleteDraftTransaction(opts: DraftDeleteOptions): Promise<
     toast.success(`${opts.label} deleted`);
     return true;
   } catch (err: any) {
-    toast.error(err?.message || `Failed to delete ${opts.label}`);
+    toast.error(friendlyError(err, `Failed to delete ${opts.label}`));
     return false;
   }
 }

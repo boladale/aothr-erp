@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import { PaymentTermsField } from '@/components/shared/PaymentTermsField';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface Item { id: string; code: string; name: string; }
 interface Service { id: string; code: string; name: string; }
@@ -176,7 +177,7 @@ export function RFPFormDialog({ open, onOpenChange, onSuccess, userId, organizat
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create RFQ');
+      toast.error(friendlyError(error, 'Failed to create RFQ'));
     } finally {
       setSubmitting(false);
     }
