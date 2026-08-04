@@ -1,3 +1,4 @@
+import { friendlyError } from '@/lib/friendly-error';
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +16,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-import { friendlyError } from '@/lib/friendly-error';
   Plus, ArrowRight, Pencil, Trash2, CheckCircle, XCircle,
   GitBranch, Circle, ChevronDown, ChevronUp,
 } from "lucide-react";
