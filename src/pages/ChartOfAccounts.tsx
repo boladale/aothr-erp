@@ -1,3 +1,4 @@
+import { friendlyError } from '@/lib/friendly-error';
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +22,6 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
 import {
-import { friendlyError } from '@/lib/friendly-error';
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
