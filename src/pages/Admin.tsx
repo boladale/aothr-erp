@@ -125,14 +125,17 @@ export default function Admin() {
       const { data, error } = await supabase.functions.invoke('admin-manage-user', {
         body: { action, target_user_id: userId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const msg = await extractEdgeError(error, data);
+        throw new Error(msg || `Failed to ${action} user`);
+      }
       toast.success(data.message);
       fetchData();
     } catch (err: any) {
-      toast.error(err.message || `Failed to ${action} user`);
+      toast.error(friendlyError(err, `Failed to ${action} user`));
     }
   };
+
 
   const handleRemoveRole = async (userId: string, role: AppRole) => {
     try {
