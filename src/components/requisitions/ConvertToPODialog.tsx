@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Award } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface ReqLine {
   id: string;
@@ -277,7 +278,7 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
       onOpenChange(false);
       onSuccess();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to convert');
+      toast.error(friendlyError(error, 'Failed to convert'));
     } finally {
       setSaving(false);
     }

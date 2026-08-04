@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface Project {
   id: string;
@@ -37,7 +38,7 @@ export default function ProjectProfitability() {
           .order('project_code');
         if (error) throw error;
         setProjects((data || []) as Project[]);
-      } catch { toast.error('Failed to load projects'); }
+      } catch (err) { toast.error(friendlyError(err, 'Failed to load projects. Please refresh and try again.')); }
       finally { setLoading(false); }
     };
     fetch();

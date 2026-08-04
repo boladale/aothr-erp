@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, FileSearch } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface AuditData {
   requisition: any;
@@ -109,7 +110,7 @@ export default function ProcurementAudit() {
         invoices: invs,
       });
     } catch (e) {
-      toast.error('Failed to fetch audit data');
+      toast.error(friendlyError(e, 'Failed to fetch audit data. Please refresh and try again.'));
     } finally { setLoading(false); }
   };
 

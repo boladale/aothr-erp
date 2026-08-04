@@ -90,7 +90,7 @@ export default function PurchaseOrderDetail() {
       notifyApproversOfPOSubmission(po).catch((e) => console.error('po_submitted email failed', e));
       fetchPO();
     } catch (error) {
-      toast.error('Failed to submit');
+      toast.error(friendlyError(error, 'Failed to submit. Please refresh and try again.'));
     } finally {
       setActionLoading(false);
     }
@@ -161,7 +161,7 @@ export default function PurchaseOrderDetail() {
       toast.success('PO returned to draft for corrections');
       fetchPO();
     } catch (error) {
-      toast.error('Failed to reject');
+      toast.error(friendlyError(error, 'Failed to reject. Please refresh and try again.'));
     } finally {
       setActionLoading(false);
     }
@@ -182,7 +182,7 @@ export default function PurchaseOrderDetail() {
       toast.success('PO marked as sent to vendor');
       fetchPO();
     } catch (error) {
-      toast.error('Failed to send');
+      toast.error(friendlyError(error, 'Failed to send. Please refresh and try again.'));
     } finally {
       setActionLoading(false);
     }
@@ -207,7 +207,7 @@ export default function PurchaseOrderDetail() {
       toast.success('PO closed successfully');
       fetchPO();
     } catch (error) {
-      toast.error('Failed to close PO');
+      toast.error(friendlyError(error, 'Failed to close PO. Please refresh and try again.'));
     }
   };
 

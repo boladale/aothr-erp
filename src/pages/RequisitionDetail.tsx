@@ -93,7 +93,7 @@ export default function RequisitionDetail() {
       }
       fetchData();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to submit');
+      toast.error(friendlyError(error, 'Failed to submit'));
     }
   };
 
@@ -116,7 +116,7 @@ export default function RequisitionDetail() {
         setConvertOpen(true);
       }
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to approve');
+      toast.error(friendlyError(error, 'Failed to approve'));
     }
   };
 
@@ -143,7 +143,7 @@ export default function RequisitionDetail() {
       if (requisition) notifyPRRejected(requisition, reason || 'Returned for corrections').catch(() => {});
       fetchData();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject');
+      toast.error(friendlyError(error, 'Failed to reject'));
     }
   };
 

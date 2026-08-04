@@ -144,7 +144,7 @@ export default function VendorPortalLogin() {
     setLoading(true);
     const { error } = await signIn(loginForm.email, loginForm.password);
     setLoading(false);
-    if (error) toast.error(error.message === 'Invalid login credentials' ? 'Invalid email or password' : error.message);
+    if (error) toast.error(friendlyError(error, 'Sign-in failed. Please check your email and password and try again.'));
   };
 
   const handleRegister = async (e: React.FormEvent) => {

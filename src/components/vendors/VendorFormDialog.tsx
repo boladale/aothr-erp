@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface VendorFormDialogProps {
   open: boolean;
@@ -214,8 +215,7 @@ export function VendorFormDialog({ open, onOpenChange, onSuccess, userId, editVe
       resetForm();
       onSuccess();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save vendor';
-      toast.error(message);
+      toast.error(friendlyError(error, 'The vendor could not be saved. Please check the required fields and try again.'));
     } finally {
       setSaving(false);
       setUploadingDocs(false);

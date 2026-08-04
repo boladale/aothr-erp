@@ -317,7 +317,7 @@ export default function RFPDetail() {
       toast.success('Scores saved');
       fetchData();
     } catch (error) {
-      toast.error('Failed to save scores');
+      toast.error(friendlyError(error, 'Failed to save scores. Please refresh and try again.'));
     }
   };
 
@@ -348,7 +348,7 @@ export default function RFPDetail() {
       toast.success(`Awarded to ${proposal.vendors?.name}`);
       fetchData();
     } catch (error) {
-      toast.error('Failed to award RFQ');
+      toast.error(friendlyError(error, 'Failed to award RFQ. Please refresh and try again.'));
     }
   };
 

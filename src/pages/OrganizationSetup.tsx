@@ -76,7 +76,7 @@ export default function OrganizationSetup() {
         .eq('user_id', user.id);
 
       if (profileError) {
-        toast.error('Failed to link profile to organization');
+        toast.error(friendlyError(profileError, 'Failed to link profile to organization. Please refresh and try again.'));
         return;
       }
 
@@ -102,7 +102,7 @@ export default function OrganizationSetup() {
       toast.success('Organization created! You are now the admin.');
       navigate('/');
     } catch (err) {
-      toast.error('Something went wrong');
+      toast.error(friendlyError(err, 'Something went wrong. Please refresh and try again.'));
     } finally {
       setLoading(false);
     }
@@ -140,7 +140,7 @@ export default function OrganizationSetup() {
         .eq('user_id', user.id);
 
       if (profileError) {
-        toast.error('Failed to join organization');
+        toast.error(friendlyError(profileError, 'Failed to join organization. Please refresh and try again.'));
         return;
       }
 
@@ -148,7 +148,7 @@ export default function OrganizationSetup() {
       toast.success(`Joined ${org.name}! Contact your admin to assign roles.`);
       navigate('/');
     } catch (err) {
-      toast.error('Something went wrong');
+      toast.error(friendlyError(err, 'Something went wrong. Please refresh and try again.'));
     } finally {
       setLoading(false);
     }

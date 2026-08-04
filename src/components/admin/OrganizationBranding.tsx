@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Loader2, Upload, X, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { friendlyError } from "@/lib/friendly-error";
 
 export function OrganizationBranding() {
   const { organizationId, isAdmin } = useAuth();
@@ -44,7 +45,7 @@ export function OrganizationBranding() {
       .update({ app_name: appName || null, logo_url: logoUrl } as any)
       .eq('id', organizationId);
     if (error) {
-      toast.error('Failed to save branding settings');
+      toast.error(friendlyError(error, 'Failed to save branding settings. Please refresh and try again.'));
     } else {
       toast.success('Branding updated successfully');
     }
@@ -73,7 +74,7 @@ export function OrganizationBranding() {
       .upload(path, file, { upsert: true });
 
     if (uploadError) {
-      toast.error('Failed to upload logo');
+      toast.error(friendlyError(uploadError, 'Failed to upload logo. Please refresh and try again.'));
       setUploading(false);
       return;
     }

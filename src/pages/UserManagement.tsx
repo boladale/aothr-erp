@@ -250,7 +250,7 @@ export default function UserManagement() {
       toast.success(`${toInsert.length} programs added`);
       fetchData();
     } catch (error) {
-      toast.error('Failed to seed programs');
+      toast.error(friendlyError(error, 'Failed to seed programs. Please refresh and try again.'));
     }
   };
 
@@ -284,7 +284,7 @@ export default function UserManagement() {
       setEditingRole(null);
       fetchData();
     } catch (error) {
-      toast.error('Failed to save role');
+      toast.error(friendlyError(error, 'Failed to save role. Please refresh and try again.'));
     }
   };
 
@@ -300,7 +300,7 @@ export default function UserManagement() {
       setRoleToDelete(null);
       fetchData();
     } catch (error) {
-      toast.error('Failed to delete role');
+      toast.error(friendlyError(error, 'Failed to delete role. Please refresh and try again.'));
     }
   };
 
@@ -332,7 +332,7 @@ export default function UserManagement() {
       setAssignDialogOpen(false);
       fetchData();
     } catch (error) {
-      toast.error('Failed to assign programs');
+      toast.error(friendlyError(error, 'Failed to assign programs. Please refresh and try again.'));
     }
   };
 
@@ -376,7 +376,7 @@ export default function UserManagement() {
       setAppRoleAssignOpen(false);
       fetchData();
     } catch (error) {
-      toast.error('Failed to save app role programs');
+      toast.error(friendlyError(error, 'Failed to save app role programs. Please refresh and try again.'));
     }
   };
 
@@ -436,8 +436,8 @@ export default function UserManagement() {
       if (error) throw error;
       toast.success('Custom role removed');
       fetchData();
-    } catch {
-      toast.error('Failed to remove custom role');
+    } catch (err) {
+      toast.error(friendlyError(err, 'The custom role could not be removed. Please refresh and try again.'));
     }
   };
 
@@ -452,7 +452,7 @@ export default function UserManagement() {
       toast.success('Role removed');
       fetchData();
     } catch (error) {
-      toast.error('Failed to remove role');
+      toast.error(friendlyError(error, 'Failed to remove role. Please refresh and try again.'));
     }
   };
 

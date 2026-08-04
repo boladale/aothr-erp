@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Coins, Plus, Trash2, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface ExchangeRate {
   id: string;
@@ -64,7 +65,7 @@ export function CurrencySettingsPanel() {
       .eq('id', organizationId);
 
     if (error) {
-      toast.error('Failed to save currency settings');
+      toast.error(friendlyError(error, 'Failed to save currency settings. Please refresh and try again.'));
     } else {
       toast.success('Currency settings saved');
       await refreshSettings();
@@ -88,7 +89,7 @@ export function CurrencySettingsPanel() {
       if (error.message.includes('duplicate')) {
         toast.error('Rate for this currency pair and date already exists');
       } else {
-        toast.error('Failed to add rate');
+        toast.error(friendlyError(error, "The exchange rate could not be saved. Check the rate and date, then try again."));
       }
       return;
     }
@@ -100,7 +101,7 @@ export function CurrencySettingsPanel() {
 
   const handleDeleteRate = async (id: string) => {
     const { error } = await supabase.from('exchange_rates').delete().eq('id', id);
-    if (error) { toast.error('Failed to delete'); return; }
+    if (error) { toast.error(friendlyError(error, 'Failed to delete. Please refresh and try again.')); return; }
     toast.success('Rate deleted');
     fetchRates();
   };

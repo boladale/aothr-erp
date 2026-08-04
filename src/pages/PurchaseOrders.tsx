@@ -207,7 +207,7 @@ export default function PurchaseOrders() {
       } catch (e) { console.error('po_submitted email failed', e); }
     },
     onSuccess: () => { toast.success('Submitted for approval'); invalidateOrders(); },
-    onError: () => toast.error('Failed to submit'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to submit. Please refresh and try again.')),
   });
 
   const approveMutation = useMutation({
@@ -233,7 +233,7 @@ export default function PurchaseOrders() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('PO returned to draft for corrections'); invalidateOrders(); },
-    onError: () => toast.error('Failed to reject PO'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to reject PO. Please refresh and try again.')),
   });
 
   const sendMutation = useMutation({
@@ -242,7 +242,7 @@ export default function PurchaseOrders() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('PO marked as sent'); invalidateOrders(); },
-    onError: () => toast.error('Failed to send'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to send. Please refresh and try again.')),
   });
 
   const deleteMutation = useMutation({

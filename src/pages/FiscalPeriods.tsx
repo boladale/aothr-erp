@@ -235,7 +235,7 @@ export default function FiscalPeriods() {
       setWizardStep(3);
       fetchPeriods();
     } catch (err: any) {
-      log.push(`✗ Error: ${err.message}`);
+      log.push(`✗ ${friendlyError(err)}`);
       setWizardLog([...log]);
       setWizardStep(3);
     }

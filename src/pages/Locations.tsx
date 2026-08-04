@@ -19,6 +19,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import type { Location } from '@/lib/supabase';
+import { friendlyError } from "@/lib/friendly-error";
 
 export default function Locations() {
   const { organizationId } = useAuth();
@@ -81,7 +82,7 @@ export default function Locations() {
       setDialogOpen(false);
       fetchLocations();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save location');
+      toast.error(friendlyError(error, 'Failed to save location'));
     } finally {
       setSaving(false);
     }
@@ -94,7 +95,7 @@ export default function Locations() {
       toast.success(loc.is_active ? 'Location disabled' : 'Location enabled');
       fetchLocations();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update location');
+      toast.error(friendlyError(error, 'Failed to update location'));
     }
   };
 
@@ -106,7 +107,7 @@ export default function Locations() {
       toast.success('Location deleted');
       fetchLocations();
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete location. It may be in use.');
+      toast.error(friendlyError(error, 'Failed to delete location. It may be in use.'));
     }
   };
 

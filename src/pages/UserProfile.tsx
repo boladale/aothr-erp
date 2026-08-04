@@ -50,7 +50,7 @@ export default function UserProfile() {
     setSignatureUrl(url);
     if (!user?.id) return;
     const { error } = await supabase.from('profiles').update({ signature_url: url } as any).eq('user_id', user.id);
-    if (error) toast.error('Failed to save signature');
+    if (error) toast.error(friendlyError(error, 'Failed to save signature. Please refresh and try again.'));
   };
 
   const initials = profile?.full_name
