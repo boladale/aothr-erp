@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/currency';
 import { MetricCard } from '@/components/ui/metric-card';
 import { DollarSign, Clock, AlertTriangle, Users } from 'lucide-react';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface AgingRow {
   customer_name: string;
@@ -33,7 +34,7 @@ export default function ARAging() {
       .eq('status', 'posted')
       .in('payment_status', ['unpaid', 'partial']);
 
-    if (error) { toast.error('Failed to load aging data'); setLoading(false); return; }
+    if (error) { toast.error(friendlyError(error, 'Failed to load aging data. Please refresh and try again.')); setLoading(false); return; }
 
     // Get all receipt allocations for these invoices
     const invoiceIds = (invoices || []).map(i => i.id);

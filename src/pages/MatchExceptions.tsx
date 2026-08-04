@@ -29,6 +29,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import type { InvoiceHold, MatchLine, MatchLineStatus } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface InvoiceHoldWithDetails extends InvoiceHold {
   ap_invoices: {
@@ -100,7 +101,7 @@ export default function MatchExceptions() {
       setHolds((data || []) as InvoiceHoldWithDetails[]);
     } catch (error) {
       console.error('Error fetching holds:', error);
-      toast.error('Failed to load exception data');
+      toast.error(friendlyError(error, 'Failed to load exception data. Please refresh and try again.'));
     } finally {
       setLoading(false);
     }
@@ -174,7 +175,7 @@ export default function MatchExceptions() {
       fetchHolds();
     } catch (error) {
       console.error('Error resolving hold:', error);
-      toast.error('Failed to resolve exception');
+      toast.error(friendlyError(error, 'Failed to resolve exception. Please refresh and try again.'));
     } finally {
       setSaving(false);
     }

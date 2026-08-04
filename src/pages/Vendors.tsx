@@ -69,7 +69,7 @@ export default function Vendors() {
       toast.success('Submitted for approval');
       fetchVendors();
     } catch (error) {
-      toast.error('Failed to submit');
+      toast.error(friendlyError(error, 'Failed to submit. Please refresh and try again.'));
     }
   };
 
@@ -91,7 +91,7 @@ export default function Vendors() {
       toast.success('Vendor approved');
       fetchVendors();
     } catch (error) {
-      toast.error('Failed to approve');
+      toast.error(friendlyError(error, 'Failed to approve. Please refresh and try again.'));
     }
   };
 
@@ -119,7 +119,7 @@ export default function Vendors() {
       toast.success('Vendor returned to draft for corrections');
       fetchVendors();
     } catch (error) {
-      toast.error('Failed to reject');
+      toast.error(friendlyError(error, 'Failed to reject. Please refresh and try again.'));
     }
   };
 
@@ -136,7 +136,7 @@ export default function Vendors() {
       toast.success(`Vendor ${newStatus === 'active' ? 'enabled' : 'disabled'}`);
       fetchVendors();
     } catch (error) {
-      toast.error('Failed to update vendor status');
+      toast.error(friendlyError(error, 'Failed to update vendor status. Please refresh and try again.'));
     }
   };
 
@@ -165,7 +165,7 @@ export default function Vendors() {
       setBlacklistReason('');
       fetchVendors();
     } catch (e) {
-      toast.error('Failed to submit blacklist request');
+      toast.error(friendlyError(e, 'Failed to submit blacklist request. Please refresh and try again.'));
     }
   };
 
@@ -182,7 +182,7 @@ export default function Vendors() {
       toast.success('Vendor blacklisted');
       fetchVendors();
     } catch (e) {
-      toast.error('Failed to approve blacklist');
+      toast.error(friendlyError(e, 'Failed to approve blacklist. Please refresh and try again.'));
     }
   };
 
@@ -199,7 +199,7 @@ export default function Vendors() {
       toast.success('Blacklist request rejected');
       fetchVendors();
     } catch (e) {
-      toast.error('Failed to reject blacklist request');
+      toast.error(friendlyError(e, 'Failed to reject blacklist request. Please refresh and try again.'));
     }
   };
 
@@ -220,7 +220,7 @@ export default function Vendors() {
       toast.success('Vendor reinstated');
       fetchVendors();
     } catch (e) {
-      toast.error('Failed to remove blacklist');
+      toast.error(friendlyError(e, 'Failed to remove blacklist. Please refresh and try again.'));
     }
   };
 

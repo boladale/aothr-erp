@@ -65,7 +65,7 @@ export function CurrencySettingsPanel() {
       .eq('id', organizationId);
 
     if (error) {
-      toast.error('Failed to save currency settings');
+      toast.error(friendlyError(error, 'Failed to save currency settings. Please refresh and try again.'));
     } else {
       toast.success('Currency settings saved');
       await refreshSettings();
@@ -101,7 +101,7 @@ export function CurrencySettingsPanel() {
 
   const handleDeleteRate = async (id: string) => {
     const { error } = await supabase.from('exchange_rates').delete().eq('id', id);
-    if (error) { toast.error('Failed to delete'); return; }
+    if (error) { toast.error(friendlyError(error, 'Failed to delete. Please refresh and try again.')); return; }
     toast.success('Rate deleted');
     fetchRates();
   };

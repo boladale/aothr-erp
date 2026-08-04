@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { exportToXLSX } from '@/lib/export-utils';
 import { Download } from 'lucide-react';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface CostingLayer {
   id: string;
@@ -163,7 +164,7 @@ export default function InventoryValuation() {
       setGlInventory(gl);
     } catch (error) {
       console.error('Error fetching inventory valuation:', error);
-      toast.error('Failed to load inventory valuation');
+      toast.error(friendlyError(error, 'Failed to load inventory valuation. Please refresh and try again.'));
     } finally {
       setLoading(false);
     }

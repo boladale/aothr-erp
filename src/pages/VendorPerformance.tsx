@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/currency';
 import { MetricCard } from '@/components/ui/metric-card';
 import { Building2, TrendingUp, Star, Truck, Search } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { friendlyError } from "@/lib/friendly-error";
 
 interface VendorPerf {
   id: string;
@@ -118,7 +119,7 @@ export default function VendorPerformance() {
       setVendors(perfData);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to load vendor performance data');
+      toast.error(friendlyError(error, 'Failed to load vendor performance data. Please refresh and try again.'));
     } finally {
       setLoading(false);
     }

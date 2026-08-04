@@ -170,7 +170,7 @@ export default function Invoices() {
       ).catch(() => {});
       invalidateInvoices();
     },
-    onError: () => toast.error('Failed to submit'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to submit. Please refresh and try again.')),
   });
   const approveMutation = useMutation({
     mutationFn: async (invoice: InvoiceWithDetails) => {
@@ -191,7 +191,7 @@ export default function Invoices() {
       ).catch(() => {});
       invalidateInvoices();
     },
-    onError: () => toast.error('Failed to approve'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to approve. Please refresh and try again.')),
   });
   const rejectMutation = useMutation({
     mutationFn: async ({ invoice, reason }: { invoice: InvoiceWithDetails; reason: string }) => {
@@ -199,7 +199,7 @@ export default function Invoices() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('Invoice returned to draft'); invalidateInvoices(); },
-    onError: () => toast.error('Failed to reject'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to reject. Please refresh and try again.')),
   });
   const handleRejectInvoice = (invoice: InvoiceWithDetails) => {
     const reason = window.prompt('Please enter a reason for rejection:');

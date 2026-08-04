@@ -119,7 +119,7 @@ export default function Admin() {
       setDialogOpen(false);
       fetchData();
     } catch (error) {
-      toast.error('Failed to add role');
+      toast.error(friendlyError(error, 'Failed to add role. Please refresh and try again.'));
     }
   };
 
@@ -152,7 +152,7 @@ export default function Admin() {
       toast.success('Role removed');
       fetchData();
     } catch (error) {
-      toast.error('Failed to remove role');
+      toast.error(friendlyError(error, 'Failed to remove role. Please refresh and try again.'));
     }
   };
 
