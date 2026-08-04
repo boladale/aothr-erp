@@ -40,6 +40,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { Profile, AppRole } from '@/lib/supabase';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Role {
   id: string;
@@ -192,7 +193,7 @@ export default function UserManagement() {
       if (data?.error) throw new Error(data.error);
       toast.success(`Invite resent to ${email}`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to resend invite');
+      toast.error(friendlyError(err, 'Failed to resend invite'));
     } finally {
       setResendingEmail(null);
     }
@@ -425,7 +426,7 @@ export default function UserManagement() {
       setUserRoleDialogOpen(false);
       fetchData();
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to assign role');
+      toast.error(friendlyError(error, 'Failed to assign role'));
     }
   };
 

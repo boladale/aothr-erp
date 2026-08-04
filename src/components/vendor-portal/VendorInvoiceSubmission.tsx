@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Plus } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   vendorId: string;
@@ -119,7 +120,7 @@ export function VendorInvoiceSubmission({ vendorId, userId, invoices, purchaseOr
       setInvoiceFile(null);
       queryClient.invalidateQueries({ queryKey: ['vendor-invoices'] });
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to submit invoice'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to submit invoice')),
   });
 
   return (

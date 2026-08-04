@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Project {
   id: string;
@@ -128,7 +129,7 @@ export default function ProjectDetail() {
       setCostForm({ cost_type: 'material', description: '', amount: 0, cost_date: new Date().toISOString().split('T')[0] });
       fetchAll();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add cost');
+      toast.error(friendlyError(error, 'Failed to add cost'));
     } finally {
       setSaving(false);
     }
@@ -155,7 +156,7 @@ export default function ProjectDetail() {
       setRevForm({ description: '', amount: 0, revenue_date: new Date().toISOString().split('T')[0] });
       fetchAll();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add revenue');
+      toast.error(friendlyError(error, 'Failed to add revenue'));
     } finally {
       setSaving(false);
     }
@@ -168,7 +169,7 @@ export default function ProjectDetail() {
       toast.success('Cost posted to GL');
       fetchAll();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to post cost');
+      toast.error(friendlyError(error, 'Failed to post cost'));
     }
   };
 
@@ -179,7 +180,7 @@ export default function ProjectDetail() {
       toast.success('Revenue posted');
       fetchAll();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to post revenue');
+      toast.error(friendlyError(error, 'Failed to post revenue'));
     }
   };
 

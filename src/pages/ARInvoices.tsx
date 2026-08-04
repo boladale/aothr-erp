@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 import { TaxSelector } from '@/components/tax/TaxSelector';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Customer { id: string; code: string; name: string; payment_terms: number | null; }
 interface Item { id: string; code: string; name: string; unit_cost: number | null; }
@@ -153,7 +154,7 @@ export default function ARInvoices() {
       resetForm();
       toast.success(`Invoice ${res}`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const handleSave = () => {
@@ -171,7 +172,7 @@ export default function ARInvoices() {
       queryClient.invalidateQueries({ queryKey: ['ar_invoices'] });
       toast.success('Invoice posted to GL');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const handlePost = (id: string) => postMutation.mutate(id);
 

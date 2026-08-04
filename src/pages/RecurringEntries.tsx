@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { Plus, Play, Pause, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface GLAccount {
   id: string;
@@ -126,7 +127,7 @@ export default function RecurringEntries() {
       next_run_date: nextRunDate, end_date: endDate || null,
     }).select().single();
 
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
 
     const lineInserts = lines.map(l => ({
       recurring_entry_id: entry.id,
@@ -138,7 +139,7 @@ export default function RecurringEntries() {
     }));
 
     const { error: lineErr } = await (supabase.from('gl_recurring_entry_lines' as any) as any).insert(lineInserts);
-    if (lineErr) { toast.error(lineErr.message); return; }
+    if (lineErr) { toast.error(friendlyError(lineErr)); return; }
 
     toast.success('Recurring entry created');
     setDialogOpen(false);
@@ -150,7 +151,7 @@ export default function RecurringEntries() {
     setGenerating(id);
     const { error } = await supabase.rpc('generate_recurring_entry' as any, { p_recurring_id: id });
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error));
     } else {
       toast.success('Journal entry generated and posted');
     }
@@ -160,14 +161,14 @@ export default function RecurringEntries() {
 
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     const { error } = await (supabase.from('gl_recurring_entries' as any) as any).update({ is_active: !currentActive }).eq('id', id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(currentActive ? 'Recurring entry paused' : 'Recurring entry activated');
     fetchData();
   };
 
   const handleDelete = async (id: string) => {
     const { error } = await (supabase.from('gl_recurring_entries' as any) as any).delete().eq('id', id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success('Recurring entry deleted');
     fetchData();
   };

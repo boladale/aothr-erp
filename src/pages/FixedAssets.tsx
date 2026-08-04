@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Plus, Edit, Calculator, PackageX } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function FixedAssets() {
   const { organizationId } = useAuth();
@@ -93,7 +94,7 @@ export default function FixedAssets() {
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['fa-categories'] }); setCatOpen(false); setEditingCat(null); setCatForm(emptyCat); toast.success('Category saved'); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   // ---- Asset dialog ----
@@ -119,7 +120,7 @@ export default function FixedAssets() {
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['fixed-assets'] }); setAssetOpen(false); setEditingAsset(null); setAssetForm(emptyAsset); toast.success('Asset saved'); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const openAssetEdit = (a: any) => {
@@ -156,7 +157,7 @@ export default function FixedAssets() {
       else toast.warning(`Posted: ${r.ok} | Skipped: ${r.fail}`, { description: r.errs.slice(0, 3).join(' | ') });
       setDepOpen(false);
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   // ---- Dispose asset ----
@@ -173,7 +174,7 @@ export default function FixedAssets() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['fixed-assets'] }); setDispOpen(false); toast.success('Asset disposed'); },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   // Totals

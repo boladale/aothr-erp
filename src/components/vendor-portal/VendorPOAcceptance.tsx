@@ -13,6 +13,7 @@ import { PODocumentDialog } from '@/components/purchase-orders/PODocumentDialog'
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle, Eye } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   vendorId: string;
@@ -91,7 +92,7 @@ export function VendorPOAcceptance({ vendorId, userId, purchaseOrders }: Props) 
       queryClient.invalidateQueries({ queryKey: ['vendor-po-acks'] });
       queryClient.invalidateQueries({ queryKey: ['vendor-pos'] });
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to respond'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to respond')),
   });
 
   const viewPODetails = (po: any) => {

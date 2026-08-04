@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, CreditCard, Send, Pencil } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Invoice { id: string; invoice_number: string; total_amount: number; payment_status: string; }
 
@@ -176,7 +177,7 @@ export default function APPayments() {
       setDialogOpen(false);
       toast({ title: res.edit ? 'Payment updated' : 'Payment created', description: `${res.number} ${res.edit ? 'updated.' : 'created as draft.'}` });
     },
-    onError: (err: any) => toast({ title: 'Error', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: 'Error', description: friendlyError(err), variant: 'destructive' }),
   });
 
   const handleSave = () => {
@@ -218,7 +219,7 @@ export default function APPayments() {
         }),
       ).catch(() => {});
     },
-    onError: (err: any) => toast({ title: 'Post failed', description: err.message, variant: 'destructive' }),
+    onError: (err: any) => toast({ title: 'Post failed', description: friendlyError(err), variant: 'destructive' }),
   });
 
   const columns = [

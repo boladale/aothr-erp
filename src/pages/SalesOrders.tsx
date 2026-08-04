@@ -19,6 +19,7 @@ import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function SalesOrders() {
   const { user, organizationId } = useAuth();
@@ -104,7 +105,7 @@ export default function SalesOrders() {
       }
     },
     onSuccess: (msg) => { invalidate(); toast.success(msg); setDialogOpen(false); resetForm(); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const confirmMutation = useMutation({
@@ -113,7 +114,7 @@ export default function SalesOrders() {
       if (error) throw error;
     },
     onSuccess: () => { invalidate(); toast.success('Order confirmed'); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const cancelMutation = useMutation({
@@ -123,7 +124,7 @@ export default function SalesOrders() {
       if (error) throw error;
     },
     onSuccess: () => { invalidate(); toast.success('Order cancelled — reservation released'); },
-    onError: (err: any) => { if (err.message !== 'cancelled') toast.error(err.message); },
+    onError: (err: any) => { if (err.message !== 'cancelled') toast.error(friendlyError(err)); },
   });
 
   const openDelivery = async (order: any) => {
@@ -155,7 +156,7 @@ export default function SalesOrders() {
       return dnNumber;
     },
     onSuccess: (dnNumber) => { invalidate(); toast.success(`Delivery Note ${dnNumber} created and posted`); setDnDialogOpen(false); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const viewOrderDetail = async (order: any) => {

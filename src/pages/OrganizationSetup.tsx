@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Loader2, Building2, Plus, LogIn } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { seedBasicChartOfAccounts } from '@/lib/seed-coa';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function OrganizationSetup() {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function OrganizationSetup() {
         if (orgError.message.includes('duplicate')) {
           toast.error('Organization code already exists. Please choose a different one.');
         } else {
-          toast.error(orgError.message);
+          toast.error(friendlyError(orgError));
         }
         return;
       }

@@ -17,6 +17,7 @@ import type { APInvoice, PurchaseOrder, Vendor, PurchaseOrderLine, Item } from '
 import { formatCurrency } from '@/lib/utils';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 import { TaxSelector } from '@/components/tax/TaxSelector';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface InvoiceWithDetails extends APInvoice { vendors: Vendor | null; purchase_orders: { po_number: string } | null; }
 interface POWithVendor extends PurchaseOrder { vendors: { id: string; name: string } | null; }
@@ -220,7 +221,7 @@ export default function Invoices() {
       if (updated?.status === 'draft') throw new Error('Invoice failed three-way matching');
     },
     onSuccess: () => { toast.success('Invoice posted'); invalidateInvoices(); },
-    onError: (e: any) => { toast.error(e?.message || 'Failed to post'); invalidateInvoices(); },
+    onError: (e: any) => { toast.error(friendlyError(e, 'Failed to post')); invalidateInvoices(); },
   });
 
   const resetForm = () => {

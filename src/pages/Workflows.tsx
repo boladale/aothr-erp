@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
+import { friendlyError } from '@/lib/friendly-error';
   Plus, ArrowRight, Pencil, Trash2, CheckCircle, XCircle,
   GitBranch, Circle, ChevronDown, ChevronUp,
 } from "lucide-react";
@@ -135,7 +136,7 @@ export default function Workflows() {
       setNewWorkflow({ entity_type: "", name: "", description: "" });
       toast.success("Workflow created");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const toggleWorkflowActive = useMutation({
@@ -144,7 +145,7 @@ export default function Workflows() {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["workflows"] }),
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const deleteWorkflowMutation = useMutation({
@@ -156,7 +157,7 @@ export default function Workflows() {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });
       toast.success("Workflow deleted");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const createStateMutation = useMutation({
@@ -170,7 +171,7 @@ export default function Workflows() {
       setNewState({ state_key: "", state_label: "", state_order: 0, is_initial: false, is_terminal: false, color: "gray" });
       toast.success("State added");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const updateStateMutation = useMutation({
@@ -184,7 +185,7 @@ export default function Workflows() {
       setEditingState(null);
       toast.success("State updated");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const deleteStateMutation = useMutation({
@@ -196,7 +197,7 @@ export default function Workflows() {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });
       toast.success("State deleted");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const createTransitionMutation = useMutation({
@@ -210,7 +211,7 @@ export default function Workflows() {
       setNewTransition({ from_state_id: "", to_state_id: "", action_label: "", required_role: "", requires_approval: false });
       toast.success("Transition added");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const updateTransitionMutation = useMutation({
@@ -224,7 +225,7 @@ export default function Workflows() {
       setEditingTransition(null);
       toast.success("Transition updated");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const deleteTransitionMutation = useMutation({
@@ -236,7 +237,7 @@ export default function Workflows() {
       queryClient.invalidateQueries({ queryKey: ["workflows"] });
       toast.success("Transition deleted");
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
 
   const getStateName = (stateId: string, states: WorkflowState[]) =>

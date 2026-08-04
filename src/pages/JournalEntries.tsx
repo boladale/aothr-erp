@@ -19,6 +19,7 @@ import { formatCurrency } from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 import { BulkActionBar } from '@/components/ui/bulk-action-bar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface JournalLine { account_id: string; debit: number; credit: number; description: string; }
 
@@ -134,7 +135,7 @@ export default function JournalEntries() {
       resetForm();
       toast.success(msg);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const handleSave = (opts?: { draft?: boolean }) => {
@@ -155,7 +156,7 @@ export default function JournalEntries() {
       queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
       toast.success('Journal entry posted');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const handlePost = (id: string) => postMutation.mutate(id);
 
@@ -196,7 +197,7 @@ export default function JournalEntries() {
       queryClient.invalidateQueries({ queryKey: ['gl_journal_entries'] });
       toast.success(`Reversal entry ${num} posted`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const handleReverse = (entry: any) => {
     if (!window.confirm(`Reverse posted entry ${entry.entry_number}? A new offsetting posted entry will be created dated today.`)) return;
@@ -214,7 +215,7 @@ export default function JournalEntries() {
       setSelectedIds([]);
       toast.success(`${count} entries posted`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const bulkProcessing = bulkPostMutation.isPending;
 
@@ -268,7 +269,7 @@ export default function JournalEntries() {
       XLSX.writeFile(wb, `journal-entries-${new Date().toISOString().slice(0, 10)}.xlsx`);
       toast.success(`Exported ${summary.length} entries`);
     } catch (err: any) {
-      toast.error(err.message || 'Export failed');
+      toast.error(friendlyError(err, 'Export failed'));
     }
   };
 

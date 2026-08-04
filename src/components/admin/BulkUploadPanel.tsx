@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { friendlyError } from '@/lib/friendly-error';
 
 type EntityKey = 'vendors' | 'items' | 'customers' | 'locations' | 'gl_accounts';
 
@@ -322,7 +323,7 @@ export function BulkUploadPanel() {
       }
       setResults(allResults);
     } catch (e: any) {
-      toast.error(e.message || 'Failed to process file');
+      toast.error(friendlyError(e, 'Failed to process file'));
     } finally {
       setProcessing(false);
     }

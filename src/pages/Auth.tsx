@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Loader2, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { friendlyError } from '@/lib/friendly-error';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -87,7 +88,7 @@ export default function Auth() {
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error));
     } else {
       toast.success('Password reset email sent! Check your inbox.');
       setForgotMode(false);
@@ -111,7 +112,7 @@ export default function Auth() {
       if (error.message.includes('already registered')) {
         toast.error('This email is already registered. Please sign in instead.');
       } else {
-        toast.error(error.message);
+        toast.error(friendlyError(error));
       }
     } else {
       toast.success('Account created! Please check your email to verify your account.');

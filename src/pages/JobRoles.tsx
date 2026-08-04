@@ -18,6 +18,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Plus, Edit, Power, Trash2 } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface JobRoleForm {
   code: string;
@@ -68,7 +69,7 @@ export default function JobRoles() {
       setOpen(false); setEditing(null); setForm(emptyForm);
       toast.success(editing ? 'Job role updated' : 'Job role created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const toggleMutation = useMutation({
@@ -77,7 +78,7 @@ export default function JobRoles() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['job_roles'] }); toast.success('Status updated'); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const deleteMutation = useMutation({
@@ -86,7 +87,7 @@ export default function JobRoles() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['job_roles'] }); setDeleteTarget(null); toast.success('Job role deleted'); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const openEdit = (r: any) => {

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -70,7 +71,7 @@ export function CreateUserDialog({ open, onOpenChange, onCreated }: CreateUserDi
       onOpenChange(false);
       onCreated();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create user');
+      toast.error(friendlyError(err, 'Failed to create user'));
     } finally {
       setLoading(false);
     }

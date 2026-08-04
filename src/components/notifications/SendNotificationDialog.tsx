@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Profile {
   id: string;
@@ -113,7 +114,7 @@ export function SendNotificationDialog({ open, onOpenChange, onSent }: SendNotif
       onOpenChange(false);
       onSent?.();
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: friendlyError(error), variant: 'destructive' });
     } finally {
       setSending(false);
     }

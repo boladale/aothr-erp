@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { sendForSignature, htmlToPdfBase64, SignableDocumentType } from '@/lib/boldsign';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   open: boolean;
@@ -67,7 +68,7 @@ export function SendForSignatureDialog({
       onOpenChange(false);
       onSent?.();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send');
+      toast.error(friendlyError(err, 'Failed to send'));
     } finally { setSending(false); }
   };
 

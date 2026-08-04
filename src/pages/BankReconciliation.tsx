@@ -16,6 +16,7 @@ import { Plus, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 import { BankStatementImport } from '@/components/bank/BankStatementImport';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface BankAccount { id: string; account_code: string; account_name: string; current_balance: number; }
 interface BankTransaction {
@@ -114,7 +115,7 @@ export default function BankReconciliation() {
         toast.info(data.reasoning || 'AI could not find matching transactions');
       }
     } catch (err: any) {
-      toast.error(err.message || 'AI reconciliation failed');
+      toast.error(friendlyError(err, 'AI reconciliation failed'));
     } finally {
       setAiLoading(false);
     }
@@ -142,7 +143,7 @@ export default function BankReconciliation() {
       organization_id: organizationId,
     }).select().single();
 
-    if (recErr) { toast.error(recErr.message); return; }
+    if (recErr) { toast.error(friendlyError(recErr)); return; }
 
     // Mark checked transactions as reconciled
     if (checkedTxns.size > 0) {

@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
 import { Receipt } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function DeliveryNotes() {
   const { user, organizationId } = useAuth();
@@ -83,7 +84,7 @@ export default function DeliveryNotes() {
       queryClient.invalidateQueries({ queryKey: ['ar-invoices'] });
       toast.success(`AR Invoice ${invNumber} created from delivery note`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const exportColumns = [

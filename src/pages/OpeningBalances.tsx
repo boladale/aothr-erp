@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { Plus, Trash2, Lock, Info, CheckCircle2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 type TBRow = { account_id: string; debit: number; credit: number };
 type APRow = { vendor_id: string; invoice_number: string; invoice_date: string; due_date: string; total_amount: number };
@@ -78,7 +79,7 @@ export default function OpeningBalances() {
     const cleaned = tb.filter(r => r.account_id && (Number(r.debit) || Number(r.credit)))
                      .map(r => ({ account_id: r.account_id, debit: Number(r.debit) || 0, credit: Number(r.credit) || 0, description: 'Opening balance' }));
     const { data, error } = await supabase.rpc('post_opening_trial_balance', { _cutover: cutoverDate, _lines: cleaned as any });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Trial Balance posted (JE ${String(data).slice(0, 8)}…)`);
     setTb([]);
   }
@@ -87,7 +88,7 @@ export default function OpeningBalances() {
     const rows = ap.filter(r => r.vendor_id && r.invoice_number && Number(r.total_amount) > 0);
     if (!rows.length) { toast.error('Add at least one AP invoice row'); return; }
     const { data, error } = await supabase.rpc('import_opening_ap_invoices', { _rows: rows as any });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Imported ${data} open vendor invoices`);
     setAp([]);
   }
@@ -95,7 +96,7 @@ export default function OpeningBalances() {
     const rows = ar.filter(r => r.customer_id && r.invoice_number && Number(r.total_amount) > 0);
     if (!rows.length) { toast.error('Add at least one AR invoice row'); return; }
     const { data, error } = await supabase.rpc('import_opening_ar_invoices', { _rows: rows as any });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Imported ${data} open customer invoices`);
     setAr([]);
   }
@@ -103,7 +104,7 @@ export default function OpeningBalances() {
     const rows = inv.filter(r => r.item_id && r.location_id && Number(r.quantity) > 0);
     if (!rows.length) { toast.error('Add at least one inventory row'); return; }
     const { data, error } = await supabase.rpc('import_opening_inventory', { _cutover: cutoverDate, _rows: rows as any });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Imported ${data} inventory rows (with FIFO layers)`);
     setInv([]);
   }
@@ -111,14 +112,14 @@ export default function OpeningBalances() {
     const rows = fa.filter(r => r.asset_code && r.name && Number(r.acquisition_cost) > 0);
     if (!rows.length) { toast.error('Add at least one asset row'); return; }
     const { data, error } = await supabase.rpc('import_opening_fixed_assets', { _cutover: cutoverDate, _rows: rows as any });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Imported ${data} fixed assets`);
     setFa([]);
   }
   async function lockPeriods() {
     if (!confirm(`Close every fiscal period ending before ${cutoverDate}? This prevents further posting into those periods.`)) return;
     const { data, error } = await supabase.rpc('lock_pre_cutover_periods', { _cutover: cutoverDate });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Closed ${data} fiscal period(s) before cutover`);
   }
 

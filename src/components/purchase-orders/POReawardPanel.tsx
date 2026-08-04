@@ -12,6 +12,7 @@ import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { friendlyError } from '@/lib/friendly-error';
 
 export function POReawardPanel() {
   const { hasRole } = useAuth();
@@ -52,7 +53,7 @@ export function POReawardPanel() {
       qc.invalidateQueries({ queryKey: ['po-reaward-requests'] });
       qc.invalidateQueries({ queryKey: ['purchase-orders'] });
     },
-    onError: (err: any) => toast.error(err.message || 'Action failed'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Action failed')),
   });
 
   if (!canManage || (requests as any[]).length === 0) return null;

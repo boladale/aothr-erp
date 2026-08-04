@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { friendlyError } from '@/lib/friendly-error';
 
 export function DataManagementPanel() {
   const [seeding, setSeeding] = useState(false);
@@ -30,10 +31,10 @@ export function DataManagementPanel() {
       if (data?.success) {
         toast.success(data.message);
       } else {
-        toast.error(data?.message || 'Failed to seed data');
+        toast.error(friendlyError(data, 'Failed to seed data'));
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to seed demo data');
+      toast.error(friendlyError(error, 'Failed to seed demo data'));
     } finally {
       setSeeding(false);
     }
@@ -50,10 +51,10 @@ export function DataManagementPanel() {
       if (data?.success) {
         toast.success(data.message);
       } else {
-        toast.error(data?.message || 'Cleanup failed');
+        toast.error(friendlyError(data, 'Cleanup failed'));
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to cleanup data');
+      toast.error(friendlyError(error, 'Failed to cleanup data'));
     } finally {
       setCleaning(false);
     }

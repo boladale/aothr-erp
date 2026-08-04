@@ -13,6 +13,7 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { toast } from 'sonner';
 import { Plus, Edit, Power } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function Departments() {
   const { organizationId } = useAuth();
@@ -47,7 +48,7 @@ export default function Departments() {
       setForm({ name: '', code: '', is_active: true });
       toast.success(editing ? 'Department updated' : 'Department created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const toggleActiveMutation = useMutation({
@@ -59,7 +60,7 @@ export default function Departments() {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
       toast.success('Status updated');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const openEdit = (dept: any) => {

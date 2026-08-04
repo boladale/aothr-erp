@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Plus, Eye, Search, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NIGERIAN_STATES, KIN_RELATIONSHIPS } from '@/lib/nigeria-data';
+import { friendlyError } from '@/lib/friendly-error';
 
 const defaultForm = {
   employee_number: '', first_name: '', last_name: '', email: '', phone: '',
@@ -89,7 +90,7 @@ export default function Employees() {
       setForm(defaultForm);
       toast.success(editingId ? 'Employee updated' : 'Employee created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const deleteMutation = useMutation({
@@ -102,7 +103,7 @@ export default function Employees() {
       setDeleteId(null);
       toast.success('Employee deleted');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const openEdit = (e: any) => {

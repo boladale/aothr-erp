@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { PenLine, ExternalLink, KeyRound, Loader2, CheckCircle2 } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 /**
  * Admin panel: configure BoldSign e-signature per organization.
@@ -44,7 +45,7 @@ export function BoldSignSettingsPanel() {
       _enabled: enabled,
     } as any);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error)); return; }
     setApiKey('');
     await load();
     toast.success('BoldSign settings saved');

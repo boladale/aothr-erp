@@ -17,6 +17,7 @@ import { Plus, Landmark, DollarSign, Wallet, Pencil, Receipt } from 'lucide-reac
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { PettyCashExpenseDialog } from '@/components/bank/PettyCashExpenseDialog';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface GLAccount { id: string; account_code: string; account_name: string; }
 interface BankAccount {
@@ -111,7 +112,7 @@ export default function BankAccounts() {
         patch.current_balance = Number(editing.current_balance || 0) + delta;
       }
       const { error } = await supabase.from('bank_accounts').update(patch).eq('id', editing.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       toast.success('Bank account updated');
     } else {
       const { error } = await supabase.from('bank_accounts').insert({
@@ -121,7 +122,7 @@ export default function BankAccounts() {
         account_type: form.account_type,
         opening_balance: opening, current_balance: opening, organization_id: organizationId,
       } as any);
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(friendlyError(error)); return; }
       toast.success('Bank account created');
     }
     setDialogOpen(false);

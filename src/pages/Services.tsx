@@ -15,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Plus, Edit, Power } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function Services() {
   const { organizationId } = useAuth();
@@ -56,7 +57,7 @@ export default function Services() {
       setForm({ name: '', code: '', description: '', estimated_cost: '', is_active: true });
       toast.success(editing ? 'Service updated' : 'Service created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const toggleActiveMutation = useMutation({
@@ -68,7 +69,7 @@ export default function Services() {
       queryClient.invalidateQueries({ queryKey: ['services'] });
       toast.success('Status updated');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const openEdit = (svc: any) => {

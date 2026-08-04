@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -36,7 +37,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
       setConfirmPassword('');
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update password');
+      toast.error(friendlyError(err, 'Failed to update password'));
     } finally {
       setLoading(false);
     }

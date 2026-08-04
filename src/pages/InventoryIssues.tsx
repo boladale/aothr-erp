@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface IssueLine {
   item_id: string;
@@ -206,7 +207,7 @@ export default function InventoryIssues() {
       setDialogOpen(false);
       resetForm();
     },
-    onError: (e: any) => toast.error(e.message || 'Failed to create issue'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to create issue')),
   });
   const saving = createMutation.isPending;
 
@@ -227,7 +228,7 @@ export default function InventoryIssues() {
       queryClient.invalidateQueries({ queryKey: ['inventory_issues'] }); queryClient.invalidateQueries({ queryKey: ['inventory_issue_jes'] });
       toast.success(`Issue ${num} posted — inventory reduced & GL entries created`);
     },
-    onError: (e: any) => toast.error(e.message || 'Failed to post issue'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to post issue')),
   });
   const handlePost = (issue: IssueRow) => postMutation.mutate(issue);
 
@@ -336,7 +337,7 @@ export default function InventoryIssues() {
       toast.success(`Return ${num} posted — inventory restored & GL reversed`);
       setReturnDialogOpen(false);
     },
-    onError: (e: any) => toast.error(e.message || 'Failed to post return'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to post return')),
   });
 
 

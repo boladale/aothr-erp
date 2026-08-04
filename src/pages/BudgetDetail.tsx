@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function BudgetDetail() {
   const { id } = useParams<{ id: string }>();
@@ -108,7 +109,7 @@ export default function BudgetDetail() {
       setAddLineOpen(false);
       setLineForm({ department_id: '', account_id: '', description: '', annual_amount: 0, q1: 0, q2: 0, q3: 0, q4: 0 });
     },
-    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Error', description: friendlyError(e), variant: 'destructive' }),
   });
 
   const deleteLineMut = useMutation({
@@ -117,7 +118,7 @@ export default function BudgetDetail() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budget-lines', id] }),
-    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Error', description: friendlyError(e), variant: 'destructive' }),
   });
 
   const statusMut = useMutation({
@@ -134,7 +135,7 @@ export default function BudgetDetail() {
       toast({ title: 'Budget updated' });
       qc.invalidateQueries({ queryKey: ['budget', id] });
     },
-    onError: (e: any) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+    onError: (e: any) => toast({ title: 'Error', description: friendlyError(e), variant: 'destructive' }),
   });
 
   const isDraft = budget?.status === 'draft';

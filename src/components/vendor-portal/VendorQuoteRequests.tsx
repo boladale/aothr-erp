@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Send } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   vendorId: string;
@@ -135,7 +136,7 @@ export function VendorQuoteRequests({ vendorId }: Props) {
       setOpen(false);
       qc.invalidateQueries({ queryKey: ['vendor-bid-invites'] });
     },
-    onError: (e: any) => toast.error(e.message || 'Failed to submit quote'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to submit quote')),
   });
 
   return (

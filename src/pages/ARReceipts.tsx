@@ -17,6 +17,7 @@ import { Plus, Send, Pencil } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Customer { id: string; code: string; name: string; }
 interface OutstandingInvoice { id: string; invoice_number: string; total_amount: number; payment_status: string; outstanding: number; }
@@ -143,7 +144,7 @@ export default function ARReceipts() {
       resetForm();
       toast.success(`Receipt ${res}`);
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const handleSave = () => {
@@ -167,7 +168,7 @@ export default function ARReceipts() {
       queryClient.invalidateQueries({ queryKey: ['ar_receipts'] });
       toast.success('Receipt posted to GL');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
   const handlePost = (id: string) => postMutation.mutate(id);
 

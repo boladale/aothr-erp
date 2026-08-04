@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Backup {
   id: string;
@@ -71,10 +72,10 @@ export function BackupManagementPanel() {
         toast.success(data.message);
         fetchBackups();
       } else {
-        toast.error(data?.message || 'Backup failed');
+        toast.error(friendlyError(data, 'Backup failed'));
       }
     } catch (err: any) {
-      toast.error(err.message || 'Backup failed');
+      toast.error(friendlyError(err, 'Backup failed'));
     } finally {
       setCreating(false);
     }
@@ -97,7 +98,7 @@ export function BackupManagementPanel() {
       URL.revokeObjectURL(url);
       toast.success('Backup downloaded');
     } catch (err: any) {
-      toast.error(err.message || 'Download failed');
+      toast.error(friendlyError(err, 'Download failed'));
     }
   };
 
@@ -113,7 +114,7 @@ export function BackupManagementPanel() {
       if (data.ok) toast.success('Backup verified ✓');
       else toast.warning(`Backup readable — ${data.drift_count} table(s) drifted`);
     } catch (err: any) {
-      toast.error(err.message || 'Verification failed');
+      toast.error(friendlyError(err, 'Verification failed'));
     } finally {
       setVerifyingId(null);
     }
@@ -133,7 +134,7 @@ export function BackupManagementPanel() {
         fetchBackups();
       }
     } catch (err: any) {
-      toast.error(err.message || 'Delete failed');
+      toast.error(friendlyError(err, 'Delete failed'));
     } finally {
       setDeletingId(null);
     }

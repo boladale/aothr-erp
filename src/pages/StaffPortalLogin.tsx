@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Loader2, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { friendlyError } from '@/lib/friendly-error';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -56,7 +57,7 @@ export default function StaffPortalLogin() {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
-    if (error) { toast.error(error.message); } else {
+    if (error) { toast.error(friendlyError(error)); } else {
       toast.success('Password reset email sent!');
       setForgotMode(false);
     }

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { CheckCircle, XCircle, Building2, Search, Link2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
+import { friendlyError } from '@/lib/friendly-error';
 
 export function VendorRegistrationsPanel() {
   const { user, organizationId } = useAuth();
@@ -126,7 +127,7 @@ export function VendorRegistrationsPanel() {
       setSelectedVendorId(null);
       setVendorSearch('');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to approve registration'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to approve registration')),
   });
 
   const rejectMutation = useMutation({
@@ -143,7 +144,7 @@ export function VendorRegistrationsPanel() {
       setRejectDialog({ open: false, id: null });
       setRejectionReason('');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to reject registration'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to reject registration')),
   });
 
   const columns = [

@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import { Send, Plus, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 type Milestone = { description: string; type: 'percent' | 'amount'; value: number };
 
@@ -158,7 +159,7 @@ export function VendorRFPBidding({ vendorId, userId }: Props) {
       setBidDialog({ open: false, rfp: null, proposalId: null });
       queryClient.invalidateQueries({ queryKey: ['vendor-invited-rfps'] });
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to submit proposal'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to submit proposal')),
   });
 
   const labelFor = (item: any) => {

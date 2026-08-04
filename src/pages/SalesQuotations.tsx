@@ -19,6 +19,7 @@ import { ExportButtons } from '@/components/exports/ExportButtons';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function SalesQuotations() {
   const { user, organizationId } = useAuth();
@@ -106,7 +107,7 @@ export default function SalesQuotations() {
       toast.success(editingQuotation ? 'Quotation updated' : 'Quotation created');
       setDialogOpen(false); resetForm();
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const statusMutation = useMutation({
@@ -115,7 +116,7 @@ export default function SalesQuotations() {
       if (error) throw error;
     },
     onSuccess: (_d, v) => { invalidate(); toast.success(`Quotation ${v.status}`); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const convertMutation = useMutation({
@@ -137,7 +138,7 @@ export default function SalesQuotations() {
       return soNumber;
     },
     onSuccess: (soNumber) => { invalidate(); toast.success(`Sales Order ${soNumber} created from quotation`); },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   const addLine = () => setLines([...lines, { item_id: '', description: '', quantity: '1', unit_price: '0' }]);

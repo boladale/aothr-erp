@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { Location, Item } from '@/lib/supabase';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface TransferRow {
   id: string;
@@ -134,7 +135,7 @@ export default function InventoryTransfers() {
       resetForm();
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to create transfer'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to create transfer')),
   });
 
   const updateStatusMutation = useMutation({
@@ -147,7 +148,7 @@ export default function InventoryTransfers() {
       invalidate();
       qc.invalidateQueries({ queryKey: ['inventory_balances'] });
     },
-    onError: (e: any) => toast.error(e?.message || 'Action failed'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Action failed')),
   });
   const postingId = updateStatusMutation.isPending ? (updateStatusMutation.variables as any)?.id ?? null : null;
   const runStatus = (id: string, patch: Record<string, any>, successMessage: string) =>

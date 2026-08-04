@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function SalaryComponents() {
   const { organizationId } = useAuth();
@@ -46,7 +47,7 @@ export default function SalaryComponents() {
       setForm({ name: '', component_type: 'earning', calculation_type: 'percentage', default_rate: '', is_taxable: false, is_statutory: false, description: '' });
       toast.success('Salary component created');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(friendlyError(err)),
   });
 
   return (

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Percent } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface TaxGroup {
   id: string;
@@ -67,11 +68,11 @@ export default function TaxConfiguration() {
     if (!form.name.trim()) return toast.error('Name is required');
     if (editingGroup) {
       const { error } = await supabase.from('tax_groups').update({ name: form.name, description: form.description || null, is_default: form.is_default }).eq('id', editingGroup.id);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       toast.success('Tax group updated');
     } else {
       const { error } = await supabase.from('tax_groups').insert({ name: form.name, description: form.description || null, is_default: form.is_default });
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       toast.success('Tax group created');
     }
     setDialogOpen(false);
@@ -86,7 +87,7 @@ export default function TaxConfiguration() {
   const handleDeleteGroup = async (id: string) => {
     if (!confirm('Delete this tax group and all its rates?')) return;
     const { error } = await supabase.from('tax_groups').delete().eq('id', id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyError(error));
     toast.success('Tax group deleted');
     fetchData();
   };
@@ -101,11 +102,11 @@ export default function TaxConfiguration() {
     };
     if (editingRate) {
       const { error } = await supabase.from('tax_rates').update(data).eq('id', editingRate.id);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       toast.success('Tax rate updated');
     } else {
       const { error } = await supabase.from('tax_rates').insert(data);
-      if (error) return toast.error(error.message);
+      if (error) return toast.error(friendlyError(error));
       toast.success('Tax rate added');
     }
     setRateDialogOpen(false);

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { RequisitionFormDialog } from '@/components/requisitions/RequisitionFormDialog';
 import { notifyApproversOfPRSubmission, notifyPRApproved, notifyPRRejected } from '@/lib/requisition-emails';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface RequisitionRow {
   id: string;
@@ -64,7 +65,7 @@ export default function Requisitions() {
       notifyApproversOfPRSubmission(req).catch((e) => console.error('pr_submitted email failed', e));
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to submit'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to submit')),
   });
   const approveMutation = useMutation({
     mutationFn: async (req: RequisitionRow) => {
@@ -78,7 +79,7 @@ export default function Requisitions() {
       notifyPRApproved(req).catch(() => {});
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to approve'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to approve')),
   });
   const rejectMutation = useMutation({
     mutationFn: async ({ req, reason }: { req: RequisitionRow; reason: string }) => {
@@ -93,7 +94,7 @@ export default function Requisitions() {
       notifyPRRejected(req, reason).catch(() => {});
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to reject'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to reject')),
   });
   const deleteMutation = useMutation({
     mutationFn: async (req: RequisitionRow) => {
@@ -102,7 +103,7 @@ export default function Requisitions() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('Requisition deleted'); invalidate(); },
-    onError: (e: any) => toast.error(e?.message || 'Failed to delete'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to delete')),
   });
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -121,7 +122,7 @@ export default function Requisitions() {
       setSelectedIds([]);
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
   const bulkRejectMutation = useMutation({
     mutationFn: async ({ ids, reason }: { ids: string[]; reason: string }) => {
@@ -140,7 +141,7 @@ export default function Requisitions() {
       setSelectedIds([]);
       invalidate();
     },
-    onError: (e: any) => toast.error(e?.message),
+    onError: (e: any) => toast.error(friendlyError(e)),
   });
   const bulkProcessing = bulkApproveMutation.isPending || bulkRejectMutation.isPending;
 
