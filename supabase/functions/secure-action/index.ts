@@ -88,8 +88,10 @@ Deno.serve(async (req) => {
           .eq('created_by', userId)
         if (ownPOs && ownPOs.length > 0) {
           return jsonResponse({
+            ok: false,
+            code: 'SELF_APPROVAL_BLOCKED',
             error: 'Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver.',
-          }, 403)
+          })
         }
         // Only approve POs currently in 'pending_approval' to prevent state-jump abuse
         const { data, error } = await admin
@@ -102,7 +104,13 @@ Deno.serve(async (req) => {
           console.error('po_approve update failed', JSON.stringify(error))
           return jsonResponse({ error: error.message, details: error.details, hint: error.hint }, 400)
         }
-        if (!data?.length) return jsonResponse({ error: 'No POs in pending_approval status' }, 409)
+        if (!data?.length) {
+          return jsonResponse({
+            ok: false,
+            code: 'PO_NOT_PENDING_APPROVAL',
+            error: 'This Purchase Order is no longer awaiting approval. Refresh the page to see its current status.',
+          })
+        }
         // Record approval log entries
         await admin.from('po_approvals').insert(
           data.map((d) => ({ po_id: d.id, approved_by: userId, approved_at: nowIso }))
