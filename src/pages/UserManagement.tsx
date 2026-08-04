@@ -436,8 +436,8 @@ export default function UserManagement() {
       if (error) throw error;
       toast.success('Custom role removed');
       fetchData();
-    } catch {
-      toast.error(friendlyError(error, 'Failed to remove custom role. Please refresh and try again.'));
+    } catch (err) {
+      toast.error(friendlyError(err, 'The custom role could not be removed. Please refresh and try again.'));
     }
   };
 

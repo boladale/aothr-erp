@@ -72,8 +72,8 @@ export function VendorInviteDialog({ open, onOpenChange, vendorId, vendorName, v
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error(friendlyError(error, 'Failed to copy. Please refresh and try again.'));
+    } catch (err) {
+      toast.error(friendlyError(err, 'The link could not be copied automatically. Please select and copy it manually. Please refresh and try again.'));
     }
   };
 

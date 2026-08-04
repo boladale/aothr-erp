@@ -38,7 +38,7 @@ export default function ProjectProfitability() {
           .order('project_code');
         if (error) throw error;
         setProjects((data || []) as Project[]);
-      } catch { toast.error(friendlyError(error, 'Failed to load projects. Please refresh and try again.')); }
+      } catch (err) { toast.error(friendlyError(err, 'Failed to load projects. Please refresh and try again.')); }
       finally { setLoading(false); }
     };
     fetch();
