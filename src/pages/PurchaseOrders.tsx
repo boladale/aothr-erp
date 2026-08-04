@@ -269,9 +269,9 @@ export default function PurchaseOrders() {
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
-      const errMsg = error?.message || (data as any)?.error;
-      if (errMsg) throw new Error(errMsg);
+      await throwEdgeError(error, data);
       return (data as any)?.updated ?? ids.length;
+
     },
     onSuccess: (n) => { toast.success(`${n} POs approved`); setSelectedIds([]); invalidateOrders(); },
     onError: (e: any) => toast.error(e?.message || 'Bulk approve failed'),
