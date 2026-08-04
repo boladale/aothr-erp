@@ -25,6 +25,8 @@ import type { PurchaseOrder, Vendor, Location, Item, POStatus } from '@/lib/supa
 import { POReawardPanel } from '@/components/purchase-orders/POReawardPanel';
 import { formatCurrency } from '@/lib/utils';
 import { notifyPOApproved } from '@/lib/po-emails';
+import { throwEdgeError } from '@/lib/edge-error';
+
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
