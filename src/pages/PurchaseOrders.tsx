@@ -212,9 +212,9 @@ export default function PurchaseOrders() {
       const { data, error } = await supabase.functions.invoke('secure-action', {
         body: { action: 'po_approve', payload: { id: po.id } },
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      await throwEdgeError(error, data);
       return po;
+
     },
     onSuccess: (po) => {
       toast.success('PO approved');
