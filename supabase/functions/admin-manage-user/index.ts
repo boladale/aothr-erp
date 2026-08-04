@@ -90,63 +90,49 @@ Deno.serve(async (req) => {
     }
 
     if (action === "delete") {
-      // Check if user has posted or approved any transactions
-      const tables = [
-        { table: "purchase_orders", col: "approved_by" },
-        { table: "goods_receipts", col: "posted_by" },
-        { table: "ap_invoices", col: "posted_by" },
-        { table: "ap_payments", col: "posted_by" },
-        { table: "ar_invoices", col: "posted_by" },
-        { table: "ar_receipts", col: "posted_by" },
-        { table: "ar_credit_notes", col: "posted_by" },
-        { table: "gl_journal_entries", col: "posted_by" },
-        { table: "fund_transfers", col: "posted_by" },
-        { table: "delivery_notes", col: "posted_by" },
+      // Any activity that must keep an audit trail blocks deletion
+      const checks: Array<{ table: string; col: string; label: string }> = [
+        { table: "purchase_orders", col: "approved_by", label: "approved purchase orders" },
+        { table: "purchase_orders", col: "created_by", label: "purchase orders they created" },
+        { table: "requisitions", col: "approved_by", label: "approved requisitions" },
+        { table: "requisitions", col: "created_by", label: "requisitions they created" },
+        { table: "goods_receipts", col: "posted_by", label: "posted goods receipts" },
+        { table: "goods_receipts", col: "created_by", label: "goods receipts they created" },
+        { table: "ap_invoices", col: "posted_by", label: "posted vendor invoices" },
+        { table: "ap_invoices", col: "created_by", label: "vendor invoices they created" },
+        { table: "ap_payments", col: "posted_by", label: "posted payments" },
+        { table: "ap_payments", col: "created_by", label: "payments they created" },
+        { table: "ar_invoices", col: "posted_by", label: "posted customer invoices" },
+        { table: "ar_receipts", col: "posted_by", label: "posted customer receipts" },
+        { table: "ar_credit_notes", col: "posted_by", label: "posted credit notes" },
+        { table: "gl_journal_entries", col: "posted_by", label: "posted journal entries" },
+        { table: "fund_transfers", col: "posted_by", label: "posted fund transfers" },
+        { table: "delivery_notes", col: "posted_by", label: "posted delivery notes" },
+        { table: "vendors", col: "created_by", label: "vendor records they created" },
+        { table: "approval_actions", col: "actor_id", label: "approval decisions" },
+        { table: "po_approvals", col: "approver_id", label: "purchase order approvals" },
+        { table: "audit_logs", col: "user_id", label: "audit-trail entries" },
       ];
 
-      // Also check created_by for key documents
-      const createdByTables = [
-        "purchase_orders",
-        "goods_receipts",
-        "ap_invoices",
-        "ap_payments",
-        "requisitions",
-        "vendors",
-      ];
-
-      let hasTransactions = false;
-
-      // Check posted_by / approved_by columns
-      for (const { table, col } of tables) {
-        const { count } = await adminClient
+      const blocking: string[] = [];
+      for (const { table, col, label } of checks) {
+        const { count, error: cErr } = await adminClient
           .from(table)
           .select("id", { count: "exact", head: true })
-          .eq(col, target_user_id)
-          .limit(1);
-        if (count && count > 0) {
-          hasTransactions = true;
-          break;
-        }
+          .eq(col, target_user_id);
+        if (cErr) continue;
+        if (count && count > 0 && !blocking.includes(label)) blocking.push(label);
       }
 
-      // Check created_by columns
-      if (!hasTransactions) {
-        for (const table of createdByTables) {
-          const { count } = await adminClient
-            .from(table)
-            .select("id", { count: "exact", head: true })
-            .eq("created_by", target_user_id)
-            .limit(1);
-          if (count && count > 0) {
-            hasTransactions = true;
-            break;
-          }
-        }
-      }
-
-      if (hasTransactions) {
+      if (blocking.length > 0) {
+        const list = blocking.slice(0, 4).join(", ");
         return new Response(
-          JSON.stringify({ error: "Cannot delete user: they have posted or created transactions. Use deactivate instead." }),
+          JSON.stringify({
+            error:
+              `This user cannot be deleted because their name is attached to ${list}` +
+              (blocking.length > 4 ? ` and ${blocking.length - 4} other record type(s)` : "") +
+              `. Deleting them would break the audit trail on those documents. Use "Deactivate" instead — the account is blocked from signing in but the history stays intact.`,
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -155,7 +141,7 @@ Deno.serve(async (req) => {
       await adminClient.from("user_roles").delete().eq("user_id", target_user_id);
       await adminClient.from("notifications").delete().eq("user_id", target_user_id);
       await adminClient.from("profiles").delete().eq("user_id", target_user_id);
-      
+
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(target_user_id);
       if (deleteError) throw deleteError;
 
@@ -164,6 +150,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
