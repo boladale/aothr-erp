@@ -24,6 +24,8 @@ import { useAuth } from '@/hooks/useAuth';
 import type { PurchaseOrder, PurchaseOrderLine, Vendor, Location, Item, POStatus } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/utils';
 import { notifyPOApproved } from '@/lib/po-emails';
+import { throwEdgeError } from '@/lib/edge-error';
+
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
