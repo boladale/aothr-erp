@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/currency';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   open: boolean;
@@ -119,7 +120,7 @@ export function PettyCashExpenseDialog({ open, onOpenChange, bankAccount, organi
       onOpenChange(false);
       onSaved?.();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to record expense');
+      toast.error(friendlyError(err, 'Failed to record expense'));
     } finally {
       setSaving(false);
     }

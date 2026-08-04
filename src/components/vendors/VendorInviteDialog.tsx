@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Copy, Link2, Check, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface VendorInviteDialogProps {
   open: boolean;
@@ -61,7 +62,7 @@ export function VendorInviteDialog({ open, onOpenChange, vendorId, vendorName, v
       queryClient.invalidateQueries({ queryKey: ['vendor-invite-tokens', vendorId] });
       toast.success('Invite link generated!');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to generate invite'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to generate invite')),
   });
 
   const handleCopy = async () => {

@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+import { friendlyError } from '@/lib/friendly-error';
   Select,
   SelectContent,
   SelectItem,
@@ -87,7 +88,7 @@ export function GeneratePeriodsDialog({
       onOpenChange(false);
       onGenerated();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to generate periods');
+      toast.error(friendlyError(err, 'Failed to generate periods'));
     } finally {
       setGenerating(false);
     }

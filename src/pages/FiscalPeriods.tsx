@@ -16,6 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GeneratePeriodsDialog } from '@/components/fiscal/GeneratePeriodsDialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface ClosingCheck {
   label: string;
@@ -83,7 +84,7 @@ export default function FiscalPeriods() {
       if (error) throw error;
       if (data) toast.success(`Period-end summary created for ${periodName}`);
       else toast.info('No activity found for this period — no summary entry created.');
-    } catch (err: any) { toast.error(err.message || 'Failed to run period-end summary'); }
+    } catch (err: any) { toast.error(friendlyError(err, 'Failed to run period-end summary')); }
     finally { setRunningAction(null); }
   };
 
@@ -96,7 +97,7 @@ export default function FiscalPeriods() {
       if (data) toast.success(`Year-end close completed for FY${yeYear}.`);
       else toast.info('No revenue/expense balances to close.');
       setYeCloseOpen(false);
-    } catch (err: any) { toast.error(err.message || 'Failed'); }
+    } catch (err: any) { toast.error(friendlyError(err, 'Failed')); }
     finally { setRunningAction(null); }
   };
 
@@ -109,7 +110,7 @@ export default function FiscalPeriods() {
       if (data) toast.success(`Opening balances created for FY${cfToYear}.`);
       else toast.info('No balances to carry forward.');
       setCfOpen(false);
-    } catch (err: any) { toast.error(err.message || 'Failed'); }
+    } catch (err: any) { toast.error(friendlyError(err, 'Failed')); }
     finally { setRunningAction(null); }
   };
 

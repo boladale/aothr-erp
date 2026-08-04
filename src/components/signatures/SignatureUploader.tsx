@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Upload, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   userId: string;
@@ -41,7 +42,7 @@ export function SignatureUploader({ userId, currentUrl, onUploaded, label = 'Sig
       onUploaded(data.publicUrl);
       toast.success('Signature uploaded');
     } catch (err: any) {
-      toast.error(err.message || 'Upload failed');
+      toast.error(friendlyError(err, 'Upload failed'));
     } finally {
       setUploading(false);
     }

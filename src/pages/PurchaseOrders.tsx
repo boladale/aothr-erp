@@ -26,6 +26,7 @@ import { POReawardPanel } from '@/components/purchase-orders/POReawardPanel';
 import { formatCurrency } from '@/lib/utils';
 import { notifyPOApproved } from '@/lib/po-emails';
 import { throwEdgeError } from '@/lib/edge-error';
+import { friendlyError } from '@/lib/friendly-error';
 
 
 interface POWithDetails extends PurchaseOrder {
@@ -178,7 +179,7 @@ export default function PurchaseOrders() {
       resetForm();
       invalidateOrders();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to save PO'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to save PO')),
   });
 
   const submitMutation = useMutation({
@@ -223,7 +224,7 @@ export default function PurchaseOrders() {
       notifyPOApproved(po).catch(() => {});
       invalidateOrders();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to approve'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to approve')),
   });
 
   const rejectMutation = useMutation({
@@ -257,7 +258,7 @@ export default function PurchaseOrders() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success('Purchase order deleted'); invalidateOrders(); },
-    onError: (e: any) => toast.error(e?.message || 'Failed to delete PO'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to delete PO')),
   });
 
   const handleDeletePO = (po: POWithDetails) => {
@@ -274,7 +275,7 @@ export default function PurchaseOrders() {
 
     },
     onSuccess: (n) => { toast.success(`${n} POs approved`); setSelectedIds([]); invalidateOrders(); },
-    onError: (e: any) => toast.error(e?.message || 'Bulk approve failed'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Bulk approve failed')),
   });
 
   const bulkRejectMutation = useMutation({
@@ -284,7 +285,7 @@ export default function PurchaseOrders() {
       return ids.length;
     },
     onSuccess: (n) => { toast.success(`${n} POs rejected`); setSelectedIds([]); invalidateOrders(); },
-    onError: (e: any) => toast.error(e?.message || 'Bulk reject failed'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Bulk reject failed')),
   });
 
   const handleRejectPO = (po: POWithDetails) => {

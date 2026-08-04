@@ -18,6 +18,7 @@ import { DeleteDraftButton } from '@/components/ui/delete-draft-button';
 import { Textarea } from '@/components/ui/textarea';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface GRNWithDetails extends GoodsReceipt {
   purchase_orders: { po_number: string; vendors: { name: string } | null } | null;
@@ -137,7 +138,7 @@ export default function GoodsReceipts() {
       resetForm();
       invalidateReceipts();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to save GRN'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to save GRN')),
   });
 
   const postMutation = useMutation({
@@ -162,7 +163,7 @@ export default function GoodsReceipts() {
       ).catch(() => {});
       invalidateReceipts();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to post GRN'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to post GRN')),
   });
   const postingId = postMutation.isPending ? (postMutation.variables as GRNWithDetails | undefined)?.id ?? null : null;
 

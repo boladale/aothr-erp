@@ -28,6 +28,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import type { InventoryBalance, Item, Location, AdjustmentType } from '@/lib/supabase';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface BalanceWithDetails extends InventoryBalance {
   items: Item | null;
@@ -177,7 +178,7 @@ export default function Inventory() {
       setDialogOpen(false);
       setForm({ item_id: '', location_id: '', adjustment_type: 'increase', quantity: 0, reason: '' });
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to adjust inventory'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to adjust inventory')),
   });
   const saving = adjustMutation.isPending;
 

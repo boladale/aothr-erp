@@ -25,6 +25,7 @@ import type { PurchaseOrder, PurchaseOrderLine, Vendor, Location, Item, POStatus
 import { formatCurrency } from '@/lib/utils';
 import { notifyPOApproved } from '@/lib/po-emails';
 import { throwEdgeError } from '@/lib/edge-error';
+import { friendlyError } from '@/lib/friendly-error';
 
 
 interface POWithDetails extends PurchaseOrder {
@@ -136,7 +137,7 @@ export default function PurchaseOrderDetail() {
       notifyPOApproved(po).catch(() => {});
       fetchPO();
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to approve');
+      toast.error(friendlyError(error, 'Failed to approve'));
     } finally {
       setActionLoading(false);
     }
@@ -230,7 +231,7 @@ export default function PurchaseOrderDetail() {
       setSignDialog(false);
       fetchPO();
     } catch (err: any) {
-      toast.error(err.message || 'Failed to finalize');
+      toast.error(friendlyError(err, 'Failed to finalize'));
     } finally {
       setActionLoading(false);
     }
@@ -252,7 +253,7 @@ export default function PurchaseOrderDetail() {
       toast.success('Purchase order deleted');
       navigate('/purchase-orders');
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete PO');
+      toast.error(friendlyError(err, 'Failed to delete PO'));
     } finally {
       setActionLoading(false);
     }
@@ -275,7 +276,7 @@ export default function PurchaseOrderDetail() {
       toast.success('Line removed');
       fetchPO();
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to remove line');
+      toast.error(friendlyError(err, 'Failed to remove line'));
     }
   };
 

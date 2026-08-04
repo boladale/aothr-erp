@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertTriangle, XCircle, Loader2, Play, ShieldCheck, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { friendlyError } from '@/lib/friendly-error';
 
 type Status = 'pass' | 'warn' | 'fail' | 'pending';
 
@@ -244,7 +245,7 @@ export default function SystemHealthCheck() {
       setRanAt(new Date());
       toast.success('Health check complete.');
     } catch (e: any) {
-      toast.error(e.message || 'Health check failed.');
+      toast.error(friendlyError(e, 'Health check failed.'));
     } finally {
       setRunning(false);
     }

@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import type { Item, Location as DbLocation } from '@/lib/supabase';
 import { ExportButton } from '@/components/ui/export-button';
 import { formatCurrency, formatNumber } from '@/lib/utils';
+import { friendlyError } from '@/lib/friendly-error';
 
 export default function Items() {
   const { organizationId } = useAuth();
@@ -127,7 +128,7 @@ export default function Items() {
       setDialogOpen(false);
       toast.success(`Item ${res}`);
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to save item'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to save item')),
   });
   const saving = saveMutation.isPending;
 
@@ -146,7 +147,7 @@ export default function Items() {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       toast.success(wasActive ? 'Item disabled' : 'Item enabled');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to update item'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to update item')),
   });
   const handleToggleActive = (item: Item) => toggleActiveMutation.mutate(item);
 
@@ -159,7 +160,7 @@ export default function Items() {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       toast.success('Item deleted');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to delete item. It may be in use.'),
+    onError: (err: any) => toast.error(friendlyError(err, 'Failed to delete item. It may be in use.')),
   });
   const handleDelete = (item: Item) => {
     if (!window.confirm(`Delete item "${item.name}"? This cannot be undone.`)) return;

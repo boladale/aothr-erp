@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { SignatureUploader } from '@/components/signatures/SignatureUploader';
 import { toast } from 'sonner';
 import { User, Mail, Shield, Building2, Save, PenTool } from 'lucide-react';
+import { friendlyError } from '@/lib/friendly-error';
 
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
@@ -68,7 +69,7 @@ export default function UserProfile() {
       await refreshProfile();
       toast.success('Profile updated successfully');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update profile');
+      toast.error(friendlyError(err, 'Failed to update profile'));
     } finally {
       setSaving(false);
     }

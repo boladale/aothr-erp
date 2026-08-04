@@ -16,6 +16,7 @@ import { RFPFormDialog } from '@/components/rfp/RFPFormDialog';
 import { BidCollectionPanel } from '@/components/requisitions/BidCollectionPanel';
 import { formatCurrency } from '@/lib/utils';
 import { notifyApproversOfPRSubmission, notifyPRApproved, notifyPRRejected } from '@/lib/requisition-emails';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface RequisitionLine {
   id: string;
@@ -157,7 +158,7 @@ export default function RequisitionDetail() {
       toast.success('Requisition deleted');
       navigate('/requisitions');
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to delete');
+      toast.error(friendlyError(err, 'Failed to delete'));
     }
   };
 
@@ -171,7 +172,7 @@ export default function RequisitionDetail() {
       toast.success('Line removed');
       fetchData();
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to remove line');
+      toast.error(friendlyError(err, 'Failed to remove line'));
     }
   };
 

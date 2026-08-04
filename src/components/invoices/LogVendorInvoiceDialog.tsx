@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/utils';
 import { TaxSelector } from '@/components/tax/TaxSelector';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Props {
   open: boolean;
@@ -145,7 +146,7 @@ export function LogVendorInvoiceDialog({ open, onOpenChange, onCreated }: Props)
       onOpenChange(false);
       onCreated?.();
     },
-    onError: (e: any) => toast.error(e?.message || 'Failed to log invoice'),
+    onError: (e: any) => toast.error(friendlyError(e, 'Failed to log invoice')),
   });
 
   const total = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);

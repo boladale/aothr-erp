@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
+import { friendlyError } from '@/lib/friendly-error';
 
 interface Project {
   id: string;
@@ -100,7 +101,7 @@ export default function Projects() {
       setForm({ project_code: '', project_name: '', description: '', status: 'planning', client_name: '', start_date: '', end_date: '', budgeted_amount: 0 });
       fetchProjects();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create project');
+      toast.error(friendlyError(error, 'Failed to create project'));
     } finally {
       setSaving(false);
     }
