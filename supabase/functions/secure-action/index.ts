@@ -80,19 +80,27 @@ Deno.serve(async (req) => {
     switch (action) {
       case 'po_approve': {
         const ids = 'ids' in payload ? payload.ids : [payload.id]
-        // Block self-approval: a user cannot approve a PO they created
-        const { data: ownPOs } = await admin
-          .from('purchase_orders')
-          .select('id')
-          .in('id', ids)
-          .eq('created_by', userId)
-        if (ownPOs && ownPOs.length > 0) {
-          return jsonResponse({
-            ok: false,
-            code: 'SELF_APPROVAL_BLOCKED',
-            error: 'Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver.',
-          })
+        // Admins (superusers) may override separation of duties
+        const { data: isAdmin } = await userClient.rpc('has_role', {
+          _user_id: userId,
+          _role: 'admin',
+        })
+        if (!isAdmin) {
+          // Block self-approval: a user cannot approve a PO they created
+          const { data: ownPOs } = await admin
+            .from('purchase_orders')
+            .select('id')
+            .in('id', ids)
+            .eq('created_by', userId)
+          if (ownPOs && ownPOs.length > 0) {
+            return jsonResponse({
+              ok: false,
+              code: 'SELF_APPROVAL_BLOCKED',
+              error: 'Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver or an Admin.',
+            })
+          }
         }
+
         // Only approve POs currently in 'pending_approval' to prevent state-jump abuse
         const { data, error } = await admin
           .from('purchase_orders')
