@@ -4,6 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrganizationBranding } from '@/components/admin/OrganizationBranding';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { extractEdgeError } from '@/lib/edge-error';
+import { friendlyError } from '@/lib/friendly-error';
+
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { DataManagementPanel } from '@/components/admin/DataManagementPanel';
@@ -125,14 +128,17 @@ export default function Admin() {
       const { data, error } = await supabase.functions.invoke('admin-manage-user', {
         body: { action, target_user_id: userId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const msg = await extractEdgeError(error, data);
+        throw new Error(msg || `Failed to ${action} user`);
+      }
       toast.success(data.message);
       fetchData();
     } catch (err: any) {
-      toast.error(err.message || `Failed to ${action} user`);
+      toast.error(friendlyError(err, `Failed to ${action} user`));
     }
   };
+
 
   const handleRemoveRole = async (userId: string, role: AppRole) => {
     try {
