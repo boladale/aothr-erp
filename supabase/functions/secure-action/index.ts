@@ -25,6 +25,32 @@ const PERM: Record<string, string> = {
   grn_post: 'goods_receipts',
 }
 
+
+// Turn Postgres/PostgREST errors into a sentence the user can act on.
+function describeDbError(error: any, whatWeWereDoing: string): string {
+  const code = String(error?.code ?? '')
+  const raw = String(error?.message ?? '').replace(/^ERROR:\s*/i, '').trim()
+  switch (code) {
+    case '23505':
+      return `A record with the same reference already exists, so ${whatWeWereDoing} was stopped. Check for a duplicate document number.`
+    case '23503':
+      return `A linked record (vendor, item, account or period) referenced here no longer exists, so ${whatWeWereDoing} was stopped. Refresh the page and re-select it.`
+    case '23502':
+      return `A required field is missing on this document, so ${whatWeWereDoing} was stopped. Open the record and complete all mandatory fields.`
+    case '23514':
+      return `A value on this document breaks a business rule (such as a negative quantity or amount), so ${whatWeWereDoing} was stopped.`
+    case '42501':
+      return `Your account is not allowed to change this record, so ${whatWeWereDoing} was stopped. Ask an Admin to grant the required role.`
+    case '40P01':
+    case '55P03':
+      return `Another user is working on this record right now, so ${whatWeWereDoing} could not be completed. Please retry in a few seconds.`
+    default:
+      return raw
+        ? `${raw} (while ${whatWeWereDoing})`
+        : `An unexpected problem stopped ${whatWeWereDoing}. Please refresh the page and try again.`
+  }
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -38,7 +64,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return jsonResponse({ error: 'Unauthorized' }, 401)
+      return jsonResponse({ error: 'You are not signed in. Please sign in again and retry this action.' }, 401)
     }
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -52,14 +78,14 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await userClient.auth.getUser()
     if (userErr || !userData?.user?.id) {
       console.error('auth.getUser failed', userErr)
-      return jsonResponse({ error: 'Unauthorized', detail: userErr?.message }, 401)
+      return jsonResponse({ error: 'Your session has expired or is invalid. Please sign out, sign in again, and retry.', detail: userErr?.message }, 401)
     }
     const userId = userData.user.id
 
     const body = await req.json().catch(() => null)
     const parsed = ActionSchema.safeParse(body)
     if (!parsed.success) {
-      return jsonResponse({ error: 'Invalid request', details: parsed.error.flatten() }, 400)
+      return jsonResponse({ error: 'The request sent to the server was incomplete or malformed. Refresh the page and try the action again.', details: parsed.error.flatten() }, 400)
     }
     const { action, payload } = parsed.data
 
@@ -69,9 +95,13 @@ Deno.serve(async (req) => {
     })
     if (permErr) {
       console.error('has_permission rpc failed', permErr)
-      return jsonResponse({ error: 'Permission check failed', detail: permErr.message }, 500)
+      return jsonResponse({ error: 'Your permissions could not be verified. Please refresh the page; if it repeats, ask an Admin to confirm your role assignment.', detail: permErr.message }, 500)
     }
-    if (!permOk) return jsonResponse({ error: 'Forbidden: missing permission ' + PERM[action] }, 403)
+    if (!permOk) {
+      return jsonResponse({
+        error: `You do not have permission to perform this action. Ask an Admin to grant your role access to ${PERM[action].replace(/_/g, ' ')}.`,
+      }, 403)
+    }
 
     // Privileged client for the actual write. Triggers enforce business rules.
     const admin = createClient(SUPABASE_URL, SERVICE)
@@ -95,7 +125,6 @@ Deno.serve(async (req) => {
           if (ownPOs && ownPOs.length > 0) {
             return jsonResponse({
               ok: false,
-              code: 'SELF_APPROVAL_BLOCKED',
               error: 'Separation of duties: you cannot approve a Purchase Order you created. Please ask another approver or an Admin.',
             })
           }
@@ -110,13 +139,12 @@ Deno.serve(async (req) => {
           .select('id')
         if (error) {
           console.error('po_approve update failed', JSON.stringify(error))
-          return jsonResponse({ error: error.message, details: error.details, hint: error.hint }, 400)
+          return jsonResponse({ error: describeDbError(error, 'approving this Purchase Order'), details: error.details, hint: error.hint }, 400)
         }
         if (!data?.length) {
           return jsonResponse({
             ok: false,
-            code: 'PO_NOT_PENDING_APPROVAL',
-            error: 'This Purchase Order is no longer awaiting approval. Refresh the page to see its current status.',
+            error: 'This Purchase Order is not awaiting approval — it may already be approved, sent, cancelled, or still in draft. Refresh the page to see its current status.',
           })
         }
         // Record approval log entries
@@ -127,51 +155,60 @@ Deno.serve(async (req) => {
       }
 
       case 'invoice_post': {
+        const ACTION_LABEL = 'posting this vendor invoice'
         const { data, error } = await admin
           .from('ap_invoices')
           .update({ status: 'posted', posted_at: nowIso, posted_by: userId })
           .eq('id', payload.id)
           .eq('status', 'draft')
           .select('id')
-        if (error) return jsonResponse({ error: error.message }, 400)
-        if (!data?.length) return jsonResponse({ error: 'Invoice not in draft status' }, 409)
+        if (error) return jsonResponse({ error: describeDbError(error, ACTION_LABEL) }, 400)
+        if (!data?.length) return jsonResponse({ error: 'This invoice is not in draft status, so it cannot be posted again. Refresh the page to see its current status.' }, 409)
         return jsonResponse({ ok: true })
       }
       case 'payment_post': {
+        const ACTION_LABEL = 'posting this payment'
         const { data, error } = await admin
           .from('ap_payments')
           .update({ status: 'posted' })
           .eq('id', payload.id)
           .eq('status', 'draft')
           .select('id')
-        if (error) return jsonResponse({ error: error.message }, 400)
-        if (!data?.length) return jsonResponse({ error: 'Payment not in draft status' }, 409)
+        if (error) return jsonResponse({ error: describeDbError(error, ACTION_LABEL) }, 400)
+        if (!data?.length) return jsonResponse({ error: 'This payment is not in draft status, so it cannot be posted again. Refresh the page to see its current status.' }, 409)
         return jsonResponse({ ok: true })
       }
       case 'payroll_approve': {
+        const ACTION_LABEL = 'approving this payroll run'
         const { data, error } = await admin
           .from('payroll_runs')
           .update({ status: 'approved', approved_by: userId, approved_at: nowIso })
           .eq('id', payload.id)
           .eq('status', 'draft')
           .select('id')
-        if (error) return jsonResponse({ error: error.message }, 400)
-        if (!data?.length) return jsonResponse({ error: 'Payroll run not in draft status' }, 409)
+        if (error) return jsonResponse({ error: describeDbError(error, ACTION_LABEL) }, 400)
+        if (!data?.length) return jsonResponse({ error: 'This payroll run is not in draft status, so it cannot be approved again. Refresh the page to see its current status.' }, 409)
         return jsonResponse({ ok: true })
       }
       case 'grn_post': {
+        const ACTION_LABEL = 'posting this goods receipt'
         const { data, error } = await admin
           .from('goods_receipts')
           .update({ status: 'posted', posted_at: nowIso, posted_by: userId })
           .eq('id', payload.id)
           .eq('status', 'draft')
           .select('id')
-        if (error) return jsonResponse({ error: error.message }, 400)
-        if (!data?.length) return jsonResponse({ error: 'GRN not in draft status' }, 409)
+        if (error) return jsonResponse({ error: describeDbError(error, ACTION_LABEL) }, 400)
+        if (!data?.length) return jsonResponse({ error: 'This goods receipt note is not in draft status, so it cannot be posted again. Refresh the page to see its current status.' }, 409)
         return jsonResponse({ ok: true })
       }
     }
   } catch (e) {
-    return jsonResponse({ error: (e as Error).message ?? 'Internal error' }, 500)
+    console.error('secure-action unhandled failure', e)
+    return jsonResponse({
+      error: (e as Error)?.message
+        ? `The server could not complete this action: ${(e as Error).message}`
+        : 'The server could not complete this action due to an unexpected internal problem. Please try again; if it persists, contact your Administrator.',
+    }, 500)
   }
 })
