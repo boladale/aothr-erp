@@ -25,6 +25,8 @@ import type { PurchaseOrder, Vendor, Location, Item, POStatus } from '@/lib/supa
 import { POReawardPanel } from '@/components/purchase-orders/POReawardPanel';
 import { formatCurrency } from '@/lib/utils';
 import { notifyPOApproved } from '@/lib/po-emails';
+import { throwEdgeError } from '@/lib/edge-error';
+
 
 interface POWithDetails extends PurchaseOrder {
   vendors: Vendor | null;
@@ -212,9 +214,9 @@ export default function PurchaseOrders() {
       const { data, error } = await supabase.functions.invoke('secure-action', {
         body: { action: 'po_approve', payload: { id: po.id } },
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      await throwEdgeError(error, data);
       return po;
+
     },
     onSuccess: (po) => {
       toast.success('PO approved');
@@ -267,9 +269,9 @@ export default function PurchaseOrders() {
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
       const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
-      const errMsg = error?.message || (data as any)?.error;
-      if (errMsg) throw new Error(errMsg);
+      await throwEdgeError(error, data);
       return (data as any)?.updated ?? ids.length;
+
     },
     onSuccess: (n) => { toast.success(`${n} POs approved`); setSelectedIds([]); invalidateOrders(); },
     onError: (e: any) => toast.error(e?.message || 'Bulk approve failed'),
