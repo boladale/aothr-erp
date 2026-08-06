@@ -364,6 +364,11 @@ export default function RFPDetail() {
                   <ShoppingCart className="mr-2 h-4 w-4" /> Create Purchase Order
                 </Button>
               )}
+              {proposals.length > 0 && (
+                <Button variant="outline" onClick={() => setCompareOpen(true)}>
+                  <Table2 className="mr-2 h-4 w-4" /> Compare Quotes (Line by Line)
+                </Button>
+              )}
               {['published', 'evaluating', 'awarded'].includes(rfp.status as string) && (
                 <Button variant="outline" onClick={() => setSignOpen(true)}>
                   <PenLine className="mr-2 h-4 w-4" /> Send for Signature
