@@ -129,6 +129,8 @@ export default function ProcurementKPIReport() {
           id: l.id,
           pr_number: req?.req_number || '—',
           pr_authorization_date: req?.approved_at || '',
+          pr_department: req?.department || '—',
+          pr_requester: req?.requester_name || '—',
           po_number: po?.po_number || '—',
           supplier_id: po?.vendors?.code || '—',
           supplier_name: po?.vendors?.name || '—',
