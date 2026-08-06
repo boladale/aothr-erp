@@ -57,7 +57,7 @@ export default function ProcurementKPIReport() {
         .select(`id, description, quantity, unit_price, line_total, qty_received,
           items(code, name, category),
           purchase_orders!inner(id, po_number, status, order_date, expected_date, approved_at, created_at,
-            discount_type, discount_amount, subtotal, total_amount,
+            discount_type, discount_amount, subtotal, total_amount, rfp_id,
             vendors(id, code, name), locations:ship_to_location_id(name))`)
         .gte('purchase_orders.order_date', dateFrom)
         .lte('purchase_orders.order_date', dateTo);
@@ -65,8 +65,9 @@ export default function ProcurementKPIReport() {
 
       const poIds = Array.from(new Set((lines || []).map((l: any) => l.purchase_orders?.id).filter(Boolean)));
       const lineIds = (lines || []).map((l: any) => l.id);
+      const rfpIds = Array.from(new Set((lines || []).map((l: any) => l.purchase_orders?.rfp_id).filter(Boolean)));
 
-      const [{ data: links }, { data: grns }] = await Promise.all([
+      const [{ data: links }, { data: grns }, { data: rfqs }] = await Promise.all([
         lineIds.length
           ? supabase
               .from('po_line_requisition_lines')
@@ -80,6 +81,12 @@ export default function ProcurementKPIReport() {
               .in('po_id', poIds)
               .eq('status', 'posted')
           : Promise.resolve({ data: [] as any[] }),
+        rfpIds.length
+          ? supabase
+              .from('rfps')
+              .select('id, requisitions:requisition_id(req_number, approved_at, submitted_at)')
+              .in('id', rfpIds)
+          : Promise.resolve({ data: [] as any[] }),
       ]);
 
       const prByLine = new Map<string, any>();
@@ -88,15 +95,22 @@ export default function ProcurementKPIReport() {
         if (req) prByLine.set(l.po_line_id, req);
       });
 
+      // Fallback: PO created from an RFQ that originated from a requisition
+      const prByRfp = new Map<string, any>();
+      (rfqs || []).forEach((r: any) => {
+        if (r.requisitions) prByRfp.set(r.id, r.requisitions);
+      });
+
       const deliveryByPO = new Map<string, string>();
       (grns || []).forEach((g: any) => {
         const prev = deliveryByPO.get(g.po_id);
         if (!prev || g.receipt_date > prev) deliveryByPO.set(g.po_id, g.receipt_date);
       });
 
+
       return (lines || []).map((l: any) => {
         const po = l.purchase_orders;
-        const req = prByLine.get(l.id);
+        const req = prByLine.get(l.id) || (po?.rfp_id ? prByRfp.get(po.rfp_id) : null);
         const qty = Number(l.quantity) || 0;
         const unit = Number(l.unit_price) || 0;
         const total = Number(l.line_total) || qty * unit;
