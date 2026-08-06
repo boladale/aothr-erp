@@ -498,7 +498,7 @@ export default function RFPDetail() {
                       <TableHead>Status</TableHead>
                       <TableHead>Quoted Amount</TableHead>
                       <TableHead>Delivery (days)</TableHead>
-                      <TableHead>Score</TableHead>
+                      <TableHead>Price Rank</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
