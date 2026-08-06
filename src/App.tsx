@@ -94,6 +94,7 @@ const VendorPaymentReport = lazy(() => import("./pages/VendorPaymentReport"));
 const VendorStatement = lazy(() => import("./pages/VendorStatement"));
 const BankStatement = lazy(() => import("./pages/BankStatement"));
 const RequisitionToPaymentReport = lazy(() => import("./pages/RequisitionToPaymentReport"));
+const ProcurementKPIReport = lazy(() => import("./pages/ProcurementKPIReport"));
 const ProcurementAudit = lazy(() => import("./pages/ProcurementAudit"));
 const Departments = lazy(() => import("./pages/Departments"));
 const JobRoles = lazy(() => import("./pages/JobRoles"));
