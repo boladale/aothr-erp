@@ -16,6 +16,8 @@ interface KPIRow {
   id: string;
   pr_number: string;
   pr_authorization_date: string;
+  pr_department: string;
+  pr_requester: string;
   po_number: string;
   supplier_id: string;
   supplier_name: string;
@@ -71,7 +73,7 @@ export default function ProcurementKPIReport() {
         lineIds.length
           ? supabase
               .from('po_line_requisition_lines')
-              .select('po_line_id, requisition_lines(requisitions(req_number, approved_at, submitted_at))')
+              .select('po_line_id, requisition_lines(requisitions(req_number, approved_at, submitted_at, department, requester_name))')
               .in('po_line_id', lineIds)
           : Promise.resolve({ data: [] as any[] }),
         poIds.length
@@ -84,7 +86,7 @@ export default function ProcurementKPIReport() {
         rfpIds.length
           ? supabase
               .from('rfps')
-              .select('id, requisitions:requisition_id(req_number, approved_at, submitted_at)')
+              .select('id, requisitions:requisition_id(req_number, approved_at, submitted_at, department, requester_name)')
               .in('id', rfpIds)
           : Promise.resolve({ data: [] as any[] }),
       ]);
@@ -127,6 +129,8 @@ export default function ProcurementKPIReport() {
           id: l.id,
           pr_number: req?.req_number || '—',
           pr_authorization_date: req?.approved_at || '',
+          pr_department: req?.department || '—',
+          pr_requester: req?.requester_name || '—',
           po_number: po?.po_number || '—',
           supplier_id: po?.vendors?.code || '—',
           supplier_name: po?.vendors?.name || '—',
@@ -188,6 +192,8 @@ export default function ProcurementKPIReport() {
   const columns = [
     { key: 'pr_number', header: 'PR No. (Requisition)' },
     { key: 'pr_authorization_date', header: 'PR Approval Date', render: (r: KPIRow) => fmtDate(r.pr_authorization_date) },
+    { key: 'pr_department', header: 'Department' },
+    { key: 'pr_requester', header: 'Requested By' },
     { key: 'po_number', header: 'PO No.' },
     { key: 'supplier_id', header: 'Supplier ID' },
     { key: 'supplier_name', header: 'Supplier Name' },
