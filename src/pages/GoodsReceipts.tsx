@@ -34,7 +34,8 @@ interface GRNLine { po_line_id: string; item_id: string; qty_received: number; m
 
 export default function GoodsReceipts() {
   const { user, organizationId } = useAuth();
-  const qc = useQueryClient();
+  const branding = useOrgBranding();
+
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGRN, setEditingGRN] = useState<GRNWithDetails | null>(null);
