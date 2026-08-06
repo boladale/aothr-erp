@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Plus, Search, Truck, Pencil } from 'lucide-react';
+import { Plus, Search, Truck, Pencil, Printer } from 'lucide-react';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getNextTransactionNumber } from '@/lib/transaction-numbers';
@@ -19,6 +20,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
 import { friendlyError } from '@/lib/friendly-error';
+import { printBrandedDocument } from '@/lib/print-template';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
+
 
 interface GRNWithDetails extends GoodsReceipt {
   purchase_orders: { po_number: string; vendors: { name: string } | null } | null;
@@ -30,7 +34,10 @@ interface GRNLine { po_line_id: string; item_id: string; qty_received: number; m
 
 export default function GoodsReceipts() {
   const { user, organizationId } = useAuth();
+  const branding = useOrgBranding();
   const qc = useQueryClient();
+
+
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGRN, setEditingGRN] = useState<GRNWithDetails | null>(null);
@@ -178,6 +185,59 @@ export default function GoodsReceipts() {
     setLines(newLines);
   };
 
+  const [printingId, setPrintingId] = useState<string | null>(null);
+  const handlePrint = async (grn: GRNWithDetails) => {
+    setPrintingId(grn.id);
+    try {
+      const { data: grnLines, error } = await supabase
+        .from('goods_receipt_lines')
+        .select('*, items(code, name, unit_of_measure)')
+        .eq('grn_id', grn.id);
+      if (error) throw error;
+
+      const rows = (grnLines || []).map((l: any, i: number) => `<tr>
+        <td>${i + 1}</td>
+        <td>${l.items?.code || ''}</td>
+        <td>${l.items?.name || ''}</td>
+        <td>${l.items?.unit_of_measure || ''}</td>
+        <td style="text-align:right">${Number(l.qty_received || 0).toLocaleString()}</td>
+      </tr>`).join('');
+
+      const body = `
+        <p><strong>Purchase Order:</strong> ${grn.purchase_orders?.po_number || '-'}<br/>
+           <strong>Vendor:</strong> ${grn.purchase_orders?.vendors?.name || '-'}<br/>
+           <strong>Received at:</strong> ${grn.locations?.name || '-'}<br/>
+           <strong>Receipt date:</strong> ${grn.receipt_date ? new Date(grn.receipt_date).toLocaleDateString() : '-'}<br/>
+           <strong>Weigh bill number:</strong> ${(grn as any).weigh_bill_number || '-'}</p>
+        <table>
+          <thead><tr><th>#</th><th>Item Code</th><th>Description</th><th>UoM</th><th style="text-align:right">Qty Received</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="5">No lines recorded</td></tr>'}</tbody>
+        </table>
+        ${(grn as any).description ? `<p style="margin-top:12px"><strong>Description of goods:</strong><br/>${(grn as any).description}</p>` : ''}
+        ${grn.notes ? `<p style="margin-top:8px"><strong>Notes:</strong> ${grn.notes}</p>` : ''}
+        <div class="signatures">
+          <div class="sig"><div class="line"></div><div class="label">Received by (Storekeeper)</div></div>
+          <div class="sig"><div class="line"></div><div class="label">Checked by</div></div>
+          <div class="sig"><div class="line"></div><div class="label">Delivered by (Vendor)</div></div>
+        </div>`;
+
+      printBrandedDocument(body, {
+        orgName: branding.appName,
+        logoUrl: branding.logoUrl || undefined,
+        documentTitle: 'Goods Received Note',
+        documentNumber: grn.grn_number,
+        documentDate: grn.receipt_date ? new Date(grn.receipt_date).toLocaleDateString() : undefined,
+        status: (grn.status || '').toUpperCase(),
+        footerNote: 'Goods received in apparent good order and condition unless otherwise stated.',
+      });
+    } catch (e: any) {
+      toast.error(friendlyError(e, 'Could not prepare the Goods Received Note for printing'));
+    } finally {
+      setPrintingId(null);
+    }
+  };
+
+
   const filtered = receipts.filter(r =>
     r.grn_number.toLowerCase().includes(search.toLowerCase()) ||
     r.purchase_orders?.po_number?.toLowerCase().includes(search.toLowerCase())
@@ -195,7 +255,12 @@ export default function GoodsReceipts() {
       key: 'actions', header: '',
       render: (r: GRNWithDetails) => (
         <div className="flex gap-2 justify-end">
+          <Button size="sm" variant="outline" disabled={printingId === r.id}
+            onClick={(e) => { e.stopPropagation(); handlePrint(r); }}>
+            <Printer className="h-3 w-3 mr-1" /> {printingId === r.id ? 'Preparing...' : 'Print'}
+          </Button>
           {r.status === 'draft' && (
+
             <>
               <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(r); }}><Pencil className="h-3 w-3" /></Button>
               <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); postMutation.mutate(r); }}>
