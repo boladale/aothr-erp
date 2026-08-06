@@ -170,6 +170,7 @@ export default function WarehouseReports() {
             <TabsTrigger value="items-received">Items Received</TabsTrigger>
             <TabsTrigger value="items-issued">Items Issued</TabsTrigger>
             <TabsTrigger value="grn-list">Goods Received Notes</TabsTrigger>
+            <TabsTrigger value="adjustments">Item Adjustments</TabsTrigger>
           </TabsList>
 
 
@@ -294,6 +295,7 @@ export default function WarehouseReports() {
           <TabsContent value="items-received"><WarehouseMovementReports kind="received-items" /></TabsContent>
           <TabsContent value="items-issued"><WarehouseMovementReports kind="issued-items" /></TabsContent>
           <TabsContent value="grn-list"><WarehouseMovementReports kind="grn-list" /></TabsContent>
+          <TabsContent value="adjustments"><WarehouseMovementReports kind="adjustments" /></TabsContent>
         </Tabs>
 
       </div>
