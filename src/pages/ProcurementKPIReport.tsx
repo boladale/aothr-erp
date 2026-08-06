@@ -16,6 +16,8 @@ interface KPIRow {
   id: string;
   pr_number: string;
   pr_authorization_date: string;
+  pr_department: string;
+  pr_requester: string;
   po_number: string;
   supplier_id: string;
   supplier_name: string;
