@@ -10,6 +10,7 @@ import { MetricCard } from '@/components/ui/metric-card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/currency';
 import { useOrgCurrency } from '@/hooks/useOrgCurrency';
+import { WarehouseMovementReports } from '@/components/warehouse/WarehouseMovementReports';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['hsl(217, 91%, 45%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(199, 89%, 48%)'];
@@ -166,6 +167,9 @@ export default function WarehouseReports() {
             <TabsTrigger value="top-items">Top Items</TabsTrigger>
             <TabsTrigger value="slow-moving">Slow Moving</TabsTrigger>
             <TabsTrigger value="dead-stock">Dead Stock</TabsTrigger>
+            <TabsTrigger value="items-received">Items Received</TabsTrigger>
+            <TabsTrigger value="items-issued">Items Issued</TabsTrigger>
+            <TabsTrigger value="grn-list">Goods Received Notes</TabsTrigger>
           </TabsList>
 
 
@@ -287,6 +291,9 @@ export default function WarehouseReports() {
               </CardContent>
             </Card>
           </TabsContent>
+          <TabsContent value="items-received"><WarehouseMovementReports kind="received-items" /></TabsContent>
+          <TabsContent value="items-issued"><WarehouseMovementReports kind="issued-items" /></TabsContent>
+          <TabsContent value="grn-list"><WarehouseMovementReports kind="grn-list" /></TabsContent>
         </Tabs>
 
       </div>
