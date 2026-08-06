@@ -29,7 +29,9 @@ interface KPIRow {
   unit_price: number;
   total_value: number;
   discounted_price: number;
+  qty_delivered: number;
   defective_units: number;
+  delivery_state: string;
   job_location: string;
 }
 
@@ -124,7 +126,9 @@ export default function ProcurementKPIReport() {
           unit_price: unit,
           total_value: total,
           discounted_price: total - total * discRate,
+          qty_delivered: received,
           defective_units: Math.max(0, qty - received),
+          delivery_state: received <= 0 ? 'Not delivered' : received >= qty ? 'Fully delivered' : 'Partially delivered',
           job_location: po?.locations?.name || '—',
         } as KPIRow;
       });
@@ -183,7 +187,9 @@ export default function ProcurementKPIReport() {
     { key: 'unit_price', header: 'Unit Price', render: (r: KPIRow) => formatCurrency(r.unit_price) },
     { key: 'total_value', header: 'Total Value', render: (r: KPIRow) => formatCurrency(r.total_value) },
     { key: 'discounted_price', header: 'Discounted Price', render: (r: KPIRow) => formatCurrency(r.discounted_price) },
-    { key: 'defective_units', header: 'Outstanding/Defective Units', render: (r: KPIRow) => r.defective_units.toLocaleString() },
+    { key: 'qty_delivered', header: 'Qty Delivered', render: (r: KPIRow) => r.qty_delivered.toLocaleString() },
+    { key: 'defective_units', header: 'Outstanding / Defective Units', render: (r: KPIRow) => r.defective_units.toLocaleString() },
+    { key: 'delivery_state', header: 'Delivery Status', render: (r: KPIRow) => <Badge variant={r.delivery_state === 'Fully delivered' ? 'outline' : 'secondary'}>{r.delivery_state}</Badge> },
     { key: 'job_location', header: 'Job Location' },
   ];
 
