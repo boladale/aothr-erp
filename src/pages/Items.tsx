@@ -117,8 +117,14 @@ export default function Items() {
         if (error) throw error;
         return 'updated';
       } else {
-        const { default_location_id: _drop, ...rest } = form;
-        const { error } = await supabase.from('items').insert({ ...rest, default_location_id: locId, organization_id: organizationId } as any);
+        const { data: nextCode, error: numErr } = await supabase.rpc('next_transaction_number', {
+          p_org_id: organizationId,
+          p_doc_type: 'item',
+          p_prefix: 'ITM',
+        } as any);
+        if (numErr) throw numErr;
+        const { default_location_id: _drop, code: _dropCode, ...rest } = form;
+        const { error } = await supabase.from('items').insert({ ...rest, code: nextCode as unknown as string, default_location_id: locId, organization_id: organizationId } as any);
         if (error) throw error;
         return 'created';
       }
