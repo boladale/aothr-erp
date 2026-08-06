@@ -110,7 +110,7 @@ export default function ProcurementKPIReport() {
 
       return (lines || []).map((l: any) => {
         const po = l.purchase_orders;
-        const req = prByLine.get(l.id);
+        const req = prByLine.get(l.id) || (po?.rfp_id ? prByRfp.get(po.rfp_id) : null);
         const qty = Number(l.quantity) || 0;
         const unit = Number(l.unit_price) || 0;
         const total = Number(l.line_total) || qty * unit;
