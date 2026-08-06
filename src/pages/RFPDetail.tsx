@@ -355,9 +355,10 @@ export default function RFPDetail() {
   if (loading) return <AppLayout><div className="page-container"><p>Loading...</p></div></AppLayout>;
   if (!rfp) return <AppLayout><div className="page-container"><p>RFQ not found</p></div></AppLayout>;
 
-  const sortedProposals = [...proposals].sort((a, b) => b.weighted_score - a.weighted_score);
+  const sortedProposals = [...proposals].sort((a, b) => (Number(a.total_amount) || Infinity) - (Number(b.total_amount) || Infinity));
   const showEvaluation = rfp.status === 'evaluating' || rfp.status === 'awarded';
-  const highestScore = sortedProposals.length > 0 ? sortedProposals[0]?.weighted_score : 0;
+  const rankedProposals = sortedProposals.filter(p => p.status === 'submitted' || p.status === 'awarded');
+  const lowestAmount = rankedProposals.length > 0 ? Number(rankedProposals[0].total_amount) || 0 : 0;
 
   return (
     <AppLayout>
