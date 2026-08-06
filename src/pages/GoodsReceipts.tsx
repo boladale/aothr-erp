@@ -255,7 +255,12 @@ export default function GoodsReceipts() {
       key: 'actions', header: '',
       render: (r: GRNWithDetails) => (
         <div className="flex gap-2 justify-end">
+          <Button size="sm" variant="outline" disabled={printingId === r.id}
+            onClick={(e) => { e.stopPropagation(); handlePrint(r); }}>
+            <Printer className="h-3 w-3 mr-1" /> {printingId === r.id ? 'Preparing...' : 'Print'}
+          </Button>
           {r.status === 'draft' && (
+
             <>
               <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(r); }}><Pencil className="h-3 w-3" /></Button>
               <Button size="sm" variant="default" disabled={postingId === r.id} onClick={(e) => { e.stopPropagation(); postMutation.mutate(r); }}>
