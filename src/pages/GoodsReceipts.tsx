@@ -20,6 +20,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
 import { friendlyError } from '@/lib/friendly-error';
+import { printBrandedDocument } from '@/lib/print-template';
+import { useOrgBranding } from '@/hooks/useOrgBranding';
+
 
 interface GRNWithDetails extends GoodsReceipt {
   purchase_orders: { po_number: string; vendors: { name: string } | null } | null;
