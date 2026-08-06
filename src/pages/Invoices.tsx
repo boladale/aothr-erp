@@ -236,6 +236,7 @@ export default function Invoices() {
 
   const columns = [
     { key: 'invoice_number', header: 'Invoice #', render: (i: InvoiceWithDetails) => <span className="font-medium">{i.invoice_number}</span> },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'vendor', header: 'Vendor', render: (i: InvoiceWithDetails) => i.vendors?.name || '-' },
     { key: 'po', header: 'PO', render: (i: InvoiceWithDetails) => i.purchase_orders?.po_number || '-' },
     { key: 'invoice_date', header: 'Date', render: (i: InvoiceWithDetails) => new Date(i.invoice_date).toLocaleDateString() },

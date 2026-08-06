@@ -179,6 +179,7 @@ export default function Requisitions() {
 
   const columns = [
     { key: 'req_number', header: 'Req #', render: (r: RequisitionRow) => <span className="font-medium">{r.req_number}</span> },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'requester', header: 'Requester', render: (r: RequisitionRow) => r.requester_name || r.profiles?.full_name || r.profiles?.email || '-' },
     { key: 'department', header: 'Department', render: (r: RequisitionRow) => r.department || '-' },
     { key: 'needed_by_date', header: 'Needed By', render: (r: RequisitionRow) => r.needed_by_date ? new Date(r.needed_by_date).toLocaleDateString() : '-' },

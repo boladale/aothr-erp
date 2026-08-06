@@ -349,6 +349,7 @@ export default function InventoryIssues() {
 
   const columns = [
     { key: 'issue_number', header: 'Issue #' },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'issue_date', header: 'Date', render: (row: IssueRow) => format(new Date(row.issue_date), 'dd MMM yyyy') },
     { key: 'location', header: 'Location', render: (row: IssueRow) => row.locations?.name || '-' },
     { key: 'issued_to', header: 'Issued To', render: (row: IssueRow) => row.issued_to || '-' },

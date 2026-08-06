@@ -118,6 +118,7 @@ export default function FundTransfers() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Transfer #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">From</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">To</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Amount</th>
@@ -130,6 +131,7 @@ export default function FundTransfers() {
                   {transfers.map(t => (
                     <tr key={t.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{t.transfer_number}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{(t as any).created_at ? new Date((t as any).created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{t.from_bank?.account_name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{t.to_bank?.account_name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-right font-medium">{formatCurrency(t.amount)}</td>
@@ -148,7 +150,7 @@ export default function FundTransfers() {
                     </tr>
                   ))}
                   {transfers.length === 0 && (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No fund transfers found</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No fund transfers found</td></tr>
                   )}
                 </tbody>
               </table>

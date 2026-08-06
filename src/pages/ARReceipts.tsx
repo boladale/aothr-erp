@@ -187,6 +187,7 @@ export default function ARReceipts() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Receipt #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Method</th>
@@ -199,6 +200,7 @@ export default function ARReceipts() {
                   {receipts.map(rec => (
                     <tr key={rec.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{rec.receipt_number}</td>
+                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{(rec as any).created_at ? new Date((rec as any).created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{rec.customers?.name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{rec.receipt_date}</td>
                       <td className="px-4 py-2.5 text-sm capitalize">{rec.payment_method.replace('_', ' ')}</td>
@@ -227,7 +229,7 @@ export default function ARReceipts() {
                     </tr>
                   ))}
                   {receipts.length === 0 && (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No receipts found</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No receipts found</td></tr>
                   )}
                 </tbody>
               </table>

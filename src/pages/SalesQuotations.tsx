@@ -167,6 +167,7 @@ export default function SalesQuotations() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Number</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Valid Until</th>
@@ -179,6 +180,7 @@ export default function SalesQuotations() {
                   {quotations.map((q: any) => (
                     <tr key={q.id} className="hover:bg-muted/50">
                       <td className="px-4 py-3 text-sm font-medium">{q.quotation_number}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{q.created_at ? new Date(q.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-3 text-sm">{q.customers?.name}</td>
                       <td className="px-4 py-3 text-sm">{q.quotation_date}</td>
                       <td className="px-4 py-3 text-sm">{q.valid_until || '—'}</td>

@@ -190,6 +190,7 @@ export default function SalesOrders() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Order #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Total</th>
@@ -201,6 +202,7 @@ export default function SalesOrders() {
                   {orders.map((o: any) => (
                     <tr key={o.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => viewOrderDetail(o)}>
                       <td className="px-4 py-3 text-sm font-medium">{o.order_number}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{o.created_at ? new Date(o.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-3 text-sm">{o.customers?.name}</td>
                       <td className="px-4 py-3 text-sm">{o.order_date}</td>
                       <td className="px-4 py-3 text-sm text-right">{formatCurrency(o.total_amount)}</td>
