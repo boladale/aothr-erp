@@ -285,49 +285,13 @@ export default function RFPDetail() {
     }
   };
 
-  const handleSaveScores = async (proposalId: string) => {
-    const proposalScores = editingScores[proposalId] || {};
-    const proposalComments = scoreComments[proposalId] || {};
-
-    try {
-      for (const criterion of criteria) {
-        const score = proposalScores[criterion.id] ?? 0;
-        const comments = proposalComments[criterion.id] || null;
-
-        await supabase.from('rfp_scores').upsert({
-          proposal_id: proposalId,
-          criterion_id: criterion.id,
-          score,
-          comments,
-          evaluated_by: user?.id,
-        }, { onConflict: 'proposal_id,criterion_id' });
-      }
-
-      // Calculate weighted score
-      let weightedScore = 0;
-      for (const criterion of criteria) {
-        const score = proposalScores[criterion.id] ?? 0;
-        weightedScore += (score / 10) * criterion.weight;
-      }
-
-      await supabase.from('rfp_proposals')
-        .update({ weighted_score: weightedScore })
-        .eq('id', proposalId);
-
-      toast.success('Scores saved');
-      fetchData();
-    } catch (error) {
-      toast.error(friendlyError(error, 'Failed to save scores. Please refresh and try again.'));
-    }
-  };
-
   const handleAward = async (proposal: Proposal) => {
     if (!rfp) return;
-    // Ensure the proposal has been scored
-    if (proposal.weighted_score <= 0) {
-      toast.error('Please score this vendor before awarding');
+    if (!proposal.total_amount || proposal.total_amount <= 0) {
+      toast.error('This vendor has no quoted amount recorded yet. Enter their quote before awarding.');
       return;
     }
+
     try {
       await supabase.from('rfps').update({
         status: 'awarded',
