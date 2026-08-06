@@ -71,7 +71,7 @@ export default function ProcurementKPIReport() {
         lineIds.length
           ? supabase
               .from('po_line_requisition_lines')
-              .select('po_line_id, requisition_lines(requisitions(req_number, approved_at, submitted_at))')
+              .select('po_line_id, requisition_lines(requisitions(req_number, approved_at, submitted_at, department, requester_name))')
               .in('po_line_id', lineIds)
           : Promise.resolve({ data: [] as any[] }),
         poIds.length
@@ -84,7 +84,7 @@ export default function ProcurementKPIReport() {
         rfpIds.length
           ? supabase
               .from('rfps')
-              .select('id, requisitions:requisition_id(req_number, approved_at, submitted_at)')
+              .select('id, requisitions:requisition_id(req_number, approved_at, submitted_at, department, requester_name)')
               .in('id', rfpIds)
           : Promise.resolve({ data: [] as any[] }),
       ]);
