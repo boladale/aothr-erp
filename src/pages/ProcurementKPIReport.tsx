@@ -29,7 +29,9 @@ interface KPIRow {
   unit_price: number;
   total_value: number;
   discounted_price: number;
+  qty_delivered: number;
   defective_units: number;
+  delivery_state: string;
   job_location: string;
 }
 
