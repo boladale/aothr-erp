@@ -110,7 +110,7 @@ export default function ProcurementKPIReport() {
         return {
           id: l.id,
           pr_number: req?.req_number || '—',
-          pr_authorization_date: req?.approved_at || req?.submitted_at || '',
+          pr_authorization_date: req?.approved_at || '',
           po_number: po?.po_number || '—',
           supplier_id: po?.vendors?.code || '—',
           supplier_name: po?.vendors?.name || '—',
@@ -168,8 +168,8 @@ export default function ProcurementKPIReport() {
   }, [filtered]);
 
   const columns = [
-    { key: 'pr_number', header: 'PR No.' },
-    { key: 'pr_authorization_date', header: 'PR Auth. Date', render: (r: KPIRow) => fmtDate(r.pr_authorization_date) },
+    { key: 'pr_number', header: 'PR No. (Requisition)' },
+    { key: 'pr_authorization_date', header: 'PR Approval Date', render: (r: KPIRow) => fmtDate(r.pr_authorization_date) },
     { key: 'po_number', header: 'PO No.' },
     { key: 'supplier_id', header: 'Supplier ID' },
     { key: 'supplier_name', header: 'Supplier Name' },
