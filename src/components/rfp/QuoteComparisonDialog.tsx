@@ -94,7 +94,37 @@ export function QuoteComparisonDialog({
   const label = (it: RFPItemLite) =>
     it.items ? `${it.items.code} — ${it.items.name}` : it.services ? `${it.services.code} — ${it.services.name}` : 'Item';
 
+  const buildExportRows = () => {
+    const rows: Record<string, string | number>[] = items.map(it => {
+      const row: Record<string, string | number> = {
+        'Line Item': label(it),
+        Qty: Number(it.quantity) || 0,
+      };
+      proposals.forEach(p => {
+        const unit = Number(prices[p.id]?.[it.id]) || 0;
+        const name = p.vendors?.name || 'Vendor';
+        row[`${name} — Unit Price`] = unit;
+        row[`${name} — Line Total`] = unit * (Number(it.quantity) || 0);
+      });
+      return row;
+    });
+    const totalRow: Record<string, string | number> = { 'Line Item': 'TOTAL QUOTED PRICE', Qty: '' };
+    const daysRow: Record<string, string | number> = { 'Line Item': 'DELIVERY TIME (DAYS)', Qty: '' };
+    const diffRow: Record<string, string | number> = { 'Line Item': 'DIFFERENCE VS LOWEST', Qty: '' };
+    proposals.forEach(p => {
+      const name = p.vendors?.name || 'Vendor';
+      totalRow[`${name} — Unit Price`] = '';
+      totalRow[`${name} — Line Total`] = totals[p.id] || 0;
+      daysRow[`${name} — Unit Price`] = '';
+      daysRow[`${name} — Line Total`] = days[p.id] || '';
+      diffRow[`${name} — Unit Price`] = '';
+      diffRow[`${name} — Line Total`] = totals[p.id] > 0 ? (totals[p.id] || 0) - lowestTotal : '';
+    });
+    return [...rows, totalRow, daysRow, diffRow];
+  };
+
   const handleSave = async () => {
+
     setSaving(true);
     try {
       for (const p of proposals) {
