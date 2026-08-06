@@ -94,6 +94,7 @@ export const pathToProgram: Record<string, string> = {
   '/fixed-assets': 'fixed_assets',
   '/po-closure': 'po_closure',
   '/procurement-reports': 'procurement_reports',
+  '/procurement-kpi': 'procurement_reports',
   '/warehouse-reports': 'warehouse_reports',
   '/ap-reports': 'ap_reports',
   '/ar-reports': 'ar_reports',
@@ -251,6 +252,7 @@ export const navSections = [
     label: 'Reports',
     items: [
       { path: '/procurement-reports', label: 'Procurement Reports', icon: BarChart3 },
+      { path: '/procurement-kpi', label: 'Procurement KPI Analysis', icon: BarChart3 },
       { path: '/warehouse-reports', label: 'Warehouse Reports', icon: BarChart3 },
       { path: '/ap-reports', label: 'AP Reports', icon: BarChart3 },
       { path: '/ar-reports', label: 'AR Reports', icon: BarChart3 },
