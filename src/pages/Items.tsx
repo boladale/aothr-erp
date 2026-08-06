@@ -311,11 +311,12 @@ export default function Items() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Code *</Label>
+                  <Label>Code</Label>
                   <Input
-                    value={form.code}
-                    onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                    placeholder="ITM001"
+                    value={editItem ? form.code : (form.code || 'Auto-generated')}
+                    readOnly
+                    disabled
+                    className="bg-muted"
                   />
                 </div>
                 <div className="space-y-2">
