@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle, ShoppingCart, PenLine } from 'lucide-react';
+import { ArrowLeft, Send, Award, UserPlus, Star, Pencil, Trophy, CheckCircle, ShoppingCart, PenLine, Table2 } from 'lucide-react';
+import { QuoteComparisonDialog } from '@/components/rfp/QuoteComparisonDialog';
 import { RFPEditDialog } from '@/components/rfp/RFPEditDialog';
 import { CreatePOFromRFPDialog } from '@/components/rfp/CreatePOFromRFPDialog';
 import { SendForSignatureDialog } from '@/components/signatures/SendForSignatureDialog';
@@ -96,6 +97,7 @@ export default function RFPDetail() {
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [rfp, setRfp] = useState<RFPData | null>(null);
   const [signOpen, setSignOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
   const branding = useOrgBranding();
 
   // Invite dialog state
@@ -600,6 +602,17 @@ export default function RFPDetail() {
           )}
 
         </Tabs>
+
+        <QuoteComparisonDialog
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+          rfpId={id!}
+          rfqNumber={rfp.rfp_number}
+          items={rfpItems as any}
+          proposals={proposals as any}
+          readOnly={rfp.status === 'awarded'}
+          onSaved={() => queryClient.invalidateQueries({ queryKey: ['rfp_detail', id] })}
+        />
 
         {/* Invite Dialog */}
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
