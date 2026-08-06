@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
 
-type ReportKind = 'received-items' | 'issued-items' | 'grn-list';
+type ReportKind = 'received-items' | 'issued-items' | 'grn-list' | 'adjustments';
 
 function defaultFrom() {
   const d = new Date();
@@ -101,6 +101,39 @@ export function WarehouseMovementReports({ kind }: Props) {
           .sort((a, b) => (a.date < b.date ? 1 : -1));
       }
 
+      if (kind === 'adjustments') {
+        let q = supabase
+          .from('inventory_adjustment_lines')
+          .select('id, quantity, adjustment_type, notes, items(code, name, unit_cost), inventory_adjustments!inner(adjustment_number, adjustment_date, status, reason, location_id, locations(name))')
+          .eq('inventory_adjustments.status', 'posted')
+          .gte('inventory_adjustments.adjustment_date', dateFrom)
+          .lte('inventory_adjustments.adjustment_date', dateTo);
+        if (locationId !== 'all') q = q.eq('inventory_adjustments.location_id', locationId);
+        const { data, error } = await q;
+        if (error) throw error;
+        return (data || [])
+          .map((r: any) => {
+            const raw = Number(r.quantity) || 0;
+            const isDecrease = String(r.adjustment_type || '').toLowerCase().includes('decrease');
+            const qty = isDecrease ? -Math.abs(raw) : Math.abs(raw);
+            const cost = Number(r.items?.unit_cost) || 0;
+            return {
+              id: r.id,
+              doc_number: r.inventory_adjustments?.adjustment_number || '',
+              date: r.inventory_adjustments?.adjustment_date || '',
+              location: r.inventory_adjustments?.locations?.name || '—',
+              item_code: r.items?.code || '',
+              item_name: r.items?.name || '',
+              adjustment_type: r.adjustment_type || '—',
+              quantity: qty,
+              unit_cost: cost,
+              value: qty * cost,
+              reason: r.inventory_adjustments?.reason || r.notes || '—',
+            };
+          })
+          .sort((a, b) => (a.date < b.date ? 1 : -1));
+      }
+
       let q = supabase
         .from('goods_receipts')
         .select('id, grn_number, receipt_date, status, weigh_bill_number, created_at, locations(name), purchase_orders(po_number, vendors(name)), goods_receipt_lines(qty_received)')
@@ -159,6 +192,24 @@ export function WarehouseMovementReports({ kind }: Props) {
           { key: 'value', header: 'Value' },
           { key: 'po_number', header: 'PO No.' },
           { key: 'vendor', header: 'Vendor' },
+        ],
+      };
+    }
+    if (kind === 'adjustments') {
+      return {
+        title: 'Item Adjustment Report',
+        filename: 'item-adjustment-report',
+        columns: [
+          { key: 'doc_number', header: 'Adj. No.' },
+          { key: 'date', header: 'Date' },
+          { key: 'location', header: 'Location' },
+          { key: 'item_code', header: 'Item Code' },
+          { key: 'item_name', header: 'Item' },
+          { key: 'adjustment_type', header: 'Type' },
+          { key: 'quantity', header: 'Qty Adjusted' },
+          { key: 'unit_cost', header: 'Unit Cost' },
+          { key: 'value', header: 'Value Impact' },
+          { key: 'reason', header: 'Reason' },
         ],
       };
     }
