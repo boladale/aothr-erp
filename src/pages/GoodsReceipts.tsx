@@ -185,6 +185,59 @@ export default function GoodsReceipts() {
     setLines(newLines);
   };
 
+  const [printingId, setPrintingId] = useState<string | null>(null);
+  const handlePrint = async (grn: GRNWithDetails) => {
+    setPrintingId(grn.id);
+    try {
+      const { data: grnLines, error } = await supabase
+        .from('goods_receipt_lines')
+        .select('*, items(code, name, unit_of_measure)')
+        .eq('grn_id', grn.id);
+      if (error) throw error;
+
+      const rows = (grnLines || []).map((l: any, i: number) => `<tr>
+        <td>${i + 1}</td>
+        <td>${l.items?.code || ''}</td>
+        <td>${l.items?.name || ''}</td>
+        <td>${l.items?.unit_of_measure || ''}</td>
+        <td style="text-align:right">${Number(l.qty_received || 0).toLocaleString()}</td>
+      </tr>`).join('');
+
+      const body = `
+        <p><strong>Purchase Order:</strong> ${grn.purchase_orders?.po_number || '-'}<br/>
+           <strong>Vendor:</strong> ${grn.purchase_orders?.vendors?.name || '-'}<br/>
+           <strong>Received at:</strong> ${grn.locations?.name || '-'}<br/>
+           <strong>Receipt date:</strong> ${grn.receipt_date ? new Date(grn.receipt_date).toLocaleDateString() : '-'}<br/>
+           <strong>Weigh bill number:</strong> ${(grn as any).weigh_bill_number || '-'}</p>
+        <table>
+          <thead><tr><th>#</th><th>Item Code</th><th>Description</th><th>UoM</th><th style="text-align:right">Qty Received</th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="5">No lines recorded</td></tr>'}</tbody>
+        </table>
+        ${(grn as any).description ? `<p style="margin-top:12px"><strong>Description of goods:</strong><br/>${(grn as any).description}</p>` : ''}
+        ${grn.notes ? `<p style="margin-top:8px"><strong>Notes:</strong> ${grn.notes}</p>` : ''}
+        <div class="signatures">
+          <div class="sig"><div class="line"></div><div class="label">Received by (Storekeeper)</div></div>
+          <div class="sig"><div class="line"></div><div class="label">Checked by</div></div>
+          <div class="sig"><div class="line"></div><div class="label">Delivered by (Vendor)</div></div>
+        </div>`;
+
+      printBrandedDocument(body, {
+        orgName: branding.appName,
+        logoUrl: branding.logoUrl || undefined,
+        documentTitle: 'Goods Received Note',
+        documentNumber: grn.grn_number,
+        documentDate: grn.receipt_date ? new Date(grn.receipt_date).toLocaleDateString() : undefined,
+        status: (grn.status || '').toUpperCase(),
+        footerNote: 'Goods received in apparent good order and condition unless otherwise stated.',
+      });
+    } catch (e: any) {
+      toast.error(friendlyError(e, 'Could not prepare the Goods Received Note for printing'));
+    } finally {
+      setPrintingId(null);
+    }
+  };
+
+
   const filtered = receipts.filter(r =>
     r.grn_number.toLowerCase().includes(search.toLowerCase()) ||
     r.purchase_orders?.po_number?.toLowerCase().includes(search.toLowerCase())
