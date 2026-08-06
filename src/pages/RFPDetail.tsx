@@ -571,9 +571,13 @@ export default function RFPDetail() {
           {showEvaluation && (
             <TabsContent value="evaluation">
               <div className="space-y-6">
-                {/* Scoring Summary Card */}
                 <Card>
-                  <CardHeader><CardTitle className="flex items-center gap-2"><Trophy className="h-5 w-5" /> Score Summary & Award</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Trophy className="h-5 w-5" /> Automatic Price Ranking & Award</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Vendors are ranked automatically by quoted amount — lowest price ranks first. No manual scoring required.
+                    </p>
+                  </CardHeader>
                   <CardContent>
                     <Table>
                       <TableHeader>
@@ -581,131 +585,50 @@ export default function RFPDetail() {
                           <TableHead>Rank</TableHead>
                           <TableHead>Vendor</TableHead>
                           <TableHead>Quoted Amount</TableHead>
+                          <TableHead>Difference vs Lowest</TableHead>
                           <TableHead>Delivery</TableHead>
-                          {criteria.map(c => (
-                            <TableHead key={c.id} className="text-center text-xs">
-                              {c.criterion_name}<br/><span className="text-muted-foreground">({c.weight}%)</span>
-                            </TableHead>
-                          ))}
-                          <TableHead className="text-center font-bold">Total Score</TableHead>
                           <TableHead></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {sortedProposals.filter(p => p.status === 'submitted' || p.status === 'awarded').map((p, idx) => (
-                          <TableRow key={p.id} className={p.status === 'awarded' ? 'bg-success/10 font-semibold' : ''}>
-                            <TableCell>
-                              <Badge variant={idx === 0 && p.weighted_score > 0 ? 'default' : 'secondary'}>
-                                #{idx + 1}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {p.vendors?.name}
-                              {p.status === 'awarded' && <Badge className="ml-2 bg-yellow-500 text-white">Awarded</Badge>}
-                            </TableCell>
-                            <TableCell className="font-semibold">{formatCurrency(p.total_amount)}</TableCell>
-                            <TableCell>{p.delivery_timeline_days ? `${p.delivery_timeline_days} days` : '-'}</TableCell>
-                            {criteria.map(c => {
-                              const score = editingScores[p.id]?.[c.id] ?? 0;
-                              const weighted = (score / 10) * c.weight;
-                              return (
-                                <TableCell key={c.id} className="text-center">
-                                  <div className="text-sm">{score}/10</div>
-                                  <div className="text-xs text-muted-foreground">{weighted.toFixed(1)}%</div>
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell className="text-center">
-                              <span className={`text-lg font-bold ${idx === 0 && p.weighted_score > 0 ? 'text-green-600' : ''}`}>
-                                {p.weighted_score.toFixed(1)}%
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              {rfp.status === 'evaluating' && p.status === 'submitted' && p.weighted_score > 0 && (
-                                <Button size="sm" onClick={() => handleAward(p)}>
-                                  <Award className="h-3 w-3 mr-1" /> Award
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {rankedProposals.map((p, idx) => {
+                          const diff = p.total_amount - lowestAmount;
+                          return (
+                            <TableRow key={p.id} className={p.status === 'awarded' ? 'bg-success/10 font-semibold' : ''}>
+                              <TableCell>
+                                <Badge variant={idx === 0 ? 'default' : 'secondary'}>#{idx + 1}</Badge>
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {p.vendors?.name}
+                                {idx === 0 && p.total_amount > 0 && <Badge variant="outline" className="ml-2 text-green-600">Lowest Price</Badge>}
+                                {p.status === 'awarded' && <Badge className="ml-2 bg-yellow-500 text-white">Awarded</Badge>}
+                              </TableCell>
+                              <TableCell className="font-semibold">{formatCurrency(p.total_amount)}</TableCell>
+                              <TableCell className={diff > 0 ? 'text-destructive' : 'text-green-600'}>
+                                {diff > 0 ? `+${formatCurrency(diff)}` : '—'}
+                              </TableCell>
+                              <TableCell>{p.delivery_timeline_days ? `${p.delivery_timeline_days} days` : '-'}</TableCell>
+                              <TableCell>
+                                {rfp.status === 'evaluating' && p.status === 'submitted' && (
+                                  <Button size="sm" onClick={() => handleAward(p)}>
+                                    <Award className="h-3 w-3 mr-1" /> Award
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        {rankedProposals.length === 0 && (
+                          <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No submitted quotes yet.</TableCell></TableRow>
+                        )}
                       </TableBody>
                     </Table>
                   </CardContent>
                 </Card>
-
-                {/* Per-vendor scoring cards */}
-                {rfp.status === 'evaluating' && sortedProposals.filter(p => p.status === 'submitted').map(proposal => (
-                  <Card key={proposal.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-3">
-                          {proposal.vendors?.name}
-                          <Badge variant="outline">Quoted: {formatCurrency(proposal.total_amount)}</Badge>
-                          <Badge variant="secondary">Score: {proposal.weighted_score.toFixed(1)}%</Badge>
-                        </CardTitle>
-                        <Button size="sm" onClick={() => handleSaveScores(proposal.id)}>Save Scores</Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Criterion</TableHead>
-                            <TableHead>Weight</TableHead>
-                            <TableHead>Score (0-10)</TableHead>
-                            <TableHead>Weighted</TableHead>
-                            <TableHead>Comments</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {criteria.map(c => {
-                            const score = editingScores[proposal.id]?.[c.id] ?? 0;
-                            const weighted = (score / 10) * c.weight;
-                            return (
-                              <TableRow key={c.id}>
-                                <TableCell className="font-medium">{c.criterion_name}</TableCell>
-                                <TableCell>{c.weight}%</TableCell>
-                                <TableCell>
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    max={10}
-                                    className="w-20"
-                                    value={score}
-                                    onChange={e => {
-                                      const val = Math.min(10, Math.max(0, Number(e.target.value)));
-                                      setEditingScores(prev => ({
-                                        ...prev,
-                                        [proposal.id]: { ...prev[proposal.id], [c.id]: val }
-                                      }));
-                                    }}
-                                  />
-                                </TableCell>
-                                <TableCell>{weighted.toFixed(1)}%</TableCell>
-                                <TableCell>
-                                  <Input
-                                    value={scoreComments[proposal.id]?.[c.id] || ''}
-                                    onChange={e => {
-                                      setScoreComments(prev => ({
-                                        ...prev,
-                                        [proposal.id]: { ...prev[proposal.id], [c.id]: e.target.value }
-                                      }));
-                                    }}
-                                    placeholder="Comments"
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
             </TabsContent>
           )}
+
         </Tabs>
 
         {/* Invite Dialog */}
