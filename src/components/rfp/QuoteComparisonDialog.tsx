@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/currency';
 import { toast } from 'sonner';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Download, FileSpreadsheet } from 'lucide-react';
+import { exportToCSV, exportToExcel } from '@/lib/export';
 
 interface RFPItemLite {
   id: string;
