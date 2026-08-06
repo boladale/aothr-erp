@@ -372,8 +372,8 @@ export default function JournalEntries() {
                           )}
                         </td>
                       )}
-                        <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{e.created_at ? new Date(e.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-3 text-sm font-mono">{e.entry_number}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{e.created_at ? new Date(e.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-3 text-sm">{e.entry_date}</td>
                       <td className="px-4 py-3 text-sm">{e.description}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">{e.source_module || 'Manual'}</td>
