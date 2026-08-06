@@ -200,7 +200,7 @@ export default function ARReceipts() {
                   {receipts.map(rec => (
                     <tr key={rec.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{rec.receipt_number}</td>
-                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{rec.created_at ? new Date(rec.created_at).toLocaleString() : '—'}</td>
+                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{(rec as any).created_at ? new Date((rec as any).created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{rec.customers?.name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{rec.receipt_date}</td>
                       <td className="px-4 py-2.5 text-sm capitalize">{rec.payment_method.replace('_', ' ')}</td>

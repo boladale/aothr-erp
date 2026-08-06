@@ -131,7 +131,7 @@ export default function FundTransfers() {
                   {transfers.map(t => (
                     <tr key={t.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{t.transfer_number}</td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{t.created_at ? new Date(t.created_at).toLocaleString() : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{(t as any).created_at ? new Date((t as any).created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{t.from_bank?.account_name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{t.to_bank?.account_name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-right font-medium">{formatCurrency(t.amount)}</td>

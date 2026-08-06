@@ -151,7 +151,7 @@ export default function ARCreditNotes() {
                   {creditNotes.map(cn => (
                     <tr key={cn.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{cn.credit_note_number}</td>
-                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{cn.created_at ? new Date(cn.created_at).toLocaleString() : '—'}</td>
+                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{(cn as any).created_at ? new Date((cn as any).created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{cn.customers?.name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm font-mono text-muted-foreground">{cn.ar_invoices?.invoice_number || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{cn.credit_date}</td>

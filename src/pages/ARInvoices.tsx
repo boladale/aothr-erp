@@ -223,7 +223,7 @@ export default function ARInvoices() {
                   {filtered.map(inv => (
                     <tr key={inv.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{inv.invoice_number}</td>
-                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{inv.created_at ? new Date(inv.created_at).toLocaleString() : '—'}</td>
+                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{(inv as any).created_at ? new Date((inv as any).created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{inv.customers?.name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{inv.invoice_date}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{inv.due_date || '—'}</td>
