@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AttachmentPanel } from '@/components/attachments/AttachmentPanel';
 import type { GoodsReceipt, PurchaseOrder, Location, PurchaseOrderLine, Item } from '@/lib/supabase';
 import { friendlyError } from '@/lib/friendly-error';
+import { throwEdgeError } from '@/lib/edge-error';
 import { printBrandedDocument } from '@/lib/print-template';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
 
@@ -153,8 +154,7 @@ export default function GoodsReceipts() {
       const { data, error } = await supabase.functions.invoke('secure-action', {
         body: { action: 'grn_post', payload: { id: grn.id } },
       });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      await throwEdgeError(error, data);
       return grn;
     },
     onSuccess: (grn: any) => {

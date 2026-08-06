@@ -25,6 +25,14 @@ const PERM: Record<string, string> = {
   grn_post: 'goods_receipts',
 }
 
+const ACTION_TABLE: Record<string, string> = {
+  po_approve: 'purchase_orders',
+  invoice_post: 'ap_invoices',
+  payment_post: 'ap_payments',
+  payroll_approve: 'payroll_runs',
+  grn_post: 'goods_receipts',
+}
+
 
 // Turn Postgres/PostgREST errors into a sentence the user can act on.
 function describeDbError(error: any, whatWeWereDoing: string): string {
@@ -89,7 +97,16 @@ Deno.serve(async (req) => {
     }
     const { action, payload } = parsed.data
 
-    // permission check
+    // Admin is the organization superuser; other roles require the module permission.
+    const { data: isAdmin, error: adminRoleErr } = await userClient.rpc('has_role', {
+      _user_id: userId,
+      _role: 'admin',
+    })
+    if (adminRoleErr) {
+      console.error('has_role rpc failed', adminRoleErr)
+      return jsonResponse({ error: 'Your Admin status could not be verified. Please refresh the page and try again.' }, 500)
+    }
+
     const { data: permOk, error: permErr } = await userClient.rpc('has_permission', {
       p_code: PERM[action],
     })
@@ -97,7 +114,7 @@ Deno.serve(async (req) => {
       console.error('has_permission rpc failed', permErr)
       return jsonResponse({ error: 'Your permissions could not be verified. Please refresh the page; if it repeats, ask an Admin to confirm your role assignment.', detail: permErr.message }, 500)
     }
-    if (!permOk) {
+    if (!isAdmin && !permOk) {
       return jsonResponse({
         error: `You do not have permission to perform this action. Ask an Admin to grant your role access to ${PERM[action].replace(/_/g, ' ')}.`,
       }, 403)
@@ -107,14 +124,34 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE)
     const nowIso = new Date().toISOString()
 
+    // Never allow the privileged writer to update a record in another organization.
+    const recordIds = 'ids' in payload ? payload.ids : [payload.id]
+    const { data: profile, error: profileErr } = await admin
+      .from('profiles')
+      .select('organization_id')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (profileErr || !profile?.organization_id) {
+      console.error('profile organization lookup failed', profileErr)
+      return jsonResponse({ error: 'Your account is not linked to an organization. Ask an Admin to correct your user profile.' }, 403)
+    }
+    const { data: ownedRecords, error: ownershipErr } = await admin
+      .from(ACTION_TABLE[action])
+      .select('id')
+      .in('id', recordIds)
+      .eq('organization_id', profile.organization_id)
+    if (ownershipErr) {
+      console.error('record organization check failed', ownershipErr)
+      return jsonResponse({ error: 'The organization for this document could not be verified. Refresh the page and try again.' }, 500)
+    }
+    if (!ownedRecords || ownedRecords.length !== recordIds.length) {
+      return jsonResponse({ error: 'This document belongs to another organization or no longer exists. It cannot be changed from your account.' }, 403)
+    }
+
     switch (action) {
       case 'po_approve': {
         const ids = 'ids' in payload ? payload.ids : [payload.id]
         // Admins (superusers) may override separation of duties
-        const { data: isAdmin } = await userClient.rpc('has_role', {
-          _user_id: userId,
-          _role: 'admin',
-        })
         if (!isAdmin) {
           // Block self-approval: a user cannot approve a PO they created
           const { data: ownPOs } = await admin
