@@ -185,7 +185,9 @@ export default function ProcurementKPIReport() {
     { key: 'unit_price', header: 'Unit Price', render: (r: KPIRow) => formatCurrency(r.unit_price) },
     { key: 'total_value', header: 'Total Value', render: (r: KPIRow) => formatCurrency(r.total_value) },
     { key: 'discounted_price', header: 'Discounted Price', render: (r: KPIRow) => formatCurrency(r.discounted_price) },
-    { key: 'defective_units', header: 'Outstanding/Defective Units', render: (r: KPIRow) => r.defective_units.toLocaleString() },
+    { key: 'qty_delivered', header: 'Qty Delivered', render: (r: KPIRow) => r.qty_delivered.toLocaleString() },
+    { key: 'defective_units', header: 'Outstanding / Defective Units', render: (r: KPIRow) => r.defective_units.toLocaleString() },
+    { key: 'delivery_state', header: 'Delivery Status', render: (r: KPIRow) => <Badge variant={r.delivery_state === 'Fully delivered' ? 'outline' : 'secondary'}>{r.delivery_state}</Badge> },
     { key: 'job_location', header: 'Job Location' },
   ];
 
