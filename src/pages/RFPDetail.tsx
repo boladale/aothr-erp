@@ -547,8 +547,8 @@ export default function RFPDetail() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <span className={`font-semibold ${p.weighted_score > 0 && p.weighted_score === highestScore ? 'text-green-600' : ''}`}>
-                              {p.weighted_score.toFixed(1)}%
+                            <span className={`font-semibold ${p.total_amount > 0 && p.total_amount === lowestAmount ? 'text-green-600' : ''}`}>
+                              {p.total_amount > 0 && p.total_amount === lowestAmount ? 'Lowest' : '-'}
                             </span>
                           </TableCell>
                           <TableCell>
