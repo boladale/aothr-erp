@@ -281,7 +281,22 @@ export function QuoteComparisonDialog({
         )}
 
         <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => exportToCSV(buildExportRows(), `Quote_Comparison_${rfqNumber}`)}
+            disabled={items.length === 0}
+          >
+            <Download className="h-4 w-4 mr-1" /> CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => exportToExcel(buildExportRows(), `Quote_Comparison_${rfqNumber}`, 'Comparison')}
+            disabled={items.length === 0}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-1" /> Excel
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+
           {!readOnly && (
             <Button onClick={handleSave} disabled={saving || items.length === 0}>
               {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
