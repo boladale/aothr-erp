@@ -23,7 +23,7 @@ interface Props {
 }
 
 export function WarehouseMovementReports({ kind }: Props) {
-  const { orgName, logoUrl } = (useOrgBranding() as any) || {};
+  const { appName, logoUrl } = useOrgBranding();
   const [locationId, setLocationId] = useState('all');
   const [dateFrom, setDateFrom] = useState(defaultFrom());
   const [dateTo, setDateTo] = useState(new Date().toISOString().slice(0, 10));
