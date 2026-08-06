@@ -384,7 +384,7 @@ export default function RFPDetail() {
             <TabsTrigger value="items">Items ({rfpItems.length})</TabsTrigger>
             <TabsTrigger value="criteria">Criteria ({criteria.length})</TabsTrigger>
             <TabsTrigger value="proposals">Proposals ({proposals.length})</TabsTrigger>
-            {showEvaluation && <TabsTrigger value="evaluation">Evaluation & Scoring</TabsTrigger>}
+            {showEvaluation && <TabsTrigger value="evaluation">Evaluation & Award</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="items">
