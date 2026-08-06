@@ -196,7 +196,7 @@ export function WarehouseMovementReports({ kind }: Props) {
               title={config.title}
               subtitle={subtitle}
               columns={config.columns}
-              orgName={orgName}
+              orgName={appName}
               logoUrl={logoUrl}
             />
           </div>
