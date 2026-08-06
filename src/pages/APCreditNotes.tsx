@@ -136,6 +136,7 @@ export default function APCreditNotes() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Credit Note #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Vendor</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Invoice</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
@@ -148,6 +149,7 @@ export default function APCreditNotes() {
                   {creditNotes.map(cn => (
                     <tr key={cn.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{cn.credit_note_number}</td>
+                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{cn.created_at ? new Date(cn.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{cn.vendors?.name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm font-mono text-muted-foreground">{cn.ap_invoices?.invoice_number || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{cn.credit_date}</td>
@@ -177,7 +179,7 @@ export default function APCreditNotes() {
                     </tr>
                   ))}
                   {creditNotes.length === 0 && (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No credit notes found</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No credit notes found</td></tr>
                   )}
                 </tbody>
               </table>

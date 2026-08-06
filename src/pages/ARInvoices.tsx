@@ -209,6 +209,7 @@ export default function ARInvoices() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Invoice #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Due Date</th>
@@ -222,6 +223,7 @@ export default function ARInvoices() {
                   {filtered.map(inv => (
                     <tr key={inv.id} className="hover:bg-muted/50">
                       <td className="px-4 py-2.5 text-sm font-mono">{inv.invoice_number}</td>
+                      <td className="px-4 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{inv.created_at ? new Date(inv.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-2.5 text-sm">{inv.customers?.name || '—'}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{inv.invoice_date}</td>
                       <td className="px-4 py-2.5 text-sm text-muted-foreground">{inv.due_date || '—'}</td>
@@ -254,7 +256,7 @@ export default function ARInvoices() {
                     </tr>
                   ))}
                   {filtered.length === 0 && (
-                    <tr><td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">No invoices found</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No invoices found</td></tr>
                   )}
                 </tbody>
               </table>
