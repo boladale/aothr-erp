@@ -117,7 +117,7 @@ export function QuoteComparisonDialog({
           .update({
             total_amount: totals[p.id] || 0,
             delivery_timeline_days: dayVal,
-            status: totals[p.id] > 0 && p.status === 'invited' ? 'submitted' : p.status,
+            status: (totals[p.id] > 0 && p.status === 'invited' ? 'submitted' : p.status) as 'awarded' | 'declined' | 'invited' | 'rejected' | 'submitted',
             submitted_at: totals[p.id] > 0 ? new Date().toISOString() : null,
           })
           .eq('id', p.id);
