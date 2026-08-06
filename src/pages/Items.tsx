@@ -139,7 +139,8 @@ export default function Items() {
   const saving = saveMutation.isPending;
 
   const handleSave = () => {
-    if (!form.code || !form.name) { toast.error('Code and Name are required'); return; }
+    if (!form.name) { toast.error('Name is required'); return; }
+    if (editItem && !form.code) { toast.error('Code is required'); return; }
     saveMutation.mutate();
   };
 
