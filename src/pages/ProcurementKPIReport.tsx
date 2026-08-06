@@ -124,7 +124,9 @@ export default function ProcurementKPIReport() {
           unit_price: unit,
           total_value: total,
           discounted_price: total - total * discRate,
+          qty_delivered: received,
           defective_units: Math.max(0, qty - received),
+          delivery_state: received <= 0 ? 'Not delivered' : received >= qty ? 'Fully delivered' : 'Partially delivered',
           job_location: po?.locations?.name || '—',
         } as KPIRow;
       });
