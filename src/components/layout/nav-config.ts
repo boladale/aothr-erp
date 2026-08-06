@@ -94,6 +94,7 @@ export const pathToProgram: Record<string, string> = {
   '/fixed-assets': 'fixed_assets',
   '/po-closure': 'po_closure',
   '/procurement-reports': 'procurement_reports',
+  '/procurement-kpi': 'procurement_reports',
   '/warehouse-reports': 'warehouse_reports',
   '/ap-reports': 'ap_reports',
   '/ar-reports': 'ar_reports',
