@@ -117,8 +117,14 @@ export default function Items() {
         if (error) throw error;
         return 'updated';
       } else {
-        const { default_location_id: _drop, ...rest } = form;
-        const { error } = await supabase.from('items').insert({ ...rest, default_location_id: locId, organization_id: organizationId } as any);
+        const { data: nextCode, error: numErr } = await supabase.rpc('next_transaction_number', {
+          p_org_id: organizationId,
+          p_doc_type: 'item',
+          p_prefix: 'ITM',
+        } as any);
+        if (numErr) throw numErr;
+        const { default_location_id: _drop, code: _dropCode, ...rest } = form;
+        const { error } = await supabase.from('items').insert({ ...rest, code: nextCode as unknown as string, default_location_id: locId, organization_id: organizationId } as any);
         if (error) throw error;
         return 'created';
       }
@@ -133,7 +139,8 @@ export default function Items() {
   const saving = saveMutation.isPending;
 
   const handleSave = () => {
-    if (!form.code || !form.name) { toast.error('Code and Name are required'); return; }
+    if (!form.name) { toast.error('Name is required'); return; }
+    if (editItem && !form.code) { toast.error('Code is required'); return; }
     saveMutation.mutate();
   };
 
@@ -311,11 +318,12 @@ export default function Items() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Code *</Label>
+                  <Label>Code</Label>
                   <Input
-                    value={form.code}
-                    onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                    placeholder="ITM001"
+                    value={editItem ? form.code : (form.code || 'Auto-generated')}
+                    readOnly
+                    disabled
+                    className="bg-muted"
                   />
                 </div>
                 <div className="space-y-2">
