@@ -281,6 +281,7 @@ const App = () => (
             <Route path="/vendor-payment-report" element={<ProtectedRoute><VendorPaymentReport /></ProtectedRoute>} />
             <Route path="/vendor-statement" element={<ProtectedRoute><VendorStatement /></ProtectedRoute>} />
             <Route path="/req-to-payment-report" element={<ProtectedRoute><RequisitionToPaymentReport /></ProtectedRoute>} />
+            <Route path="/procurement-kpi" element={<ProtectedRoute><ProcurementKPIReport /></ProtectedRoute>} />
             <Route path="/procurement-audit" element={<ProtectedRoute><ProcurementAudit /></ProtectedRoute>} />
             <Route path="/vendor-registrations" element={<ProtectedRoute><VendorRegistrations /></ProtectedRoute>} />
             <Route path="/departments" element={<ProtectedRoute><Departments /></ProtectedRoute>} />
