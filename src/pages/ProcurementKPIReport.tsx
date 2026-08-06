@@ -192,6 +192,8 @@ export default function ProcurementKPIReport() {
   const columns = [
     { key: 'pr_number', header: 'PR No. (Requisition)' },
     { key: 'pr_authorization_date', header: 'PR Approval Date', render: (r: KPIRow) => fmtDate(r.pr_authorization_date) },
+    { key: 'pr_department', header: 'Department' },
+    { key: 'pr_requester', header: 'Requested By' },
     { key: 'po_number', header: 'PO No.' },
     { key: 'supplier_id', header: 'Supplier ID' },
     { key: 'supplier_name', header: 'Supplier Name' },
