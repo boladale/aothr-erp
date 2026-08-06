@@ -117,6 +117,7 @@ export default function DeliveryNotes() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">DN #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Customer</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Sales Order</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Location</th>
@@ -129,6 +130,7 @@ export default function DeliveryNotes() {
                   {deliveries.map((d: any) => (
                     <tr key={d.id} className="hover:bg-muted/50 cursor-pointer" onClick={() => viewDetail(d)}>
                       <td className="px-4 py-3 text-sm font-medium">{d.dn_number}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{d.created_at ? new Date(d.created_at).toLocaleString() : '—'}</td>
                       <td className="px-4 py-3 text-sm">{d.customers?.name}</td>
                       <td className="px-4 py-3 text-sm">{d.sales_orders?.order_number}</td>
                       <td className="px-4 py-3 text-sm">{d.locations?.name}</td>

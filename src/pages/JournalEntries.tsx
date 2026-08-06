@@ -346,6 +346,7 @@ export default function JournalEntries() {
                       </th>
                     )}
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Entry #</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Created</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Description</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Source</th>
@@ -360,6 +361,7 @@ export default function JournalEntries() {
                     <tr key={e.id} className={`hover:bg-muted/50 ${selectedIds.includes(e.id) ? 'bg-primary/5' : ''}`}>
                       {canManage && (
                         <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{e.created_at ? new Date(e.created_at).toLocaleString() : '—'}</td>
                           {e.status === 'draft' && (
                             <Checkbox
                               checked={selectedIds.includes(e.id)}
