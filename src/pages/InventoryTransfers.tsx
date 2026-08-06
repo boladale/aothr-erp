@@ -174,6 +174,7 @@ export default function InventoryTransfers() {
 
   const columns = [
     { key: 'transfer_number', header: 'Transfer #', render: (r: TransferRow) => <span className="font-medium">{r.transfer_number}</span> },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'from', header: 'From', render: (r: TransferRow) => r.from_location?.name || '-' },
     { key: 'to', header: 'To', render: (r: TransferRow) => r.to_location?.name || '-' },
     { key: 'date', header: 'Date', render: (r: TransferRow) => new Date(r.transfer_date).toLocaleDateString() },

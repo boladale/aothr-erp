@@ -185,6 +185,7 @@ export default function GoodsReceipts() {
 
   const columns = [
     { key: 'grn_number', header: 'GRN Number', render: (r: GRNWithDetails) => <span className="font-medium">{r.grn_number}</span> },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'po', header: 'PO', render: (r: GRNWithDetails) => r.purchase_orders?.po_number || '-' },
     { key: 'vendor', header: 'Vendor', render: (r: GRNWithDetails) => r.purchase_orders?.vendors?.name || '-' },
     { key: 'location', header: 'Location', render: (r: GRNWithDetails) => r.locations?.name || '-' },

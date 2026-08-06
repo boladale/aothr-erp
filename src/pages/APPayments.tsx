@@ -224,6 +224,7 @@ export default function APPayments() {
 
   const columns = [
     { key: 'payment_number', header: 'Payment #' },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'vendor', header: 'Vendor', render: (item: any) => (item.vendor as any)?.name || '-' },
     { key: 'payment_date', header: 'Date' },
     { key: 'payment_method', header: 'Method', render: (item: any) => item.payment_method?.replace('_', ' ') },

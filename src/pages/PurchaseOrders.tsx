@@ -324,6 +324,7 @@ export default function PurchaseOrders() {
 
   const columns = [
     { key: 'po_number', header: 'PO Number', render: (o: POWithDetails) => <span className="font-medium">{o.po_number}</span> },
+    { key: 'created_at', header: 'Created', render: (r: any) => r?.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'vendor', header: 'Vendor', render: (o: POWithDetails) => o.vendors?.name || '-' },
     { key: 'order_date', header: 'Order Date', render: (o: POWithDetails) => new Date(o.order_date).toLocaleDateString() },
     { key: 'total_amount', header: 'Total', render: (o: POWithDetails) => formatCurrency(o.total_amount) },
