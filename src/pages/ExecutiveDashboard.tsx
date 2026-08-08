@@ -85,7 +85,7 @@ export default function ExecutiveDashboard() {
         supabase.from('ar_invoices').select('total_amount, invoice_date').gte('invoice_date', iso(chartStart)),
         supabase.from('ap_invoices').select('total_amount, payment_status, due_date'),
         supabase.from('bank_accounts').select('current_balance, is_active').eq('is_active', true),
-        supabase.from('purchase_orders').select('id, status, total_amount, created_at, expected_delivery_date'),
+        supabase.from('purchase_orders').select('id, status, total_amount, created_at, expected_date'),
         supabase.from('goods_receipts').select('id, status, receipt_date, purchase_order_id'),
         supabase.from('inventory_balances').select('quantity, item:items(reorder_level, unit_cost)'),
         supabase.from('projects').select('id, status, budget_amount'),
@@ -128,7 +128,7 @@ export default function ExecutiveDashboard() {
       const fulfilled = sentPos.filter((p: any) => receivedPoIds.has(p.id)).length;
       const onTime = (grns.data || []).filter((g: any) => {
         const po = allPos.find((p: any) => p.id === g.purchase_order_id);
-        return po?.expected_delivery_date ? new Date(g.receipt_date) <= new Date(po.expected_delivery_date) : true;
+        return po?.expected_date ? new Date(g.receipt_date) <= new Date(po.expected_date) : true;
       }).length;
       const grnCount = (grns.data || []).length;
       const fulfilmentRate = sentPos.length ? (fulfilled / sentPos.length) * 100 : 100;
