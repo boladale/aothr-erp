@@ -200,6 +200,8 @@ const App = () => (
             <Route path="/email-events" element={<ProtectedRoute><EmailEvents /></ProtectedRoute>} />
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/executive-dashboard" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
+
             <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
             <Route path="/chairman-dashboard" element={<ProtectedRoute><ChairmanVendorDashboard /></ProtectedRoute>} />
             <Route path="/chairman-dashboard/list/:type" element={<ProtectedRoute><ChairmanList /></ProtectedRoute>} />
