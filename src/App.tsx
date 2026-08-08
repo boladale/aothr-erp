@@ -13,6 +13,8 @@ import { VendorPortalGuard } from "./components/guards/VendorPortalGuard";
 // Lazy-loaded pages — each becomes its own chunk loaded on demand
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
+
 const Vendors = lazy(() => import("./pages/Vendors"));
 const Items = lazy(() => import("./pages/Items"));
 const Locations = lazy(() => import("./pages/Locations"));
@@ -200,6 +202,8 @@ const App = () => (
             <Route path="/email-events" element={<ProtectedRoute><EmailEvents /></ProtectedRoute>} />
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/executive-dashboard" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
+
             <Route path="/vendor-dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
             <Route path="/chairman-dashboard" element={<ProtectedRoute><ChairmanVendorDashboard /></ProtectedRoute>} />
             <Route path="/chairman-dashboard/list/:type" element={<ProtectedRoute><ChairmanList /></ProtectedRoute>} />
