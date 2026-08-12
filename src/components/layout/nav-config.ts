@@ -258,6 +258,7 @@ export const navSections = [
       { path: '/procurement-reports', label: 'Procurement Reports', icon: BarChart3 },
       { path: '/procurement-kpi', label: 'Procurement KPI Analysis', icon: BarChart3 },
       { path: '/warehouse-reports', label: 'Warehouse Reports', icon: BarChart3 },
+      { path: '/inventory-reports', label: 'Inventory Reports', icon: BarChart3 },
       { path: '/ap-reports', label: 'AP Reports', icon: BarChart3 },
       { path: '/ar-reports', label: 'AR Reports', icon: BarChart3 },
       { path: '/cash-reports', label: 'Cash Reports', icon: BarChart3 },
