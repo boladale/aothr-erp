@@ -446,6 +446,25 @@ export default function Items() {
                   FIFO: oldest stock consumed first at its original cost. Weighted Average: issues costed at the current average unit cost across all on-hand stock.
                 </p>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Shelf Life (days)</Label>
+                  <Input
+                    type="number"
+                    value={form.shelf_life_days}
+                    onChange={e => setForm({ ...form, shelf_life_days: e.target.value })}
+                    placeholder="Optional — used for expiration tracking"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fixed Expiry Date</Label>
+                  <Input
+                    type="date"
+                    value={form.expiry_date}
+                    onChange={e => setForm({ ...form, expiry_date: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
