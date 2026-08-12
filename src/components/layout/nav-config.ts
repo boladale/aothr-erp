@@ -98,6 +98,7 @@ export const pathToProgram: Record<string, string> = {
   '/procurement-reports': 'procurement_reports',
   '/procurement-kpi': 'procurement_reports',
   '/warehouse-reports': 'warehouse_reports',
+  '/inventory-reports': 'warehouse_reports',
   '/ap-reports': 'ap_reports',
   '/ar-reports': 'ar_reports',
   '/cash-reports': 'cash_reports',
