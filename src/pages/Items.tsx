@@ -43,6 +43,8 @@ export default function Items() {
     serial_number: '',
     barcode: '',
     costing_method: 'fifo' as 'fifo' | 'weighted_average',
+    shelf_life_days: '' as string,
+    expiry_date: '' as string,
   });
 
   const locationsQ = useQuery<DbLocation[]>({
@@ -78,7 +80,7 @@ export default function Items() {
 
   const openCreate = () => {
     setEditItem(null);
-    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none', reorder_level: 0, serial_number: '', barcode: '', costing_method: 'fifo' });
+    setForm({ code: '', name: '', description: '', category: '', unit_of_measure: 'EA', unit_cost: 0, default_location_id: 'none', reorder_level: 0, serial_number: '', barcode: '', costing_method: 'fifo', shelf_life_days: '', expiry_date: '' });
     setDialogOpen(true);
   };
 
@@ -96,6 +98,8 @@ export default function Items() {
       serial_number: (item as any).serial_number || '',
       barcode: (item as any).barcode || '',
       costing_method: ((item as any).costing_method as 'fifo' | 'weighted_average') || 'fifo',
+      shelf_life_days: (item as any).shelf_life_days != null ? String((item as any).shelf_life_days) : '',
+      expiry_date: (item as any).expiry_date || '',
     });
     setDialogOpen(true);
   };
@@ -113,6 +117,8 @@ export default function Items() {
           serial_number: form.serial_number || null,
           barcode: form.barcode || null,
           costing_method: form.costing_method,
+          shelf_life_days: form.shelf_life_days ? parseInt(form.shelf_life_days) : null,
+          expiry_date: form.expiry_date || null,
         } as any).eq('id', editItem.id);
         if (error) throw error;
         return 'updated';
@@ -123,8 +129,15 @@ export default function Items() {
           p_prefix: 'ITM',
         } as any);
         if (numErr) throw numErr;
-        const { default_location_id: _drop, code: _dropCode, ...rest } = form;
-        const { error } = await supabase.from('items').insert({ ...rest, code: nextCode as unknown as string, default_location_id: locId, organization_id: organizationId } as any);
+        const { default_location_id: _drop, code: _dropCode, shelf_life_days: _sl, expiry_date: _ed, ...rest } = form;
+        const { error } = await supabase.from('items').insert({
+          ...rest,
+          code: nextCode as unknown as string,
+          default_location_id: locId,
+          shelf_life_days: form.shelf_life_days ? parseInt(form.shelf_life_days) : null,
+          expiry_date: form.expiry_date || null,
+          organization_id: organizationId,
+        } as any);
         if (error) throw error;
         return 'created';
       }
@@ -432,6 +445,25 @@ export default function Items() {
                 <p className="text-xs text-muted-foreground">
                   FIFO: oldest stock consumed first at its original cost. Weighted Average: issues costed at the current average unit cost across all on-hand stock.
                 </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Shelf Life (days)</Label>
+                  <Input
+                    type="number"
+                    value={form.shelf_life_days}
+                    onChange={e => setForm({ ...form, shelf_life_days: e.target.value })}
+                    placeholder="Optional — used for expiration tracking"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Fixed Expiry Date</Label>
+                  <Input
+                    type="date"
+                    value={form.expiry_date}
+                    onChange={e => setForm({ ...form, expiry_date: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>

@@ -4033,12 +4033,14 @@ export type Database = {
           created_at: string
           default_location_id: string | null
           description: string | null
+          expiry_date: string | null
           id: string
           is_active: boolean | null
           name: string
           organization_id: string | null
           reorder_level: number
           serial_number: string | null
+          shelf_life_days: number | null
           unit_cost: number | null
           unit_of_measure: string
           updated_at: string
@@ -4051,12 +4053,14 @@ export type Database = {
           created_at?: string
           default_location_id?: string | null
           description?: string | null
+          expiry_date?: string | null
           id?: string
           is_active?: boolean | null
           name: string
           organization_id?: string | null
           reorder_level?: number
           serial_number?: string | null
+          shelf_life_days?: number | null
           unit_cost?: number | null
           unit_of_measure?: string
           updated_at?: string
@@ -4069,12 +4073,14 @@ export type Database = {
           created_at?: string
           default_location_id?: string | null
           description?: string | null
+          expiry_date?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
           organization_id?: string | null
           reorder_level?: number
           serial_number?: string | null
+          shelf_life_days?: number | null
           unit_cost?: number | null
           unit_of_measure?: string
           updated_at?: string
