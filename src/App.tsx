@@ -58,6 +58,7 @@ const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const ProjectProfitability = lazy(() => import("./pages/ProjectProfitability"));
 const ProcurementReports = lazy(() => import("./pages/ProcurementReports"));
 const WarehouseReports = lazy(() => import("./pages/WarehouseReports"));
+const InventoryReports = lazy(() => import("./pages/InventoryReports"));
 const FinanceAPReports = lazy(() => import("./pages/FinanceAPReports"));
 const FinanceARReports = lazy(() => import("./pages/FinanceARReports"));
 const CashReports = lazy(() => import("./pages/CashReports"));
