@@ -129,8 +129,15 @@ export default function Items() {
           p_prefix: 'ITM',
         } as any);
         if (numErr) throw numErr;
-        const { default_location_id: _drop, code: _dropCode, ...rest } = form;
-        const { error } = await supabase.from('items').insert({ ...rest, code: nextCode as unknown as string, default_location_id: locId, organization_id: organizationId } as any);
+        const { default_location_id: _drop, code: _dropCode, shelf_life_days: _sl, expiry_date: _ed, ...rest } = form;
+        const { error } = await supabase.from('items').insert({
+          ...rest,
+          code: nextCode as unknown as string,
+          default_location_id: locId,
+          shelf_life_days: form.shelf_life_days ? parseInt(form.shelf_life_days) : null,
+          expiry_date: form.expiry_date || null,
+          organization_id: organizationId,
+        } as any);
         if (error) throw error;
         return 'created';
       }
