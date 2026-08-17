@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/currency';
-import { ArrowRight, Sparkle, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowRight, Sparkle, TrendingUp, TrendingDown, Info } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 type PeriodKey = 'month' | 'quarter' | 'year';
@@ -51,6 +52,9 @@ function scoreLabel(score: number) {
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
+type Driver = { label: string; weight: string; value: string; detail: string };
+type Department = { name: string; score: number; path: string; drivers: Driver[] };
+
 function ScoreCard({ title, value, suffix, sub, subTone }: { title: string; value: string; suffix?: string; sub?: string; subTone?: string }) {
   return (
     <Card className="h-full">
@@ -69,6 +73,7 @@ function ScoreCard({ title, value, suffix, sub, subTone }: { title: string; valu
 export default function ExecutiveDashboard() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState<PeriodKey>('month');
+  const [explain, setExplain] = useState<Department | null>(null);
   const range = useMemo(() => periodRange(period), [period]);
 
   const { data, isLoading } = useQuery({
@@ -163,13 +168,113 @@ export default function ExecutiveDashboard() {
       const budgetUtil = budgetTotal ? (budgetUsed / budgetTotal) * 100 : 0;
       const budgetHealth = budgetTotal ? clamp(100 - Math.max(0, budgetUtil - 90) * 3) : 100;
 
-      const departments = [
-        { name: 'Finance', score: financeHealth, path: '/finance-dashboard' },
-        { name: 'Procurement', score: procurementHealth, path: '/procurement-dashboard' },
-        { name: 'HR', score: hrHealth, path: '/employees' },
-        { name: 'Inventory', score: inventoryHealth, path: '/inventory' },
-        { name: 'Projects', score: projectsHealth, path: '/projects' },
-        { name: 'Budgets', score: budgetHealth, path: '/budgets' },
+      const pct = (n: number) => `${Math.round(n)}%`;
+
+      const departments: Department[] = [
+        {
+          name: 'Finance',
+          score: financeHealth,
+          path: '/finance-dashboard',
+          drivers: [
+            {
+              label: 'Liquidity (cash vs unpaid supplier invoices)',
+              weight: '60%',
+              value: pct(liquidity),
+              detail: apOutstanding > 0
+                ? `${compactAmount(cash)} cash against ${compactAmount(apOutstanding)} owed. Full marks at 1.5x cover.`
+                : 'No unpaid supplier invoices, so liquidity scores full marks.',
+            },
+            {
+              label: 'Payment discipline (invoices not past due)',
+              weight: '40%',
+              value: pct(apDiscipline),
+              detail: openAP ? `${overdueAP} of ${openAP} open supplier invoices are past their due date.` : 'No open supplier invoices.',
+            },
+          ],
+        },
+        {
+          name: 'Procurement',
+          score: procurementHealth,
+          path: '/procurement-dashboard',
+          drivers: [
+            {
+              label: 'Order fulfilment (POs with goods received)',
+              weight: '50%',
+              value: pct(fulfilmentRate),
+              detail: sentPos.length
+                ? `${fulfilled} of ${sentPos.length} live purchase orders have at least one posted goods receipt.`
+                : 'No live purchase orders in this period.',
+            },
+            {
+              label: 'On-time delivery (receipts on/before expected date)',
+              weight: '50%',
+              value: pct(onTimeRate),
+              detail: grnCount
+                ? `${onTime} of ${grnCount} goods receipts arrived on or before the expected date.`
+                : 'No goods receipts posted yet.',
+            },
+          ],
+        },
+        {
+          name: 'HR',
+          score: hrHealth,
+          path: '/employees',
+          drivers: [
+            {
+              label: 'Active staff ratio',
+              weight: '70%',
+              value: pct(emp.length ? (activeEmp / emp.length) * 100 : 100),
+              detail: emp.length ? `${activeEmp} of ${emp.length} employees are active.` : 'No employees recorded.',
+            },
+            {
+              label: 'Leave backlog cleared',
+              weight: '30%',
+              value: pct(totalLeave ? 100 - (pendingLeave / totalLeave) * 100 : 100),
+              detail: totalLeave ? `${pendingLeave} of ${totalLeave} leave requests are still pending approval.` : 'No leave requests recorded.',
+            },
+          ],
+        },
+        {
+          name: 'Inventory',
+          score: inventoryHealth,
+          path: '/inventory',
+          drivers: [
+            {
+              label: 'Stock above reorder level',
+              weight: '100%',
+              value: pct(inventoryHealth),
+              detail: invRows.length ? `${belowReorder} of ${invRows.length} stock records are below their reorder level.` : 'No stock records found.',
+            },
+          ],
+        },
+        {
+          name: 'Projects',
+          score: projectsHealth,
+          path: '/projects',
+          drivers: [
+            {
+              label: 'Projects active or completed (not on hold/cancelled)',
+              weight: '100%',
+              value: pct(projectsHealth),
+              detail: projRows.length ? `${healthyProjects} of ${projRows.length} projects are active, in progress or completed.` : 'No projects recorded.',
+            },
+          ],
+        },
+        {
+          name: 'Budgets',
+          score: budgetHealth,
+          path: '/budgets',
+          drivers: [
+            {
+              label: 'Budget utilisation headroom',
+              weight: '100%',
+              value: pct(budgetHealth),
+              detail: budgetTotal
+                ? `${budgetUtil.toFixed(0)}% of budget committed or spent. Score only drops once utilisation passes 90%.`
+                : 'No budgets set, so this scores full marks by default.',
+            },
+          ],
+        },
       ];
 
       const businessHealth = clamp(departments.reduce((s, d) => s + d.score, 0) / departments.length);
@@ -235,7 +340,17 @@ export default function ExecutiveDashboard() {
             subTone={data.revenueDelta >= 0 ? 'text-success' : 'text-destructive'}
           />
           <ScoreCard title="Cash Position" value={compactAmount(data.cash)} sub={`${compactAmount(data.arOutstanding)} receivable`} />
-          <ScoreCard title="Procurement Health" value={String(data.procurementHealth)} suffix="/100" sub={`● ${ph.label}`} subTone={ph.tone} />
+          <div className="relative">
+            <ScoreCard title="Procurement Health" value={String(data.procurementHealth)} suffix="/100" sub={`● ${ph.label}`} subTone={ph.tone} />
+            <button
+              type="button"
+              aria-label="Why is Procurement Health scored this way?"
+              className="absolute top-3 right-3 text-muted-foreground hover:text-primary"
+              onClick={() => setExplain(data.departments.find((d) => d.name === 'Procurement') || null)}
+            >
+              <Info className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -281,14 +396,24 @@ export default function ExecutiveDashboard() {
         </div>
 
         <div>
-          <h2 className="text-sm text-muted-foreground mb-3">Department Health Scores</h2>
+          <h2 className="text-sm text-muted-foreground mb-3">Department Health Scores — click the info icon to see why</h2>
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {data.departments.map((d) => {
               const s = scoreLabel(d.score);
               return (
                 <Card key={d.name} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate(d.path)}>
                   <CardContent className="p-4 space-y-1">
-                    <p className="text-sm font-medium">{d.name}</p>
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="text-sm font-medium">{d.name}</p>
+                      <button
+                        type="button"
+                        aria-label={`Why is ${d.name} scored ${d.score}?`}
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={(e) => { e.stopPropagation(); setExplain(d); }}
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </div>
                     <p className="text-2xl font-bold">{d.score}</p>
                     <p className={`text-xs ${s.tone} flex items-center gap-1`}>
                       {d.score >= 65 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -300,6 +425,33 @@ export default function ExecutiveDashboard() {
             })}
           </div>
         </div>
+
+        <Dialog open={!!explain} onOpenChange={(o) => !o && setExplain(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{explain?.name} Health — {explain?.score}/100</DialogTitle>
+              <DialogDescription>
+                This score is a weighted average of the KPIs below. 100 means every KPI is fully met; the score drops only where a KPI falls short.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {explain?.drivers.map((dr) => (
+                <div key={dr.label} className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">{dr.label}</p>
+                    <span className="text-sm font-semibold">{dr.value}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Weight in score: {dr.weight}</p>
+                  <p className="text-xs text-muted-foreground">{dr.detail}</p>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">
+                Departments showing 100 do so because they have no shortfalls recorded — often because there is no data yet in that area
+                (for example no budgets set or no open supplier invoices), which the score treats as "nothing at risk".
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
