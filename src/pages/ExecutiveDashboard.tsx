@@ -384,14 +384,24 @@ export default function ExecutiveDashboard() {
         </div>
 
         <div>
-          <h2 className="text-sm text-muted-foreground mb-3">Department Health Scores</h2>
+          <h2 className="text-sm text-muted-foreground mb-3">Department Health Scores — click the info icon to see why</h2>
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {data.departments.map((d) => {
               const s = scoreLabel(d.score);
               return (
                 <Card key={d.name} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => navigate(d.path)}>
                   <CardContent className="p-4 space-y-1">
-                    <p className="text-sm font-medium">{d.name}</p>
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="text-sm font-medium">{d.name}</p>
+                      <button
+                        type="button"
+                        aria-label={`Why is ${d.name} scored ${d.score}?`}
+                        className="text-muted-foreground hover:text-primary"
+                        onClick={(e) => { e.stopPropagation(); setExplain(d); }}
+                      >
+                        <Info className="h-4 w-4" />
+                      </button>
+                    </div>
                     <p className="text-2xl font-bold">{d.score}</p>
                     <p className={`text-xs ${s.tone} flex items-center gap-1`}>
                       {d.score >= 65 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -403,6 +413,33 @@ export default function ExecutiveDashboard() {
             })}
           </div>
         </div>
+
+        <Dialog open={!!explain} onOpenChange={(o) => !o && setExplain(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{explain?.name} Health — {explain?.score}/100</DialogTitle>
+              <DialogDescription>
+                This score is a weighted average of the KPIs below. 100 means every KPI is fully met; the score drops only where a KPI falls short.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              {explain?.drivers.map((dr) => (
+                <div key={dr.label} className="rounded-lg border p-3 space-y-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium">{dr.label}</p>
+                    <span className="text-sm font-semibold">{dr.value}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Weight in score: {dr.weight}</p>
+                  <p className="text-xs text-muted-foreground">{dr.detail}</p>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">
+                Departments showing 100 do so because they have no shortfalls recorded — often because there is no data yet in that area
+                (for example no budgets set or no open supplier invoices), which the score treats as "nothing at risk".
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
