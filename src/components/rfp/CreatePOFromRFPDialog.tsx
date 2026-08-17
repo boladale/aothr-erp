@@ -325,6 +325,14 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           </div>
         </div>
 
+        <PaymentScheduleEditor
+          terms={paymentTerms}
+          onTermsChange={setPaymentTerms}
+          milestones={milestones}
+          onMilestonesChange={setMilestones}
+          poTotal={total}
+        />
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleCreate} disabled={saving}>
