@@ -69,7 +69,7 @@ export function PaymentScheduleEditor({ terms, onTermsChange, milestones, onMile
         <div className="space-y-2">
           {milestones.map((m, idx) => (
             <div key={idx} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-4 space-y-1">
+              <div className="col-span-6 space-y-1">
                 <Label className="text-xs">Milestone {idx + 1} description</Label>
                 <Input
                   value={m.description}
@@ -99,10 +99,6 @@ export function PaymentScheduleEditor({ terms, onTermsChange, milestones, onMile
                     update(idx, m.basis === 'percentage' ? { percentage: val } : { amount: val });
                   }}
                 />
-              </div>
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs">Due date</Label>
-                <Input type="date" value={m.due_date || ''} onChange={e => update(idx, { due_date: e.target.value || null })} />
               </div>
               <div className="col-span-1 text-right text-sm font-medium pb-2">
                 {formatCurrency(milestoneValue(m, poTotal))}
