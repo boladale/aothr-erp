@@ -51,6 +51,9 @@ function scoreLabel(score: number) {
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
+type Driver = { label: string; weight: string; value: string; detail: string };
+type Department = { name: string; score: number; path: string; drivers: Driver[] };
+
 function ScoreCard({ title, value, suffix, sub, subTone }: { title: string; value: string; suffix?: string; sub?: string; subTone?: string }) {
   return (
     <Card className="h-full">
