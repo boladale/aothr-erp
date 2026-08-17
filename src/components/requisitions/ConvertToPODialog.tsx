@@ -259,6 +259,9 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         throw traceError;
       }
 
+      await savePOMilestones(po.id, organizationId!, milestones, subtotal);
+
+
       if (sendToVendor) {
         try {
           const { data: approveData, error: approveErr } = await supabase.functions.invoke('secure-action', {
