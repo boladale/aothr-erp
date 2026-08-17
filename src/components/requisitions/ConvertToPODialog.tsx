@@ -208,8 +208,9 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
           subtotal,
           total_amount: subtotal,
           notes: `Converted from ${requisition.req_number}`,
+          payment_terms: paymentTerms || null,
           created_by: user?.id, organization_id: organizationId,
-        })
+        } as any)
         .select()
         .single();
 
