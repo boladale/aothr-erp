@@ -520,7 +520,6 @@ export default function PurchaseOrderDetail() {
                       <TableHead>#</TableHead>
                       <TableHead>Milestone</TableHead>
                       <TableHead>Basis</TableHead>
-                      <TableHead>Due Date</TableHead>
                       <TableHead className="text-right">Amount</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -530,12 +529,11 @@ export default function PurchaseOrderDetail() {
                         <TableCell>{m.milestone_no}</TableCell>
                         <TableCell className="font-medium">{m.description}</TableCell>
                         <TableCell>{m.basis === 'percentage' ? `${Number(m.percentage)}%` : 'Fixed value'}</TableCell>
-                        <TableCell>{m.due_date ? new Date(m.due_date).toLocaleDateString() : '—'}</TableCell>
                         <TableCell className="text-right">{formatCurrency(Number(m.amount) || 0)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow>
-                      <TableCell colSpan={4} className="text-right font-semibold">Total scheduled</TableCell>
+                      <TableCell colSpan={3} className="text-right font-semibold">Total scheduled</TableCell>
                       <TableCell className="text-right font-semibold">
                         {formatCurrency(milestones.reduce((s: number, m: any) => s + (Number(m.amount) || 0), 0))}
                       </TableCell>
