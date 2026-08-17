@@ -62,6 +62,7 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
   const [po, setPO] = useState<POData | null>(null);
   const [lines, setLines] = useState<POLine[]>([]);
   const [org, setOrg] = useState<OrgData | null>(null);
+  const [milestones, setMilestones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,17 +70,19 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
     setLoading(true);
 
     const fetchAll = async () => {
-      const [poRes, linesRes, orgRes] = await Promise.all([
+      const [poRes, linesRes, orgRes, msRes] = await Promise.all([
         supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, payment_terms, vendor_signature_url, vendor_signed_at, manager_signature_url, manager_signed_at, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
         supabase.from('purchase_order_lines').select('line_number, quantity, unit_price, line_total, description, items(code, name, unit_of_measure), services(code, name)').eq('po_id', poId).order('line_number'),
         organizationId
           ? supabase.from('organizations').select('name, address, city, country, phone, email, logo_url, app_name').eq('id', organizationId).single()
           : Promise.resolve({ data: null }),
+        (supabase.from('po_payment_milestones' as any) as any).select('*').eq('po_id', poId).order('milestone_no'),
       ]);
 
       setPO(poRes.data as POData | null);
       setLines((linesRes.data || []) as POLine[]);
       if (orgRes.data) setOrg(orgRes.data as OrgData);
+      setMilestones((msRes?.data || []) as any[]);
       setLoading(false);
     };
 
