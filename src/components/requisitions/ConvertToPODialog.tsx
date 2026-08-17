@@ -173,6 +173,8 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
     loadData();
     setExpectedDate('');
     setLocationId('');
+    setPaymentTerms('');
+    setMilestones([]);
   }, [open, lines, requisition.id]);
 
   const toggleLine = (idx: number) => {
