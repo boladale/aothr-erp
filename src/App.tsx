@@ -57,6 +57,7 @@ const Projects = lazy(() => import("./pages/Projects"));
 const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const ProjectProfitability = lazy(() => import("./pages/ProjectProfitability"));
 const ProcurementReports = lazy(() => import("./pages/ProcurementReports"));
+const GoodsDelivered = lazy(() => import("./pages/GoodsDelivered"));
 const WarehouseReports = lazy(() => import("./pages/WarehouseReports"));
 const InventoryReports = lazy(() => import("./pages/InventoryReports"));
 const FinanceAPReports = lazy(() => import("./pages/FinanceAPReports"));
@@ -263,6 +264,7 @@ const App = () => (
             <Route path="/flow-diagrams" element={<ProtectedRoute><FlowDiagrams /></ProtectedRoute>} />
             <Route path="/trainers-script" element={<ProtectedRoute><TrainersScript /></ProtectedRoute>} />
             <Route path="/procurement-reports" element={<ProtectedRoute><ProcurementReports /></ProtectedRoute>} />
+            <Route path="/goods-delivered" element={<ProtectedRoute><GoodsDelivered /></ProtectedRoute>} />
             <Route path="/warehouse-reports" element={<ProtectedRoute><WarehouseReports /></ProtectedRoute>} />
             <Route path="/inventory-reports" element={<ProtectedRoute><InventoryReports /></ProtectedRoute>} />
             <Route path="/ap-reports" element={<ProtectedRoute><FinanceAPReports /></ProtectedRoute>} />
