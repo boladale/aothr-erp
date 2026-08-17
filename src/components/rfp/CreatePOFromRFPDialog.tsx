@@ -27,6 +27,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award, Package, Clock, Truck } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { friendlyError } from "@/lib/friendly-error";
+import { PaymentScheduleEditor } from '@/components/purchase-orders/PaymentScheduleEditor';
+import { POMilestone, savePOMilestones } from '@/lib/po-milestones';
 
 interface RFPItem {
   id: string;
