@@ -102,6 +102,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         priceByItem[l.rfp_item_id] = Number(l.unit_price) || 0;
       });
       const hasQuotedLines = Object.values(priceByItem).some(v => v > 0);
+      setPriceSource(hasQuotedLines ? 'quote' : 'split');
 
       const totalQty = rfpItems.reduce((s, i) => s + i.quantity, 0);
       const totalAmount = awardedProposal.total_amount || 0;
@@ -122,6 +123,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         };
       });
       setPOLines(lines);
+
     })();
 
     // Pre-fill expected date from delivery timeline
