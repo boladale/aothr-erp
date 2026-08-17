@@ -73,6 +73,7 @@ function ScoreCard({ title, value, suffix, sub, subTone }: { title: string; valu
 export default function ExecutiveDashboard() {
   const navigate = useNavigate();
   const [period, setPeriod] = useState<PeriodKey>('month');
+  const [explain, setExplain] = useState<Department | null>(null);
   const range = useMemo(() => periodRange(period), [period]);
 
   const { data, isLoading } = useQuery({
