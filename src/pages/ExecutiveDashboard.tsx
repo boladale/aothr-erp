@@ -340,7 +340,17 @@ export default function ExecutiveDashboard() {
             subTone={data.revenueDelta >= 0 ? 'text-success' : 'text-destructive'}
           />
           <ScoreCard title="Cash Position" value={compactAmount(data.cash)} sub={`${compactAmount(data.arOutstanding)} receivable`} />
-          <ScoreCard title="Procurement Health" value={String(data.procurementHealth)} suffix="/100" sub={`● ${ph.label}`} subTone={ph.tone} />
+          <div className="relative">
+            <ScoreCard title="Procurement Health" value={String(data.procurementHealth)} suffix="/100" sub={`● ${ph.label}`} subTone={ph.tone} />
+            <button
+              type="button"
+              aria-label="Why is Procurement Health scored this way?"
+              className="absolute top-3 right-3 text-muted-foreground hover:text-primary"
+              onClick={() => setExplain(data.departments.find((d) => d.name === 'Procurement') || null)}
+            >
+              <Info className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
