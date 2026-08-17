@@ -163,13 +163,113 @@ export default function ExecutiveDashboard() {
       const budgetUtil = budgetTotal ? (budgetUsed / budgetTotal) * 100 : 0;
       const budgetHealth = budgetTotal ? clamp(100 - Math.max(0, budgetUtil - 90) * 3) : 100;
 
-      const departments = [
-        { name: 'Finance', score: financeHealth, path: '/finance-dashboard' },
-        { name: 'Procurement', score: procurementHealth, path: '/procurement-dashboard' },
-        { name: 'HR', score: hrHealth, path: '/employees' },
-        { name: 'Inventory', score: inventoryHealth, path: '/inventory' },
-        { name: 'Projects', score: projectsHealth, path: '/projects' },
-        { name: 'Budgets', score: budgetHealth, path: '/budgets' },
+      const pct = (n: number) => `${Math.round(n)}%`;
+
+      const departments: Department[] = [
+        {
+          name: 'Finance',
+          score: financeHealth,
+          path: '/finance-dashboard',
+          drivers: [
+            {
+              label: 'Liquidity (cash vs unpaid supplier invoices)',
+              weight: '60%',
+              value: pct(liquidity),
+              detail: apOutstanding > 0
+                ? `${compactAmount(cash)} cash against ${compactAmount(apOutstanding)} owed. Full marks at 1.5x cover.`
+                : 'No unpaid supplier invoices, so liquidity scores full marks.',
+            },
+            {
+              label: 'Payment discipline (invoices not past due)',
+              weight: '40%',
+              value: pct(apDiscipline),
+              detail: openAP ? `${overdueAP} of ${openAP} open supplier invoices are past their due date.` : 'No open supplier invoices.',
+            },
+          ],
+        },
+        {
+          name: 'Procurement',
+          score: procurementHealth,
+          path: '/procurement-dashboard',
+          drivers: [
+            {
+              label: 'Order fulfilment (POs with goods received)',
+              weight: '50%',
+              value: pct(fulfilmentRate),
+              detail: sentPos.length
+                ? `${fulfilled} of ${sentPos.length} live purchase orders have at least one posted goods receipt.`
+                : 'No live purchase orders in this period.',
+            },
+            {
+              label: 'On-time delivery (receipts on/before expected date)',
+              weight: '50%',
+              value: pct(onTimeRate),
+              detail: grnCount
+                ? `${onTime} of ${grnCount} goods receipts arrived on or before the expected date.`
+                : 'No goods receipts posted yet.',
+            },
+          ],
+        },
+        {
+          name: 'HR',
+          score: hrHealth,
+          path: '/employees',
+          drivers: [
+            {
+              label: 'Active staff ratio',
+              weight: '70%',
+              value: pct(emp.length ? (activeEmp / emp.length) * 100 : 100),
+              detail: emp.length ? `${activeEmp} of ${emp.length} employees are active.` : 'No employees recorded.',
+            },
+            {
+              label: 'Leave backlog cleared',
+              weight: '30%',
+              value: pct(totalLeave ? 100 - (pendingLeave / totalLeave) * 100 : 100),
+              detail: totalLeave ? `${pendingLeave} of ${totalLeave} leave requests are still pending approval.` : 'No leave requests recorded.',
+            },
+          ],
+        },
+        {
+          name: 'Inventory',
+          score: inventoryHealth,
+          path: '/inventory',
+          drivers: [
+            {
+              label: 'Stock above reorder level',
+              weight: '100%',
+              value: pct(inventoryHealth),
+              detail: invRows.length ? `${belowReorder} of ${invRows.length} stock records are below their reorder level.` : 'No stock records found.',
+            },
+          ],
+        },
+        {
+          name: 'Projects',
+          score: projectsHealth,
+          path: '/projects',
+          drivers: [
+            {
+              label: 'Projects active or completed (not on hold/cancelled)',
+              weight: '100%',
+              value: pct(projectsHealth),
+              detail: projRows.length ? `${healthyProjects} of ${projRows.length} projects are active, in progress or completed.` : 'No projects recorded.',
+            },
+          ],
+        },
+        {
+          name: 'Budgets',
+          score: budgetHealth,
+          path: '/budgets',
+          drivers: [
+            {
+              label: 'Budget utilisation headroom',
+              weight: '100%',
+              value: pct(budgetHealth),
+              detail: budgetTotal
+                ? `${budgetUtil.toFixed(0)}% of budget committed or spent. Score only drops once utilisation passes 90%.`
+                : 'No budgets set, so this scores full marks by default.',
+            },
+          ],
+        },
       ];
 
       const businessHealth = clamp(departments.reduce((s, d) => s + d.score, 0) / departments.length);
