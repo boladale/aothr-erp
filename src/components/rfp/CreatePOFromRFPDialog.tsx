@@ -205,6 +205,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         throw linesError;
       }
 
+      await savePOMilestones(po.id, organizationId!, milestones, subtotal);
+
       toast.success(`PO ${poNumber} created from RFQ`);
       setCreatedPOId(po.id);
       onOpenChange(false);
