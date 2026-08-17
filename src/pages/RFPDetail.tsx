@@ -529,8 +529,17 @@ export default function RFPDetail() {
                                   <CheckCircle className="h-3 w-3 mr-1" /> Record Submission
                                 </Button>
                               )}
+                              {rfp.status !== 'awarded' && p.status === 'submitted' && (
+                                <Button size="sm" onClick={() => handleAward(p)} disabled={!(p.total_amount > 0)}>
+                                  <Award className="h-3 w-3 mr-1" /> Award
+                                </Button>
+                              )}
+                              {p.status === 'awarded' && (
+                                <Badge className="bg-yellow-500 text-white">Awarded</Badge>
+                              )}
                             </div>
                           </TableCell>
+
                         </TableRow>
                       );
                     })}
