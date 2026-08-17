@@ -83,6 +83,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   const [saving, setSaving] = useState(false);
   const [createdPOId, setCreatedPOId] = useState<string | null>(null);
   const [showDocument, setShowDocument] = useState(false);
+  const [priceSource, setPriceSource] = useState<'quote' | 'split'>('split');
+
 
   useEffect(() => {
     if (!open) return;
