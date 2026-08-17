@@ -121,8 +121,15 @@ export default function PurchaseOrders() {
       discount_type: (po as any).discount_type || 'percentage',
       discount_amount: (po as any).discount_amount || 0,
     });
+    setPaymentTerms((po as any).payment_terms || '');
     const { data } = await supabase.from('purchase_order_lines').select('*').eq('po_id', po.id).order('line_number');
     setLines((data || []).map((l: any) => ({ item_id: l.item_id, quantity: l.quantity, unit_price: l.unit_price })));
+    const { data: ms } = await (supabase.from('po_payment_milestones' as any) as any)
+      .select('*').eq('po_id', po.id).order('milestone_no');
+    setMilestones((ms || []).map((m: any) => ({
+      description: m.description, basis: m.basis, percentage: Number(m.percentage) || 0,
+      amount: Number(m.amount) || 0, due_date: m.due_date,
+    })));
     setDialogOpen(true);
   };
 
@@ -146,11 +153,12 @@ export default function PurchaseOrders() {
           notes: form.notes,
           subtotal,
           total_amount: totalAmount,
+          payment_terms: paymentTerms || null,
           payment_terms_type: form.payment_terms_type,
           payment_terms_amount: form.payment_terms_amount,
           discount_type: form.discount_type,
           discount_amount: form.discount_amount,
-        }).eq('id', editingPO.id);
+        } as any).eq('id', editingPO.id);
         if (poError) throw poError;
         await supabase.from('purchase_order_lines').delete().eq('po_id', editingPO.id);
         const lineInserts = validLines.map((l, idx) => ({
@@ -158,22 +166,25 @@ export default function PurchaseOrders() {
         }));
         const { error: linesError } = await supabase.from('purchase_order_lines').insert(lineInserts);
         if (linesError) throw linesError;
+        await savePOMilestones(editingPO.id, organizationId!, milestones, totalAmount);
         return 'updated';
       } else {
         const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
         const { data: po, error: poError } = await supabase.from('purchase_orders').insert({
           po_number: poNumber, vendor_id: form.vendor_id, ship_to_location_id: form.ship_to_location_id || null,
           expected_date: form.expected_date || null, notes: form.notes, subtotal, total_amount: totalAmount,
+          payment_terms: paymentTerms || null,
           payment_terms_type: form.payment_terms_type, payment_terms_amount: form.payment_terms_amount,
           discount_type: form.discount_type, discount_amount: form.discount_amount,
           created_by: user?.id, organization_id: organizationId,
-        }).select().single();
+        } as any).select().single();
         if (poError) throw poError;
         const lineInserts = validLines.map((l, idx) => ({
           po_id: po.id, line_number: idx + 1, item_id: l.item_id, quantity: l.quantity, unit_price: l.unit_price,
         }));
         const { error: linesError } = await supabase.from('purchase_order_lines').insert(lineInserts);
         if (linesError) throw linesError;
+        await savePOMilestones(po.id, organizationId!, milestones, totalAmount);
         return 'created';
       }
     },
