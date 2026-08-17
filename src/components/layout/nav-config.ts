@@ -170,6 +170,7 @@ export const navSections = [
       { path: '/requisitions', label: 'Requisitions', icon: ClipboardList },
       { path: '/rfps', label: 'Requests for Proposal', icon: FileSearch },
       { path: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
+      { path: '/goods-delivered', label: 'Goods Delivered', icon: PackageCheck },
     ],
   },
   {
@@ -258,7 +259,6 @@ export const navSections = [
     items: [
       { path: '/procurement-reports', label: 'Procurement Reports', icon: BarChart3 },
       { path: '/procurement-kpi', label: 'Procurement KPI Analysis', icon: BarChart3 },
-      { path: '/goods-delivered', label: 'Goods Delivered', icon: BarChart3 },
       { path: '/warehouse-reports', label: 'Warehouse Reports', icon: BarChart3 },
       { path: '/inventory-reports', label: 'Inventory Reports', icon: BarChart3 },
       { path: '/ap-reports', label: 'AP Reports', icon: BarChart3 },
