@@ -416,6 +416,13 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
             <div className="text-right font-semibold">PO Total: {formatCurrency(total)}</div>
           </div>
         </div>
+        <PaymentScheduleEditor
+          terms={paymentTerms}
+          onTermsChange={setPaymentTerms}
+          milestones={milestones}
+          onMilestonesChange={setMilestones}
+          poTotal={total}
+        />
         <div className="flex items-center gap-2 p-3 rounded-md border bg-muted/30">
           <Checkbox
             id="send-to-vendor"
