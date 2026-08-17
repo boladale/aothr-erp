@@ -83,6 +83,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   const [saving, setSaving] = useState(false);
   const [createdPOId, setCreatedPOId] = useState<string | null>(null);
   const [showDocument, setShowDocument] = useState(false);
+  const [priceSource, setPriceSource] = useState<'quote' | 'split'>('split');
+
 
   useEffect(() => {
     if (!open) return;
@@ -102,6 +104,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         priceByItem[l.rfp_item_id] = Number(l.unit_price) || 0;
       });
       const hasQuotedLines = Object.values(priceByItem).some(v => v > 0);
+      setPriceSource(hasQuotedLines ? 'quote' : 'split');
 
       const totalQty = rfpItems.reduce((s, i) => s + i.quantity, 0);
       const totalAmount = awardedProposal.total_amount || 0;
@@ -122,6 +125,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         };
       });
       setPOLines(lines);
+
     })();
 
     // Pre-fill expected date from delivery timeline
@@ -267,7 +271,15 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           </div>
 
           <div className="space-y-2">
-            <Label>PO Line Items</Label>
+            <div className="flex items-center justify-between">
+              <Label>PO Line Items</Label>
+              <Badge variant={priceSource === 'quote' ? 'secondary' : 'destructive'}>
+                {priceSource === 'quote'
+                  ? "Prices from vendor's submitted quote"
+                  : 'No line quote found — average split (edit prices below)'}
+              </Badge>
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>
