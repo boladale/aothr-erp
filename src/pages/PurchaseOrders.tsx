@@ -61,6 +61,8 @@ export default function PurchaseOrders() {
     discount_type: 'percentage',
     discount_amount: 0,
   });
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [milestones, setMilestones] = useState<POMilestone[]>([]);
   const [lines, setLines] = useState<POLine[]>([{ item_id: '', quantity: 1, unit_price: 0 }]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
