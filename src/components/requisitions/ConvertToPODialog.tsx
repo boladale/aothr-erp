@@ -26,6 +26,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { friendlyError } from "@/lib/friendly-error";
+import { PaymentScheduleEditor } from '@/components/purchase-orders/PaymentScheduleEditor';
+import { POMilestone, savePOMilestones } from '@/lib/po-milestones';
 
 interface ReqLine {
   id: string;
