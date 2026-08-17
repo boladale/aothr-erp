@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/currency';
-import { ArrowRight, Sparkle, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowRight, Sparkle, TrendingUp, TrendingDown, Info } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 type PeriodKey = 'month' | 'quarter' | 'year';
