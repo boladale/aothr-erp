@@ -165,13 +165,6 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
       const subtotal = poLines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
 
-      // Fetch RFP payment terms to carry over
-      const { data: rfpRow } = await supabase
-        .from('rfps')
-        .select('payment_terms')
-        .eq('id', rfpId)
-        .single();
-
       const { data: po, error: poError } = await supabase
         .from('purchase_orders')
         .insert({
@@ -181,7 +174,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           expected_date: expectedDate || null,
           subtotal,
           total_amount: subtotal,
-          payment_terms: (rfpRow as any)?.payment_terms || null,
+          payment_terms: paymentTerms || null,
           notes: `Created from RFQ ${rfpNumber} — ${rfpTitle}`,
           created_by: user?.id,
           organization_id: organizationId,
