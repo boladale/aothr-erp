@@ -273,10 +273,40 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
             </div>
           </div>
 
-          {po.payment_terms && (
+          {(po.payment_terms || milestones.length > 0) && (
             <div style={{ marginBottom: 20, padding: 14, background: '#eef4ff', border: '1px solid #c8d8f5', borderRadius: 6, fontSize: 12 }}>
               <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Payment Terms</h3>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{po.payment_terms}</div>
+              {po.payment_terms && <div style={{ whiteSpace: 'pre-wrap' }}>{po.payment_terms}</div>}
+              {milestones.length > 0 && (
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10, fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #c8d8f5' }}>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>#</th>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Milestone</th>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Basis</th>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Due Date</th>
+                      <th style={{ textAlign: 'right', padding: '4px 0' }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {milestones.map((m: any) => (
+                      <tr key={m.id}>
+                        <td style={{ padding: '4px 0' }}>{m.milestone_no}</td>
+                        <td style={{ padding: '4px 0' }}>{m.description}</td>
+                        <td style={{ padding: '4px 0' }}>{m.basis === 'percentage' ? `${Number(m.percentage)}%` : 'Fixed value'}</td>
+                        <td style={{ padding: '4px 0' }}>{m.due_date ? new Date(m.due_date).toLocaleDateString() : '—'}</td>
+                        <td style={{ padding: '4px 0', textAlign: 'right' }}>{formatCurrency(Number(m.amount) || 0)}</td>
+                      </tr>
+                    ))}
+                    <tr style={{ borderTop: '1px solid #c8d8f5', fontWeight: 700 }}>
+                      <td colSpan={4} style={{ padding: '4px 0', textAlign: 'right' }}>Total scheduled</td>
+                      <td style={{ padding: '4px 0', textAlign: 'right' }}>
+                        {formatCurrency(milestones.reduce((s: number, m: any) => s + (Number(m.amount) || 0), 0))}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 
