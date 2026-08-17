@@ -90,6 +90,8 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
   const [saving, setSaving] = useState(false);
   const [awardedInfo, setAwardedInfo] = useState<AwardedBidInfo | null>(null);
   const [sendToVendor, setSendToVendor] = useState(defaultSendToVendor);
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [milestones, setMilestones] = useState<POMilestone[]>([]);
 
   useEffect(() => {
     if (open) setSendToVendor(defaultSendToVendor);
