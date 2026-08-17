@@ -218,7 +218,13 @@ export function GoodsDeliveredByPO() {
                 <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No deliveries in the selected period.</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    {rows.length === 0
+                      ? 'No posted goods receipts between the selected dates. Widen the date range, or post a GRN in Goods Receipts first.'
+                      : `No delivered PO line matches "${search}" in this date range. Only posted GRNs appear here — try widening the dates or clearing the search.`}
+                  </TableCell>
+                </TableRow>
               )}
               {filtered.map((r: any) => (
                 <Fragment key={r.id}>
