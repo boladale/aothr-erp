@@ -284,7 +284,6 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
                       <th style={{ textAlign: 'left', padding: '4px 0' }}>#</th>
                       <th style={{ textAlign: 'left', padding: '4px 0' }}>Milestone</th>
                       <th style={{ textAlign: 'left', padding: '4px 0' }}>Basis</th>
-                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Due Date</th>
                       <th style={{ textAlign: 'right', padding: '4px 0' }}>Amount</th>
                     </tr>
                   </thead>
@@ -294,12 +293,11 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
                         <td style={{ padding: '4px 0' }}>{m.milestone_no}</td>
                         <td style={{ padding: '4px 0' }}>{m.description}</td>
                         <td style={{ padding: '4px 0' }}>{m.basis === 'percentage' ? `${Number(m.percentage)}%` : 'Fixed value'}</td>
-                        <td style={{ padding: '4px 0' }}>{m.due_date ? new Date(m.due_date).toLocaleDateString() : '—'}</td>
                         <td style={{ padding: '4px 0', textAlign: 'right' }}>{formatCurrency(Number(m.amount) || 0)}</td>
                       </tr>
                     ))}
                     <tr style={{ borderTop: '1px solid #c8d8f5', fontWeight: 700 }}>
-                      <td colSpan={4} style={{ padding: '4px 0', textAlign: 'right' }}>Total scheduled</td>
+                      <td colSpan={3} style={{ padding: '4px 0', textAlign: 'right' }}>Total scheduled</td>
                       <td style={{ padding: '4px 0', textAlign: 'right' }}>
                         {formatCurrency(milestones.reduce((s: number, m: any) => s + (Number(m.amount) || 0), 0))}
                       </td>
