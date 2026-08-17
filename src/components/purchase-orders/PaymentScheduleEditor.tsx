@@ -100,10 +100,6 @@ export function PaymentScheduleEditor({ terms, onTermsChange, milestones, onMile
                   }}
                 />
               </div>
-              <div className="col-span-2 space-y-1">
-                <Label className="text-xs">Due date</Label>
-                <Input type="date" value={m.due_date || ''} onChange={e => update(idx, { due_date: e.target.value || null })} />
-              </div>
               <div className="col-span-1 text-right text-sm font-medium pb-2">
                 {formatCurrency(milestoneValue(m, poTotal))}
               </div>
