@@ -271,7 +271,15 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           </div>
 
           <div className="space-y-2">
-            <Label>PO Line Items</Label>
+            <div className="flex items-center justify-between">
+              <Label>PO Line Items</Label>
+              <Badge variant={priceSource === 'quote' ? 'secondary' : 'destructive'}>
+                {priceSource === 'quote'
+                  ? "Prices from vendor's submitted quote"
+                  : 'No line quote found — average split (edit prices below)'}
+              </Badge>
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>
