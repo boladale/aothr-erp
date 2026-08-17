@@ -62,19 +62,22 @@ export default function PurchaseOrderDetail() {
     queryKey: ['purchase_order', id],
     enabled: !!id,
     queryFn: async () => {
-      const [poRes, linesRes] = await Promise.all([
+      const [poRes, linesRes, msRes] = await Promise.all([
         supabase.from('purchase_orders').select('*, vendors(*), locations(*)').eq('id', id).single(),
         supabase.from('purchase_order_lines').select('*, items(*)').eq('po_id', id).order('line_number'),
+        (supabase.from('po_payment_milestones' as any) as any).select('*').eq('po_id', id).order('milestone_no'),
       ]);
       if (poRes.error) throw poRes.error;
       return {
         po: poRes.data as POWithDetails,
         lines: (linesRes.data || []) as POLineWithItem[],
+        milestones: (msRes?.data || []) as any[],
       };
     },
   });
   const po = data?.po ?? null;
   const lines = data?.lines ?? [];
+  const milestones = data?.milestones ?? [];
   const fetchPO = () => queryClient.invalidateQueries({ queryKey: ['purchase_order', id] });
 
   const handleSubmitForApproval = async () => {
