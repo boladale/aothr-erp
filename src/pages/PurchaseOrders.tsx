@@ -27,6 +27,8 @@ import { formatCurrency } from '@/lib/utils';
 import { notifyPOApproved } from '@/lib/po-emails';
 import { throwEdgeError } from '@/lib/edge-error';
 import { friendlyError } from '@/lib/friendly-error';
+import { PaymentScheduleEditor } from '@/components/purchase-orders/PaymentScheduleEditor';
+import { POMilestone, savePOMilestones } from '@/lib/po-milestones';
 
 
 interface POWithDetails extends PurchaseOrder {
