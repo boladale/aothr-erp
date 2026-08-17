@@ -314,6 +314,8 @@ export default function PurchaseOrders() {
     setEditingPO(null);
     setForm({ vendor_id: '', ship_to_location_id: '', expected_date: '', notes: '', payment_terms_type: 'percentage', payment_terms_amount: 0, discount_type: 'percentage', discount_amount: 0 });
     setLines([{ item_id: '', quantity: 1, unit_price: 0 }]);
+    setPaymentTerms('');
+    setMilestones([]);
   };
 
   const addLine = () => setLines([...lines, { item_id: '', quantity: 1, unit_price: 0 }]);
