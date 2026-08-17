@@ -141,7 +141,11 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       setExpectedDate('');
     }
     setLocationId('');
-  }, [open, rfpItems, awardedProposal]);
+    setMilestones([]);
+    // Carry payment terms over from the RFQ as the starting point
+    supabase.from('rfps').select('payment_terms').eq('id', rfpId).single()
+      .then(({ data }: any) => setPaymentTerms(data?.payment_terms || ''));
+  }, [open, rfpItems, awardedProposal, rfpId]);
 
 
   const updateLineField = (idx: number, field: 'quantity' | 'unit_price', value: number) => {
