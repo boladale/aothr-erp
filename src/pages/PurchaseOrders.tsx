@@ -530,6 +530,20 @@ export default function PurchaseOrders() {
                   );
                 })()}
               </div>
+              {(() => {
+                const sub = lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
+                const disc = form.discount_type === 'percentage' ? sub * (form.discount_amount / 100) : form.discount_amount;
+                const tot = Math.max(0, sub - disc);
+                return (
+                  <PaymentScheduleEditor
+                    terms={paymentTerms}
+                    onTermsChange={setPaymentTerms}
+                    milestones={milestones}
+                    onMilestonesChange={setMilestones}
+                    poTotal={tot}
+                  />
+                );
+              })()}
               <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Additional notes..." />
