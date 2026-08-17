@@ -26,6 +26,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { friendlyError } from "@/lib/friendly-error";
+import { PaymentScheduleEditor } from '@/components/purchase-orders/PaymentScheduleEditor';
+import { POMilestone, savePOMilestones } from '@/lib/po-milestones';
 
 interface ReqLine {
   id: string;
@@ -88,6 +90,8 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
   const [saving, setSaving] = useState(false);
   const [awardedInfo, setAwardedInfo] = useState<AwardedBidInfo | null>(null);
   const [sendToVendor, setSendToVendor] = useState(defaultSendToVendor);
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [milestones, setMilestones] = useState<POMilestone[]>([]);
 
   useEffect(() => {
     if (open) setSendToVendor(defaultSendToVendor);
@@ -169,6 +173,8 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
     loadData();
     setExpectedDate('');
     setLocationId('');
+    setPaymentTerms('');
+    setMilestones([]);
   }, [open, lines, requisition.id]);
 
   const toggleLine = (idx: number) => {
@@ -204,8 +210,9 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
           subtotal,
           total_amount: subtotal,
           notes: `Converted from ${requisition.req_number}`,
+          payment_terms: paymentTerms || null,
           created_by: user?.id, organization_id: organizationId,
-        })
+        } as any)
         .select()
         .single();
 
@@ -253,6 +260,9 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
         await supabase.from('purchase_orders').delete().eq('id', po.id);
         throw traceError;
       }
+
+      await savePOMilestones(po.id, organizationId!, milestones, subtotal);
+
 
       if (sendToVendor) {
         try {
@@ -416,6 +426,13 @@ export function ConvertToPODialog({ open, onOpenChange, requisition, lines, onSu
             <div className="text-right font-semibold">PO Total: {formatCurrency(total)}</div>
           </div>
         </div>
+        <PaymentScheduleEditor
+          terms={paymentTerms}
+          onTermsChange={setPaymentTerms}
+          milestones={milestones}
+          onMilestonesChange={setMilestones}
+          poTotal={total}
+        />
         <div className="flex items-center gap-2 p-3 rounded-md border bg-muted/30">
           <Checkbox
             id="send-to-vendor"

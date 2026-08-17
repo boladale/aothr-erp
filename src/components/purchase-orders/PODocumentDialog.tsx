@@ -62,6 +62,7 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
   const [po, setPO] = useState<POData | null>(null);
   const [lines, setLines] = useState<POLine[]>([]);
   const [org, setOrg] = useState<OrgData | null>(null);
+  const [milestones, setMilestones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -69,17 +70,19 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
     setLoading(true);
 
     const fetchAll = async () => {
-      const [poRes, linesRes, orgRes] = await Promise.all([
+      const [poRes, linesRes, orgRes, msRes] = await Promise.all([
         supabase.from('purchase_orders').select('id, po_number, order_date, expected_date, subtotal, tax_amount, total_amount, notes, payment_terms, vendor_signature_url, vendor_signed_at, manager_signature_url, manager_signed_at, vendors(code, name, address, city, country, phone, email), locations(name, address)').eq('id', poId).single(),
         supabase.from('purchase_order_lines').select('line_number, quantity, unit_price, line_total, description, items(code, name, unit_of_measure), services(code, name)').eq('po_id', poId).order('line_number'),
         organizationId
           ? supabase.from('organizations').select('name, address, city, country, phone, email, logo_url, app_name').eq('id', organizationId).single()
           : Promise.resolve({ data: null }),
+        (supabase.from('po_payment_milestones' as any) as any).select('*').eq('po_id', poId).order('milestone_no'),
       ]);
 
       setPO(poRes.data as POData | null);
       setLines((linesRes.data || []) as POLine[]);
       if (orgRes.data) setOrg(orgRes.data as OrgData);
+      setMilestones((msRes?.data || []) as any[]);
       setLoading(false);
     };
 
@@ -270,10 +273,40 @@ export function PODocumentDialog({ open, onOpenChange, poId, poStatus, onStatusC
             </div>
           </div>
 
-          {po.payment_terms && (
+          {(po.payment_terms || milestones.length > 0) && (
             <div style={{ marginBottom: 20, padding: 14, background: '#eef4ff', border: '1px solid #c8d8f5', borderRadius: 6, fontSize: 12 }}>
               <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Payment Terms</h3>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{po.payment_terms}</div>
+              {po.payment_terms && <div style={{ whiteSpace: 'pre-wrap' }}>{po.payment_terms}</div>}
+              {milestones.length > 0 && (
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 10, fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #c8d8f5' }}>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>#</th>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Milestone</th>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Basis</th>
+                      <th style={{ textAlign: 'left', padding: '4px 0' }}>Due Date</th>
+                      <th style={{ textAlign: 'right', padding: '4px 0' }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {milestones.map((m: any) => (
+                      <tr key={m.id}>
+                        <td style={{ padding: '4px 0' }}>{m.milestone_no}</td>
+                        <td style={{ padding: '4px 0' }}>{m.description}</td>
+                        <td style={{ padding: '4px 0' }}>{m.basis === 'percentage' ? `${Number(m.percentage)}%` : 'Fixed value'}</td>
+                        <td style={{ padding: '4px 0' }}>{m.due_date ? new Date(m.due_date).toLocaleDateString() : '—'}</td>
+                        <td style={{ padding: '4px 0', textAlign: 'right' }}>{formatCurrency(Number(m.amount) || 0)}</td>
+                      </tr>
+                    ))}
+                    <tr style={{ borderTop: '1px solid #c8d8f5', fontWeight: 700 }}>
+                      <td colSpan={4} style={{ padding: '4px 0', textAlign: 'right' }}>Total scheduled</td>
+                      <td style={{ padding: '4px 0', textAlign: 'right' }}>
+                        {formatCurrency(milestones.reduce((s: number, m: any) => s + (Number(m.amount) || 0), 0))}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 

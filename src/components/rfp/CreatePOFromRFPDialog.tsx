@@ -27,6 +27,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award, Package, Clock, Truck } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 import { friendlyError } from "@/lib/friendly-error";
+import { PaymentScheduleEditor } from '@/components/purchase-orders/PaymentScheduleEditor';
+import { POMilestone, savePOMilestones } from '@/lib/po-milestones';
 
 interface RFPItem {
   id: string;
@@ -84,6 +86,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
   const [createdPOId, setCreatedPOId] = useState<string | null>(null);
   const [showDocument, setShowDocument] = useState(false);
   const [priceSource, setPriceSource] = useState<'quote' | 'split'>('split');
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [milestones, setMilestones] = useState<POMilestone[]>([]);
 
 
   useEffect(() => {
@@ -137,7 +141,11 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       setExpectedDate('');
     }
     setLocationId('');
-  }, [open, rfpItems, awardedProposal]);
+    setMilestones([]);
+    // Carry payment terms over from the RFQ as the starting point
+    supabase.from('rfps').select('payment_terms').eq('id', rfpId).single()
+      .then(({ data }: any) => setPaymentTerms(data?.payment_terms || ''));
+  }, [open, rfpItems, awardedProposal, rfpId]);
 
 
   const updateLineField = (idx: number, field: 'quantity' | 'unit_price', value: number) => {
@@ -157,13 +165,6 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
       const poNumber = await getNextTransactionNumber(organizationId!, 'PO', 'PO');
       const subtotal = poLines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
 
-      // Fetch RFP payment terms to carry over
-      const { data: rfpRow } = await supabase
-        .from('rfps')
-        .select('payment_terms')
-        .eq('id', rfpId)
-        .single();
-
       const { data: po, error: poError } = await supabase
         .from('purchase_orders')
         .insert({
@@ -173,7 +174,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
           expected_date: expectedDate || null,
           subtotal,
           total_amount: subtotal,
-          payment_terms: (rfpRow as any)?.payment_terms || null,
+          payment_terms: paymentTerms || null,
           notes: `Created from RFQ ${rfpNumber} — ${rfpTitle}`,
           created_by: user?.id,
           organization_id: organizationId,
@@ -203,6 +204,8 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
         await supabase.from('purchase_orders').delete().eq('id', po.id);
         throw linesError;
       }
+
+      await savePOMilestones(po.id, organizationId!, milestones, subtotal);
 
       toast.success(`PO ${poNumber} created from RFQ`);
       setCreatedPOId(po.id);
@@ -321,6 +324,14 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
             <div className="text-right font-semibold text-lg">PO Total: {formatCurrency(total)}</div>
           </div>
         </div>
+
+        <PaymentScheduleEditor
+          terms={paymentTerms}
+          onTermsChange={setPaymentTerms}
+          milestones={milestones}
+          onMilestonesChange={setMilestones}
+          poTotal={total}
+        />
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
