@@ -90,23 +90,39 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
     supabase.from('locations').select('id, code, name').eq('is_active', true).order('name')
       .then(({ data }) => setLocations((data || []) as Location[]));
 
-    const totalQty = rfpItems.reduce((s, i) => s + i.quantity, 0);
-    const totalAmount = awardedProposal.total_amount || 0;
+    (async () => {
+      // Pull the vendor's actual quoted unit prices per line (from Compare Quotes)
+      const { data: quoted } = await supabase
+        .from('rfp_proposal_lines')
+        .select('rfp_item_id, unit_price')
+        .eq('proposal_id', awardedProposal.id);
 
-    const lines: POLine[] = rfpItems.map(item => {
-      const isService = !!item.service_id;
-      const ref = isService ? item.services : item.items;
-      return {
-        item_id: isService ? null : item.item_id,
-        service_id: isService ? item.service_id : null,
-        kind: isService ? 'service' : 'item',
-        quantity: item.quantity,
-        unit_price: totalQty > 0 ? Math.round((totalAmount / totalQty) * 100) / 100 : 0,
-        itemCode: ref?.code || '',
-        itemName: ref?.name || '',
-      };
-    });
-    setPOLines(lines);
+      const priceByItem: Record<string, number> = {};
+      (quoted || []).forEach((l: any) => {
+        priceByItem[l.rfp_item_id] = Number(l.unit_price) || 0;
+      });
+      const hasQuotedLines = Object.values(priceByItem).some(v => v > 0);
+
+      const totalQty = rfpItems.reduce((s, i) => s + i.quantity, 0);
+      const totalAmount = awardedProposal.total_amount || 0;
+
+      const lines: POLine[] = rfpItems.map(item => {
+        const isService = !!item.service_id;
+        const ref = isService ? item.services : item.items;
+        const quotedPrice = priceByItem[item.id];
+        const fallback = totalQty > 0 ? Math.round((totalAmount / totalQty) * 100) / 100 : 0;
+        return {
+          item_id: isService ? null : item.item_id,
+          service_id: isService ? item.service_id : null,
+          kind: isService ? 'service' : 'item',
+          quantity: item.quantity,
+          unit_price: hasQuotedLines ? (quotedPrice || 0) : fallback,
+          itemCode: ref?.code || '',
+          itemName: ref?.name || '',
+        };
+      });
+      setPOLines(lines);
+    })();
 
     // Pre-fill expected date from delivery timeline
     if (awardedProposal.delivery_timeline_days) {
@@ -118,6 +134,7 @@ export function CreatePOFromRFPDialog({ open, onOpenChange, rfpId, rfpNumber, rf
     }
     setLocationId('');
   }, [open, rfpItems, awardedProposal]);
+
 
   const updateLineField = (idx: number, field: 'quantity' | 'unit_price', value: number) => {
     const updated = [...poLines];
