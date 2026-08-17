@@ -4914,6 +4914,56 @@ export type Database = {
           },
         ]
       }
+      po_payment_milestones: {
+        Row: {
+          amount: number
+          basis: string
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          milestone_no: number
+          organization_id: string
+          percentage: number
+          po_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          basis?: string
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          milestone_no: number
+          organization_id: string
+          percentage?: number
+          po_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          basis?: string
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          milestone_no?: number
+          organization_id?: string
+          percentage?: number
+          po_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "po_payment_milestones_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       po_reaward_requests: {
         Row: {
           approval_notes: string | null
