@@ -332,7 +332,7 @@ export default function Vendors() {
               </Button>
             </>
           )}
-          {v.status === 'draft' && (
+          {(v.status === 'draft' || v.status === 'active' || v.status === 'inactive') && (
             <Button size="sm" variant="ghost" title="Edit" onClick={(e) => { e.stopPropagation(); handleEdit(v); }}>
               <Pencil className="h-4 w-4" />
             </Button>
