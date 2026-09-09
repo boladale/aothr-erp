@@ -233,6 +233,7 @@ export function GoodsDeliveredByPO() {
               <TableRow>
                 <TableHead className="w-8" />
                 <TableHead>PO No.</TableHead>
+                <TableHead>PO Stage</TableHead>
                 <TableHead>Vendor</TableHead>
                 <TableHead>Item</TableHead>
                 <TableHead className="text-right">Ordered</TableHead>
