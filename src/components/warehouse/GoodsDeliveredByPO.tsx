@@ -261,6 +261,7 @@ export function GoodsDeliveredByPO() {
                   <TableRow className="cursor-pointer" onClick={() => setExpanded(p => ({ ...p, [r.id]: !p[r.id] }))}>
                     <TableCell>{expanded[r.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</TableCell>
                     <TableCell className="font-medium">{r.po_number}</TableCell>
+                    <TableCell className="capitalize text-muted-foreground">{String(r.po_status || '').replace(/_/g, ' ') || '—'}</TableCell>
                     <TableCell>{r.vendor}</TableCell>
                     <TableCell>{r.item_code ? `${r.item_code} — ` : ''}{r.item_name}</TableCell>
                     <TableCell className="text-right">{r.qty_ordered.toLocaleString()}</TableCell>
