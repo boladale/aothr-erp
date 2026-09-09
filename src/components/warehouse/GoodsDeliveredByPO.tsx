@@ -245,11 +245,11 @@ export function GoodsDeliveredByPO() {
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     {rows.length === 0
                       ? 'No approved purchase orders yet. Once a PO is approved its lines appear here, even before any delivery.'
                       : `No purchase order matches "${applied}". Check the PO number or click Show all.`}
@@ -275,7 +275,7 @@ export function GoodsDeliveredByPO() {
                   {expanded[r.id] && (
                     <TableRow>
                       <TableCell />
-                      <TableCell colSpan={8} className="bg-muted/40">
+                      <TableCell colSpan={9} className="bg-muted/40">
                         {r.deliveries.length === 0 ? (
                           <div className="py-3 text-sm text-muted-foreground">No deliveries received yet for this line.</div>
                         ) : (
