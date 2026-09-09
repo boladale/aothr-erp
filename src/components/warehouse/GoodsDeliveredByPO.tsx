@@ -11,7 +11,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
 
-const ACTIVE_PO_STATUSES = ['approved', 'sent', 'partially_received', 'fully_received', 'closed'];
+const ACTIVE_PO_STATUSES = [
+  'draft',
+  'pending_approval',
+  'approved',
+  'sent',
+  'partially_received',
+  'fully_received',
+  'closed',
+];
+
+// "po 12", "PO-00012", "12" should all find PO-00012
+const norm = (v: string) => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const numTail = (v: string) => (String(v || '').match(/(\d+)\s*$/)?.[1] || '').replace(/^0+/, '');
 
 interface Delivery {
   date: string;
@@ -117,11 +129,16 @@ export function GoodsDeliveredByPO() {
   });
 
   const filtered = useMemo(() => {
-    const q = applied.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r: any) =>
-      [r.po_number, r.vendor, r.item_code, r.item_name].some((v: string) => String(v || '').toLowerCase().includes(q)),
-    );
+    const raw = applied.trim();
+    if (!raw) return rows;
+    const q = norm(raw);
+    const qNum = numTail(raw);
+    return rows.filter((r: any) => {
+      const hit = [r.po_number, r.vendor, r.item_code, r.item_name].some((v: string) => norm(v).includes(q));
+      if (hit) return true;
+      // allow searching by the number alone, e.g. "12" -> PO-00012
+      return !!qNum && numTail(r.po_number) === qNum;
+    });
   }, [rows, applied]);
 
   const exportColumns = [
@@ -216,6 +233,7 @@ export function GoodsDeliveredByPO() {
               <TableRow>
                 <TableHead className="w-8" />
                 <TableHead>PO No.</TableHead>
+                <TableHead>PO Stage</TableHead>
                 <TableHead>Vendor</TableHead>
                 <TableHead>Item</TableHead>
                 <TableHead className="text-right">Ordered</TableHead>
@@ -227,14 +245,14 @@ export function GoodsDeliveredByPO() {
             </TableHeader>
             <TableBody>
               {isLoading && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Loading…</TableCell></TableRow>
               )}
               {!isLoading && filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     {rows.length === 0
-                      ? 'No approved purchase orders yet. Once a PO is approved its lines appear here, even before any delivery.'
-                      : `No purchase order matches "${applied}". Check the PO number or click Show all.`}
+                      ? 'No purchase orders yet. Once a PO is raised its lines appear here, even before any delivery.'
+                      : `No purchase order matches "${applied}". You can type just the number (e.g. 12) or click Show all.`}
                   </TableCell>
                 </TableRow>
               )}
@@ -243,6 +261,7 @@ export function GoodsDeliveredByPO() {
                   <TableRow className="cursor-pointer" onClick={() => setExpanded(p => ({ ...p, [r.id]: !p[r.id] }))}>
                     <TableCell>{expanded[r.id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</TableCell>
                     <TableCell className="font-medium">{r.po_number}</TableCell>
+                    <TableCell className="capitalize text-muted-foreground">{String(r.po_status || '').replace(/_/g, ' ') || '—'}</TableCell>
                     <TableCell>{r.vendor}</TableCell>
                     <TableCell>{r.item_code ? `${r.item_code} — ` : ''}{r.item_name}</TableCell>
                     <TableCell className="text-right">{r.qty_ordered.toLocaleString()}</TableCell>
@@ -256,7 +275,7 @@ export function GoodsDeliveredByPO() {
                   {expanded[r.id] && (
                     <TableRow>
                       <TableCell />
-                      <TableCell colSpan={8} className="bg-muted/40">
+                      <TableCell colSpan={9} className="bg-muted/40">
                         {r.deliveries.length === 0 ? (
                           <div className="py-3 text-sm text-muted-foreground">No deliveries received yet for this line.</div>
                         ) : (
