@@ -251,8 +251,8 @@ export function GoodsDeliveredByPO() {
                 <TableRow>
                   <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                     {rows.length === 0
-                      ? 'No approved purchase orders yet. Once a PO is approved its lines appear here, even before any delivery.'
-                      : `No purchase order matches "${applied}". Check the PO number or click Show all.`}
+                      ? 'No purchase orders yet. Once a PO is raised its lines appear here, even before any delivery.'
+                      : `No purchase order matches "${applied}". You can type just the number (e.g. 12) or click Show all.`}
                   </TableCell>
                 </TableRow>
               )}
