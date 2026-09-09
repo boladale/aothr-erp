@@ -129,11 +129,16 @@ export function GoodsDeliveredByPO() {
   });
 
   const filtered = useMemo(() => {
-    const q = applied.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r: any) =>
-      [r.po_number, r.vendor, r.item_code, r.item_name].some((v: string) => String(v || '').toLowerCase().includes(q)),
-    );
+    const raw = applied.trim();
+    if (!raw) return rows;
+    const q = norm(raw);
+    const qNum = numTail(raw);
+    return rows.filter((r: any) => {
+      const hit = [r.po_number, r.vendor, r.item_code, r.item_name].some((v: string) => norm(v).includes(q));
+      if (hit) return true;
+      // allow searching by the number alone, e.g. "12" -> PO-00012
+      return !!qNum && numTail(r.po_number) === qNum;
+    });
   }, [rows, applied]);
 
   const exportColumns = [
