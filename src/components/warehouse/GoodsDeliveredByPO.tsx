@@ -11,7 +11,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ExportButtons } from '@/components/exports/ExportButtons';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
 
-const ACTIVE_PO_STATUSES = ['approved', 'sent', 'partially_received', 'fully_received', 'closed'];
+const ACTIVE_PO_STATUSES = [
+  'draft',
+  'pending_approval',
+  'approved',
+  'sent',
+  'partially_received',
+  'fully_received',
+  'closed',
+];
+
+// "po 12", "PO-00012", "12" should all find PO-00012
+const norm = (v: string) => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const numTail = (v: string) => (String(v || '').match(/(\d+)\s*$/)?.[1] || '').replace(/^0+/, '');
 
 interface Delivery {
   date: string;
