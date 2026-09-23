@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.generate_recurring_entry(uuid) FROM PUBLIC, anon;

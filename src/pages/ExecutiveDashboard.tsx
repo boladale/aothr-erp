@@ -91,9 +91,9 @@ export default function ExecutiveDashboard() {
         supabase.from('ap_invoices').select('total_amount, payment_status, due_date'),
         supabase.from('bank_accounts').select('current_balance, is_active').eq('is_active', true),
         supabase.from('purchase_orders').select('id, status, total_amount, created_at, expected_date'),
-        supabase.from('goods_receipts').select('id, status, receipt_date, purchase_order_id'),
+        supabase.from('goods_receipts').select('id, status, receipt_date, po_id'),
         supabase.from('inventory_balances').select('quantity, item:items(reorder_level, unit_cost)'),
-        supabase.from('projects').select('id, status, budget_amount'),
+        supabase.from('projects').select('id, status, budgeted_amount'),
         supabase.from('employees').select('id, status'),
         supabase.from('leave_requests').select('id, status'),
         supabase.from('budget_lines').select('annual_amount, committed_amount, actual_amount'),
@@ -128,11 +128,11 @@ export default function ExecutiveDashboard() {
       // Procurement health: completion rate + on-time delivery
       const allPos = pos.data || [];
       const closedPos = allPos.filter((p: any) => ['closed', 'completed', 'received'].includes(String(p.status)));
-      const receivedPoIds = new Set((grns.data || []).map((g: any) => g.purchase_order_id));
+      const receivedPoIds = new Set((grns.data || []).map((g: any) => g.po_id));
       const sentPos = allPos.filter((p: any) => !['draft', 'cancelled', 'rejected'].includes(String(p.status)));
       const fulfilled = sentPos.filter((p: any) => receivedPoIds.has(p.id)).length;
       const onTime = (grns.data || []).filter((g: any) => {
-        const po = allPos.find((p: any) => p.id === g.purchase_order_id);
+        const po = allPos.find((p: any) => p.id === g.po_id);
         return po?.expected_date ? new Date(g.receipt_date) <= new Date(po.expected_date) : true;
       }).length;
       const grnCount = (grns.data || []).length;
