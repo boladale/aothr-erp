@@ -153,7 +153,7 @@ export default function StockMovements() {
           location_id: l.delivery_notes.location_id,
           location_name: l.delivery_notes.locations?.name || '',
           qty_in: 0,
-          qty_out: Number(l.quantity) || 0,
+          qty_out: Number(l.qty_delivered) || 0,
         });
       });
 
