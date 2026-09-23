@@ -3057,6 +3057,107 @@ export type Database = {
           },
         ]
       }
+      gl_recurring_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          last_generated_at: string | null
+          name: string
+          next_run_date: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_generated_at?: string | null
+          name: string
+          next_run_date: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_generated_at?: string | null
+          name?: string
+          next_run_date?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gl_recurring_entries_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gl_recurring_entry_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          credit: number
+          debit: number
+          description: string | null
+          id: string
+          line_number: number
+          recurring_entry_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          line_number?: number
+          recurring_entry_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          line_number?: number
+          recurring_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gl_recurring_entry_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "gl_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gl_recurring_entry_lines_recurring_entry_id_fkey"
+            columns: ["recurring_entry_id"]
+            isOneToOne: false
+            referencedRelation: "gl_recurring_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goods_receipt_lines: {
         Row: {
           grn_id: string
@@ -7804,6 +7905,10 @@ export type Database = {
       generate_employee_salary_from_grade: {
         Args: { p_employee_id: string }
         Returns: undefined
+      }
+      generate_recurring_entry: {
+        Args: { p_recurring_id: string }
+        Returns: string
       }
       get_org_boldsign_settings: {
         Args: { _org_id: string }

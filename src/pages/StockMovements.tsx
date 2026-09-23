@@ -139,7 +139,7 @@ export default function StockMovements() {
       // Delivery Notes
       const { data: dnLines } = await supabase
         .from('delivery_note_lines')
-        .select('id, quantity, item_id, items(code, name), delivery_notes!inner(dn_number, delivery_date, status, location_id, locations(name))')
+        .select('id, qty_delivered, item_id, items(code, name), delivery_notes!inner(dn_number, delivery_date, status, location_id, locations(name))')
         .eq('delivery_notes.status', 'posted');
       (dnLines || []).forEach((l: any) => {
         movements.push({
@@ -153,7 +153,7 @@ export default function StockMovements() {
           location_id: l.delivery_notes.location_id,
           location_name: l.delivery_notes.locations?.name || '',
           qty_in: 0,
-          qty_out: Number(l.quantity) || 0,
+          qty_out: Number(l.qty_delivered) || 0,
         });
       });
 

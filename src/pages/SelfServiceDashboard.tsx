@@ -15,7 +15,7 @@ export default function SelfServiceDashboard() {
   const { data: employee } = useQuery({
     queryKey: ['my-employee', user?.id],
     queryFn: async () => {
-      const { data } = await (supabase.from('employees' as any) as any).select('*, departments(name), job_titles(title)').eq('user_id', user!.id).maybeSingle();
+      const { data } = await (supabase.from('employees' as any) as any).select('*, departments(name), job_roles(name)').eq('user_id', user!.id).maybeSingle();
       return data as any;
     },
     enabled: !!user,
@@ -120,7 +120,7 @@ export default function SelfServiceDashboard() {
           <CardContent className="grid grid-cols-2 gap-2 text-sm">
             <div><span className="text-muted-foreground">Employee #:</span> {(employee as any).employee_number}</div>
             <div><span className="text-muted-foreground">Department:</span> {(employee as any).departments?.name || '—'}</div>
-            <div><span className="text-muted-foreground">Job Title:</span> {(employee as any).job_titles?.title || '—'}</div>
+            <div><span className="text-muted-foreground">Job Title:</span> {(employee as any).job_roles?.name || '—'}</div>
             <div><span className="text-muted-foreground">Email:</span> {(employee as any).email || '—'}</div>
           </CardContent>
         </Card>
