@@ -147,7 +147,8 @@ export const navSections = [
   {
     label: 'Main',
     items: [
-      { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { path: '/', label: 'My Briefing', icon: LayoutDashboard },
+      { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ],
   },
   {
