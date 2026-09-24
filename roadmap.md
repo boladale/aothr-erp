@@ -4,4 +4,7 @@
 
 ## AI Business Operating Agent (from uploaded spec)
 - [x] Read spec, answer the 9 discovery questions (section 40)
-- [ ] Wait for user go-ahead + answers on chat history before Phase 1 build
+- [x] AI Read Layer design approved
+- [x] AI settings (company on/off + future switches) and 15 read-only business summaries built and tested
+- [ ] Admin on/off switch screen for AI
+- [ ] AI tools + Ask Aothr agent — waiting for user approval of the next step, plus OpenAI key decision
