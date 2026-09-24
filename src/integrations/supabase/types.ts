@@ -8059,6 +8059,7 @@ export type Database = {
         | "hr_officer"
         | "payroll_manager"
         | "finance_manager"
+        | "executive"
       approval_action_type: "approved" | "rejected" | "delegated" | "escalated"
       approval_instance_status:
         | "pending"
@@ -8298,6 +8299,7 @@ export const Constants = {
         "hr_officer",
         "payroll_manager",
         "finance_manager",
+        "executive",
       ],
       approval_action_type: ["approved", "rejected", "delegated", "escalated"],
       approval_instance_status: [
