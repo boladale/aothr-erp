@@ -10,4 +10,4 @@
 - [x] Per-company OpenAI key screen (Admin → Branding)
 - [x] Security warnings reviewed (248 → ~70 intentional)
 - [x] Ask Aothr chat built (company OpenAI keys) — needs real key test
-- [ ] Health-check warnings: walk user through fixes (branding, 2026 periods, VAT rules, opening balances)
+- [x] Health-check warnings: walk user through fixes (branding, 2026 periods, VAT rules, opening balances)
