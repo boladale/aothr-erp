@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_settings: {
+        Row: {
+          actions_enabled: boolean
+          ai_enabled: boolean
+          ai_model: string
+          ai_provider: string
+          alerts_enabled: boolean
+          automation_enabled: boolean
+          chat_enabled: boolean
+          created_at: string
+          insights_enabled: boolean
+          morning_brief_enabled: boolean
+          organization_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          actions_enabled?: boolean
+          ai_enabled?: boolean
+          ai_model?: string
+          ai_provider?: string
+          alerts_enabled?: boolean
+          automation_enabled?: boolean
+          chat_enabled?: boolean
+          created_at?: string
+          insights_enabled?: boolean
+          morning_brief_enabled?: boolean
+          organization_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          actions_enabled?: boolean
+          ai_enabled?: boolean
+          ai_model?: string
+          ai_provider?: string
+          alerts_enabled?: boolean
+          automation_enabled?: boolean
+          chat_enabled?: boolean
+          created_at?: string
+          insights_enabled?: boolean
+          morning_brief_enabled?: boolean
+          organization_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ap_credit_note_lines: {
         Row: {
           credit_note_id: string
@@ -7865,6 +7921,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ai_account_balances: {
+        Args: { p_from: string; p_org: string; p_to: string }
+        Returns: {
+          account_code: string
+          account_id: string
+          account_name: string
+          account_type: string
+          balance: number
+          credit: number
+          debit: number
+        }[]
+      }
+      ai_business_alerts: { Args: never; Returns: Json }
+      ai_business_health: { Args: never; Returns: Json }
+      ai_can: { Args: { p_code: string }; Returns: boolean }
+      ai_cash_position: { Args: never; Returns: Json }
+      ai_customer_intelligence: { Args: never; Returns: Json }
+      ai_expense_analysis: { Args: never; Returns: Json }
+      ai_guard: { Args: { p_codes: string[] }; Returns: string }
+      ai_inventory_position: { Args: never; Returns: Json }
+      ai_journal_last_change: { Args: { p_org: string }; Returns: string }
+      ai_payables: { Args: never; Returns: Json }
+      ai_payroll_position: { Args: never; Returns: Json }
+      ai_pl_totals: {
+        Args: { p_from: string; p_org: string; p_to: string }
+        Returns: Json
+      }
+      ai_procurement_position: { Args: never; Returns: Json }
+      ai_profit_loss_monthly: { Args: never; Returns: Json }
+      ai_project_position: { Args: never; Returns: Json }
+      ai_receivables: { Args: never; Returns: Json }
+      ai_sales_performance: { Args: never; Returns: Json }
+      ai_supplier_performance: { Args: never; Returns: Json }
+      ai_tax_position: { Args: never; Returns: Json }
       approve_po_reaward:
         | { Args: { p_request_id: string }; Returns: string }
         | { Args: { p_notes?: string; p_request_id: string }; Returns: string }
