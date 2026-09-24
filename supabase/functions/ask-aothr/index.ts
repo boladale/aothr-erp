@@ -49,8 +49,9 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("organization_id, full_name").eq("user_id", user.id).maybeSingle();
     const org = prof?.organization_id;
     if (!org) return json({ error: "Your account is not linked to a company." }, 400);
-    const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model").eq("organization_id", org).maybeSingle();
+    const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model, chat_enabled, morning_brief_enabled").eq("organization_id", org).maybeSingle();
     if (settings && settings.ai_enabled === false) return json({ error: "AI is switched off for your company." });
+    if (settings && settings.chat_enabled === false) return json({ error: "Ask Aothr is switched off for your company." });
     const { data: keyRow } = await admin.from("ai_provider_keys").select("openai_api_key").eq("organization_id", org).maybeSingle();
     const key = keyRow?.openai_api_key;
     if (!key) return json({ error: "No OpenAI key has been added for your company yet. Ask your admin to add it under Administration → Branding." });
