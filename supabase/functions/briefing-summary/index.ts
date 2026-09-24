@@ -18,8 +18,16 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!user) return json({ error: "Please sign in again." }, 401);
 
-    const key = Deno.env.get("LOVABLE_API_KEY");
-    if (!key) return json({ error: "AI is not configured." }, 500);
+    // Company's own OpenAI key (saved by the admin under Administration → Branding)
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: prof } = await admin.from("profiles").select("organization_id").eq("user_id", user.id).maybeSingle();
+    if (!prof?.organization_id) return json({ error: "Your account is not linked to a company." }, 400);
+    const { data: keyRow } = await admin.from("ai_provider_keys").select("openai_api_key").eq("organization_id", prof.organization_id).maybeSingle();
+    const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model").eq("organization_id", prof.organization_id).maybeSingle();
+    if (settings && settings.ai_enabled === false) return json({ error: "AI is switched off for your company." }, 403);
+    const key = keyRow?.openai_api_key;
+    if (!key) return json({ error: "No OpenAI key has been added for your company yet. Ask your admin to add it under Administration → Branding." }, 400);
+    const model = settings?.ai_model && !settings.ai_model.includes("/") ? settings.ai_model : "gpt-4o-mini";
 
     const { roleLabel, name, metrics } = await req.json();
     if (!metrics || typeof metrics !== "object") return json({ error: "No data to summarise." }, 400);
@@ -30,22 +38,17 @@ ${JSON.stringify(metrics).slice(0, 6000)}
 
 Write 2-3 short plain-English sentences (max 70 words) highlighting what matters most today: the biggest change, any risk, and one suggested action. No headings, no bullet points, no markdown. Use compact amounts like ₦12.5M.`;
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
+    const res = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
-      body: JSON.stringify({
-        model: "openai/gpt-6-astra",
-        input: prompt,
-        stream: true,
-        reasoning: { effort: "low" },
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ model, input: prompt, stream: true }),
     });
 
     if (!res.ok) {
       const t = await res.text();
-      console.error("AI gateway error", res.status, t);
-      if (res.status === 429) return json({ error: "AI is busy right now. Please try again in a minute." }, 429);
-      if (res.status === 402) return json({ error: "AI credits have run out. Add credits in Settings → Plans & credits." }, 402);
+      console.error("OpenAI error", res.status, t.slice(0, 300));
+      if (res.status === 401) return json({ error: "Your company's OpenAI key was rejected. Ask your admin to check or replace it." }, 401);
+      if (res.status === 429) return json({ error: "OpenAI is busy or your OpenAI credit has run out. Please check your OpenAI billing or try again shortly." }, 429);
       return json({ error: "The AI summary could not be generated." }, res.status >= 500 ? 502 : res.status);
     }
 

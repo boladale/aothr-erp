@@ -7,4 +7,6 @@
 - [x] AI Read Layer design approved
 - [x] AI settings (company on/off + future switches) and 15 read-only business summaries built and tested
 - [ ] Admin on/off switch screen for AI
-- [ ] AI tools + Ask Aothr agent — waiting for user approval of the next step, plus OpenAI key decision
+- [x] Per-company OpenAI key screen (Admin → Branding)
+- [x] Security warnings reviewed (248 → ~70 intentional)
+- [ ] AI tools + Ask Aothr agent — waiting for user approval

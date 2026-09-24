@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_provider_keys: {
+        Row: {
+          created_at: string
+          openai_api_key: string | null
+          organization_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          openai_api_key?: string | null
+          organization_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          openai_api_key?: string | null
+          organization_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_provider_keys_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_settings: {
         Row: {
           actions_enabled: boolean
@@ -8007,6 +8039,14 @@ export type Database = {
           has_api_key: boolean
         }[]
       }
+      get_org_openai_settings: {
+        Args: never
+        Returns: {
+          has_key: boolean
+          key_hint: string
+          updated_at: string
+        }[]
+      }
       get_user_org_id: { Args: never; Returns: string }
       get_user_programs: { Args: { p_user_id: string }; Returns: string[] }
       get_user_roles: {
@@ -8128,6 +8168,7 @@ export type Database = {
         Args: { _api_key: string; _enabled: boolean; _org_id: string }
         Returns: undefined
       }
+      set_org_openai_key: { Args: { _api_key: string }; Returns: undefined }
       vendor_in_user_org: { Args: { _vendor_id: string }; Returns: boolean }
     }
     Enums: {
