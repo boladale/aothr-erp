@@ -50,10 +50,10 @@ Deno.serve(async (req) => {
     const org = prof?.organization_id;
     if (!org) return json({ error: "Your account is not linked to a company." }, 400);
     const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model").eq("organization_id", org).maybeSingle();
-    if (settings && settings.ai_enabled === false) return json({ error: "AI is switched off for your company." }, 403);
+    if (settings && settings.ai_enabled === false) return json({ error: "AI is switched off for your company." });
     const { data: keyRow } = await admin.from("ai_provider_keys").select("openai_api_key").eq("organization_id", org).maybeSingle();
     const key = keyRow?.openai_api_key;
-    if (!key) return json({ error: "No OpenAI key has been added for your company yet. Ask your admin to add it under Administration → Branding." }, 400);
+    if (!key) return json({ error: "No OpenAI key has been added for your company yet. Ask your admin to add it under Administration → Branding." });
     const model = settings?.ai_model && !settings.ai_model.includes("/") ? settings.ai_model : "gpt-4o-mini";
 
     // Conversation (own only)
