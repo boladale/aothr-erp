@@ -164,6 +164,7 @@ export default function Admin() {
     warehouse_officer: 'bg-info/80 text-info-foreground',
     accounts_payable: 'bg-success text-success-foreground',
     finance_manager: 'bg-success text-success-foreground',
+    executive: 'bg-primary text-primary-foreground',
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
@@ -422,6 +423,7 @@ export default function Admin() {
                   <SelectGroup>
                     <SelectLabel>System Roles</SelectLabel>
                     <SelectItem value="app:admin">Admin</SelectItem>
+                    <SelectItem value="app:executive">Executive (Chairman / MD)</SelectItem>
                     <SelectItem value="app:finance_manager">Finance Manager</SelectItem>
                     <SelectItem value="app:procurement_manager">Procurement Manager (Approver)</SelectItem>
                     <SelectItem value="app:procurement_officer">Procurement Officer (Initiator)</SelectItem>

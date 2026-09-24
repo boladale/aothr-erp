@@ -464,6 +464,7 @@ export default function UserManagement() {
     warehouse_officer: 'bg-info/80 text-info-foreground',
     accounts_payable: 'bg-success text-success-foreground',
     finance_manager: 'bg-success text-success-foreground',
+    executive: 'bg-primary text-primary-foreground',
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
@@ -919,6 +920,8 @@ export default function UserManagement() {
                 <SelectContent>
                   <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">System Roles</div>
                   <SelectItem value="app:admin">Admin</SelectItem>
+                  <SelectItem value="app:executive">Executive (Chairman / MD)</SelectItem>
+                  <SelectItem value="app:finance_manager">Finance Manager</SelectItem>
                   <SelectItem value="app:procurement_manager">Procurement Manager (Approver)</SelectItem>
                   <SelectItem value="app:procurement_officer">Procurement Officer (Initiator)</SelectItem>
                   <SelectItem value="app:warehouse_manager">Warehouse Manager (Approver)</SelectItem>
