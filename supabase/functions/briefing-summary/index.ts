@@ -23,8 +23,9 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("organization_id").eq("user_id", user.id).maybeSingle();
     if (!prof?.organization_id) return json({ error: "Your account is not linked to a company." }, 400);
     const { data: keyRow } = await admin.from("ai_provider_keys").select("openai_api_key").eq("organization_id", prof.organization_id).maybeSingle();
-    const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model").eq("organization_id", prof.organization_id).maybeSingle();
+    const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model, chat_enabled, morning_brief_enabled").eq("organization_id", prof.organization_id).maybeSingle();
     if (settings && settings.ai_enabled === false) return json({ error: "AI is switched off for your company." });
+    if (settings && settings.morning_brief_enabled === false) return json({ error: "The AI summary is switched off for your company." });
     const key = keyRow?.openai_api_key;
     if (!key) return json({ error: "No OpenAI key has been added for your company yet. Ask your admin to add it under Administration → Branding." });
     const model = settings?.ai_model && !settings.ai_model.includes("/") ? settings.ai_model : "gpt-4o-mini";
