@@ -53,6 +53,9 @@ async function executiveSection(): Promise<Section> {
   };
   const cur = bucket(ytdStart, now);
   const prev = bucket(prevStart, prevEnd);
+  const mtd = bucket(new Date(now.getFullYear(), now.getMonth(), 1), now);
+  const lm = bucket(new Date(now.getFullYear(), now.getMonth() - 1, 1), new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59));
+  const mch = pctChange(mtd.revenue, lm.revenue);
   const ch = pctChange(cur.profit, prev.profit);
   const margin = cur.revenue ? (cur.profit / cur.revenue) * 100 : 0;
   return {
@@ -63,8 +66,10 @@ async function executiveSection(): Promise<Section> {
       { label: 'YTD Expenses', value: compact(cur.expense), sub: `Last year: ${compact(prev.expense)}`, path: '/financial-reports' },
       { label: 'YTD Profit', value: compact(cur.profit), sub: `Margin ${margin.toFixed(1)}%`, tone: cur.profit >= 0 ? 'good' : 'bad', path: '/financial-reports' },
       { label: 'Profit vs last year YTD', value: ch === null ? '—' : `${ch >= 0 ? '+' : ''}${ch.toFixed(1)}%`, sub: `Last year YTD profit: ${compact(prev.profit)}`, tone: ch === null ? 'neutral' : ch >= 0 ? 'good' : 'bad' },
+      { label: 'Revenue this month', value: compact(mtd.revenue), sub: `Last month: ${compact(lm.revenue)}${mch === null ? '' : ` (${mch >= 0 ? '+' : ''}${mch.toFixed(0)}%)`}`, tone: mch === null ? 'neutral' : mch >= 0 ? 'good' : 'bad', path: '/financial-reports' },
+      { label: 'Profit this month', value: compact(mtd.profit), sub: `Last month: ${compact(lm.profit)}`, tone: mtd.profit >= 0 ? 'good' : 'bad', path: '/financial-reports' },
     ],
-    raw: { ytd_revenue: cur.revenue, ytd_cost_of_sales: cur.cos, ytd_expenses: cur.expense, ytd_profit: cur.profit, last_year_ytd_profit: prev.profit, last_year_ytd_revenue: prev.revenue, profit_change_pct: ch ?? 'n/a' },
+    raw: { ytd_revenue: cur.revenue, ytd_cost_of_sales: cur.cos, ytd_expenses: cur.expense, ytd_profit: cur.profit, last_year_ytd_profit: prev.profit, last_year_ytd_revenue: prev.revenue, profit_change_pct: ch ?? 'n/a', month_revenue: mtd.revenue, last_month_revenue: lm.revenue, month_profit: mtd.profit, last_month_profit: lm.profit },
   };
 }
 
