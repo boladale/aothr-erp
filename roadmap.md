@@ -9,4 +9,4 @@
 - [ ] Admin on/off switch screen for AI
 - [x] Per-company OpenAI key screen (Admin → Branding)
 - [x] Security warnings reviewed (248 → ~70 intentional)
-- [ ] AI tools + Ask Aothr agent — waiting for user approval
+- [x] Ask Aothr chat built (company OpenAI keys) — needs real key test

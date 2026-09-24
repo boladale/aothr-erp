@@ -1,5 +1,6 @@
 import {
   PackageCheck,
+  Sparkles,
   LayoutDashboard,
   Building2,
   Package,
@@ -148,6 +149,7 @@ export const navSections = [
     label: 'Main',
     items: [
       { path: '/', label: 'My Briefing', icon: LayoutDashboard },
+      { path: '/ask-aothr', label: 'Ask Aothr', icon: Sparkles },
       { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ],
   },
