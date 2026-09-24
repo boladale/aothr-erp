@@ -14,6 +14,7 @@ import { VendorPortalGuard } from "./components/guards/VendorPortalGuard";
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MyBriefing = lazy(() => import("./pages/MyBriefing"));
+const AskAothr = lazy(() => import("./pages/AskAothr"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 
 const Vendors = lazy(() => import("./pages/Vendors"));
@@ -205,6 +206,7 @@ const App = () => (
             <Route path="/email-events" element={<ProtectedRoute><EmailEvents /></ProtectedRoute>} />
             <Route path="/org-setup" element={<OrgSetupRoute />} />
             <Route path="/" element={<ProtectedRoute><MyBriefing /></ProtectedRoute>} />
+            <Route path="/ask-aothr" element={<ProtectedRoute><AskAothr /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/executive-dashboard" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
 
