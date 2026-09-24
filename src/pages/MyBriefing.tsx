@@ -100,8 +100,8 @@ async function procurementSection(): Promise<Section> {
 async function financeSection(): Promise<Section> {
   const [{ data: banks }, { data: ar }, { data: ap }] = await Promise.all([
     sb.from('bank_accounts').select('current_balance').eq('is_active', true),
-    sb.from('ar_invoices').select('total_amount, amount_paid, payment_status, due_date'),
-    sb.from('ap_invoices').select('total_amount, amount_paid, payment_status, due_date'),
+    sb.from('ar_invoices').select('total_amount, payment_status, due_date'),
+    sb.from('ap_invoices').select('total_amount, payment_status, due_date'),
   ]);
   const today = new Date();
   const open = (rows: any[]) => (rows || []).filter((i) => i.payment_status !== 'paid');
@@ -168,7 +168,7 @@ async function hrSection(): Promise<Section> {
 
 async function staffSection(userId: string): Promise<Section | null> {
   const { data: employee } = await sb.from('employees').select('id').eq('user_id', userId).maybeSingle();
-  const { data: reqs } = await sb.from('requisitions').select('status').eq('requested_by', userId);
+  const { data: reqs } = await sb.from('requisitions').select('status').eq('created_by', userId);
   const myReqs = reqs || [];
   const metrics: Metric[] = [
     { label: 'My requisitions awaiting approval', value: String(myReqs.filter((r: any) => r.status === 'pending_approval').length), path: '/requisitions' },

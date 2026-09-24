@@ -464,6 +464,7 @@ export default function UserManagement() {
     warehouse_officer: 'bg-info/80 text-info-foreground',
     accounts_payable: 'bg-success text-success-foreground',
     finance_manager: 'bg-success text-success-foreground',
+    executive: 'bg-primary text-primary-foreground',
     ap_clerk: 'bg-success/80 text-success-foreground',
     requisitioner: 'bg-accent text-accent-foreground',
     viewer: 'bg-muted text-muted-foreground',
