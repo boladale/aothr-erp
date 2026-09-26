@@ -20,6 +20,38 @@ const SUGGESTIONS = [
   "What are my biggest expenses this year?",
 ];
 
+function RichText({ text }: { text: string }) {
+  const clean = text.replace(/\*\*(.+?)\*\*/g, "$1");
+  const lines = clean.split("\n");
+  const blocks: JSX.Element[] = [];
+  let buf: string[] = [];
+  const isRow = (l: string) => /^\s*\|.*\|\s*$/.test(l);
+  const cells = (l: string) => l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+  let i = 0;
+  const flush = () => { if (buf.length) { blocks.push(<p key={blocks.length} className="whitespace-pre-wrap">{buf.join("\n")}</p>); buf = []; } };
+  while (i < lines.length) {
+    if (isRow(lines[i])) {
+      flush();
+      const rows: string[][] = [];
+      while (i < lines.length && isRow(lines[i])) {
+        if (!/^\s*\|[\s:|-]+\|\s*$/.test(lines[i])) rows.push(cells(lines[i]));
+        i++;
+      }
+      const [head, ...body] = rows;
+      blocks.push(
+        <div key={blocks.length} className="my-2 overflow-x-auto">
+          <table className="w-full border-collapse text-xs">
+            <thead><tr>{head?.map((c, j) => <th key={j} className="border-b border-border px-2 py-1 text-left font-semibold">{c}</th>)}</tr></thead>
+            <tbody>{body.map((r, k) => <tr key={k}>{r.map((c, j) => <td key={j} className="border-b border-border/50 px-2 py-1">{c}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+      );
+    } else { buf.push(lines[i]); i++; }
+  }
+  flush();
+  return <>{blocks}</>;
+}
+
 export default function AskAothr() {
   const { toast } = useToast();
   const [convs, setConvs] = useState<Conv[]>([]);
@@ -118,9 +150,9 @@ export default function AskAothr() {
             )}
             {msgs.map((m, i) => (
               <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-                <div className={cn("max-w-[80%] whitespace-pre-wrap rounded-lg px-4 py-2 text-sm",
+                <div className={cn("max-w-[80%] rounded-lg px-4 py-2 text-sm",
                   m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground")}>
-                  {m.content.replace(/\*\*(.+?)\*\*/g, "$1")}
+                  <RichText text={m.content} />
                 </div>
               </div>
             ))}
