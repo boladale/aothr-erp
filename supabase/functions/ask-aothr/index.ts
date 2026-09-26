@@ -29,6 +29,10 @@ const TOOLS: Record<string, string> = {
   ai_vendor_directory: "List of suppliers (vendors we buy from) with name, code, status, categories, phone, email, city and blacklist status.",
   ai_customer_directory: "List of customers (people/companies we sell to) with name, code, phone, email, address, city, payment terms and credit limit. Use for contact details of any customer.",
   ai_revenue_by_account: "Revenue by income ledger account (e.g. Sales, Service Income): year to date vs same period last year, PLUS a by_month list (YYYY-MM) with each account's amount per month for this and last year. Use for revenue sources / income lines, including for a specific month.",
+  ai_revenue_breakdown: "Sales per customer (YTD, same period last year, change, share %, last invoice date, days since last purchase), top-1 and top-3 customer concentration %, sales per product/service YTD vs last year, and sales by month. Use for top customers, customers buying less, customers not buying recently, dependence on few customers, best products/services, best/worst sales months.",
+  ai_cost_breakdown: "Every expense account (incl. cost of sales) YTD vs same period last year with change and %, this month vs last month, biggest increases, monthly expense totals and month-by-account detail. Use for biggest expenses, rising costs, highest-expense months, cost of goods sold drivers, cost-saving ideas, why profit moved.",
+  ai_cash_outlook: "Cash now, ledger cash at each of the last 7 month-ends (for cash vs last month / trend), supplier bills overdue and due in next 30 days, customer payments expected in next 30 days, oldest unpaid customer invoices. Use for payments coming due, cash pressure, cash-flow problems, oldest balances.",
+  ai_procurement_spend: "Procurement spend: PO value ordered and supplier bills YTD vs last year, payments made per supplier YTD, delivery record per supplier (deliveries, late count, avg days late), and highest-value stock items. Use for procurement spend, suppliers paid most, consistently late suppliers, highest stock value items.",
 };
 const toolDefs = Object.entries(TOOLS).map(([name, description]) => ({
   type: "function",
@@ -93,6 +97,9 @@ Rules:
 - Respect the time period asked. If the user names a month (e.g. "September 2026"), use that month's figures from the monthly breakdowns, not year-to-date totals. Only give YTD when asked or when no period is named, and label the period clearly.
 - Use a list or small markdown table when showing several records.
 - Amounts are Nigerian Naira; write them like ₦12.5M or ₦850,000.
+- For broad CEO questions (how is the business doing, biggest issues, risks, what to focus on, what changed, improving or worse, three things to investigate), call several tools together: ai_business_health, ai_business_alerts, ai_profit_loss_monthly, ai_cash_outlook, ai_receivables, ai_cost_breakdown, and ai_revenue_breakdown. Rank issues by money at stake and back every point with a figure.
+- For "this month vs last month", use the latest two months in monthly breakdowns and say if the current month is still in progress.
+- For "why" questions, explain using the biggest movements in revenue by customer/product and costs by account; never guess causes the data does not show.
 - Be concise and practical: short answer first, then key figures as a short bullet list, then one suggested action when useful.
 - Plain business English, no jargon, no mention of tools, databases or JSON.
 - You can only read data; you cannot create, approve or change anything.`,
