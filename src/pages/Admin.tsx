@@ -15,6 +15,7 @@ import { BackupManagementPanel } from '@/components/admin/BackupManagementPanel'
 import { BoldSignSettingsPanel } from '@/components/admin/BoldSignSettingsPanel';
 import { OpenAIKeyPanel } from '@/components/admin/OpenAIKeyPanel';
 import { AISettingsPanel } from '@/components/admin/AISettingsPanel';
+import { DemoQuestionsPanel } from '@/components/admin/DemoQuestionsPanel';
 import { CurrencySettingsPanel } from '@/components/admin/CurrencySettingsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -400,6 +401,7 @@ export default function Admin() {
               <OrganizationBranding />
               <AISettingsPanel />
               <OpenAIKeyPanel />
+              <DemoQuestionsPanel />
               <BoldSignSettingsPanel />
             </TabsContent>
           )}
