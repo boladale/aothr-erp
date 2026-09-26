@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user } } = await userDb.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (!user) return json({ error: "Please sign in again." }, 401);
+    if (!user) return json({ error: "Your sign-in has expired. Please refresh the page or sign in again." });
 
     const body = await req.json().catch(() => ({}));
     const question = typeof body.question === "string" ? body.question.trim().slice(0, 2000) : "";
@@ -105,7 +105,7 @@ Rules:
       if (!res.ok) {
         const t = await res.text();
         console.error("OpenAI error", res.status, t.slice(0, 300));
-        if (res.status === 401) return json({ error: "Your company's OpenAI key was rejected. Ask your admin to check or replace it." }, 401);
+        if (res.status === 401) return json({ error: "Your company's OpenAI key was rejected. Ask your admin to check or replace it." });
         if (res.status === 429) return json({ error: "OpenAI is busy or your OpenAI credit has run out. Check your OpenAI billing or try again shortly." }, 429);
         return json({ error: "Aothr could not answer right now. Please try again." }, 502);
       }

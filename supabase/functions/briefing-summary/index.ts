@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (!user) return json({ error: "Please sign in again." }, 401);
+    if (!user) return json({ error: "Your sign-in has expired. Please refresh the page or sign in again." });
 
     // Company's own OpenAI key (saved by the admin under Administration → Branding)
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -48,7 +48,7 @@ Write 2-3 short plain-English sentences (max 70 words) highlighting what matters
     if (!res.ok) {
       const t = await res.text();
       console.error("OpenAI error", res.status, t.slice(0, 300));
-      if (res.status === 401) return json({ error: "Your company's OpenAI key was rejected. Ask your admin to check or replace it." }, 401);
+      if (res.status === 401) return json({ error: "Your company's OpenAI key was rejected. Ask your admin to check or replace it." });
       if (res.status === 429) return json({ error: "OpenAI is busy or your OpenAI credit has run out. Please check your OpenAI billing or try again shortly." }, 429);
       return json({ error: "The AI summary could not be generated." }, res.status >= 500 ? 502 : res.status);
     }
