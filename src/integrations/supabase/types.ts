@@ -8051,10 +8051,12 @@ export type Database = {
       ai_procurement_position: { Args: never; Returns: Json }
       ai_profit_loss_monthly: { Args: never; Returns: Json }
       ai_project_position: { Args: never; Returns: Json }
+      ai_purchase_order_details: { Args: never; Returns: Json }
       ai_receivables: { Args: never; Returns: Json }
       ai_sales_performance: { Args: never; Returns: Json }
       ai_supplier_performance: { Args: never; Returns: Json }
       ai_tax_position: { Args: never; Returns: Json }
+      ai_vendor_directory: { Args: never; Returns: Json }
       approve_po_reaward:
         | { Args: { p_request_id: string }; Returns: string }
         | { Args: { p_notes?: string; p_request_id: string }; Returns: string }
