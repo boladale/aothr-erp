@@ -8041,6 +8041,17 @@ export type Database = {
       ai_cost_breakdown: { Args: never; Returns: Json }
       ai_customer_directory: { Args: never; Returns: Json }
       ai_customer_intelligence: { Args: never; Returns: Json }
+      ai_demo_questions: {
+        Args: { p_days?: number }
+        Returns: {
+          answer: string
+          asked_at: string
+          conversation_id: string
+          question: string
+          tools_used: string[]
+          weak: boolean
+        }[]
+      }
       ai_expense_analysis: { Args: never; Returns: Json }
       ai_guard: { Args: { p_codes: string[] }; Returns: string }
       ai_inventory_position: { Args: never; Returns: Json }
