@@ -19,6 +19,7 @@ const TOOLS: Record<string, string> = {
   ai_procurement_position: "Purchase orders by status, overdue deliveries, approvals waiting over 7 days, open RFQs, requisitions.",
   ai_supplier_performance: "Supplier spend YTD, on-time delivery and outstanding balances.",
   ai_payroll_position: "Payroll totals and headcount (no individual salaries).",
+  ai_payroll_employee_detail: "Individual staff pay from the latest approved payroll: name, department, job role, monthly gross, tax, pension, deductions, net pay, ranked highest first. Use for highest/lowest earners or a named person's pay. Restricted to payroll-permitted users.",
   ai_project_position: "Projects: budget, actual cost, revenue, margin, over-budget flags.",
   ai_business_alerts: "Current risks: negative cash, overdue invoices, low stock, stuck approvals, late deliveries, over-budget projects.",
   ai_customer_intelligence: "Customer counts, sales, balances, rising/declining customers, top customers.",
@@ -88,6 +89,7 @@ Rules:
 - "Open" purchase orders means approved, sent or partially received only. Never add rejected, draft or cancelled POs into open totals.
 - If a name isn't found among suppliers, check customers too (and vice versa) before saying it doesn't exist. Never list unrelated records as a substitute.
 - "Revenue lines", "income lines" or "ledgers" means income accounts (ai_revenue_by_account), not months.
+- For questions about an individual's pay or top earners, call ai_payroll_employee_detail. If it returns an access error, say the user's role doesn't allow viewing individual pay. Never describe a payroll total as one person's salary.
 - Respect the time period asked. If the user names a month (e.g. "September 2026"), use that month's figures from the monthly breakdowns, not year-to-date totals. Only give YTD when asked or when no period is named, and label the period clearly.
 - Use a list or small markdown table when showing several records.
 - Amounts are Nigerian Naira; write them like ₦12.5M or ₦850,000.
