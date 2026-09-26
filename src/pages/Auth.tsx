@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Loader2, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { friendlyError } from '@/lib/friendly-error';
+import { startDemo } from './DemoLogin';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -257,6 +258,12 @@ export default function Auth() {
               </form>
             </TabsContent>
           </Tabs>
+          <div className="mt-6 border-t pt-4">
+            <Button type="button" variant="outline" className="w-full" disabled={loading}
+              onClick={async () => { setLoading(true); const e = await startDemo(); setLoading(false); if (e) toast.error(e); else navigate('/ask-aothr'); }}>
+              Try the Ask Aothr demo
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
