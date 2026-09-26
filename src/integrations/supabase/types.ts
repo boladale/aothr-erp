@@ -8044,6 +8044,7 @@ export type Database = {
       ai_inventory_position: { Args: never; Returns: Json }
       ai_journal_last_change: { Args: { p_org: string }; Returns: string }
       ai_payables: { Args: never; Returns: Json }
+      ai_payroll_employee_detail: { Args: never; Returns: Json }
       ai_payroll_position: { Args: never; Returns: Json }
       ai_pl_totals: {
         Args: { p_from: string; p_org: string; p_to: string }
