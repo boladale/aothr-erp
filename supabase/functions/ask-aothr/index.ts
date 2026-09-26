@@ -151,7 +151,7 @@ Rules:
     if (!answer) answer = "I couldn't find an answer to that from your company's data.";
 
     const { error: msgErr } = await admin.from("ai_messages").insert([
-      { conversation_id: convId, organization_id: org, user_id: user.id, role: "user", content: question },
+      { conversation_id: convId, organization_id: org, user_id: user.id, role: "user", content: question, tools_used: [] },
       { conversation_id: convId, organization_id: org, user_id: user.id, role: "assistant", content: answer, tools_used: [...used] },
     ]);
     if (msgErr) console.error("ai_messages insert failed:", JSON.stringify(msgErr));
