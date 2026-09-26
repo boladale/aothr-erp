@@ -8036,7 +8036,9 @@ export type Database = {
       ai_business_alerts: { Args: never; Returns: Json }
       ai_business_health: { Args: never; Returns: Json }
       ai_can: { Args: { p_code: string }; Returns: boolean }
+      ai_cash_outlook: { Args: never; Returns: Json }
       ai_cash_position: { Args: never; Returns: Json }
+      ai_cost_breakdown: { Args: never; Returns: Json }
       ai_customer_directory: { Args: never; Returns: Json }
       ai_customer_intelligence: { Args: never; Returns: Json }
       ai_expense_analysis: { Args: never; Returns: Json }
@@ -8051,10 +8053,12 @@ export type Database = {
         Returns: Json
       }
       ai_procurement_position: { Args: never; Returns: Json }
+      ai_procurement_spend: { Args: never; Returns: Json }
       ai_profit_loss_monthly: { Args: never; Returns: Json }
       ai_project_position: { Args: never; Returns: Json }
       ai_purchase_order_details: { Args: never; Returns: Json }
       ai_receivables: { Args: never; Returns: Json }
+      ai_revenue_breakdown: { Args: never; Returns: Json }
       ai_revenue_by_account: { Args: never; Returns: Json }
       ai_sales_performance: { Args: never; Returns: Json }
       ai_supplier_performance: { Args: never; Returns: Json }
