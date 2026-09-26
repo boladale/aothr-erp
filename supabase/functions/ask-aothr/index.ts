@@ -58,6 +58,13 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles").select("organization_id, full_name").eq("user_id", user.id).maybeSingle();
     const org = prof?.organization_id;
     if (!org) return json({ error: "Your account is not linked to a company." }, 400);
+    // Demo account: 100 questions per day shared across all website visitors
+    if (user.email === "demo@aothr.com") {
+      const since = new Date(); since.setUTCHours(0, 0, 0, 0);
+      const { count } = await admin.from("ai_messages").select("id", { count: "exact", head: true })
+        .eq("user_id", user.id).eq("role", "user").gte("created_at", since.toISOString());
+      if ((count ?? 0) >= 100) return json({ error: "The demo has reached today's question limit. Please come back tomorrow or contact us for a full walkthrough." });
+    }
     const { data: settings } = await admin.from("ai_settings").select("ai_enabled, ai_model, chat_enabled, morning_brief_enabled").eq("organization_id", org).maybeSingle();
     if (settings && settings.ai_enabled === false) return json({ error: "AI is switched off for your company." });
     if (settings && settings.chat_enabled === false) return json({ error: "Ask Aothr is switched off for your company." });
