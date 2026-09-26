@@ -25,7 +25,9 @@ const TOOLS: Record<string, string> = {
   ai_expense_analysis: "Expenses by month and category, budget vs actual, unusual movements.",
   ai_tax_position: "Tax liabilities, VAT collected and paid, tax rates in use.",
   ai_purchase_order_details: "Individual purchase orders (not closed/cancelled): PO number, status, order and expected dates, days overdue, total, supplier name/categories/phone/email, and the items on each PO with quantities and prices. Use for any question about specific POs, which supplier, what items, or how late.",
-  ai_vendor_directory: "List of suppliers with name, code, status, categories, phone, email, city and blacklist status.",
+  ai_vendor_directory: "List of suppliers (vendors we buy from) with name, code, status, categories, phone, email, city and blacklist status.",
+  ai_customer_directory: "List of customers (people/companies we sell to) with name, code, phone, email, address, city, payment terms and credit limit. Use for contact details of any customer.",
+  ai_revenue_by_account: "Revenue broken down by income ledger account (e.g. Sales, Service Income) for this year to date vs the same period last year. Use for 'top revenue lines', 'which income lines/ledgers', revenue sources.",
 };
 const toolDefs = Object.entries(TOOLS).map(([name, description]) => ({
   type: "function",
@@ -84,7 +86,9 @@ Rules:
 - When the user asks about specific records (names, items, suppliers, dates, how many days), call the detail tools (e.g. ai_purchase_order_details, ai_vendor_directory) instead of repeating summary totals. Never say information is unavailable before checking the detail tools.
 - Answer the exact question asked. Don't pad with unrelated figures.
 - "Open" purchase orders means approved, sent or partially received only. Never add rejected, draft or cancelled POs into open totals.
-- Use a list or small table when showing several records.
+- If a name isn't found among suppliers, check customers too (and vice versa) before saying it doesn't exist. Never list unrelated records as a substitute.
+- "Revenue lines", "income lines" or "ledgers" means income accounts (ai_revenue_by_account), not months.
+- Use a list or small markdown table when showing several records.
 - Amounts are Nigerian Naira; write them like ₦12.5M or ₦850,000.
 - Be concise and practical: short answer first, then key figures as a short bullet list, then one suggested action when useful.
 - Plain business English, no jargon, no mention of tools, databases or JSON.
