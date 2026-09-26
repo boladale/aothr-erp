@@ -15,6 +15,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MyBriefing = lazy(() => import("./pages/MyBriefing"));
 const AskAothr = lazy(() => import("./pages/AskAothr"));
+const DemoLogin = lazy(() => import("./pages/DemoLogin"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 
 const Vendors = lazy(() => import("./pages/Vendors"));
@@ -164,6 +165,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/auth" replace />;
   }
 
+  // Demo visitors can only use Ask Aothr
+  if (user.email === 'demo@aothr.com' && window.location.pathname !== '/ask-aothr') {
+    return <Navigate to="/ask-aothr" replace />;
+  }
+
   if (!organizationId) {
     if (roles.length === 0) {
       return <Navigate to="/org-setup" replace />;
@@ -200,6 +206,7 @@ const App = () => (
           <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/demo" element={<DemoLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/email-monitor" element={<ProtectedRoute><EmailMonitor /></ProtectedRoute>} />

@@ -7,6 +7,20 @@ import { Card } from "@/components/ui/card";
 import { Sparkles, Plus, Trash2, Send, Loader2, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+
+function DemoShell({ children }: { children: React.ReactNode }) {
+  const { signOut } = useAuth();
+  return (
+    <div className="min-h-screen bg-background p-4">
+      <div className="mb-3 flex items-center justify-between rounded-md border bg-muted/50 px-4 py-2 text-sm">
+        <span>You are using the <strong>Aothr ERP demo</strong> with sample company figures. Ask anything about the business.</span>
+        <Button size="sm" variant="ghost" onClick={() => { signOut().then(() => { window.location.href = "/auth"; }); }}>Exit demo</Button>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Conv = { id: string; title: string; updated_at: string };
@@ -54,6 +68,9 @@ function RichText({ text }: { text: string }) {
 
 export default function AskAothr() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isDemo = user?.email === "demo@aothr.com";
+  const Shell = isDemo ? DemoShell : AppLayout;
   const [convs, setConvs] = useState<Conv[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -66,7 +83,7 @@ export default function AskAothr() {
       .select("id,title,updated_at").order("updated_at", { ascending: false }).limit(50);
     setConvs(data ?? []);
   };
-  useEffect(() => { loadConvs(); }, []);
+  useEffect(() => { if (!isDemo) loadConvs(); }, [isDemo]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, busy]);
 
   const open = async (id: string) => {
@@ -101,13 +118,13 @@ export default function AskAothr() {
     }
     setMsgs((m) => [...m, { role: "assistant", content: data.answer }]);
     if (!active) setActive(data.conversationId);
-    loadConvs();
+    if (!isDemo) loadConvs();
   };
 
   return (
-    <AppLayout>
+    <Shell>
       <div className="flex h-[calc(100vh-7rem)] gap-4">
-        <Card className="hidden w-64 shrink-0 flex-col md:flex">
+        {!isDemo && <Card className="hidden w-64 shrink-0 flex-col md:flex">
           <div className="border-b p-3">
             <Button className="w-full" size="sm" onClick={newChat}><Plus className="mr-1 h-4 w-4" />New chat</Button>
           </div>
@@ -124,7 +141,7 @@ export default function AskAothr() {
               </div>
             ))}
           </div>
-        </Card>
+        </Card>}
 
         <Card className="flex flex-1 flex-col">
           <div className="flex items-center gap-2 border-b px-4 py-3">
@@ -172,6 +189,6 @@ export default function AskAothr() {
           </form>
         </Card>
       </div>
-    </AppLayout>
+    </Shell>
   );
 }
