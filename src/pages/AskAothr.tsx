@@ -60,6 +60,18 @@ function RichText({ text }: { text: string }) {
           </table>
         </div>
       );
+    } else if (/^\s*#{1,6}\s+/.test(lines[i])) {
+      flush();
+      blocks.push(<h3 key={blocks.length} className="mb-1 mt-2 text-base font-semibold">{lines[i].replace(/^\s*#{1,6}\s+/, "")}</h3>);
+      i++;
+    } else if (/^\s*Overall:/.test(lines[i])) {
+      flush();
+      blocks.push(<p key={blocks.length} className="whitespace-pre-wrap"><strong>Overall:</strong>{lines[i].replace(/^\s*Overall:/, "")}</p>);
+      i++;
+    } else if (/^\s*(🔴|🟠|🟡)/.test(lines[i])) {
+      flush();
+      blocks.push(<p key={blocks.length} className="mt-2 font-semibold">{lines[i]}</p>);
+      i++;
     } else { buf.push(lines[i]); i++; }
   }
   flush();
