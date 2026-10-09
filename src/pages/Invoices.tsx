@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { Plus, Search, Receipt, Pencil } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -174,6 +175,7 @@ export default function Invoices() {
   });
   const approveMutation = useMutation({
     mutationFn: async (invoice: InvoiceWithDetails) => {
+      await assertApprovalCode('this invoice approval');
       const { error } = await supabase.from('ap_invoices').update({ status: 'approved' }).eq('id', invoice.id);
       if (error) throw error;
       return invoice;

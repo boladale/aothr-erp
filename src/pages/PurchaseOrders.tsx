@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, FileText, Pencil, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -227,6 +228,7 @@ export default function PurchaseOrders() {
 
   const approveMutation = useMutation({
     mutationFn: async (po: POWithDetails) => {
+      await assertApprovalCode('this purchase order approval');
       const { data, error } = await supabase.functions.invoke('secure-action', {
         body: { action: 'po_approve', payload: { id: po.id } },
       });
@@ -284,6 +286,7 @@ export default function PurchaseOrders() {
 
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
+      await assertApprovalCode('these purchase order approvals');
       const { data, error } = await supabase.functions.invoke('secure-action', { body: { action: 'po_approve', payload: { ids } } });
       await throwEdgeError(error, data);
       return (data as any)?.updated ?? ids.length;

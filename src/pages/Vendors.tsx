@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { Plus, Search, Pencil, Trash2, Power, Link2, Ban } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,6 +75,7 @@ export default function Vendors() {
   };
 
   const handleApprove = async (vendor: Vendor) => {
+    if (!(await requireApprovalCode('this vendor approval'))) return;
     try {
       const { error: vendorError } = await supabase
         .from('vendors')
@@ -170,6 +172,7 @@ export default function Vendors() {
   };
 
   const handleApproveBlacklist = async (vendor: VendorWithBlacklist) => {
+    if (!(await requireApprovalCode('this blacklist approval'))) return;
     if (!window.confirm(`Approve blacklist for "${vendor.name}"? This will block the vendor from any new transactions.`)) return;
     try {
       const { error } = await (supabase.from('vendors') as any).update({

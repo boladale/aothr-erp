@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CheckCircle2, AlertTriangle, FileText, PenTool, Trash2, PenLine } from 'lucide-react';
@@ -128,6 +129,7 @@ export default function PurchaseOrderDetail() {
   };
 
   const handleApprove = async () => {
+    if (!(await requireApprovalCode('this purchase order approval'))) return;
     if (!po) return;
     setActionLoading(true);
     try {

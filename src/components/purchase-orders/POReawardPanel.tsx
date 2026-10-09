@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,6 +43,7 @@ export function POReawardPanel() {
 
   const action = useMutation({
     mutationFn: async ({ id, act, notes }: { id: string; act: 'approve' | 'reject'; notes: string }) => {
+      if (act === 'approve') await assertApprovalCode('this re-award decision');
       const fn = act === 'approve' ? 'approve_po_reaward' : 'reject_po_reaward';
       const { error } = await supabase.rpc(fn as any, { p_request_id: id, p_notes: notes || null });
       if (error) throw error;
