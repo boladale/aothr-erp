@@ -16,6 +16,7 @@ import { BoldSignSettingsPanel } from '@/components/admin/BoldSignSettingsPanel'
 import { OpenAIKeyPanel } from '@/components/admin/OpenAIKeyPanel';
 import { AISettingsPanel } from '@/components/admin/AISettingsPanel';
 import { DemoQuestionsPanel } from '@/components/admin/DemoQuestionsPanel';
+import { SecuritySettingsPanel } from '@/components/admin/SecuritySettingsPanel';
 import { CurrencySettingsPanel } from '@/components/admin/CurrencySettingsPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -400,6 +401,7 @@ export default function Admin() {
             <TabsContent value="branding" className="space-y-4">
               <OrganizationBranding />
               <AISettingsPanel />
+              <SecuritySettingsPanel />
               <OpenAIKeyPanel />
               <DemoQuestionsPanel />
               <BoldSignSettingsPanel />

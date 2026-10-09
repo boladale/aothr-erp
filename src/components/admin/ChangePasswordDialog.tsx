@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
-import { friendlyError } from '@/lib/friendly-error';
+import { Loader2, ShieldCheck } from 'lucide-react';
+import { NewPasswordForm } from '@/components/auth/NewPasswordForm';
+import { BackupCodesView } from '@/components/auth/BackupCodesView';
+import { getVerifiedTotp, mfaTools } from '@/lib/mfa';
+import { requireApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -14,58 +14,38 @@ interface ChangePasswordDialogProps {
 }
 
 export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialogProps) {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [hasMfa, setHasMfa] = useState(false);
+  const [codes, setCodes] = useState<string[] | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const handleChange = async () => {
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
+  useEffect(() => { if (open) { setCodes(null); getVerifiedTotp().then((f) => setHasMfa(!!f)); } }, [open]);
 
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      toast.success('Password updated successfully');
-      setNewPassword('');
-      setConfirmPassword('');
-      onOpenChange(false);
-    } catch (err: any) {
-      toast.error(friendlyError(err, 'Failed to update password'));
-    } finally {
-      setLoading(false);
-    }
+  const newCodes = async () => {
+    if (!(await requireApprovalCode('new backup codes'))) return;
+    setBusy(true);
+    const r = await mfaTools<{ codes: string[] }>({ action: 'generate_backup_codes' });
+    setBusy(false);
+    if (r.error) return toast.error(r.error);
+    setCodes(r.codes);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Change Password</DialogTitle>
+          <DialogTitle>Password &amp; security</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
-            <Input id="newPassword" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min 6 characters" />
+        <NewPasswordForm onDone={() => onOpenChange(false)} onCancel={() => onOpenChange(false)} />
+        {hasMfa && (
+          <div className="border-t pt-4 space-y-3">
+            <p className="text-sm font-medium flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-success" /> Google Authenticator is on</p>
+            {codes ? <BackupCodesView codes={codes} /> : (
+              <Button variant="outline" size="sm" onClick={newCodes} disabled={busy}>
+                {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Get new backup codes
+              </Button>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input id="confirmPassword" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Re-enter password" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
-          <Button onClick={handleChange} disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Update Password
-          </Button>
-        </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );
