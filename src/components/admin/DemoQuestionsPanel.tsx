@@ -22,7 +22,7 @@ export function DemoQuestionsPanel() {
   const exportCsv = () => {
     const esc = (s: string) => `"${(s ?? "").replace(/"/g, '""')}"`;
     const csv = ["Asked at,Question,Answer,Needs attention",
-      ...shown.map((r) => [new Date(r.asked_at).toLocaleString(), esc(r.question), esc(r.answer ?? ""), r.weak ? "Yes" : "No"].join(","))].join("\n");
+      ...shown.map((r) => [esc(new Date(r.asked_at).toLocaleString()), esc(r.question), esc(r.answer ?? ""), r.weak ? "Yes" : "No"].join(","))].join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     a.download = "demo-questions.csv"; a.click();
