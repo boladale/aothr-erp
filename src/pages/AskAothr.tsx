@@ -35,7 +35,7 @@ const SUGGESTIONS = [
 ];
 
 function RichText({ text }: { text: string }) {
-  const clean = text.replace(/\*\*(.+?)\*\*/g, "$1");
+  const clean = text.replace(/&(?:nbsp|#160|#x0*a0);/gi, " ").replace(/\*\*(.+?)\*\*/g, "$1");
   const lines = clean.split("\n");
   const blocks: JSX.Element[] = [];
   let buf: string[] = [];
