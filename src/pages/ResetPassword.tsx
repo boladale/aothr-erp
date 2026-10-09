@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, Building2, KeyRound } from 'lucide-react';
+import { PasswordStrength } from '@/components/auth/PasswordStrength';
+import { checkPassword } from '@/lib/password-strength';
 import { friendlyError } from '@/lib/friendly-error';
 
 export default function ResetPassword() {
@@ -34,8 +36,8 @@ export default function ResetPassword() {
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (!checkPassword(password).ok) {
+      toast.error('That password is too weak. Use the suggestion or add capitals, numbers and symbols.');
       return;
     }
     if (password !== confirmPassword) {
@@ -45,6 +47,7 @@ export default function ResetPassword() {
 
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
+    if (!error) await supabase.rpc('mark_password_changed' as any);
     setLoading(false);
 
     if (error) {
@@ -106,6 +109,7 @@ export default function ResetPassword() {
                 onChange={e => setPassword(e.target.value)}
                 required
               />
+              <PasswordStrength value={password} onUse={pw => { setPassword(pw); setConfirmPassword(pw); }} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm-new-password">Confirm Password</Label>

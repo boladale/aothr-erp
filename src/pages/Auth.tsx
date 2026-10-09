@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PasswordStrength } from '@/components/auth/PasswordStrength';
+import { checkPassword } from '@/lib/password-strength';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -15,7 +17,7 @@ import { startDemo } from './DemoLogin';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters').refine(p => checkPassword(p).ok, 'Password is too weak — add capitals, numbers and symbols, or use a suggested password'),
 });
 
 const signupSchema = loginSchema.extend({
@@ -239,6 +241,7 @@ export default function Auth() {
                     onChange={e => setSignupForm({ ...signupForm, password: e.target.value })}
                     required
                   />
+                  <PasswordStrength value={signupForm.password} onUse={pw => setSignupForm({ ...signupForm, password: pw, confirmPassword: pw })} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-confirm">Confirm Password</Label>
