@@ -4713,6 +4713,30 @@ export type Database = {
           },
         ]
       }
+      mfa_backup_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -4755,6 +4779,38 @@ export type Database = {
             foreignKeyName: "notifications_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_security_settings: {
+        Row: {
+          mfa_required: boolean
+          organization_id: string
+          password_max_age_days: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          mfa_required?: boolean
+          organization_id: string
+          password_max_age_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          mfa_required?: boolean
+          organization_id?: string
+          password_max_age_days?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_security_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -7288,6 +7344,21 @@ export type Database = {
           },
         ]
       }
+      user_password_status: {
+        Row: {
+          password_changed_at: string
+          user_id: string
+        }
+        Insert: {
+          password_changed_at?: string
+          user_id: string
+        }
+        Update: {
+          password_changed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -8120,6 +8191,7 @@ export type Database = {
         Args: { p_recurring_id: string }
         Returns: string
       }
+      get_my_security_status: { Args: never; Returns: Json }
       get_org_boldsign_settings: {
         Args: { _org_id: string }
         Returns: {
@@ -8200,6 +8272,7 @@ export type Database = {
           vendor_name: string
         }[]
       }
+      mark_password_changed: { Args: never; Returns: undefined }
       move_to_dlq: {
         Args: {
           dlq_name: string
