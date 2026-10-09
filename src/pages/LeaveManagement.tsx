@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { Plus, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { friendlyError } from '@/lib/friendly-error';
+import { assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 
 export default function LeaveManagement() {
   const { user, organizationId } = useAuth();
@@ -56,6 +57,7 @@ export default function LeaveManagement() {
 
   const actionMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      if (status === 'approved') await assertApprovalCode('this leave approval');
       const { error } = await supabase.from('leave_requests' as any).update({
         status,
         approved_by: user?.id,
