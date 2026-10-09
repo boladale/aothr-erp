@@ -15,6 +15,8 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MyBriefing = lazy(() => import("./pages/MyBriefing"));
 const AskAothr = lazy(() => import("./pages/AskAothr"));
+import { SecurityGate } from './components/auth/SecurityGate';
+import { ApprovalCodeDialog } from './components/auth/ApprovalCodeDialog';
 const DemoLogin = lazy(() => import("./pages/DemoLogin"));
 const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 
@@ -192,7 +194,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
   
-  return <>{children}</>;
+  if (user.email === 'demo@aothr.com') return <>{children}</>;
+  return <SecurityGate>{children}</SecurityGate>;
 }
 
 const App = () => (
@@ -203,6 +206,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ApprovalCodeDialog />
           <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/auth" element={<Auth />} />
