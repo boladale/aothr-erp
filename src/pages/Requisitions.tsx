@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -69,6 +70,7 @@ export default function Requisitions() {
   });
   const approveMutation = useMutation({
     mutationFn: async (req: RequisitionRow) => {
+      await assertApprovalCode('this requisition approval');
       if (req.status !== 'pending_approval') throw new Error('Only pending requisitions can be approved');
       const { error } = await supabase.from('requisitions').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id }).eq('id', req.id).eq('status', 'pending_approval');
       if (error) throw error;
@@ -107,6 +109,7 @@ export default function Requisitions() {
   });
   const bulkApproveMutation = useMutation({
     mutationFn: async (ids: string[]) => {
+      await assertApprovalCode('these requisition approvals');
       const { error } = await supabase.from('requisitions').update({
         status: 'approved', approved_at: new Date().toISOString(), approved_by: user?.id
       }).in('id', ids);

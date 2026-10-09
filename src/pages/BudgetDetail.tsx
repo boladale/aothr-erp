@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Plus, Trash2, CheckCircle, Lock } from 'lucide-react';
@@ -123,6 +124,7 @@ export default function BudgetDetail() {
 
   const statusMut = useMutation({
     mutationFn: async (newStatus: 'active' | 'frozen' | 'closed') => {
+      if (newStatus === 'active') await assertApprovalCode('this budget approval');
       const patch: any = { status: newStatus };
       if (newStatus === 'active') {
         patch.approved_by = user?.id;

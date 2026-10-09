@@ -1,4 +1,5 @@
 import { friendlyError } from '@/lib/friendly-error';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -248,6 +249,7 @@ export default function ChartOfAccounts() {
   };
 
   const handleApprove = async (account: GLAccount) => {
+    if (!(await requireApprovalCode('this account approval'))) return;
     const { error } = await supabase.from('gl_accounts').update({ status: 'approved' }).eq('id', account.id);
     if (error) { toast.error(friendlyError(error)); return; }
     toast.success(`Account ${account.account_code} approved`);

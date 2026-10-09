@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +58,7 @@ export function VendorRegistrationsPanel() {
 
   const approveMutation = useMutation({
     mutationFn: async ({ registration, vendorId }: { registration: any; vendorId: string | null }) => {
+      await assertApprovalCode('this vendor registration approval');
       let finalVendorId = vendorId;
 
       if (!finalVendorId) {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { requireApprovalCode, assertApprovalCode } from '@/components/auth/ApprovalCodeDialog';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Send, Check, X, ShoppingCart, AlertTriangle, FileText, Trash2 } from 'lucide-react';
@@ -98,6 +99,7 @@ export default function RequisitionDetail() {
   };
 
   const handleApprove = async (sendDirect = false) => {
+    if (!(await requireApprovalCode('this requisition approval'))) return;
     if (requisition?.status !== 'pending_approval') {
       toast.error('This requisition is not pending approval');
       return;
