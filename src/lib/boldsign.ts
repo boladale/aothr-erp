@@ -87,8 +87,12 @@ export async function refreshSignatureStatus(signatureRequestId: string) {
 }
 
 export async function downloadSignedPdf(path: string, filename = 'signed.pdf') {
-  const { data, error } = await supabase.storage.from('signed-documents').download(path);
-  if (error) throw new Error(error.message);
+  const { data: res, error: fnErr } = await supabase.functions.invoke('boldsign-download', { body: { path } });
+  if (fnErr) throw new Error(fnErr.message);
+  if ((res as any)?.error || !(res as any)?.url) throw new Error((res as any)?.error || 'Download failed');
+  const resp = await fetch((res as any).url);
+  if (!resp.ok) throw new Error('Download failed');
+  const data = await resp.blob();
   const url = URL.createObjectURL(data);
   const a = document.createElement('a');
   a.href = url; a.download = filename;

@@ -8,6 +8,13 @@
       "when": 1791537628968,
       "tag": "0000_security_mfa_password_age",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794830661494,
+      "tag": "0001_drop_signed_documents_client_read",
+      "breakpoints": true
     }
   ]
 }

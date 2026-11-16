@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "org members can read signed documents" ON storage.objects;
