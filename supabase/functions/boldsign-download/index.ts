@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     }
     // RLS on signature_requests limits this to the caller's own company
     const { data: row } = await userClient
-      .from("signature_requests").select("id").eq("signed_pdf_path", path).maybeSingle();
+      .from("signature_requests").select("id").eq("signed_pdf_url", path).maybeSingle();
     if (!row) return json({ error: "Document not found" }, 404);
 
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
