@@ -28,6 +28,7 @@ type Conv = { id: string; title: string; updated_at: string };
 const SUGGESTIONS = [
   "How is my business doing?",
   "Compare this year's profit with last year to date",
+  "Why did revenue change compared with last year?",
   "Who owes us the most money?",
   "Which purchase orders are overdue?",
   "What stock needs reordering?",
