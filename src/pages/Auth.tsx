@@ -17,10 +17,11 @@ import { startDemo } from './DemoLogin';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters').refine(p => checkPassword(p).ok, 'Password is too weak — add capitals, numbers and symbols, or use a suggested password'),
+  password: z.string().min(1, 'Enter your password'),
 });
 
 const signupSchema = loginSchema.extend({
+  password: z.string().min(8, 'Password must be at least 8 characters').refine(p => checkPassword(p).ok, 'Password is too weak — add capitals, numbers and symbols, or use a suggested password'),
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
   confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
