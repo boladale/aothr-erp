@@ -39,6 +39,9 @@ function RichText({ text }: { text: string }) {
   const clean = text
     .replace(/&(?:nbsp|#160|#x0*a0);/gi, " ")
     .replace(/\*\*(.+?)\*\*/g, "$1")
+    // Drop saved working-out blocks (display math) — answers state the figure only
+    .replace(/\\\[[\s\S]*?\\\]/g, "")
+    .replace(/\$\$[\s\S]*?\$\$/g, "")
     // Strip LaTeX/math markup some answers were saved with
     .replace(/\\\[|\\\]|\\\(|\\\)|\$\$/g, "")
     .replace(/\\text\{([^}]*)\}/g, "$1")
