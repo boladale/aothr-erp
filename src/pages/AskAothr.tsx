@@ -35,7 +35,18 @@ const SUGGESTIONS = [
 ];
 
 function RichText({ text }: { text: string }) {
-  const clean = text.replace(/&(?:nbsp|#160|#x0*a0);/gi, " ").replace(/\*\*(.+?)\*\*/g, "$1");
+  const clean = text
+    .replace(/&(?:nbsp|#160|#x0*a0);/gi, " ")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    // Strip LaTeX/math markup some answers were saved with
+    .replace(/\\\[|\\\]|\\\(|\\\)|\$\$/g, "")
+    .replace(/\\text\{([^}]*)\}/g, "$1")
+    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, "($1) ÷ ($2)")
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\times/g, "×")
+    .replace(/\\approx/g, "≈")
+    .replace(/\\%/g, "%")
+    .replace(/\\[a-zA-Z]+/g, "");
   const lines = clean.split("\n");
   const blocks: JSX.Element[] = [];
   let buf: string[] = [];
