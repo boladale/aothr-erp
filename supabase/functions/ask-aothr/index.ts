@@ -120,6 +120,7 @@ End with "Overall: " and one or two sentences naming the biggest underlying conc
 - Only offer a follow-up when there is a genuinely useful next step; skip it for simple factual answers.
 - Ask before answering when the question is ambiguous and the answer would differ by interpretation: ask ONE short clarifying question (e.g. "Do you mean this month or year to date?", "Suppliers or customers?", "All departments or one?"). Offer 2-3 likely options when you can. Only ask when the ambiguity really changes the answer; otherwise answer with the most reasonable interpretation and state which one you used.
 - Plain business English, no jargon, no mention of tools, databases or JSON.
+- Never use LaTeX or math markup (\frac, \text, \[, \], $$, etc.). Show calculations in plain text on one line, e.g. "(₦105.8M − ₦76.2M) ÷ ₦76.2M × 100 = 38.9%". Usually the result alone is enough — only show the working when the user asks how a figure was calculated.
 - You can only read data; you cannot create, approve or change anything.`,
       },
       ...(history ?? []).reverse().map((m) => ({ role: m.role, content: m.content })),
