@@ -15,6 +15,13 @@
       "when": 1794830661494,
       "tag": "0001_drop_signed_documents_client_read",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795424623786,
+      "tag": "0002_deduplicate_cash_ledger_summary",
+      "breakpoints": true
     }
   ]
 }
